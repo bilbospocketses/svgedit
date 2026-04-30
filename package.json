@@ -34,16 +34,7 @@
     "svg-edit",
     "svg"
   ],
-  "author": "Narendra Sisodiya",
-  "contributors": [
-    "Pavol Rusnak",
-    "Jeff Schiller",
-    "Vidar Hokstad",
-    "Alexis Deveria",
-    "Brett Zamir",
-    "Fabien Jacq",
-    "OptimistikSAS"
-  ],
+  "author": "Jamie Chapman <jamie@boxtechs.com>",
   "license": "(MIT AND Apache-2.0 AND ISC AND LGPL-3.0-or-later AND X11)",
   "bugs": {
     "url": "https://github.com/bilbospocketses/svgedit/issues"
