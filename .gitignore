@@ -10,6 +10,7 @@ coverage/*
 .vs
 .vscode
 .idea
+.claude
 
 # OS
 .DS_Store

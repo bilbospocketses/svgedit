@@ -26,7 +26,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SVG-Edit/svgedit.git"
+    "url": "git+https://github.com/bilbospocketses/svgedit.git"
   },
   "keywords": [
     "svg-editor",
@@ -46,9 +46,9 @@
   ],
   "license": "(MIT AND Apache-2.0 AND ISC AND LGPL-3.0-or-later AND X11)",
   "bugs": {
-    "url": "https://github.com/SVG-Edit/svgedit/issues"
+    "url": "https://github.com/bilbospocketses/svgedit/issues"
   },
-  "homepage": "https://github.com/SVG-Edit/svgedit#readme",
+  "homepage": "https://github.com/bilbospocketses/svgedit#readme",
   "browserslist": [
     "defaults",
     "not IE 11",

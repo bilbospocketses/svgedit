@@ -21,10 +21,6 @@ under `editor/extensions/`.
 A: You need to download the latest version to your server and unzip.
 The exact commands/instructions are here: {@link https://visihow.com/Improve_your_user's_experience_by_adding_svg_graphic_editor_to_your_website_in_less_than_2_minutes}
 
-**Q: How can I help?**
-
-A: See [Testing](../Testing.md) and [ReleaseInstructions](../ReleaseInstructions.md).
-
 <!-- The remaining should be moved to Editor.md as documentation,
   assuming they are still valid -->
 

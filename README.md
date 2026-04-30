@@ -39,7 +39,7 @@ npm test           # lint + vitest unit suite + Playwright e2e
 | `tests/e2e/` | Playwright end-to-end tests (Chromium) |
 | `scripts/` | Build / test runner scripts |
 | `_reference/embed-api-v6/` | Preserved V6-era embed API code, kept as design input for the upcoming V7+ embed API |
-| `docs/` | Project docs (Accessibility, Contributing, Development) |
+| `docs/tutorials/` | Editor / Canvas / API / Events / FAQ tutorials (legacy upstream content; revisit during TS migration) |
 | `CHANGELOG.md` | Keep a Changelog format; live source of what's changed |
 
 ## Embedding (planned)

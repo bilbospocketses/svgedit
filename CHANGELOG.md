@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `CHANGELOG.md` (this file).
 - `_reference/embed-api-v6/` — preserved V6-era embed API source as design input for the upcoming V7+ embed API.
 
+### Changed (audit follow-up 2026-04-30)
+- `chore: post-housekeeping audit follow-ups` — Three flags surfaced by an outside-eyes audit pass:
+  - `package.json` `repository.url`, `bugs.url`, and `homepage` updated from `SVG-Edit/svgedit` to `bilbospocketses/svgedit` so npm-derived "report bug" / "view repo" links land on the fork rather than upstream.
+  - `.gitignore` adds `.claude` so per-repo Claude Code session settings don't show up as untracked.
+  - `docs/` half-strip cleaned up: deleted `Accessibility.md` (upstream a11y test setup), `Acknowledgements.md` (overlaps with README credits and references deps already removed), `Contributing.md` (upstream commit-prefix conventions for upstream PR pipeline; fork takes no PRs), `Development.md` (upstream submodule + GH Pages deploy flow), `ReleaseInstructions.md` (referenced deleted `npm run version-bump` and `CHANGES.md`), and `docs/versions/{3,4,5,6}.0.0.md` (upstream historical version notes; fork started at v7.4.1). README repo-layout table updated to reflect surviving `docs/tutorials/`. `FrequentlyAskedQuestions.md` "How can I help?" Q&A removed (linked to deleted `Testing.md` + `ReleaseInstructions.md`).
+
 ### Changed (README)
 - `docs(README): rewrite for fork — drop upstream branding` — Per scope directive §1. Replaced upstream README content (Netlify deploy links, npm publish flow, CodeQL/Snyk badges, `svg-edit.github.io` logo, "we want contributors" sections, Sample-React-extension instructions) with fork-appropriate content: status banner ("personal fork, no upstream tracking"), scope-directive bullet list, run commands, repo layout table, embedding-planned section pointing at `_reference/embed-api-v6/`, credits + inherited license note. Aimed at someone landing on this repo cold and needing to know "what is this fork doing differently and how do I run it."
 
