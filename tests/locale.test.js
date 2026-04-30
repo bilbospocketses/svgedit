@@ -1,78 +1,45 @@
-import { afterEach, describe, expect, test } from 'vitest'
+import { describe, expect, test } from 'vitest'
 import { putLocale, t } from '../src/editor/locale.js'
 
-const goodLangs = ['en', 'fr', 'de']
-const originalNavigator = {
-  userLanguage: navigator.userLanguage,
-  language: navigator.language
-}
-
-const setNavigatorProp = (prop, value) => {
-  Object.defineProperty(navigator, prop, {
-    value,
-    configurable: true,
-    writable: true
-  })
-}
-
-const restoreNavigatorProp = (prop, value) => {
-  if (value === undefined) {
-    Reflect.deleteProperty(navigator, prop)
-    return
-  }
-  setNavigatorProp(prop, value)
-}
-
-afterEach(() => {
-  restoreNavigatorProp('userLanguage', originalNavigator.userLanguage)
-  restoreNavigatorProp('language', originalNavigator.language)
-})
-
-describe('locale loader', () => {
-  test('falls back to English when lang is not supported', async () => {
-    const result = await putLocale('xx', goodLangs)
+describe('locale shim (English-only)', () => {
+  test('putLocale resolves with langParam "en" and an i18next-compat facade', async () => {
+    const result = await putLocale()
     expect(result.langParam).toBe('en')
-    expect(t('common.ok')).toBe('OK')
+    expect(typeof result.i18next.t).toBe('function')
+    expect(typeof result.i18next.addResourceBundle).toBe('function')
   })
 
-  test('loads explicit test locale bundle', async () => {
-    const result = await putLocale('test', goodLangs)
-    expect(result.langParam).toBe('test')
+  test('t looks up dotted keys in the default bundle', () => {
     expect(t('common.ok')).toBe('OK')
+    expect(t('common.cancel')).toBe('Cancel')
     expect(t('misc.powered_by')).toBe('Powered by')
   })
 
-  test('uses navigator.userLanguage when available', async () => {
-    setNavigatorProp('userLanguage', 'fr')
-    setNavigatorProp('language', 'en-US')
-
-    const result = await putLocale('', goodLangs)
-    expect(result.langParam).toBe('fr')
-    expect(t('common.ok')).toBe('OK')
+  test('t returns the key itself for unknown paths', () => {
+    expect(t('does.not.exist')).toBe('does.not.exist')
+    expect(t('common.does_not_exist')).toBe('common.does_not_exist')
   })
 
-  test('uses navigator.language and still falls back to English for unsupported locale', async () => {
-    Reflect.deleteProperty(navigator, 'userLanguage')
-    setNavigatorProp('language', 'pt-BR')
-
-    const result = await putLocale('', goodLangs)
-    expect(result.langParam).toBe('en')
-    expect(t('common.ok')).toBe('OK')
+  test('t interpolates {{var}} placeholders when vars are passed', () => {
+    expect(t('notification.saveFromBrowser', { type: 'SVG' }))
+      .toContain('SVG')
+    expect(t('config.pick_paint_opavity', { newValue: 'Stroke' }))
+      .toBe('Pick a Stroke Paint and Opacity')
   })
 
-  test('uses navigator.language with supported locale', async () => {
-    Reflect.deleteProperty(navigator, 'userLanguage')
-    setNavigatorProp('language', 'de')
-
-    const result = await putLocale('', goodLangs)
-    expect(result.langParam).toBe('de')
+  test('t leaves unmatched placeholders intact when vars are missing', () => {
+    expect(t('config.pick_paint_opavity'))
+      .toBe('Pick a {{newValue}} Paint and Opacity')
   })
 
-  test('uses explicit lang parameter over navigator', async () => {
-    setNavigatorProp('userLanguage', 'de')
-    setNavigatorProp('language', 'de')
+  test('t supports namespace lookups via "ns:key" after addResourceBundle', async () => {
+    const { i18next } = await putLocale()
+    i18next.addResourceBundle('en', 'demo', { greet: 'Hello {{who}}' })
+    expect(t('demo:greet', { who: 'World' })).toBe('Hello World')
+  })
 
-    const result = await putLocale('en', goodLangs)
-    expect(result.langParam).toBe('en')
+  test('t passes non-string keys through (defensive)', () => {
+    expect(t(42)).toBe(42)
+    expect(t(null)).toBe(null)
   })
 })
