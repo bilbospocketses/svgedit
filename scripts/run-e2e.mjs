@@ -1,10 +1,8 @@
 import { spawn } from 'node:child_process'
-import { copyFile, mkdir, readdir, readFile, stat } from 'node:fs/promises'
-import { join } from 'node:path'
+import { readdir, stat } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
+import { join } from 'node:path'
 
-// Always instrument the build for coverage and ensure Playwright can launch.
-process.env.COVERAGE = 'true'
 // Put Playwright browsers inside the project so CI without sudo/system cache still works.
 const playwrightCache = process.env.PLAYWRIGHT_BROWSERS_PATH ||
   join(process.cwd(), 'node_modules', '.cache', 'ms-playwright')
@@ -13,8 +11,10 @@ const sanitizedEnv = { ...process.env, PLAYWRIGHT_BROWSERS_PATH: playwrightCache
 delete sanitizedEnv.ELECTRON_RUN_AS_NODE
 delete process.env.ELECTRON_RUN_AS_NODE
 
+// shell:true on Windows so `npx`/`npm` (which are `.cmd` shims) resolve via PATHEXT.
+const isWindows = process.platform === 'win32'
 const run = (cmd, args, opts = {}) => new Promise((resolve, reject) => {
-  const child = spawn(cmd, args, { stdio: 'inherit', shell: false, env: sanitizedEnv, ...opts })
+  const child = spawn(cmd, args, { stdio: 'inherit', shell: isWindows, env: sanitizedEnv, ...opts })
   child.on('exit', code => (code === 0 ? resolve() : reject(new Error(`${cmd} exited with code ${code}`))))
   child.on('error', reject)
 })
@@ -55,20 +55,7 @@ const getLatestMtime = async (root) => {
 
 const ensureBuild = async () => {
   const distIndex = join(process.cwd(), 'dist', 'editor', 'index.html')
-  const distEditor = join(process.cwd(), 'dist', 'editor', 'Editor.js')
-
-  // Check if build exists and has coverage instrumentation
   let needsBuild = !existsSync(distIndex)
-
-  if (!needsBuild && existsSync(distEditor)) {
-    // Check if build has coverage instrumentation
-    const editorContent = await readFile(distEditor, 'utf-8')
-    const hasCoverage = editorContent.includes('__coverage__')
-    if (!hasCoverage) {
-      console.log('Existing build lacks coverage instrumentation, rebuilding...')
-      needsBuild = true
-    }
-  }
 
   if (!needsBuild) {
     const distStat = await stat(distIndex)
@@ -90,20 +77,8 @@ const ensureBuild = async () => {
   }
 }
 
-const seedNycFromVitest = async () => {
-  const vitestCoverage = join(process.cwd(), 'coverage', 'coverage-final.json')
-  if (existsSync(vitestCoverage)) {
-    const nycOutputDir = join(process.cwd(), '.nyc_output')
-    await mkdir(nycOutputDir, { recursive: true })
-    await copyFile(vitestCoverage, join(nycOutputDir, 'vitest.json'))
-  }
-}
-
 if (await hasPlaywright()) {
   await ensureBrowser()
   await ensureBuild()
-  await run('rimraf', ['.nyc_output/*'], { shell: true })
-  await seedNycFromVitest()
   await run('npx', ['playwright', 'test'])
-  await run('npx', ['nyc', 'report', '--reporter', 'text-summary', '--reporter', 'json-summary'])
 }
