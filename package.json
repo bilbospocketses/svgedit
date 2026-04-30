@@ -5,38 +5,24 @@
   "main": "dist/editor/Editor.js",
   "module": "dist/editor/Editor.js",
   "directories": {
-    "doc": "docs",
-    "example": "examples",
     "test": "test"
   },
   "engines": {
     "node": ">=20"
   },
   "workspaces": [
-    "packages/svgcanvas",
-    "packages/react-test"
+    "packages/svgcanvas"
   ],
   "scripts": {
     "lint": "standard .",
     "pretest": "npm run lint",
     "test": "vitest run --coverage && node scripts/run-e2e.mjs",
-    "build": "vite build packages/svgcanvas && vite build packages/react-test && vite build",
+    "build": "vite build packages/svgcanvas && vite build",
     "postbuild": "node scripts/copy-static.mjs && node scripts/build-extensions.mjs",
     "start": "vite dev --host --port 8000 --strictPort",
     "prestart": "echo svgedit is available at http://localhost:8000/src/editor/index.html",
     "start:iife": "npm run build && vite preview --host --port 8000 --strictPort --outDir dist/editor --open /iife-index.html",
-    "start:e2e": "vite preview --host --port 8000 --strictPort --outDir dist/editor",
-    "open-docs-no-start": "open-cli http://localhost:8000/docs/jsdoc/",
-    "open-docs": "run-p start open-docs-no-start",
-    "build-docs-remove": "rimraf \"docs/jsdoc/\"",
-    "build-docs-create": "jsdoc --pedantic -c docs/jsdoc-config.js src",
-    "build-docs": "run-s -c build-docs-remove build-docs-create",
-    "build-and-open-docs-no-start": "run-s build-docs open-docs-no-start",
-    "build-and-open-docs": "run-s build-docs open-docs",
-    "remark": "remark -q -f .",
-    "version-bump": "node scripts/version-bump.mjs",
-    "publish": "node scripts/publish.mjs",
-    "test-build": "run-s test build-docs build"
+    "start:e2e": "vite preview --host --port 8000 --strictPort --outDir dist/editor"
   },
   "repository": {
     "type": "git",
@@ -70,7 +56,7 @@
   ],
   "standard": {
     "ignore": [
-      "archive/"
+      "_reference/"
     ],
     "globals": [
       "assert",
@@ -95,14 +81,7 @@
     "@rollup/plugin-dynamic-import-vars": "2.1.5",
     "@vitest/coverage-v8": "^4.0.16",
     "jamilih": "0.63.1",
-    "jsdoc": "4.0.5",
     "jsdom": "^27.4.0",
-    "npm-run-all": "4.1.5",
-    "nyc": "17.1.0",
-    "open-cli": "8.0.0",
-    "remark-cli": "12.0.1",
-    "remark-lint-ordered-list-marker-value": "4.0.1",
-    "rimraf": "6.1.2",
     "standard": "17.1.2",
     "vite": "^7.3.1",
     "vite-plugin-istanbul": "^7.2.1",
