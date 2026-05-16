@@ -108,7 +108,7 @@ export class SeMenuItem extends HTMLElement {
     if (shortcut) {
       // register the keydown event
       document.addEventListener('keydown', (e) => {
-        // only track keyboard shortcuts for the body containing the SVG-Editor
+        // only track keyboard shortcuts for the body containing the svgedit editor
         if (e.target.nodeName !== 'BODY') return
         // normalize key
         const key = `${(e.metaKey) ? 'meta+' : ''}${(e.ctrlKey) ? 'ctrl+' : ''}${(e.shiftKey) ? 'shift+' : ''}${e.key.toUpperCase()}`

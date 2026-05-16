@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (brand sweep 2026-05-16)
+- `chore(brand): sweep remaining "SVG-Edit"/"SVG Edit" → "svgedit"` — Step 1's brand pass caught the MainMenu label + URLs + `clear.js` generator string. Manual cross-browser smoke against Step 1.5 surfaced the storage preferences dialog still using the old name. Single-commit follow-up sweep across 16 active sites:
+  - **4 user-visible strings:** storage prefs dialog body (2 occurrences in `ext-storage/locale/en.js` + duplicate in `locale/lang.en.js` `editorPreferencesMsg`), Help-menu homepage label (`editor_homepage`), storage dialog `aria-label`.
+  - **11 code / JSDoc comments:** triplicate `// only track keyboard shortcuts for the body containing the SVG-Editor` (`Editor.js`, `seButton.js`, `seMenuItem.js`); extension header comments (`ext-storage.js`, `ext-panning.js`); JSDoc in `ConfigObj.js` + `svgcanvas.js`; `EditorStartup.js` opener-signal comment; `unit-harness.html` `<title>`.
+  - **`svg-exec.js:78` reworded** (not just renamed): `// Keep SVG-Edit comment on top` → `// Keep generator comment on top`. The literal generator string in `clear.js:51` is "svgedit" since Step 1; the comment was identifying which comment-text to hoist on save — now tracks current behavior.
+  - **Out of scope:** 10 `src/editor/images/*.svg` XML attribution comments (defensible historical attribution; tracked under `todo_svgedit.md` #10).
+  - Verified: lint clean, vitest 564/564 unchanged, e2e 178 passed + 2 skipped on both browsers, build clean. No code logic touched.
+
 ### Changed (browser-compat investigation 2026-05-16)
 - `feat(test): browser-compat investigation (Step 1.5 of 5)` — Multi-browser Playwright setup + 4 regression tests verifying the 4 audit-flagged browser-bug workarounds; 5-commit PR (`feat/browser-compat-investigation`) on safety tag `pre-compat-investigation`.
   - **Multi-browser Playwright:** Added Firefox project to `playwright.config.mjs` alongside Chromium. By default all e2e tests run on both browsers (162 → 180 attempted runs after the new tests land). `scripts/run-e2e.mjs ensureBrowser()` extended to auto-install Firefox to the project-local cache via a new version-prefix-agnostic `isBrowserInstalled(prefix)` helper.

@@ -1,7 +1,7 @@
 export default {
-  message: 'By default and where supported, SVG-Edit can store your editor ' +
+  message: 'By default and where supported, svgedit can store your editor ' +
   'preferences and SVG content locally on your machine so you do not ' +
-  'need to add these back each time you load SVG-Edit. If, for privacy ' +
+  'need to add these back each time you load svgedit. If, for privacy ' +
   'reasons, you do not wish to store this information on your machine, ' +
   'you can change away from the default option below.',
   storagePrefsAndContent: 'Store preferences and SVG content locally',
