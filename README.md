@@ -42,6 +42,13 @@ npm test           # lint + vitest unit suite + Playwright e2e
 | `docs/tutorials/` | Editor / Canvas / API / Events / FAQ tutorials (legacy upstream content; revisit during TS migration) |
 | `CHANGELOG.md` | Keep a Changelog format; live source of what's changed |
 
+## Path tool keys
+
+- `Enter` — complete the path open (≥ 2 points)
+- `Esc` — cancel the path
+- Double-click — completes the path open
+- Click on first point — close the path
+
 ## Embedding (planned)
 
 The editor will be embeddable as an iframe with a documented `EMBED_API.md` surface — URL params for chrome control, a `window.svgedit.*` programmatic API, and a postMessage protocol that includes two-way theme sync between host and editor. Design is in flight; see `_reference/embed-api-v6/` for the V6-era prototype that informs the new design.

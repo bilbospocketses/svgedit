@@ -28,6 +28,19 @@ let path = null
 */
 export const init = (canvas) => {
   svgCanvas = canvas
+  document.addEventListener('keydown', (e) => {
+    if (svgCanvas.getCurrentMode() !== 'path') return
+    if (!svgCanvas.getDrawnPath()) return
+    const t = e.target
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      pathActionsMethod.finishPath()
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      pathActionsMethod.cancelPath()
+    }
+  })
 }
 
 /**
@@ -1234,6 +1247,33 @@ class PathActions {
   */
   convertPath (pth, toRel) {
     return convertPath(pth, toRel)
+  }
+
+  /**
+   * Complete the in-progress path open (NOT closed). Requires the drawn
+   * path to have at least 2 segments; no-op otherwise.
+   * @returns {void}
+   */
+  finishPath () {
+    const drawnPath = svgCanvas.getDrawnPath()
+    if (!drawnPath) return
+    if (drawnPath.pathSegList.numberOfItems < 2) return
+    const stretchy = getElement('path_stretch_line')
+    if (stretchy) stretchy.remove()
+    svgCanvas.setDrawnPath(null)
+    svgCanvas.setStarted(false)
+    this.toEditMode(drawnPath)
+  }
+
+  /**
+   * Discard the in-progress path drawing entirely. Stays in `'path'` mode
+   * so the user can start a new path immediately. Delegates to `clear()`
+   * which handles the cleanup (stretchy + element removal + grip hide).
+   * @returns {void}
+   */
+  cancelPath () {
+    if (!svgCanvas.getDrawnPath()) return
+    this.clear()
   }
 }
 
