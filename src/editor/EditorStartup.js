@@ -619,7 +619,8 @@ class EditorStartup {
         this.showSaveWarning = false
       }
 
-      // showSaveWarning is set to 'false' when the page is saved.
+      // showSaveWarning is cleared by Editor.markSaved(), called from save
+      // extensions (ext-opensave) after the document is successfully persisted.
       if (!this.configObj.curConfig.no_save_warning && this.showSaveWarning) {
       // Browser already asks question about closing the page
         e.returnValue = this.i18next.t('notification.unsavedChanges') // Firefox needs this when beforeunload set by addEventListener (even though message is not used)

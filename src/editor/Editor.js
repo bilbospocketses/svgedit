@@ -374,6 +374,17 @@ class Editor extends EditorStartup {
   }
 
   /**
+   * Clear the unsaved-changes warning. Called by save extensions after the
+   * document has been successfully persisted (e.g., ext-opensave after
+   * `fileSave` resolves). Any subsequent edit re-arms the warning via
+   * the `elementChanged` handler.
+   * @returns {void}
+   */
+  markSaved () {
+    this.showSaveWarning = false
+  }
+
+  /**
    *  @lends module:SVGEditor~Actions */
   /**
    * editor shortcuts init
