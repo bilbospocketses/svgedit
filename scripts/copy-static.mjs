@@ -11,8 +11,6 @@ const targets = [
   ['src/editor/index.html', 'index.html'],
   ['src/editor/xdomain-index.html', 'xdomain-index.html'],
   ['src/editor/iife-index.html', 'iife-index.html'],
-  ['src/editor/browser-not-supported.html', 'browser-not-supported.html'],
-  ['src/editor/browser-not-supported.js', 'browser-not-supported.js'],
   ['src/editor/svgedit.css', 'svgedit.css'],
   ['src/editor/images', 'images'],
   ['src/editor/components/jgraduate/images', 'components/jgraduate/images'],
