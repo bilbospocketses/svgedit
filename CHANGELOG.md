@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (pre-migration audit 2026-05-16)
+- `docs(audit): comprehensive pre-migration codebase audit` — Big-bang exhaustive walk through 102 files across 9 areas (canvas core, editor UI, web components, extensions, scripts, packages, tests, vendored libs, build/config). Per user directive: "no quick fixes, as thorough as we can be to make sure we get it all on the first run, regardless of how long that takes." Output `docs/AUDIT_2026-05-16.md` captures: per-area verdicts (99 KEEP / 2 DELETE / 1 REVIVE), 11 real bugs surfaced (cmenuDialog `screen.*` typo, three missing `super.attributeChangedCallback`, contextmenu `appendChild(string)`, Editor.js i18n typo, two LayersPanel UI bugs, two jQuery.jPicker jQuery-on-DOM misuses, seExplorerButton HTML syntax + dead XMLHttpRequest, seZoom stray CSS semicolon, ext-overview_window `evt.originalEvent`), migration architectural decisions (PathDataListShim already covers `pathSegList`; 8 `createSVGPathSeg*` direct calls in `path-actions.js` need refactor to `setPathData` before `pathseg` can be dropped; jgraduate stack disposition deferred to elix→Lit brainstorming; multi-unit mode dropped as out-of-scope; HTML-in-foreignObject promoted to new authoring feature; MathML/Optimistik dropped), embed-API design inputs (12 candidate surfaces), naming consistency cleanup list, full decisions log. 99 KEEP / 2 DELETE (`browser-not-supported`, `ext-helloworld`) / 1 REVIVE (`ext-overview_window`). Drives the JS→TS migration brainstorm (#2 in backlog) and the elix→Lit migration brainstorm (#3).
+
 ### Added
 - `CHANGELOG.md` (this file).
 - `_reference/embed-api-v6/` — preserved V6-era embed API source as design input for the upcoming V7+ embed API.
