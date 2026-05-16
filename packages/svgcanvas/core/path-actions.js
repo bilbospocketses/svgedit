@@ -412,7 +412,6 @@ class PathActions {
         svgCanvas.removePath_(id)
 
         const newpath = getElement(id)
-        let newseg
         let sSeg
         const len = seglist.numberOfItems
         // if we clicked on an existing point, then we are done this path, commit it
@@ -428,13 +427,13 @@ class PathActions {
             const absY = seglist.getItem(0).y
 
             sSeg = stretchy.pathSegList.getItem(1)
-            newseg = sSeg.pathSegType === 4
-              ? drawnPath.createSVGPathSegLinetoAbs(absX, absY)
-              : drawnPath.createSVGPathSegCurvetoCubicAbs(absX, absY, sSeg.x1 / zoom, sSeg.y1 / zoom, absX, absY)
+            const newEntry = sSeg.pathSegType === 4
+              ? { type: 'L', values: [absX, absY] }
+              : { type: 'C', values: [sSeg.x1 / zoom, sSeg.y1 / zoom, absX, absY, absX, absY] }
 
-            const endseg = drawnPath.createSVGPathSegClosePath()
-            seglist.appendItem(newseg)
-            seglist.appendItem(endseg)
+            const data = drawnPath.getPathData()
+            data.push(newEntry, { type: 'Z', values: [] })
+            drawnPath.setPathData(data)
           } else if (len < 3) {
             keep = false
             return keep
@@ -483,18 +482,14 @@ class PathActions {
 
           // Use the segment defined by stretchy
           sSeg = stretchy.pathSegList.getItem(1)
-          newseg = sSeg.pathSegType === 4
-            ? drawnPath.createSVGPathSegLinetoAbs(svgCanvas.round(x), svgCanvas.round(y))
-            : drawnPath.createSVGPathSegCurvetoCubicAbs(
-              svgCanvas.round(x),
-              svgCanvas.round(y),
-              sSeg.x1 / zoom,
-              sSeg.y1 / zoom,
-              sSeg.x2 / zoom,
-              sSeg.y2 / zoom
-            )
-
-          drawnPath.pathSegList.appendItem(newseg)
+          const rx = svgCanvas.round(x)
+          const ry = svgCanvas.round(y)
+          const nextEntry = sSeg.pathSegType === 4
+            ? { type: 'L', values: [rx, ry] }
+            : { type: 'C', values: [sSeg.x1 / zoom, sSeg.y1 / zoom, sSeg.x2 / zoom, sSeg.y2 / zoom, rx, ry] }
+          const data = drawnPath.getPathData()
+          data.push(nextEntry)
+          drawnPath.setPathData(data)
 
           x *= zoom
           y *= zoom
@@ -1023,18 +1018,16 @@ class PathActions {
 
     if (openPt !== false) {
       // Close this path
-
-      // Create a line going to the previous "M"
-      const newseg = elem.createSVGPathSegLinetoAbs(startItem.x, startItem.y)
-
-      const closer = elem.createSVGPathSegClosePath()
+      const data = elem.getPathData()
+      const lineEntry = { type: 'L', values: [startItem.x, startItem.y] }
+      const closeEntry = { type: 'Z', values: [] }
       if (openPt === path.segs.length - 1) {
-        list.appendItem(newseg)
-        list.appendItem(closer)
+        data.push(lineEntry, closeEntry)
       } else {
-        list.insertItemBefore(closer, openPt)
-        list.insertItemBefore(newseg, openPt)
+        // Insert lineEntry then closeEntry at openPt (preserves original order)
+        data.splice(openPt, 0, lineEntry, closeEntry)
       }
+      elem.setPathData(data)
 
       path.init().selectPt(openPt + 1)
       return
@@ -1229,8 +1222,9 @@ class PathActions {
         const prev = segList.getItem(i - 1)
         if (prev.x !== lastM.x || prev.y !== lastM.y) {
           // Add an L segment here
-          const newseg = elem.createSVGPathSegLinetoAbs(lastM.x, lastM.y)
-          segList.insertItemBefore(newseg, i)
+          const data = elem.getPathData()
+          data.splice(i, 0, { type: 'L', values: [lastM.x, lastM.y] })
+          elem.setPathData(data)
           // Can this be done better?
           pathActionsMethod.fixEnd(elem)
           break

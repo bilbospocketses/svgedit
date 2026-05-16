@@ -7,8 +7,12 @@
  * @copyright 2010 Alexis Deveria, 2010 Pavol Rusnak, 2010 Jeff Schiller, 2021 OptimistikSAS
  *
  */
-import 'pathseg' // SVGPathSeg Polyfill (see https://github.com/progers/pathseg)
-
+// SVG 2 getPathData/setPathData polyfill. Not yet natively supported in shipping
+// browsers as of this writing -- the polyfill installs on SVGPathElement.prototype
+// before any other import touches path elements. Enables the PathDataListShim in
+// core/path-method.js to install pathSegList delegation, which core/path-actions.js
+// relies on.
+import 'path-data-polyfill'
 import Paint from './core/paint.js'
 import * as pathModule from './core/path.js'
 import * as history from './core/history.js'
