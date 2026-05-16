@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (coords.js Firefox closepath 2026-05-16)
+- `fix(coords): handle uppercase 'Z' closepath + emit closepath in newPathData` — Fixes the Firefox-only crash logged as `test.fixme` during Step 1.5 (todo #10). Two independent bugs in `packages/svgcanvas/core/coords.js`:
+  - **Read side (line 314):** `pathMap.indexOf(seg.type)` returned -1 for Firefox's native `getPathData()` segments with `seg.type === 'Z'` (literal source-case letter), because `pathMap` only contained lowercase `'z'`. The `continue` left a hole in `changes.d[]`, causing `seg is undefined` at line 384. Fix: normalize `'Z'` → `'z'` before the indexOf lookup (SVG spec treats Z and z as equivalent for closepath — no operands, no absolute/relative distinction).
+  - **Write side (switch at line 439):** the switch building `newPathData` had no `case 1` for closepath, so closepath segments were silently dropped from `newPathData`. On Chromium this was harmless (no `setPathData` support → only `setAttribute('d', dstr)` runs and `dstr` correctly has `z`). On Firefox, `setPathData(newPathData)` re-serializes the d attribute and dropped the closepath, producing visually broken open paths from previously-closed shapes. Fix: add `case 1: newPathData.push({ type: letter, values: [] })`.
+- **Test side cleanup:** removed the 2 `test.fixme(browserName === 'firefox', ...)` markers from `tests/e2e/unit/svgcore-{remap,recalculate}-extra.spec.js`. Also made path-d assertions in those tests format-tolerant — Firefox's native `setPathData` re-serializes with space separators (`M 3 -1 L 8 ...`) while Chromium preserves the comma/concise format svgedit writes (`M3,-1 L8,-1 ...`). Both are valid SVG path data syntax; tests now normalize to a canonical form before asserting key segments.
+- Final e2e baseline: **180 passed, 0 skipped** on 180 attempted (Chromium 90 + Firefox 90). Vitest 564/564 unchanged. Lint clean.
+
 ### Changed (brand sweep 2026-05-16)
 - `chore(brand): sweep remaining "SVG-Edit"/"SVG Edit" → "svgedit"` — Step 1's brand pass caught the MainMenu label + URLs + `clear.js` generator string. Manual cross-browser smoke against Step 1.5 surfaced the storage preferences dialog still using the old name. Single-commit follow-up sweep across 16 active sites:
   - **4 user-visible strings:** storage prefs dialog body (2 occurrences in `ext-storage/locale/en.js` + duplicate in `locale/lang.en.js` `editorPreferencesMsg`), Help-menu homepage label (`editor_homepage`), storage dialog `aria-label`.

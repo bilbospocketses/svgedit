@@ -201,10 +201,7 @@ test.describe('SVG core recalculate extra cases', () => {
     expect(result.clip.transforms).toBe(0)
   })
 
-  test('recalculateDimensions remaps polygons and matrix transforms', async ({ page, browserName }) => {
-    // Chrome avoids the bug because it lacks native getPathData() and falls back to the
-    // pathSegList polyfill (numeric segment types); Firefox hits it via native getPathData().
-    test.fixme(browserName === 'firefox', 'Firefox: coords.js getPathData() branch skips uppercase Z segments, leaving holes in changes.d[]. See todo_svgedit.md #10.')
+  test('recalculateDimensions remaps polygons and matrix transforms', async ({ page }) => {
     const result = await page.evaluate(() => {
       const NS = 'http://www.w3.org/2000/svg'
       const { utilities, coords, recalculate } = window.svgHarness
@@ -300,7 +297,12 @@ test.describe('SVG core recalculate extra cases', () => {
     expect(result.poly.hasTransform).toBe(false)
     expect(result.poly.points).toContain('-5')
     expect(result.poly.hasCommand).toBe(true)
-    expect(result.path.d.startsWith('M7,8')).toBe(true)
+    // Normalize cross-browser path-d format (see note in svgcore-remap-extra.spec.js)
+    const normalizedPathD = result.path.d
+      .replace(/([MmLlHhVvCcSsQqTtAaZz])\s+/g, '$1')
+      .replace(/[,\s]+/g, ' ')
+      .trim()
+    expect(normalizedPathD.startsWith('M7 8')).toBe(true)
     expect(result.path.transform).toBe('')
     expect(result.path.hasCommand).toBe(true)
     expect(result.rect.x).toBe('1')

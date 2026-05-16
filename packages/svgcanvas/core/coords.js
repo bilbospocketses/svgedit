@@ -310,7 +310,11 @@ export const remapElement = (selected, changes, m) => {
         const pathDataSegments = selected.getPathData()
         for (let i = 0; i < len; ++i) {
           const seg = pathDataSegments[i]
-          const t = seg.type
+          // Normalize 'Z' -> 'z': pathMap only contains lowercase 'z' (SVG spec
+          // treats Z and z as equivalent for closepath -- no operands, no
+          // absolute/relative distinction), but Firefox's native getPathData()
+          // returns the literal letter as written in the source path.
+          const t = seg.type === 'Z' ? 'z' : seg.type
           const type = pathMap.indexOf(t)
           if (type === -1) continue
           const values = seg.values || []
@@ -437,6 +441,9 @@ export const remapElement = (selected, changes, m) => {
         const letter = pathMap[type]
         dstr += letter
         switch (type) {
+          case 1: // closepath (z) -- no operands
+            newPathData.push({ type: letter, values: [] })
+            break
           case 13: // relative horizontal line (h)
           case 12: // absolute horizontal line (H)
             dstr += `${seg.x} `
