@@ -244,12 +244,18 @@ export default {
               extensions: ['.svg']
             })
           }
-          svgEditor.topPanel.updateTitle(handle.name)
+          // browser-fs-access returns null on Firefox's download fallback (no
+          // File System Access API support); returns a FileSystemFileHandle on
+          // Chromium. Save succeeded either way -- clear the dirty flag first
+          // so a null handle doesn't skip it via TypeError on handle.name.
           svgEditor.markSaved()
-          svgCanvas.runExtensions('onSavedDocument', {
-            name: handle.name,
-            kind: handle.kind
-          })
+          if (handle) {
+            svgEditor.topPanel.updateTitle(handle.name)
+            svgCanvas.runExtensions('onSavedDocument', {
+              name: handle.name,
+              kind: handle.kind
+            })
+          }
         } catch (err) {
           if (err.name !== 'AbortError') {
             return console.error(err)

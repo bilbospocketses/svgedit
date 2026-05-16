@@ -52,15 +52,43 @@ export const t = (key, vars) => {
 }
 
 /**
+ * Recursive deep-merge of plain-object trees. Arrays and primitives at
+ * any depth replace the corresponding target value rather than concat/merging.
+ * Used by `addResourceBundle` so extension-loaded translation bundles
+ * augment the base bundle without clobbering sibling namespaces.
+ */
+const deepMerge = (target, source) => {
+  if (target == null || typeof target !== 'object') return source
+  if (source == null || typeof source !== 'object') return target
+  const result = { ...target }
+  for (const [key, value] of Object.entries(source)) {
+    const targetVal = result[key]
+    const bothObjects = (
+      value !== null && typeof value === 'object' && !Array.isArray(value) &&
+      targetVal !== null && typeof targetVal === 'object' && !Array.isArray(targetVal)
+    )
+    result[key] = bothObjects ? deepMerge(targetVal, value) : value
+  }
+  return result
+}
+
+/**
  * Compatibility facade for code that still references `svgEditor.i18next`.
  * Implements only the surface used by the editor shell + extensions:
  * `.t()` for lookups and `.addResourceBundle()` for extension-locale
  * registration.
+ *
+ * `addResourceBundle` does a deep merge into the existing namespace bundle
+ * rather than a flat overwrite, matching the semantics extensions expect
+ * when they call `addResourceBundle(lang, ns, dict, deep=true, overwrite=true)`.
+ * The pre-fix flat overwrite caused the FIRST extension to load its
+ * translations to clobber the entire bundle for that namespace, leaving
+ * other consumers (e.g., the storage prefs dialog) with raw key text.
  */
 const i18nextFacade = {
   t,
   addResourceBundle (_lang, ns, dict) {
-    bundles[ns] = dict
+    bundles[ns] = deepMerge(bundles[ns] || {}, dict)
   }
 }
 
