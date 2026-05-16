@@ -75,7 +75,7 @@ template.innerHTML = `
     margin-top: 2px;
   }
   #options-container {
-    position:fixed
+    position:fixed;
     display:flex;
     flex-direction:column;
     background-color:var(--icon-bg-color);

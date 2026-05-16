@@ -130,7 +130,7 @@ export class ExplorerButton extends HTMLElement {
         <img class="button-icon" src="explorer.svg" alt="icon">
         <div class="handle"></div>
       </div>
-      <div class="image-lib"">
+      <div class="image-lib">
         <se-button></se-button>
      </div>
       <div class="menu">
