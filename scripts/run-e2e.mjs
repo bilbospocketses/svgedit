@@ -30,10 +30,23 @@ const hasPlaywright = async () => {
   }
 }
 
+const isBrowserInstalled = async (prefix) => {
+  if (!existsSync(playwrightCache)) return false
+  try {
+    const entries = await readdir(playwrightCache)
+    return entries.some(name => name.startsWith(prefix + '-'))
+  } catch {
+    return false
+  }
+}
+
 const ensureBrowser = async () => {
-  // Download Chromium to the project cache if it's missing.
-  if (!existsSync(playwrightCache)) {
+  // Download browsers to the project cache if any are missing.
+  if (!(await isBrowserInstalled('chromium'))) {
     await run('npx', ['playwright', 'install', 'chromium'])
+  }
+  if (!(await isBrowserInstalled('firefox'))) {
+    await run('npx', ['playwright', 'install', 'firefox'])
   }
 }
 
