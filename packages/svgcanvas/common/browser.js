@@ -17,17 +17,6 @@ class BrowserDetector {
   #cachedResults = new Map()
 
   /**
-   * Detects if the browser is WebKit-based
-   * @returns {boolean}
-   */
-  get isWebkit () {
-    if (!this.#cachedResults.has('isWebkit')) {
-      this.#cachedResults.set('isWebkit', this.#userAgent.includes('AppleWebKit'))
-    }
-    return this.#cachedResults.get('isWebkit')
-  }
-
-  /**
    * Detects if the browser is Gecko-based
    * @returns {boolean}
    */
@@ -100,12 +89,6 @@ class BrowserDetector {
 const browser = new BrowserDetector()
 
 // Export as functions for backward compatibility
-/**
- * @function module:browser.isWebkit
- * @returns {boolean}
- */
-export const isWebkit = () => browser.isWebkit
-
 /**
  * @function module:browser.isGecko
  * @returns {boolean}

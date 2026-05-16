@@ -28,7 +28,7 @@ import {
   getTransformList
 } from './math.js'
 import { convertUnit, shortFloat, convertToNum } from './units.js'
-import { isGecko, isChrome, isWebkit } from '../common/browser.js'
+import { isChrome } from '../common/browser.js'
 import * as pathModule from './path.js'
 import { NS } from './namespaces.js'
 import * as draw from './draw.js'
@@ -500,17 +500,6 @@ const setSvgString = (xmlString, preventUndo) => {
       }
     })
 
-    // For Firefox: Put all paint elems in defs
-    if (isGecko()) {
-      const svgDefs = findDefs()
-      const findElems = content.querySelectorAll(
-        'linearGradient, radialGradient, pattern'
-      )
-      Array.prototype.forEach.call(findElems, ele => {
-        svgDefs.appendChild(ele)
-      })
-    }
-
     // Set ref element for <use> elements
 
     // TODO: This should also be done if the object is re-added through "redo"
@@ -707,20 +696,6 @@ const importSvgString = (xmlString, preserveDimension) => {
       ts = `translate(0) ${ts} translate(0)`
 
       symbol = svgCanvas.getDOMDocument().createElementNS(NS.SVG, 'symbol')
-      const defs = findDefs()
-
-      if (isGecko()) {
-        // Move all gradients into root for Firefox, workaround for this bug:
-        // https://bugzilla.mozilla.org/show_bug.cgi?id=353575
-        // TODO: Make this properly undo-able.
-        const elements = svg.querySelectorAll(
-          'linearGradient, radialGradient, pattern'
-        )
-        Array.prototype.forEach.call(elements, el => {
-          defs.appendChild(el)
-        })
-      }
-
       while (svg.firstChild) {
         const first = svg.firstChild
         symbol.append(first)
@@ -1265,13 +1240,7 @@ const removeUnusedDefElemsMethod = () => {
  * @returns {void}
  */
 const convertGradientsMethod = elem => {
-  let elems = elem.querySelectorAll('linearGradient, radialGradient')
-  if (!elems.length && isWebkit()) {
-    // Bug in webkit prevents regular *Gradient selector search
-    elems = Array.prototype.filter.call(elem.querySelectorAll('*'), curThis => {
-      return curThis.tagName.includes('Gradient')
-    })
-  }
+  const elems = elem.querySelectorAll('linearGradient, radialGradient')
   Array.prototype.forEach.call(elems, grad => {
     if (grad.getAttribute('gradientUnits') === 'userSpaceOnUse') {
       const svgContent = svgCanvas.getSvgContent()
