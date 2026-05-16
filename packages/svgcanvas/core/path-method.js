@@ -62,7 +62,7 @@ class PathDataListShim {
   _entryToSeg (entry) {
     const { type, values = [] } = entry
     const cmd = CMD_TO_TYPE[type] || CMD_TO_TYPE[type?.toUpperCase?.()]
-    const seg = { pathSegType: cmd }
+    const seg = { pathSegType: cmd, pathSegTypeAsLetter: type }
     const U = String(type).toUpperCase()
     switch (U) {
       case 'H':

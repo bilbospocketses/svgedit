@@ -517,14 +517,11 @@ export const remapElement = (selected, changes, m) => {
       })
 
       const d = dstr.trim()
+      // setAttribute('d', ...) is the authoritative write; path-data-polyfill hooks
+      // it to keep its internal cache in sync.  A subsequent setPathData() call would
+      // re-serialise in the polyfill's own whitespace-only format and overwrite the
+      // carefully comma-formatted dstr, so we do not call it here.
       selected.setAttribute('d', d)
-      if (supportsPathData) {
-        try {
-          selected.setPathData(newPathData)
-        } catch (e) {
-          // Fallback to 'd' attribute if setPathData is unavailable or throws.
-        }
-      }
       break
     }
     default:

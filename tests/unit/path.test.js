@@ -1,11 +1,18 @@
-/* globals SVGPathSeg */
-import 'pathseg'
+import 'path-data-polyfill'
 import { NS } from '../../packages/svgcanvas/core/namespaces.js'
 import * as utilities from '../../packages/svgcanvas/core/utilities.js'
 import { convertPath as convertPathActions } from '../../packages/svgcanvas/core/path-actions.js'
 import * as pathModule from '../../packages/svgcanvas/core/path.js'
 import { Path, Segment } from '../../packages/svgcanvas/core/path-method.js'
 import { init as unitsInit } from '../../packages/svgcanvas/core/units.js'
+
+// pathseg polyfill provided SVGPathSeg.PATHSEG_* numeric constants used below.
+// After the pathseg drop (Step 2 of migration), define just what this file uses.
+// Values match SVG 1.x spec: LINETO_REL=5, CURVETO_CUBIC_REL=7.
+const SVGPathSeg = {
+  PATHSEG_LINETO_REL: 5,
+  PATHSEG_CURVETO_CUBIC_REL: 7
+}
 
 describe('path', function () {
   /**

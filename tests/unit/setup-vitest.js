@@ -330,8 +330,18 @@ if (svgElementProto) {
   }
 }
 
-// Ensure pathseg polyfill can attach to prototypes.
-await import('pathseg')
+// Ensure SVG shape element constructors exist before path-data-polyfill loads.
+// path-data-polyfill accesses SVGRectElement/SVGCircleElement/etc as bare globals
+// at module-evaluation time; jsdom does not define them, so we stub them here.
+if (!win.SVGRectElement) win.SVGRectElement = win.SVGElement
+if (!win.SVGCircleElement) win.SVGCircleElement = win.SVGElement
+if (!win.SVGEllipseElement) win.SVGEllipseElement = win.SVGElement
+if (!win.SVGLineElement) win.SVGLineElement = win.SVGElement
+if (!win.SVGPolylineElement) win.SVGPolylineElement = win.SVGElement
+if (!win.SVGPolygonElement) win.SVGPolygonElement = win.SVGElement
+
+// Ensure path-data-polyfill can attach getPathData/setPathData to prototypes.
+await import('path-data-polyfill')
 
 // Add minimal chai-like helpers some legacy tests expect.
 assert.close = (actual, expected, delta, message) =>
