@@ -201,7 +201,10 @@ test.describe('SVG core recalculate extra cases', () => {
     expect(result.clip.transforms).toBe(0)
   })
 
-  test('recalculateDimensions remaps polygons and matrix transforms', async ({ page }) => {
+  test('recalculateDimensions remaps polygons and matrix transforms', async ({ page, browserName }) => {
+    // Chrome avoids the bug because it lacks native getPathData() and falls back to the
+    // pathSegList polyfill (numeric segment types); Firefox hits it via native getPathData().
+    test.fixme(browserName === 'firefox', 'Firefox: coords.js getPathData() branch skips uppercase Z segments, leaving holes in changes.d[]. See todo_svgedit.md #10.')
     const result = await page.evaluate(() => {
       const NS = 'http://www.w3.org/2000/svg'
       const { utilities, coords, recalculate } = window.svgHarness

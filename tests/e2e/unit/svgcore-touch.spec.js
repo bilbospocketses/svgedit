@@ -1,6 +1,11 @@
 import { test, expect } from '../fixtures.js'
 
 test.describe('touch event adapter', () => {
+  // Firefox desktop does not expose TouchEvent unless the browser context has
+  // touch support enabled. hasTouch: true enables touch emulation so that
+  // both TouchEvent and Touch constructors are available in page.evaluate().
+  test.use({ hasTouch: true })
+
   test.beforeEach(async ({ page }) => {
     await page.goto('/tests/unit-harness.html')
     await page.waitForFunction(() => Boolean(window.svgHarness))
