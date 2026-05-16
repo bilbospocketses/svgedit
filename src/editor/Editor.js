@@ -435,26 +435,6 @@ class Editor extends EditorStartup {
     })
   }
 
-  // parents() https://stackoverflow.com/a/12981248
-  getParents (el, parentSelector /* optional */) {
-    // If no parentSelector defined will bubble up all the way to *document*
-    if (parentSelector === undefined) {
-      parentSelector = document
-    }
-
-    const parents = []
-    let p = el.parentNode
-
-    while (p !== parentSelector) {
-      const o = p
-      parents.push(o)
-      p = o.parentNode
-    }
-    parents.push(parentSelector) // Push that parentSelector you wanted to stop at
-
-    return parents
-  }
-
   /**
    * @param {string} sel Selector to match
    * @returns {module:SVGthis.ToolButton}
