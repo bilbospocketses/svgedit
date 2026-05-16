@@ -3,7 +3,7 @@ import SvgCanvas from '@svgedit/svgcanvas'
 import { isChrome } from '@svgedit/svgcanvas/common/browser.js'
 
 const { $id, $click, convertUnit, isValidUnit } = SvgCanvas
-const homePage = 'https://github.com/SVG-Edit/svgedit'
+const homePage = 'https://github.com/bilbospocketses/svgedit'
 
 /**
  *
@@ -226,7 +226,7 @@ class MainMenu {
     // add Top panel
     const template = document.createElement('template')
     template.innerHTML = `
-    <se-menu id="main_button" label="SVG-Edit" src="logo.svg" alt="logo">
+    <se-menu id="main_button" label="svgedit" src="logo.svg" alt="logo">
         <se-menu-item id="tool_export" label="tools.export_img" src="export.svg"></se-menu-item>
         <se-menu-item id="tool_docprops" label="tools.docprops" shortcut="shift+D" src="docprop.svg"></se-menu-item>
         <se-menu-item id="tool_editor_prefs" label="config.editor_prefs" src="editPref.svg"></se-menu-item>
