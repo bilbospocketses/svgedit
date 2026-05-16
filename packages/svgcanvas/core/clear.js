@@ -48,6 +48,6 @@ export const clearSvgContentElementInit = () => {
   }
 
   // TODO: make this string optional and set by the client
-  const comment = svgCanvas.getDOMDocument().createComment(' Created with SVG-edit - https://github.com/SVG-Edit/svgedit')
+  const comment = svgCanvas.getDOMDocument().createComment(' Created with svgedit - https://github.com/bilbospocketses/svgedit')
   el.append(comment)
 }

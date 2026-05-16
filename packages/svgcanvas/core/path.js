@@ -624,7 +624,18 @@ const pathMap = [
 
 /**
  * Convert a path to one with only absolute or relative values.
- * @todo move to pathActions.js
+ *
+ * NOTE: A similarly-named `convertPath` lives in path-actions.js with a
+ * different API — that one uses `pathSegTypeAsLetter` letter-string dispatch,
+ * while this one uses numeric `pathSegType` + `pathMap` array indexing.
+ * Both are live consumers per `tests/unit/path.test.js` (which imports both
+ * and validates they produce equivalent output). The 2026-05-16 audit
+ * incorrectly classified this as a duplicate; corrected during Step 1
+ * pre-migration cleanup execution. Do NOT delete; APIs are incompatible
+ * so the two cannot be consolidated trivially.
+ *
+ * @todo Consolidating these is a real refactor, not a delete — out of scope
+ *       for the pre-migration cleanup; revisit during/after TS migration.
  * @function module:path.convertPath
  * @param {SVGPathElement} pth - the path to convert
  * @param {boolean} toRel - true of convert to relative

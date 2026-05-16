@@ -237,7 +237,7 @@ export default {
       // Fetch data storage object from svgCanvas
       const dataStorage = svgCanvas.getDataStorage()
 
-      // Query all connector elements (id startss with conn_)
+      // Query all connector elements (id starts with conn_)
       const connectors = document.querySelectorAll('[id^="conn_"]')
       // Reset connections array
       connections = []

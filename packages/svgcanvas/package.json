@@ -4,27 +4,18 @@
   "description": "SVG Canvas",
   "main": "dist/svgcanvas.js",
   "types": "svgcanvas.d.ts",
-  "author": "Narendra Sisodiya",
+  "author": "Jamie Chapman <jamie@boxtechs.com>",
   "publishConfig": {
     "access": "public"
   },
   "bugs": {
-    "url": "https://github.com/SVG-Edit/svgedit/issues"
+    "url": "https://github.com/bilbospocketses/svgedit/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SVG-Edit/svgedit.git"
+    "url": "git+https://github.com/bilbospocketses/svgedit.git"
   },
-  "homepage": "https://github.com/SVG-Edit/svgedit#readme",
-  "contributors": [
-    "Pavol Rusnak",
-    "Jeff Schiller",
-    "Vidar Hokstad",
-    "Alexis Deveria",
-    "Brett Zamir",
-    "Fabien Jacq",
-    "OptimistikSAS"
-  ],
+  "homepage": "https://github.com/bilbospocketses/svgedit#readme",
   "keywords": [
     "svg-editor",
     "javascript",

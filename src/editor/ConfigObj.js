@@ -185,8 +185,6 @@ export default class ConfigObj {
       'ext-connector',
       'ext-eyedropper',
       'ext-grid',
-      // 'ext-imagelib',
-      // 'ext-arrows',
       'ext-markers',
       // 'ext-overview_window', disabled until we fix performance issue
       'ext-panning',
@@ -361,8 +359,6 @@ export default class ConfigObj {
         if (val) {
           this.defaultPrefs[key] = String(val) // Convert to string for FF (.value fails in Webkit)
         }
-      } else if (window.widget) {
-        this.defaultPrefs[key] = window.widget.preferenceForKey(storeKey)
       } else {
         const result = document.cookie.match(
           new RegExp('(?:^|;\\s*)' + regexEscape(
