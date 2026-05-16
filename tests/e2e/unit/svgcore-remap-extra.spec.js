@@ -6,10 +6,7 @@ test.describe('SVG core remap extras', () => {
     await page.waitForFunction(() => Boolean(window.svgHarness))
   })
 
-  test('remapElement handles gradients, text/tspan and paths with snapping', async ({ page, browserName }) => {
-    // Chrome avoids the bug because it lacks native getPathData() and falls back to the
-    // pathSegList polyfill (numeric segment types); Firefox hits it via native getPathData().
-    test.fixme(browserName === 'firefox', 'Firefox: coords.js getPathData() branch skips uppercase Z segments, leaving holes in changes.d[]. See todo_svgedit.md #10.')
+  test('remapElement handles gradients, text/tspan and paths with snapping', async ({ page }) => {
     const result = await page.evaluate(() => {
       const NS = 'http://www.w3.org/2000/svg'
       const { coords, utilities, units } = window.svgHarness
@@ -137,7 +134,16 @@ test.describe('SVG core remap extras', () => {
     expect(result.rect.height).toBe('5')
     expect(result.rect.x).toBe('-10')
     expect(result.rect.y).toBe('-5')
-    expect(result.path.startsWith('M3,')).toBe(true)
-    expect(result.path).toContain('a2,6')
+    // Firefox setPathData re-serializes with space separators ("M 3 -1 L 8 ...");
+    // Chromium keeps the comma/concise format we wrote ("M3,-1 L8,-1 ..."). Both
+    // are valid SVG path data syntax. Normalize to a canonical form (letter glued
+    // to first number, single-space separators) before asserting key segments.
+    const normalized = result.path
+      .replace(/([MmLlHhVvCcSsQqTtAaZz])\s+/g, '$1')
+      .replace(/[,\s]+/g, ' ')
+      .trim()
+    expect(normalized.startsWith('M3 -1')).toBe(true)
+    expect(normalized).toContain('a2 6')
+    expect(/[zZ]\s*$/.test(normalized)).toBe(true)
   })
 })
