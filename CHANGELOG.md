@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (Firefox dirty-state on save 2026-05-16)
+- `fix(editor): clear showSaveWarning on successful save (Editor.markSaved())` — Fixes the Firefox-surfaced "unsaved changes" beforeunload warning that appeared after a successful save (todo #10). Root cause: the `showSaveWarning` dirty flag was **never reset** after save — the comment at `EditorStartup.js:622` claiming otherwise was stale from upstream. The flag was only being set (`true` in `Editor.elementChanged` on every edit) but never cleared. Both Chrome and Firefox technically had the bug; modern Chromium browsers suppress the beforeunload prompt aggressively (post-2020 security change), masking it visually — Firefox honors `e.returnValue` strictly, so only Firefox showed the warning. Fix:
+  - **`Editor.markSaved()`** — new accessor on the Editor instance that sets `showSaveWarning = false`. Centralized seam so save extensions can clear the dirty flag without reaching into internal state.
+  - **`ext-opensave.js`** — calls `svgEditor.markSaved()` after `fileSave` resolves successfully (before `runExtensions('onSavedDocument', ...)`). Both `'save'` and `'saveas'` paths go through the same code, so both flows clear the flag. Save-cancellation (AbortError) doesn't clear the flag — dirty state is preserved as expected.
+  - **`saveSourceEditor` NOT touched** — that's the in-memory Source-dialog flow (saving the textarea back to canvas), not a disk save; dirty state should remain.
+  - **`EditorStartup.js:622` comment refreshed** — replaces the stale claim with an accurate description pointing at `markSaved()`.
+- **Regression test:** new `tests/e2e/firefox-dirty-state-on-save.spec.js` with 2 tests verifying the dirty-flag lifecycle (force-dirty → markSaved → assert clean → force-dirty again → assert dirty) and idempotency. Both pass on Chromium + Firefox.
+- Final e2e baseline: **184 passed, 0 skipped** (180 prior + 4 new). Vitest 564/564 unchanged. Lint clean.
+
 ### Fixed (coords.js Firefox closepath 2026-05-16)
 - `fix(coords): handle uppercase 'Z' closepath + emit closepath in newPathData` — Fixes the Firefox-only crash logged as `test.fixme` during Step 1.5 (todo #10). Two independent bugs in `packages/svgcanvas/core/coords.js`:
   - **Read side (line 314):** `pathMap.indexOf(seg.type)` returned -1 for Firefox's native `getPathData()` segments with `seg.type === 'Z'` (literal source-case letter), because `pathMap` only contained lowercase `'z'`. The `continue` left a hole in `changes.d[]`, causing `seg is undefined` at line 384. Fix: normalize `'Z'` → `'z'` before the indexOf lookup (SVG spec treats Z and z as equivalent for closepath — no operands, no absolute/relative distinction).

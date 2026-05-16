@@ -245,6 +245,7 @@ export default {
             })
           }
           svgEditor.topPanel.updateTitle(handle.name)
+          svgEditor.markSaved()
           svgCanvas.runExtensions('onSavedDocument', {
             name: handle.name,
             kind: handle.kind
