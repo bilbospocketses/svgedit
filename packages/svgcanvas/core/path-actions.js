@@ -884,20 +884,7 @@ class PathActions {
     tlist.clear()
     pth.removeAttribute('transform')
     const segList = pth.pathSegList
-
-    // Opera/win/non-EN throws an error here.
-    // TODO: Find out why!
-    // Presumed fixed in Opera 10.5, so commented out for now
-
-    // try {
     const len = segList.numberOfItems
-    // } catch(err) {
-    //   const fixed_d = pathActions.convertPath(pth);
-    //   pth.setAttribute('d', fixed_d);
-    //   segList = pth.pathSegList;
-    //   const len = segList.numberOfItems;
-    // }
-    // let lastX, lastY;
     for (let i = 0; i < len; ++i) {
       const seg = segList.getItem(i)
       const type = seg.pathSegType
@@ -1166,9 +1153,6 @@ class PathActions {
 
     // TODO: Find right way to select point now
     // path.selectPt(selPt);
-    if (window.opera) { // Opera repaints incorrectly
-      path.elem.setAttribute('d', path.elem.getAttribute('d'))
-    }
     path.endChanges('Delete path node(s)')
   }
 

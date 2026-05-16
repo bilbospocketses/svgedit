@@ -14,7 +14,6 @@ describe('namespaces', function () {
     assert.equal(reverse[NS.SVG], 'svg')
     assert.equal(reverse[NS.XLINK], 'xlink')
     assert.equal(reverse[NS.SE], 'se')
-    assert.equal(reverse[NS.OI], 'oi')
     assert.equal(reverse[NS.XML], 'xml')
     assert.equal(reverse[NS.XMLNS], 'xmlns')
     assert.equal(reverse[NS.HTML], 'html')

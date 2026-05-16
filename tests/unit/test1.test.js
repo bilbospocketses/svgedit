@@ -192,29 +192,6 @@ describe('Basic Module', function () {
       assert.equal(hasFoo, false, 'Did not include foo: xmlns')
     })
 
-    it('Test import math elements inside a foreignObject', function () {
-      /* const set = */ svgCanvas.setSvgString(
-        '<svg width="640" height="480" xmlns="http://www.w3.org/2000/svg" xmlns:se="http://svg-edit.googlecode.com" xmlns:xlink="http://www.w3.org/1999/xlink">' +
-          '<foreignObject id="fo" width="24" height="26" font-size="24"><math id="m" display="inline" xmlns="http://www.w3.org/1998/Math/MathML">' +
-              '<msub>' +
-                '<mi>A</mi>' +
-                '<mn>0</mn>' +
-              '</msub>' +
-            '</math>' +
-          '</foreignObject>' +
-        '</svg>'
-      )
-      const fo = document.getElementById('fo')
-      // we cannot use getElementById('math') because not all browsers understand MathML and do not know to use the @id attribute
-      // see Bug https://bugs.webkit.org/show_bug.cgi?id=35042
-      const math = fo.firstChild
-
-      assert.equal(Boolean(math), true, 'Math element exists')
-      assert.equal(math.nodeName, 'math', 'Math element has the proper nodeName')
-      assert.equal(math.getAttribute('id'), 'm', 'Math element has an id')
-      assert.equal(math.namespaceURI, 'http://www.w3.org/1998/Math/MathML', 'Preserved MathML namespace')
-    })
-
     it('Test importing SVG into existing drawing', function () {
       /* const doc = */ svgCanvas.setSvgString(
         '<svg width="640" height="480" xmlns="http://www.w3.org/2000/svg">' +

@@ -205,8 +205,6 @@ export default {
           }
           if (storage) {
             storage.setItem(key, val)
-          } else if (window.widget) {
-            window.widget.setPreferenceForKey(val, key)
           } else {
             val = encodeURIComponent(val)
             document.cookie =

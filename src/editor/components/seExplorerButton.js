@@ -23,7 +23,6 @@ export class ExplorerButton extends HTMLElement {
     this.$handle = this._shadowRoot.querySelector('.handle')
     this.$lib = this._shadowRoot.querySelector('.image-lib')
     this.files = []
-    this.request = new XMLHttpRequest()
     this.imgPath = svgEditor.configObj.curConfig.imgPath
 
     // Closes opened (pressed) lib menu on click on the canvas

@@ -642,7 +642,6 @@ export function jPickerMethod (elem, options, commitCallback, liveCallback, canc
   } else {
     settings.window.liveUpdate = false // Basic control binding for inline use - You will need to override the liveCallback or commitCallback function to retrieve results
   }
-  const isLessThanIE7 = Number.parseFloat(navigator.appVersion.split('MSIE')[1]) < 7 && document.body.filters // needed to run the AlphaImageLoader function for IE6
   // set color mode and update visuals for the new color mode
   /**
    *
@@ -1060,11 +1059,7 @@ export function jPickerMethod (elem, options, commitCallback, liveCallback, canc
   * @returns {void}
   */
   function setImg (img, src) {
-    if (isLessThanIE7 && (src.includes('AlphaBar.png') || src.includes('Bars.png') || src.includes('Maps.png'))) {
-      img.setAttribute('pngSrc', src)
-      img.style.backgroundImage = 'none'
-      img.style.filter = 'progid:DXImageTransform.Microsoft.AlphaImageLoader(src=\'' + src + '\', sizingMethod=\'scale\')'
-    } else img.style.backgroundImage = 'url(\'' + src + '\')'
+    img.style.backgroundImage = 'url(\'' + src + '\')'
   }
   /**
   * @param {external:jQuery} img
@@ -1082,25 +1077,9 @@ export function jPickerMethod (elem, options, commitCallback, liveCallback, canc
   function setAlpha (obj, alpha) {
     obj.style.visibility = (alpha > 0) ? 'visible' : 'hidden'
     if (alpha > 0 && alpha < 100) {
-      if (isLessThanIE7) {
-        const src = obj.getAttribute('pngSrc')
-        if (!isNullish(src) && (
-          src.includes('AlphaBar.png') || src.includes('Bars.png') || src.includes('Maps.png')
-        )) {
-          obj.style.filter = 'progid:DXImageTransform.Microsoft.AlphaImageLoader(src=\'' + src +
-          '\', sizingMethod=\'scale\') progid:DXImageTransform.Microsoft.Alpha(opacity=' + alpha + ')'
-        } else obj.style.opacity = toFixedNumeric(alpha / 100, 4)
-      } else obj.style.opacity = toFixedNumeric(alpha / 100, 4)
+      obj.style.opacity = toFixedNumeric(alpha / 100, 4)
     } else if (alpha === 0 || alpha === 100) {
-      if (isLessThanIE7) {
-        const src = obj.getAttribute('pngSrc')
-        if (!isNullish(src) && (
-          src.includes('AlphaBar.png') || src.includes('Bars.png') || src.includes('Maps.png')
-        )) {
-          obj.style.filter = 'progid:DXImageTransform.Microsoft.AlphaImageLoader(src=\'' + src +
-          '\', sizingMethod=\'scale\')'
-        } else obj.style.opacity = ''
-      } else obj.style.opacity = ''
+      obj.style.opacity = ''
     }
   }
 
@@ -1264,18 +1243,6 @@ export function jPickerMethod (elem, options, commitCallback, liveCallback, canc
     }
     container.style.display = 'block'
     attachIFrame()
-    /* switch (settings.window.effects.type) {
-    case 'fade':
-      container.fadeIn(settings.window.effects.speed.show, attachIFrame);
-      break;
-    case 'slide':
-      container.slideDown(settings.window.effects.speed.show, attachIFrame);
-      break;
-    case 'show':
-    default:
-      container.show(settings.window.effects.speed.show, attachIFrame);
-      break;
-    } */
   }
   /**
   *
@@ -1293,18 +1260,6 @@ export function jPickerMethod (elem, options, commitCallback, liveCallback, canc
     }
     container.style.display = 'none'
     removeIFrame()
-    /* switch (settings.window.effects.type) {
-    case 'fade':
-      container.fadeOut(settings.window.effects.speed.hide, removeIFrame);
-      break;
-    case 'slide':
-      container.slideUp(settings.window.effects.speed.hide, removeIFrame);
-      break;
-    case 'show':
-    default:
-      container.hide(settings.window.effects.speed.hide, removeIFrame);
-      break;
-    } */
   }
   /**
   *
