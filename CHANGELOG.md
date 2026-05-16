@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (browser-compat investigation 2026-05-16)
+- `feat(test): browser-compat investigation (Step 1.5 of 5)` — Multi-browser Playwright setup + 4 regression tests verifying the 4 audit-flagged browser-bug workarounds; 5-commit PR (`feat/browser-compat-investigation`) on safety tag `pre-compat-investigation`.
+  - **Multi-browser Playwright:** Added Firefox project to `playwright.config.mjs` alongside Chromium. By default all e2e tests run on both browsers (162 → 180 attempted runs after the new tests land). `scripts/run-e2e.mjs ensureBrowser()` extended to auto-install Firefox to the project-local cache via a new version-prefix-agnostic `isBrowserInstalled(prefix)` helper.
+  - **Existing-test Firefox failures:** 4 surfaced when Firefox was first added. 2 fixed as test-infra quirks (`tests/e2e/unit/svgcore-touch.spec.js` — added `test.use({ hasTouch: true })` so Firefox desktop exposes `TouchEvent`/`Touch` constructors in `page.evaluate`). 2 marked `test.fixme(browserName === 'firefox', ...)` for a confirmed source bug: `packages/svgcanvas/core/coords.js` `getPathData()` branch skips uppercase `'Z'` segments because `pathMap` only contains lowercase `'z'`, leaving holes in `changes.d[]` that crash at coords.js:384. Chrome avoids it via the pathSegList polyfill (numeric segment types). Logged to `todo_svgedit.md` #10 as a follow-up correctness fix.
+  - **4 new browser-compat tests** in `tests/e2e/browser-compat-*.spec.js` (9 tests total, all pass on both browsers WITH and WITHOUT the workarounds in place — that's the verification):
+    - `canvasbg-overflow` (Site 1: `select.js:423` — Chrome 7 zoom-out overflow bug)
+    - `gradient-detect` (Site 2: `svg-exec.js` `convertGradientsMethod` — WebKit `*Gradient` selector fallback)
+    - `import-gradients` (Site 3: `svg-exec.js:503-512` — Firefox 353575 root-level gradients/patterns)
+    - `import-symbol-gradients` (Site 4: `svg-exec.js:712-722` — Firefox 353575 inside `<symbol>`)
+  - **Workaround outcomes (per site):**
+    - Site 1: **DROPPED** — `overflow: 'visible'` hardcoded; 4/4 tests pass on Chromium + Firefox without the `isWebkit()` ternary.
+    - Site 2: **DROPPED** — `querySelectorAll('linearGradient, radialGradient')` works directly on both browsers; the WebKit `*Gradient` tagName fallback is no longer needed.
+    - Site 3: **DROPPED** — Firefox 353575 no longer reproduces; root-level gradients/patterns/radialGradients render correctly without being moved into `<defs>`.
+    - Site 4: **DROPPED** — same as Site 3 for the symbol/use import path. Orphaned `const defs = findDefs()` local removed alongside the deleted block.
+  - **`isWebkit()` in `packages/svgcanvas/common/browser.js`: DROPPED entirely** — getter + export both removed; grep confirms zero remaining consumers in active code. Dead `isWebkit` import dropped from `select.js`.
+  - **`isGecko()` KEPT** — 3 unrelated consumers in `selected-elem.js` + `undo.js` (separate Firefox workarounds NOT in Step 1.5 scope). Dead `isGecko` import dropped from `svg-exec.js` (both 353575 sites in that file are now gone).
+  - **Net source change:** -49 lines across `select.js`, `svg-exec.js`, `common/browser.js` (4 workaround drops + helper removal + orphan-local cleanup + import tidy).
+  - Final e2e baseline: Chromium 90 + Firefox 88 passing + 2 fixme skipped = 180 attempted, 178 passed, 0 failed. Vitest 564/564 unchanged. Lint clean.
+
 ### Changed (pre-migration cleanup 2026-05-16)
 - `chore: pre-migration cleanup (Step 1 of 5)` — Mechanical execution of `docs/AUDIT_2026-05-16.md` § "Pre-migration deletions" + § "Brand / attribution updates" + two verify-then-delete duplicate purges, plus three textual fixes folded from todo #10. 8 commits across one PR (`feat/pre-migration-cleanup`).
   - **Deletions:** `src/editor/browser-not-supported.{js,html}` (dead universal-SVG-support check); `src/editor/extensions/ext-helloworld/` extension (tutorial/demo, no product value); `window.widget` KaiOS/Apple-Dashboard branches in `ConfigObj.js` + `ext-storage.js`; IE6 detection + filters in `jQuery.jPicker.js`; commented-out jQuery effects in `jQuery.jPicker.js`; Opera-bug commented block + `if (window.opera)` branch in `path-actions.js`; MathML allowlist (31 entries) + Optimistik `oi:` namespace handling in `sanitize.js`; dead `XMLHttpRequest` in `seExplorerButton.js`; commented-out namespaces (SODIPODI/INKSCAPE/RDF/OSB/CC/DC) in `namespaces.js`.

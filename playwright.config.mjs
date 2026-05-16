@@ -1,4 +1,4 @@
-import { defineConfig } from '@playwright/test'
+import { defineConfig, devices } from '@playwright/test'
 
 export default defineConfig({
   testDir: 'tests/e2e',
@@ -16,5 +16,15 @@ export default defineConfig({
     url: 'http://localhost:8000/index.html',
     reuseExistingServer: !process.env.CI,
     timeout: 180 * 1000
-  }
+  },
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] }
+    },
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] }
+    }
+  ]
 })

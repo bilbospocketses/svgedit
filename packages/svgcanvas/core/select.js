@@ -6,7 +6,6 @@
  * @copyright 2010 Alexis Deveria, 2010 Jeff Schiller
  */
 
-import { isWebkit } from '../common/browser.js'
 import { getRotationAngle, getBBox, getStrokedBBox } from './utilities.js'
 import { transformListToTransform, transformBox, transformPoint, matrixMultiply, getTransformList } from './math.js'
 import { NS } from './namespaces'
@@ -420,7 +419,7 @@ export class SelectorManager {
         height,
         x: 0,
         y: 0,
-        overflow: (isWebkit() ? 'none' : 'visible'), // Chrome 7 has a problem with this when zooming out
+        overflow: 'visible',
         style: 'pointer-events:none'
       }
     })
