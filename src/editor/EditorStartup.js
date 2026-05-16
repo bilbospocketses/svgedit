@@ -14,7 +14,7 @@ import Rulers from './Rulers.js'
    * @returns {void}
    */
 const readySignal = () => {
-  // let the opener know SVG Edit is ready (now that config is set up)
+  // let the opener know svgedit is ready (now that config is set up)
   const w = window.opener || window.parent
   if (w) {
     try {

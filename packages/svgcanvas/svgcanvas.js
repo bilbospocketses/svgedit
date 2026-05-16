@@ -1206,8 +1206,8 @@ class SvgCanvas {
 
   /**
    * This function determines whether to use a nonce in the prefix, when
-   * generating IDs for future documents in SVG-Edit.
-   * If you're controlling SVG-Edit externally, and want randomized IDs, call
+   * generating IDs for future documents in svgedit.
+   * If you're controlling svgedit externally, and want randomized IDs, call
    * this BEFORE calling `svgCanvas.setSvgString`.
    * @function module:svgcanvas.SvgCanvas#randomizeIds
    * @param {boolean} [enableRandomization] If true, adds a nonce to the prefix. Thus

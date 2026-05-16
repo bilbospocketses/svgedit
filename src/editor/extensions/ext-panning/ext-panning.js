@@ -7,7 +7,7 @@
  *
  */
 /*
-  This is a very basic SVG-Edit extension to let tablet/mobile devices pan without problem
+  This is a very basic svgedit extension to let tablet/mobile devices pan without problem
 */
 
 const name = 'panning'

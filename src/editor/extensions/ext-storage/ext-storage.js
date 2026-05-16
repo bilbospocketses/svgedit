@@ -5,7 +5,7 @@
  *  page unload (which can later be automatically retrieved upon future
  *  editor loads).
  *
- *  The functionality was originally part of the SVG Editor, but moved to a
+ *  The functionality was originally part of the svgedit editor, but moved to a
  *  separate extension to make the setting behavior optional, and adapted
  *  to inform the user of its setting of local data.
  *

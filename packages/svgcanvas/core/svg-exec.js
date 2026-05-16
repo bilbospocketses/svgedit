@@ -75,7 +75,7 @@ const svgCanvasToString = () => {
 
   svgCanvas.pathActions.clear(true)
 
-  // Keep SVG-Edit comment on top
+  // Keep generator comment on top
   const childNodesElems = svgCanvas.getSvgContent().childNodes
   childNodesElems.forEach((node, i) => {
     if (i && node.nodeType === 8 && node.data.includes('Created with')) {
