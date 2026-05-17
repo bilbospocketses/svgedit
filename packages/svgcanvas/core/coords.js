@@ -435,24 +435,20 @@ export const remapElement = (selected, changes, m) => {
       }
 
       let dstr = ''
-      const newPathData = []
       changes.d.forEach(seg => {
         const { type } = seg
         const letter = pathMap[type]
         dstr += letter
         switch (type) {
           case 1: // closepath (z) -- no operands
-            newPathData.push({ type: letter, values: [] })
             break
           case 13: // relative horizontal line (h)
           case 12: // absolute horizontal line (H)
             dstr += `${seg.x} `
-            newPathData.push({ type: letter, values: [seg.x] })
             break
           case 15: // relative vertical line (v)
           case 14: // absolute vertical line (V)
             dstr += `${seg.y} `
-            newPathData.push({ type: letter, values: [seg.y] })
             break
           case 3: // relative move (m)
           case 5: // relative line (l)
@@ -461,20 +457,14 @@ export const remapElement = (selected, changes, m) => {
           case 4: // absolute line (L)
           case 18: // absolute smooth quad (T)
             dstr += `${seg.x},${seg.y} `
-            newPathData.push({ type: letter, values: [seg.x, seg.y] })
             break
           case 7: // relative cubic (c)
           case 6: // absolute cubic (C)
             dstr += `${seg.x1},${seg.y1} ${seg.x2},${seg.y2} ${seg.x},${seg.y} `
-            newPathData.push({
-              type: letter,
-              values: [seg.x1, seg.y1, seg.x2, seg.y2, seg.x, seg.y]
-            })
             break
           case 9: // relative quad (q)
           case 8: // absolute quad (Q)
             dstr += `${seg.x1},${seg.y1} ${seg.x},${seg.y} `
-            newPathData.push({ type: letter, values: [seg.x1, seg.y1, seg.x, seg.y] })
             break
           case 11: // relative elliptical arc (a)
           case 10: // absolute elliptical arc (A)
@@ -493,23 +483,10 @@ export const remapElement = (selected, changes, m) => {
               ',' +
               seg.y +
               ' '
-            newPathData.push({
-              type: letter,
-              values: [
-                seg.r1,
-                seg.r2,
-                seg.angle,
-                Number(seg.largeArcFlag),
-                Number(seg.sweepFlag),
-                seg.x,
-                seg.y
-              ]
-            })
             break
           case 17: // relative smooth cubic (s)
           case 16: // absolute smooth cubic (S)
             dstr += `${seg.x2},${seg.y2} ${seg.x},${seg.y} `
-            newPathData.push({ type: letter, values: [seg.x2, seg.y2, seg.x, seg.y] })
             break
           default:
             break
@@ -517,14 +494,11 @@ export const remapElement = (selected, changes, m) => {
       })
 
       const d = dstr.trim()
+      // setAttribute('d', ...) is the authoritative write; path-data-polyfill hooks
+      // it to keep its internal cache in sync.  A subsequent setPathData() call would
+      // re-serialise in the polyfill's own whitespace-only format and overwrite the
+      // carefully comma-formatted dstr, so we do not call it here.
       selected.setAttribute('d', d)
-      if (supportsPathData) {
-        try {
-          selected.setPathData(newPathData)
-        } catch (e) {
-          // Fallback to 'd' attribute if setPathData is unavailable or throws.
-        }
-      }
       break
     }
     default:

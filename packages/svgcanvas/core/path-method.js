@@ -62,7 +62,7 @@ class PathDataListShim {
   _entryToSeg (entry) {
     const { type, values = [] } = entry
     const cmd = CMD_TO_TYPE[type] || CMD_TO_TYPE[type?.toUpperCase?.()]
-    const seg = { pathSegType: cmd }
+    const seg = { pathSegType: cmd, pathSegTypeAsLetter: type }
     const U = String(type).toUpperCase()
     switch (U) {
       case 'H':
@@ -894,12 +894,12 @@ export class Path {
     if (!seg.prev) { return }
 
     const { prev } = seg
-    let newseg; let newX; let newY
+    let newEntry; let newX; let newY
     switch (seg.item.pathSegType) {
       case 4: {
         newX = (seg.item.x + prev.item.x) / 2
         newY = (seg.item.y + prev.item.y) / 2
-        newseg = this.elem.createSVGPathSegLinetoAbs(newX, newY)
+        newEntry = { type: 'L', values: [newX, newY] }
         break
       } case 6: { // make it a curved segment to preserve the shape (WRS)
       // https://en.wikipedia.org/wiki/De_Casteljau%27s_algorithm#Geometric_interpretation
@@ -915,14 +915,16 @@ export class Path {
         const p01y = (p0y + p1y) / 2
         const p12y = (p1y + p2y) / 2
         newY = (p01y + p12y) / 2
-        newseg = this.elem.createSVGPathSegCurvetoCubicAbs(newX, newY, p0x, p0y, p01x, p01y)
+        newEntry = { type: 'C', values: [p0x, p0y, p01x, p01y, newX, newY] }
         const pts = [seg.item.x, seg.item.y, p12x, p12y, p2x, p2y]
         replacePathSegMethod(seg.type, index, pts)
         break
       }
     }
-    const list = this.elem.pathSegList
-    list.insertItemBefore(newseg, index)
+    if (!newEntry) return
+    const data = this.elem.getPathData()
+    data.splice(index, 0, newEntry)
+    this.elem.setPathData(data)
   }
 
   /**

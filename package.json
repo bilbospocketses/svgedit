@@ -63,7 +63,7 @@
     "browser-fs-access": "0.38.0",
     "elix": "15.0.1",
     "jspdf": "4.0.0",
-    "pathseg": "1.2.1",
+    "path-data-polyfill": "^1.0.10",
     "svg2pdf.js": "2.7.0"
   },
   "devDependencies": {

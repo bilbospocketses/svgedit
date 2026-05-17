@@ -1,4 +1,4 @@
-import 'pathseg'
+import 'path-data-polyfill'
 import { vi } from 'vitest'
 import { NS } from '../../packages/svgcanvas/core/namespaces.js'
 import * as draw from '../../packages/svgcanvas/core/draw.js'

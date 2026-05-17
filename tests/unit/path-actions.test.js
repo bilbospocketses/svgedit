@@ -1,4 +1,7 @@
-import 'pathseg'
+import 'path-data-polyfill'
+// path-method.js installs the PathDataListShim on SVGPathElement.prototype
+// (provides .pathSegList getter backed by path-data-polyfill getPathData/setPathData).
+import '../../packages/svgcanvas/core/path-method.js'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { init as pathActionsInit, pathActionsMethod } from '../../packages/svgcanvas/core/path-actions.js'
 import { init as utilitiesInit } from '../../packages/svgcanvas/core/utilities.js'

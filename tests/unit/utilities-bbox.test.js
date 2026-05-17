@@ -1,5 +1,5 @@
 import { strict as assert } from 'node:assert'
-import 'pathseg'
+import 'path-data-polyfill'
 
 import { NS } from '../../packages/svgcanvas/core/namespaces.js'
 import * as utilities from '../../packages/svgcanvas/core/utilities.js'

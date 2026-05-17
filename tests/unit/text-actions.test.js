@@ -1,4 +1,4 @@
-import 'pathseg'
+import 'path-data-polyfill'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { init as textActionsInit, textActionsMethod } from '../../packages/svgcanvas/core/text-actions.js'
 import { init as utilitiesInit } from '../../packages/svgcanvas/core/utilities.js'
