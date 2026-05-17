@@ -17,7 +17,7 @@ const targets = [
   ['src/editor/extensions', 'extensions'],
   // Test harness assets for Playwright (unit-style tests in browser)
   ['src/editor/tests', 'tests'],
-  ['node_modules/pathseg/pathseg.js', 'tests/vendor/pathseg/pathseg.js']
+  ['node_modules/path-data-polyfill/path-data-polyfill.js', 'tests/vendor/path-data-polyfill/path-data-polyfill.js']
 ]
 
 for (const [src, dest] of targets) {

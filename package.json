@@ -64,7 +64,6 @@
     "elix": "15.0.1",
     "jspdf": "4.0.0",
     "path-data-polyfill": "^1.0.10",
-    "pathseg": "1.2.1",
     "svg2pdf.js": "2.7.0"
   },
   "devDependencies": {
