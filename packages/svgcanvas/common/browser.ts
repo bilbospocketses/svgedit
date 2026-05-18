@@ -12,63 +12,63 @@ const NSSVG = 'http://www.w3.org/2000/svg'
  * Browser capabilities and detection object.
  * Uses modern feature detection and lazy evaluation patterns.
  */
-class BrowserDetector {
-  #userAgent = navigator.userAgent
-  #cachedResults = new Map()
+export class BrowserDetector {
+  #userAgent: string = navigator.userAgent
+  #cachedResults: Map<string, boolean> = new Map()
 
   /**
    * Detects if the browser is Gecko-based
    * @returns {boolean}
    */
-  get isGecko () {
+  get isGecko (): boolean {
     if (!this.#cachedResults.has('isGecko')) {
       this.#cachedResults.set('isGecko', this.#userAgent.includes('Gecko/'))
     }
-    return this.#cachedResults.get('isGecko')
+    return this.#cachedResults.get('isGecko') ?? false
   }
 
   /**
    * Detects if the browser is Chrome
    * @returns {boolean}
    */
-  get isChrome () {
+  get isChrome (): boolean {
     if (!this.#cachedResults.has('isChrome')) {
       this.#cachedResults.set('isChrome', this.#userAgent.includes('Chrome/'))
     }
-    return this.#cachedResults.get('isChrome')
+    return this.#cachedResults.get('isChrome') ?? false
   }
 
   /**
    * Detects if the platform is macOS
    * @returns {boolean}
    */
-  get isMac () {
+  get isMac (): boolean {
     if (!this.#cachedResults.has('isMac')) {
       this.#cachedResults.set('isMac', this.#userAgent.includes('Macintosh'))
     }
-    return this.#cachedResults.get('isMac')
+    return this.#cachedResults.get('isMac') ?? false
   }
 
   /**
    * Tests if the browser supports accurate text character positioning
    * @returns {boolean}
    */
-  get supportsGoodTextCharPos () {
+  get supportsGoodTextCharPos (): boolean {
     if (!this.#cachedResults.has('supportsGoodTextCharPos')) {
       this.#cachedResults.set('supportsGoodTextCharPos', this.#testTextCharPos())
     }
-    return this.#cachedResults.get('supportsGoodTextCharPos')
+    return this.#cachedResults.get('supportsGoodTextCharPos') ?? false
   }
 
   /**
    * Private method to test text character positioning support
    * @returns {boolean}
    */
-  #testTextCharPos () {
+  #testTextCharPos (): boolean {
     const svgroot = document.createElementNS(NSSVG, 'svg')
     const svgContent = document.createElementNS(NSSVG, 'svg')
     document.documentElement.append(svgroot)
-    svgContent.setAttribute('x', 5)
+    svgContent.setAttribute('x', '5')
     svgroot.append(svgContent)
     const text = document.createElementNS(NSSVG, 'text')
     text.textContent = 'a'
@@ -77,7 +77,7 @@ class BrowserDetector {
     try {
       const pos = text.getStartPositionOfChar(0).x
       return pos === 0
-    } catch (err) {
+    } catch {
       return false
     } finally {
       svgroot.remove()
@@ -86,32 +86,32 @@ class BrowserDetector {
 }
 
 // Create singleton instance
-const browser = new BrowserDetector()
+const browser: BrowserDetector = new BrowserDetector()
 
 // Export as functions for backward compatibility
 /**
  * @function module:browser.isGecko
  * @returns {boolean}
  */
-export const isGecko = () => browser.isGecko
+export const isGecko = (): boolean => browser.isGecko
 
 /**
  * @function module:browser.isChrome
  * @returns {boolean}
  */
-export const isChrome = () => browser.isChrome
+export const isChrome = (): boolean => browser.isChrome
 
 /**
  * @function module:browser.isMac
  * @returns {boolean}
  */
-export const isMac = () => browser.isMac
+export const isMac = (): boolean => browser.isMac
 
 /**
  * @function module:browser.supportsGoodTextCharPos
  * @returns {boolean}
  */
-export const supportsGoodTextCharPos = () => browser.supportsGoodTextCharPos
+export const supportsGoodTextCharPos = (): boolean => browser.supportsGoodTextCharPos
 
 // Export browser instance for direct access
 export default browser
