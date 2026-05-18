@@ -435,7 +435,6 @@ export const getBBox = (elem: Element): BBoxObject | null => {
         } else {
           // Check if element is child of a foreignObject
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const fo = getClosest((selected as any).parentNode, 'foreignObject') as unknown as Element[]
           if (fo.length && (fo[0] as SVGGraphicsElement | undefined)?.getBBox) {
             ret = (fo[0] as SVGGraphicsElement).getBBox()
@@ -1063,7 +1062,6 @@ export const getVisibleElements = (parentElement?: Element | null): Element[] =>
   const contentElems: Element[] = []
   if (parentElement) {
     const children = parentElement.children
-    // eslint-disable-next-line array-callback-return
     Array.from(children, elem => {
       if ((elem as SVGGraphicsElement & { getBBox?: () => SVGRect }).getBBox) {
         contentElems.push(elem)
