@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument */
+// svgCanvas is opaquely typed (typed in Task 10 C6); file-level disable matches clear.ts pattern
 /**
  * @module text-actions Tools for Text edit functions
  * @license MIT
@@ -7,22 +9,33 @@
 
 import { NS } from './namespaces.js'
 import { transformPoint, matrixMultiply, getTransformList, transformListToTransform } from './math.js'
+import type { XYObject } from './math.js'
 import {
   assignAttributes,
   getElement,
   getBBox as utilsGetBBox
 } from './utilities.js'
+import type { BBoxObject } from './utilities.js'
 import { supportsGoodTextCharPos } from '../common/browser.js'
 
-let svgCanvas = null
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let svgCanvas: any = null
 
 /**
  * @function module:text-actions.init
- * @param {module:text-actions.svgCanvas} textActionsContext
+ * @param {unknown} canvas
  * @returns {void}
  */
-export const init = canvas => {
+export const init = (canvas: unknown): void => {
   svgCanvas = canvas
+}
+
+/** Bounding data for a single character position. */
+interface CharData {
+  x: number
+  width: number
+  y?: number
+  height?: number
 }
 
 /**
@@ -32,17 +45,17 @@ export const init = canvas => {
  * @memberof module:svgcanvas.SvgCanvas#
  */
 class TextActions {
-  #curtext = null
-  #textinput = null
-  #cursor = null
-  #selblock = null
-  #blinker = null
-  #chardata = []
-  #textbb = null // , transbb;
-  #matrix = null
-  #lastX = null
-  #lastY = null
-  #allowDbl = false
+  #curtext: SVGTextElement | false | null = null
+  #textinput: HTMLInputElement | null = null
+  #cursor: Element | null = null
+  #selblock: Element | null = null
+  #blinker: ReturnType<typeof setInterval> | null = null
+  #chardata: CharData[] = []
+  #textbb: BBoxObject | null = null // , transbb;
+  #matrix: SVGMatrix | null = null
+  #lastX: number = 0
+  #lastY: number = 0
+  #allowDbl: boolean = false
 
   /**
    * Get the accumulated transformation matrix from the element up to the SVG content element.
@@ -52,18 +65,18 @@ class TextActions {
    * @returns {SVGMatrix|null} The accumulated transformation matrix, or null if none
    * @private
    */
-  #getAccumulatedMatrix = (elem) => {
-    const svgContent = svgCanvas.getSvgContent()
-    const matrices = []
+  #getAccumulatedMatrix = (elem: Element): SVGMatrix | null => {
+    const svgContent: Element = svgCanvas.getSvgContent()
+    const matrices: SVGMatrix[] = []
 
-    let current = elem
-    while (current && current !== svgContent && current.nodeType === 1) {
-      const tlist = getTransformList(current)
+    let current: Node | null = elem
+    while (current && current !== svgContent && (current).nodeType === 1) {
+      const tlist = getTransformList(current as Element)
       if (tlist && tlist.numberOfItems > 0) {
         const matrix = transformListToTransform(tlist).matrix
         matrices.unshift(matrix) // Add to beginning to maintain correct order
       }
-      current = current.parentNode
+      current = (current as Element).parentNode
     }
 
     if (matrices.length === 0) {
@@ -71,7 +84,7 @@ class TextActions {
     }
 
     if (matrices.length === 1) {
-      return matrices[0]
+      return matrices[0] ?? null
     }
 
     // Multiply all matrices together
@@ -80,28 +93,32 @@ class TextActions {
 
   /**
    *
-   * @param {Integer} index
+   * @param {number} [index]
    * @returns {void}
    * @private
    */
-  #setCursor = (index = undefined) => {
-    const empty = this.#textinput.value === ''
-    this.#textinput.focus()
+  #setCursor = (index?: number): void => {
+    const inp = this.#textinput
+    if (!inp) return
+    const empty = inp.value === ''
+    inp.focus()
 
-    if (index === undefined) {
+    let resolvedIndex = index
+    if (resolvedIndex === undefined) {
       if (empty) {
-        index = 0
+        resolvedIndex = 0
       } else {
-        if (this.#textinput.selectionEnd !== this.#textinput.selectionStart) {
+        if (inp.selectionEnd !== inp.selectionStart) {
           return
         }
-        index = this.#textinput.selectionEnd
+        resolvedIndex = inp.selectionEnd ?? 0
       }
     }
 
-    const charbb = this.#chardata[index]
+    const charbb = this.#chardata[resolvedIndex]
+    if (!charbb) return
     if (!empty) {
-      this.#textinput.setSelectionRange(index, index)
+      inp.setSelectionRange(resolvedIndex, resolvedIndex)
     }
     this.#cursor = getElement('text_cursor')
     if (!this.#cursor) {
@@ -111,18 +128,22 @@ class TextActions {
         stroke: '#333',
         'stroke-width': 1
       })
-      getElement('selectorParentGroup').append(this.#cursor)
+      getElement('selectorParentGroup')?.append(this.#cursor)
     }
 
     if (!this.#blinker) {
+      const cursorRef = this.#cursor
       this.#blinker = setInterval(() => {
-        const show = this.#cursor.getAttribute('display') === 'none'
-        this.#cursor.setAttribute('display', show ? 'inline' : 'none')
+        const show = cursorRef.getAttribute('display') === 'none'
+        cursorRef.setAttribute('display', show ? 'inline' : 'none')
       }, 600)
     }
 
-    const startPt = this.#ptToScreen(charbb.x, this.#textbb.y)
-    const endPt = this.#ptToScreen(charbb.x, this.#textbb.y + this.#textbb.height)
+    const textbb = this.#textbb
+    if (!textbb) return
+
+    const startPt = this.#ptToScreen(charbb.x, textbb.y)
+    const endPt = this.#ptToScreen(charbb.x, textbb.y + textbb.height)
 
     assignAttributes(this.#cursor, {
       x1: startPt.x,
@@ -140,20 +161,20 @@ class TextActions {
 
   /**
    *
-   * @param {Integer} start
-   * @param {Integer} end
-   * @param {boolean} skipInput
+   * @param {number} start
+   * @param {number} end
+   * @param {boolean} [skipInput]
    * @returns {void}
    * @private
    */
-  #setSelection = (start, end, skipInput) => {
+  #setSelection = (start: number, end: number, skipInput?: boolean): void => {
     if (start === end) {
       this.#setCursor(end)
       return
     }
 
     if (!skipInput) {
-      this.#textinput.setSelectionRange(start, end)
+      this.#textinput?.setSelectionRange(start, end)
     }
 
     this.#selblock = getElement('text_selectblock')
@@ -165,20 +186,24 @@ class TextActions {
         opacity: 0.5,
         style: 'pointer-events:none'
       })
-      getElement('selectorParentGroup').append(this.#selblock)
+      getElement('selectorParentGroup')?.append(this.#selblock)
     }
 
     const startbb = this.#chardata[start]
     const endbb = this.#chardata[end]
+    if (!startbb || !endbb) return
 
-    this.#cursor.setAttribute('visibility', 'hidden')
+    this.#cursor?.setAttribute('visibility', 'hidden')
 
-    const tl = this.#ptToScreen(startbb.x, this.#textbb.y)
-    const tr = this.#ptToScreen(startbb.x + (endbb.x - startbb.x), this.#textbb.y)
-    const bl = this.#ptToScreen(startbb.x, this.#textbb.y + this.#textbb.height)
+    const textbb = this.#textbb
+    if (!textbb) return
+
+    const tl = this.#ptToScreen(startbb.x, textbb.y)
+    const tr = this.#ptToScreen(startbb.x + (endbb.x - startbb.x), textbb.y)
+    const bl = this.#ptToScreen(startbb.x, textbb.y + textbb.height)
     const br = this.#ptToScreen(
       startbb.x + (endbb.x - startbb.x),
-      this.#textbb.y + this.#textbb.height
+      textbb.y + textbb.height
     )
 
     const dstr =
@@ -208,14 +233,14 @@ class TextActions {
 
   /**
    *
-   * @param {Float} mouseX
-   * @param {Float} mouseY
-   * @returns {Integer}
+   * @param {number} mouseX
+   * @param {number} mouseY
+   * @returns {number}
    * @private
    */
-  #getIndexFromPoint = (mouseX, mouseY) => {
+  #getIndexFromPoint = (mouseX: number, mouseY: number): number => {
     // Position cursor here
-    const pt = svgCanvas.getSvgRoot().createSVGPoint()
+    const pt: SVGPoint = (svgCanvas.getSvgRoot() as SVGSVGElement).createSVGPoint()
     pt.x = mouseX
     pt.y = mouseY
 
@@ -224,45 +249,49 @@ class TextActions {
       return 0
     }
     // Determine if cursor should be on left or right of character
-    let charpos = this.#curtext.getCharNumAtPosition(pt)
+    const curtext = this.#curtext as SVGTextElement
+    let charpos = curtext.getCharNumAtPosition(pt)
     if (charpos < 0) {
       // Out of text range, look at mouse coords
       charpos = this.#chardata.length - 2
-      if (mouseX <= this.#chardata[0].x) {
+      const first = this.#chardata[0]
+      if (first && mouseX <= first.x) {
         charpos = 0
       }
     } else if (charpos >= this.#chardata.length - 2) {
       charpos = this.#chardata.length - 2
     }
     const charbb = this.#chardata[charpos]
-    const mid = charbb.x + charbb.width / 2
-    if (mouseX > mid) {
-      charpos++
+    if (charbb) {
+      const mid = charbb.x + charbb.width / 2
+      if (mouseX > mid) {
+        charpos++
+      }
     }
     return charpos
   }
 
   /**
    *
-   * @param {Float} mouseX
-   * @param {Float} mouseY
+   * @param {number} mouseX
+   * @param {number} mouseY
    * @returns {void}
    * @private
    */
-  #setCursorFromPoint = (mouseX, mouseY) => {
+  #setCursorFromPoint = (mouseX: number, mouseY: number): void => {
     this.#setCursor(this.#getIndexFromPoint(mouseX, mouseY))
   }
 
   /**
    *
-   * @param {Float} x
-   * @param {Float} y
-   * @param {boolean} apply
+   * @param {number} x
+   * @param {number} y
+   * @param {boolean} [apply]
    * @returns {void}
    * @private
    */
-  #setEndSelectionFromPoint = (x, y, apply) => {
-    const i1 = this.#textinput.selectionStart
+  #setEndSelectionFromPoint = (x: number, y: number, apply?: boolean): void => {
+    const i1 = this.#textinput?.selectionStart ?? 0
     const i2 = this.#getIndexFromPoint(x, y)
 
     const start = Math.min(i1, i2)
@@ -272,17 +301,17 @@ class TextActions {
 
   /**
    *
-   * @param {Float} xIn
-   * @param {Float} yIn
-   * @returns {module:math.XYObject}
+   * @param {number} xIn
+   * @param {number} yIn
+   * @returns {XYObject}
    * @private
    */
-  #screenToPt = (xIn, yIn) => {
+  #screenToPt = (xIn: number, yIn: number): XYObject => {
     const out = {
       x: xIn,
       y: yIn
     }
-    const zoom = svgCanvas.getZoom()
+    const zoom: number = svgCanvas.getZoom()
     out.x /= zoom
     out.y /= zoom
 
@@ -297,12 +326,12 @@ class TextActions {
 
   /**
    *
-   * @param {Float} xIn
-   * @param {Float} yIn
-   * @returns {module:math.XYObject}
+   * @param {number} xIn
+   * @param {number} yIn
+   * @returns {XYObject}
    * @private
    */
-  #ptToScreen = (xIn, yIn) => {
+  #ptToScreen = (xIn: number, yIn: number): XYObject => {
     const out = {
       x: xIn,
       y: yIn
@@ -313,7 +342,7 @@ class TextActions {
       out.x = pt.x
       out.y = pt.y
     }
-    const zoom = svgCanvas.getZoom()
+    const zoom: number = svgCanvas.getZoom()
     out.x *= zoom
     out.y *= zoom
 
@@ -326,29 +355,30 @@ class TextActions {
    * @returns {void}
    * @private
    */
-  #selectAll = (evt) => {
-    this.#setSelection(0, this.#curtext.textContent.length)
-    evt.target.removeEventListener('click', this.#selectAll)
+  #selectAll = (evt: Event): void => {
+    const curtext = this.#curtext as SVGTextElement
+    this.#setSelection(0, curtext.textContent?.length ?? 0)
+    ;(evt.target as EventTarget & { removeEventListener: (type: string, listener: EventListener) => void }).removeEventListener('click', this.#selectAll)
   }
 
   /**
    *
-   * @param {Event} evt
+   * @param {MouseEvent} evt
    * @returns {void}
    * @private
    */
-  #selectWord = (evt) => {
+  #selectWord = (evt: MouseEvent): void => {
     if (!this.#allowDbl || !this.#curtext) {
       return
     }
-    const zoom = svgCanvas.getZoom()
-    const ept = transformPoint(evt.pageX, evt.pageY, svgCanvas.getrootSctm())
+    const zoom: number = svgCanvas.getZoom()
+    const ept: XYObject = transformPoint(evt.pageX, evt.pageY, svgCanvas.getrootSctm())
     const mouseX = ept.x * zoom
     const mouseY = ept.y * zoom
     const pt = this.#screenToPt(mouseX, mouseY)
 
     const index = this.#getIndexFromPoint(pt.x, pt.y)
-    const str = this.#curtext.textContent
+    const str = (this.#curtext).textContent ?? ''
     const first = str.slice(0, index).replace(/[a-z\d]+$/i, '').length
     const m = str.slice(index).match(/^[a-z\d]+/i)
     const last = (m ? m[0].length : 0) + index
@@ -358,41 +388,41 @@ class TextActions {
     svgCanvas.$click(evt.target, this.#selectAll)
 
     setTimeout(() => {
-      evt.target.removeEventListener('click', this.#selectAll)
+      ;(evt.target as EventTarget & { removeEventListener: (type: string, listener: EventListener) => void }).removeEventListener('click', this.#selectAll)
     }, 300)
   }
 
   /**
-   * @param {Element} target
-   * @param {Float} x
-   * @param {Float} y
+   * @param {SVGTextElement} target
+   * @param {number} x
+   * @param {number} y
    * @returns {void}
    */
-  select (target, x, y) {
+  select (target: SVGTextElement, x: number, y: number): void {
     this.#curtext = target
     svgCanvas.textActions.toEditMode(x, y)
   }
 
   /**
-   * @param {Element} elem
+   * @param {SVGTextElement} elem
    * @returns {void}
    */
-  start (elem) {
+  start (elem: SVGTextElement): void {
     this.#curtext = elem
     svgCanvas.textActions.toEditMode()
   }
 
   /**
-   * @param {external:MouseEvent} evt
+   * @param {MouseEvent} evt
    * @param {Element} mouseTarget
-   * @param {Float} startX
-   * @param {Float} startY
+   * @param {number} startX
+   * @param {number} startY
    * @returns {void}
    */
-  mouseDown (evt, mouseTarget, startX, startY) {
+  mouseDown (_evt: MouseEvent, _mouseTarget: Element, startX: number, startY: number): void {
     const pt = this.#screenToPt(startX, startY)
 
-    this.#textinput.focus()
+    this.#textinput?.focus()
     this.#setCursorFromPoint(pt.x, pt.y)
     this.#lastX = startX
     this.#lastY = startY
@@ -401,22 +431,22 @@ class TextActions {
   }
 
   /**
-   * @param {Float} mouseX
-   * @param {Float} mouseY
+   * @param {number} mouseX
+   * @param {number} mouseY
    * @returns {void}
    */
-  mouseMove (mouseX, mouseY) {
+  mouseMove (mouseX: number, mouseY: number): void {
     const pt = this.#screenToPt(mouseX, mouseY)
     this.#setEndSelectionFromPoint(pt.x, pt.y)
   }
 
   /**
-   * @param {external:MouseEvent} evt
-   * @param {Float} mouseX
-   * @param {Float} mouseY
+   * @param {MouseEvent} evt
+   * @param {number} mouseX
+   * @param {number} mouseY
    * @returns {void}
    */
-  mouseUp (evt, mouseX, mouseY) {
+  mouseUp (evt: MouseEvent, mouseX: number, mouseY: number): void {
     const pt = this.#screenToPt(mouseX, mouseY)
 
     this.#setEndSelectionFromPoint(pt.x, pt.y, true)
@@ -439,19 +469,19 @@ class TextActions {
   }
 
   /**
-   * @param {Integer} index
+   * @param {number} index
    * @returns {void}
    */
-  setCursor (index) {
+  setCursor (index: number): void {
     this.#setCursor(index)
   }
 
   /**
-   * @param {Float} x
-   * @param {Float} y
+   * @param {number} [x]
+   * @param {number} [y]
    * @returns {void}
    */
-  toEditMode (x, y) {
+  toEditMode (x?: number, y?: number): void {
     this.#allowDbl = false
     svgCanvas.setCurrentMode('textedit')
     svgCanvas.selectorManager.requestSelector(this.#curtext).showGrips(false)
@@ -461,14 +491,14 @@ class TextActions {
 
     svgCanvas.textActions.init()
 
-    this.#curtext.style.cursor = 'text'
+    ;(this.#curtext as SVGTextElement).style.cursor = 'text'
 
     // if (supportsEditableText()) {
     //   curtext.setAttribute('editable', 'simple');
     //   return;
     // }
 
-    if (arguments.length === 0) {
+    if (x === undefined || y === undefined) {
       this.#setCursor()
     } else {
       const pt = this.#screenToPt(x, y)
@@ -481,13 +511,15 @@ class TextActions {
   }
 
   /**
-   * @param {boolean|Element} selectElem
+   * @param {boolean|Element} [selectElem]
    * @fires module:svgcanvas.SvgCanvas#event:selected
    * @returns {void}
    */
-  toSelectMode (selectElem) {
+  toSelectMode (selectElem?: boolean | Element): void {
     svgCanvas.setCurrentMode('select')
-    clearInterval(this.#blinker)
+    if (this.#blinker !== null) {
+      clearInterval(this.#blinker)
+    }
     this.#blinker = null
     if (this.#selblock) {
       this.#selblock.setAttribute('display', 'none')
@@ -495,21 +527,21 @@ class TextActions {
     if (this.#cursor) {
       this.#cursor.setAttribute('visibility', 'hidden')
     }
-    this.#curtext.style.cursor = 'move'
+    ;(this.#curtext as SVGTextElement).style.cursor = 'move'
 
     if (selectElem) {
       svgCanvas.clearSelection()
-      this.#curtext.style.cursor = 'move'
+      ;(this.#curtext as SVGTextElement).style.cursor = 'move'
 
       svgCanvas.call('selected', [this.#curtext])
       svgCanvas.addToSelection([this.#curtext], true)
     }
-    if (!this.#curtext?.textContent.length) {
+    if (!(this.#curtext as SVGTextElement | null)?.textContent?.length) {
       // No content, so delete
       svgCanvas.deleteSelectedElements()
     }
 
-    this.#textinput.blur()
+    this.#textinput?.blur()
 
     this.#curtext = false
 
@@ -519,72 +551,78 @@ class TextActions {
   }
 
   /**
-   * @param {Element} elem
+   * @param {HTMLInputElement} elem
    * @returns {void}
    */
-  setInputElem (elem) {
+  setInputElem (elem: HTMLInputElement): void {
     this.#textinput = elem
   }
 
   /**
    * @returns {void}
    */
-  clear () {
+  clear (): void {
     if (svgCanvas.getCurrentMode() === 'textedit') {
       svgCanvas.textActions.toSelectMode()
     }
   }
 
   /**
-   * @param {Element} _inputElem Not in use
+   * @param {Element} [_inputElem] Not in use
    * @returns {void}
    */
-  init (_inputElem) {
+  init (_inputElem?: Element): void {
     if (!this.#curtext) {
       return
     }
-    let i
-    let end
     // if (supportsEditableText()) {
     //   curtext.select();
     //   return;
     // }
 
-    if (!this.#curtext.parentNode) {
+    const curtext = this.#curtext
+
+    if (!curtext.parentNode) {
       // Result of the ffClone, need to get correct element
-      const selectedElements = svgCanvas.getSelectedElements()
-      this.#curtext = selectedElements[0]
+      const selectedElements: SVGTextElement[] = svgCanvas.getSelectedElements()
+      this.#curtext = selectedElements[0] ?? null
+      if (!this.#curtext) return
       svgCanvas.selectorManager.requestSelector(this.#curtext).showGrips(false)
     }
 
-    const str = this.#curtext.textContent
+    const textElem = this.#curtext
+    const str = textElem.textContent ?? ''
     const len = str.length
 
-    this.#textbb = utilsGetBBox(this.#curtext)
+    this.#textbb = utilsGetBBox(textElem)
 
     // Calculate accumulated transform matrix including all parent groups
     // This fixes the issue where text cursor appears in wrong position
     // when editing text inside a group with transforms
-    this.#matrix = this.#getAccumulatedMatrix(this.#curtext)
+    this.#matrix = this.#getAccumulatedMatrix(textElem)
 
     this.#chardata = []
     this.#chardata.length = len
-    this.#textinput.focus()
+    this.#textinput?.focus()
 
-    this.#curtext.removeEventListener('dblclick', this.#selectWord)
-    this.#curtext.addEventListener('dblclick', this.#selectWord)
+    textElem.removeEventListener('dblclick', this.#selectWord)
+    textElem.addEventListener('dblclick', this.#selectWord)
 
-    if (!len) {
-      end = { x: this.#textbb.x + this.#textbb.width / 2, width: 0 }
+    // endX tracks the x of the last character's end position for the final cursor entry
+    let endX: number = 0
+    const textbb = this.#textbb
+
+    if (!len && textbb) {
+      endX = textbb.x + textbb.width / 2
     }
 
-    for (i = 0; i < len; i++) {
-      const start = this.#curtext.getStartPositionOfChar(i)
-      end = this.#curtext.getEndPositionOfChar(i)
+    for (let i = 0; i < len; i++) {
+      const start = textElem.getStartPositionOfChar(i)
+      const end = textElem.getEndPositionOfChar(i)
 
       if (!supportsGoodTextCharPos()) {
-        const zoom = svgCanvas.getZoom()
-        const offset = svgCanvas.contentW * zoom
+        const zoom: number = svgCanvas.getZoom()
+        const offset: number = (svgCanvas.contentW as number) * zoom
         start.x -= offset
         end.x -= offset
 
@@ -592,26 +630,31 @@ class TextActions {
         end.x /= zoom
       }
 
+      endX = end.x
+
       // Get a "bbox" equivalent for each character. Uses the
       // bbox data of the actual text for y, height purposes
 
       // TODO: Decide if y, width and height are actually necessary
       this.#chardata[i] = {
         x: start.x,
-        y: this.#textbb.y, // start.y?
+        y: textbb?.y ?? 0, // start.y?
         width: end.x - start.x,
-        height: this.#textbb.height
+        height: textbb?.height ?? 0
       }
     }
 
     // Add a last bbox for cursor at end of text
     this.#chardata.push({
-      x: end.x,
+      x: endX,
       width: 0
     })
-    this.#setSelection(this.#textinput.selectionStart, this.#textinput.selectionEnd, true)
+    const inp = this.#textinput
+    if (inp) {
+      this.#setSelection(inp.selectionStart ?? 0, inp.selectionEnd ?? 0, true)
+    }
   }
 }
 
 // Export singleton instance for backward compatibility
-export const textActionsMethod = new TextActions()
+export const textActionsMethod: TextActions = new TextActions()
