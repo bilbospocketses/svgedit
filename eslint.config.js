@@ -1,8 +1,9 @@
+import { defineConfig } from 'eslint/config'
 import tseslint from 'typescript-eslint'
 import globals from 'globals'
 import pluginPromise from 'eslint-plugin-promise'
 
-export default tseslint.config(
+export default defineConfig([
   {
     ignores: [
       'dist/**',
@@ -89,4 +90,4 @@ export default tseslint.config(
     files: ['tests/**/*.js', '*.config.{js,mjs,ts}'],
     extends: [tseslint.configs.disableTypeChecked]
   }
-)
+])
