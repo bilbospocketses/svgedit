@@ -17,11 +17,10 @@ const FONT_ATTRIBUTES = ['font-family', 'font-size', 'font-stretch', 'font-style
 /**
  * This defines which elements and attributes that we support (or at least
  * don't remove).
- * @type {PlainObject}
  */
 /* eslint-disable max-len */
-const svgGenericWhiteList = ['class', 'id', 'display', 'transform', 'style']
-const svgWhiteList_ = {
+const svgGenericWhiteList: string[] = ['class', 'id', 'display', 'transform', 'style']
+const svgWhiteList_: Record<string, string[]> = {
   // SVG Elements
   a: ['clip-path', 'clip-rule', 'fill', 'fill-opacity', 'fill-rule', 'filter', 'href', 'mask', 'opacity', 'stroke', 'stroke-dasharray', 'stroke-dashoffset', 'stroke-linecap', 'stroke-linejoin', 'stroke-miterlimit', 'stroke-opacity', 'stroke-width', 'systemLanguage', 'xlink:href', 'xlink:title'],
   circle: ['clip-path', 'clip-rule', 'cx', 'cy', 'enable-background', 'fill', 'fill-opacity', 'fill-rule', 'filter', 'mask', 'opacity', 'r', 'requiredFeatures', 'stroke', 'stroke-dasharray', 'stroke-dashoffset', 'stroke-linecap', 'stroke-linejoin', 'stroke-miterlimit', 'stroke-opacity', 'stroke-width', 'systemLanguage'],
@@ -104,13 +103,15 @@ for (const [element, attrs] of Object.entries(svgWhiteList_)) {
 }
 
 // Produce a Namespace-aware version of svgWhitelist
-const svgWhiteListNS_ = {}
+const svgWhiteListNS_: Record<string, Record<string, string | null>> = {}
 for (const [elt, atts] of Object.entries(svgWhiteList_)) {
-  const attNS = {}
+  const attNS: Record<string, string | null> = {}
   for (const att of atts) {
     if (att.includes(':')) {
-      const [prefix, localName] = att.split(':')
-      attNS[localName] = NS[prefix.toUpperCase()]
+      const colonIdx = att.indexOf(':')
+      const prefix = att.slice(0, colonIdx).toUpperCase() as keyof typeof NS
+      const localName = att.slice(colonIdx + 1)
+      attNS[localName] = NS[prefix] ?? null
     } else {
       attNS[att] = att === 'xmlns' ? NS.XMLNS : null
     }
@@ -125,14 +126,15 @@ for (const [elt, atts] of Object.entries(svgWhiteList_)) {
 * @param {Text|Element} node - The DOM element to be checked (we'll also check its children) or text node to be cleaned up
 * @returns {void}
 */
-export const sanitizeSvg = (node) => {
+export const sanitizeSvg = (node: Node): void => {
   // Cleanup text nodes
   if (node.nodeType === 3) { // 3 === TEXT_NODE
+    const textNode = node as Text
     // Trim whitespace
-    node.nodeValue = node.nodeValue.trim()
+    textNode.nodeValue = (textNode.nodeValue ?? '').trim()
     // Remove if empty
-    if (!node.nodeValue.length) {
-      node.remove()
+    if (!textNode.nodeValue.length) {
+      textNode.remove()
     }
   }
 
@@ -142,28 +144,34 @@ export const sanitizeSvg = (node) => {
     return
   }
 
-  const doc = node.ownerDocument
-  const parent = node.parentNode
+  const elem = node as Element
+  const doc = elem.ownerDocument
+  const parent = elem.parentNode
   // can parent ever be null here?  I think the root node's parent is the document...
   if (!doc || !parent) {
     return
   }
 
-  const allowedAttrs = svgWhiteList_[node.nodeName]
-  const allowedAttrsNS = svgWhiteListNS_[node.nodeName]
+  const allowedAttrs = svgWhiteList_[elem.nodeName]
+  const allowedAttrsNS = svgWhiteListNS_[elem.nodeName]
   // if this element is supported, sanitize it
   if (typeof allowedAttrs !== 'undefined') {
-    const seAttrs = []
-    let i = node.attributes.length
+    const seAttrs: [string, string, string | null][] = []
+    let i = elem.attributes.length
     while (i--) {
       // if the attribute is not in our whitelist, then remove it
-      const attr = node.attributes.item(i)
+      const attr = elem.attributes.item(i)
+      if (!attr) continue
       const attrName = attr.nodeName
       const attrLocalName = attr.localName
       const attrNsURI = attr.namespaceURI
       // Check that an attribute with the correct localName in the correct namespace is on
-      // our whitelist or is a namespace declaration for one of our allowed namespaces
-      if (attrNsURI !== allowedAttrsNS[attrLocalName] && attrNsURI !== NS.XMLNS &&
+      // our whitelist or is a namespace declaration for one of our allowed namespaces.
+      // Note: when attrLocalName is NOT a key, allowedAttrsNS[attrLocalName] is undefined
+      // (NOT null) — this is load-bearing because the JS original relied on
+      // undefined !== null to trigger removal for unknown attrs on no-namespace nodes.
+      const expectedNs: string | null | undefined = allowedAttrsNS ? allowedAttrsNS[attrLocalName] : undefined
+      if (attrNsURI !== expectedNs && attrNsURI !== NS.XMLNS &&
        !(attrNsURI === NS.XMLNS && REVERSE_NS[attr.value])) {
         // Special case: allow href attribute even without namespace if it's in the whitelist
         const isHrefAttribute = (attrLocalName === 'href' && allowedAttrs.includes('href'))
@@ -173,11 +181,11 @@ export const sanitizeSvg = (node) => {
           // Is there a more appropriate way to do this?
           if (attrName.startsWith('se:') || attrName.startsWith('data-')) {
             // We should bypass the namespace as well
-            const seAttrNS = attrName.startsWith('se:') ? NS.SE : null
+            const seAttrNS: string | null = attrName.startsWith('se:') ? NS.SE : null
             seAttrs.push([attrName, attr.value, seAttrNS])
           } else {
-            warn(`attribute ${attrName} in element ${node.nodeName} not in whitelist is removed: ${node.outerHTML}`, null, 'sanitize')
-            node.removeAttributeNS(attrNsURI, attrLocalName)
+            warn(`attribute ${attrName} in element ${elem.nodeName} not in whitelist is removed: ${elem.outerHTML}`, null, 'sanitize')
+            elem.removeAttributeNS(attrNsURI, attrLocalName)
           }
         }
       }
@@ -187,99 +195,112 @@ export const sanitizeSvg = (node) => {
         const props = attr.value.split(';')
         let p = props.length
         while (p--) {
-          const [name, val] = props[p].split(':')
+          const prop = props[p]
+          if (!prop) continue
+          const colonIdx = prop.indexOf(':')
+          const name = colonIdx >= 0 ? prop.slice(0, colonIdx) : prop
+          const val = colonIdx >= 0 ? prop.slice(colonIdx + 1) : ''
           const styleAttrName = (name || '').trim()
           const styleAttrVal = (val || '').trim()
           // Now check that this attribute is supported
           if (allowedAttrs.includes(styleAttrName)) {
-            node.setAttribute(styleAttrName, styleAttrVal)
+            elem.setAttribute(styleAttrName, styleAttrVal)
           }
         }
-        node.removeAttribute('style')
+        elem.removeAttribute('style')
       }
     }
 
     // If legacy xlink:href is present but href is missing, mirror it to href for modern browsers
-    const xlinkHref = node.getAttributeNS(NS.XLINK, 'href')
+    const xlinkHref = elem.getAttributeNS(NS.XLINK, 'href')
     if (xlinkHref) {
-      node.setAttribute('href', xlinkHref)
-      node.removeAttributeNS(NS.XLINK, 'href')
+      elem.setAttribute('href', xlinkHref)
+      elem.removeAttributeNS(NS.XLINK, 'href')
     }
 
     Object.values(seAttrs).forEach(([att, val, ns]) => {
-      node.setAttributeNS(ns, att, val)
+      elem.setAttributeNS(ns, att, val)
     })
 
     // for some elements that have a xlink:href or href, ensure the URI refers to a local element
     // (but not for links and other elements where external hrefs are allowed)
-    const href = getHref(node)
+    const href = getHref(elem)
     if (href &&
       ['filter', 'linearGradient', 'pattern',
-        'radialGradient', 'textPath', 'use'].includes(node.nodeName) && href[0] !== '#') {
+        'radialGradient', 'textPath', 'use'].includes(elem.nodeName) && href[0] !== '#') {
       // remove the attribute (but keep the element)
-      setHref(node, '')
-      warn(`attribute href in element ${node.nodeName} pointing to a non-local reference (${href}) is removed: ${node.outerHTML}`, null, 'sanitize')
-      node.removeAttributeNS(NS.XLINK, 'href')
-      node.removeAttribute('href')
+      setHref(elem, '')
+      warn(`attribute href in element ${elem.nodeName} pointing to a non-local reference (${href}) is removed: ${elem.outerHTML}`, null, 'sanitize')
+      elem.removeAttributeNS(NS.XLINK, 'href')
+      elem.removeAttribute('href')
     }
 
     // Safari crashes on a <use> without a xlink:href, so we just remove the node here
-    if (node.nodeName === 'use' && !getHref(node)) {
-      warn(`element ${node.nodeName} without a xlink:href or href is removed: ${node.outerHTML}`, null, 'sanitize')
-      node.remove()
+    if (elem.nodeName === 'use' && !getHref(elem)) {
+      warn(`element ${elem.nodeName} without a xlink:href or href is removed: ${elem.outerHTML}`, null, 'sanitize')
+      elem.remove()
       return
     }
     // For <use> elements with missing width/height, derive defaults from referenced viewBox/size for proper sizing/selection
-    if (node.nodeName === 'use') {
-      const ref = getRefElem(getHref(node))
+    if (elem.nodeName === 'use') {
+      const ref = getRefElem(getHref(elem))
       if (ref) {
         const refViewBox = ref.getAttribute('viewBox')
         const viewBoxParts = refViewBox ? refViewBox.split(/[\s,]+/).map(Number) : null
         const refWidth = Number(ref.getAttribute('width'))
         const refHeight = Number(ref.getAttribute('height'))
-        if (!node.hasAttribute('width')) {
-          const width = viewBoxParts?.[2] || refWidth
-          if (width) node.setAttribute('width', width)
+        if (!elem.hasAttribute('width')) {
+          const width = viewBoxParts?.[2] ?? refWidth
+          if (width) elem.setAttribute('width', String(width))
         }
-        if (!node.hasAttribute('height')) {
-          const height = viewBoxParts?.[3] || refHeight
-          if (height) node.setAttribute('height', height)
+        if (!elem.hasAttribute('height')) {
+          const height = viewBoxParts?.[3] ?? refHeight
+          if (height) elem.setAttribute('height', String(height))
         }
       }
     }
     // if the element has attributes pointing to a non-local reference,
     // need to remove the attribute
-    ['clip-path', 'fill', 'filter', 'marker-end', 'marker-mid', 'marker-start', 'mask', 'stroke'].forEach((attr) => {
-      let val = node.getAttribute(attr)
+    ;['clip-path', 'fill', 'filter', 'marker-end', 'marker-mid', 'marker-start', 'mask', 'stroke'].forEach((attr) => {
+      let val = elem.getAttribute(attr)
       if (val) {
         val = getUrlFromAttr(val)
         // simply check for first character being a '#'
         if (val && val[0] !== '#') {
-          node.setAttribute(attr, '')
-          warn(`attribute ${attr} in element ${node.nodeName} pointing to a non-local reference (${val}) is removed: ${node.outerHTML}`, null, 'sanitize')
-          node.removeAttribute(attr)
+          elem.setAttribute(attr, '')
+          warn(`attribute ${attr} in element ${elem.nodeName} pointing to a non-local reference (${val}) is removed: ${elem.outerHTML}`, null, 'sanitize')
+          elem.removeAttribute(attr)
         }
       }
     })
 
     // recurse to children
-    i = node.childNodes.length
-    while (i--) { sanitizeSvg(node.childNodes.item(i)) }
+    i = elem.childNodes.length
+    while (i--) {
+      const childNode = elem.childNodes.item(i)
+      if (childNode) sanitizeSvg(childNode)
+    }
   // else (element not supported), remove it
   } else {
     // remove all children from this node and insert them before this node
     // TODO: in the case of animation elements this will hardly ever be correct
-    warn(`element ${node.nodeName} not supported is removed: ${node.outerHTML}`, null, 'sanitize')
-    const children = []
-    while (node.hasChildNodes()) {
-      children.push(parent.insertBefore(node.firstChild, node))
+    warn(`element ${elem.nodeName} not supported is removed: ${elem.outerHTML}`, null, 'sanitize')
+    const children: Node[] = []
+    while (elem.hasChildNodes()) {
+      const firstChild = elem.firstChild
+      if (firstChild) {
+        children.push(parent.insertBefore(firstChild, elem))
+      }
     }
 
     // remove this node from the document altogether
-    node.remove()
+    elem.remove()
 
     // call sanitizeSvg on each of those children
     let i = children.length
-    while (i--) { sanitizeSvg(children[i]) }
+    while (i--) {
+      const child = children[i]
+      if (child) sanitizeSvg(child)
+    }
   }
 }

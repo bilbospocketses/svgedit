@@ -7,8 +7,9 @@
 
 import {
   BatchCommand, MoveElementCommand, InsertElementCommand, RemoveElementCommand,
-  ChangeElementCommand
+  ChangeElementCommand, type CommandAttributes
 } from './history.js'
+import type { UndoManager } from './history.js'
 
 /**
  * History recording service.
@@ -43,12 +44,16 @@ import {
  * @memberof module:history
  */
 class HistoryRecordingService {
+  undoManager_: UndoManager | null
+  currentBatchCommand_: BatchCommand | null
+  batchCommandStack_: BatchCommand[]
+
   /**
-  * @param {history.UndoManager|null} undoManager - The undo manager.
+  * @param {UndoManager | null} undoManager - The undo manager.
   *     A value of `null` is valid for cases where no history recording is required.
-  *     See singleton: {@link module:history.HistoryRecordingService.HistoryRecordingService.NO_HISTORY}
+  *     See singleton: {@link HistoryRecordingService.NO_HISTORY}
   */
-  constructor (undoManager) {
+  constructor (undoManager: UndoManager | null) {
     this.undoManager_ = undoManager
     this.currentBatchCommand_ = null
     this.batchCommandStack_ = []
@@ -59,9 +64,9 @@ class HistoryRecordingService {
    * Requires a corresponding call to endBatchCommand. Start and end commands can be nested.
    *
    * @param {string} text - Optional string describing the batch command.
-   * @returns {module:history.HistoryRecordingService}
+   * @returns {HistoryRecordingService}
    */
-  startBatchCommand (text) {
+  startBatchCommand (text?: string): this {
     if (!this.undoManager_) { return this }
     this.currentBatchCommand_ = new BatchCommand(text)
     this.batchCommandStack_.push(this.currentBatchCommand_)
@@ -70,15 +75,15 @@ class HistoryRecordingService {
 
   /**
    * End a batch command and add it to the history or a parent batch command.
-   * @returns {module:history.HistoryRecordingService}
+   * @returns {HistoryRecordingService}
    */
-  endBatchCommand () {
+  endBatchCommand (): this {
     if (!this.undoManager_) { return this }
     if (this.currentBatchCommand_) {
       const batchCommand = this.currentBatchCommand_
       this.batchCommandStack_.pop()
       const { length: len } = this.batchCommandStack_
-      this.currentBatchCommand_ = len ? this.batchCommandStack_[len - 1] : null
+      this.currentBatchCommand_ = len ? (this.batchCommandStack_[len - 1] ?? null) : null
       if (!batchCommand.isEmpty()) {
         this.addCommand_(batchCommand)
       }
@@ -89,12 +94,12 @@ class HistoryRecordingService {
   /**
    * Add a `MoveElementCommand` to the history or current batch command.
    * @param {Element} elem - The DOM element that was moved
-   * @param {Element} oldNextSibling - The element's next sibling before it was moved
-   * @param {Element} oldParent - The element's parent before it was moved
+   * @param {Node | null} oldNextSibling - The element's next sibling before it was moved
+   * @param {Node} oldParent - The element's parent before it was moved
    * @param {string} [text] - An optional string visible to user related to this change
-   * @returns {module:history.HistoryRecordingService}
+   * @returns {HistoryRecordingService}
    */
-  moveElement (elem, oldNextSibling, oldParent, text) {
+  moveElement (elem: Element, oldNextSibling: Node | null, oldParent: Node, text?: string): this {
     if (!this.undoManager_) { return this }
     this.addCommand_(new MoveElementCommand(elem, oldNextSibling, oldParent, text))
     return this
@@ -104,9 +109,9 @@ class HistoryRecordingService {
    * Add an `InsertElementCommand` to the history or current batch command.
    * @param {Element} elem - The DOM element that was added
    * @param {string} [text] - An optional string visible to user related to this change
-   * @returns {module:history.HistoryRecordingService}
+   * @returns {HistoryRecordingService}
    */
-  insertElement (elem, text) {
+  insertElement (elem: Element, text?: string): this {
     if (!this.undoManager_) { return this }
     this.addCommand_(new InsertElementCommand(elem, text))
     return this
@@ -115,12 +120,12 @@ class HistoryRecordingService {
   /**
    * Add a `RemoveElementCommand` to the history or current batch command.
    * @param {Element} elem - The DOM element that was removed
-   * @param {Element} oldNextSibling - The element's next sibling before it was removed
-   * @param {Element} oldParent - The element's parent before it was removed
+   * @param {Node | null} oldNextSibling - The element's next sibling before it was removed
+   * @param {Node} oldParent - The element's parent before it was removed
    * @param {string} [text] - An optional string visible to user related to this change
-   * @returns {module:history.HistoryRecordingService}
+   * @returns {HistoryRecordingService}
    */
-  removeElement (elem, oldNextSibling, oldParent, text) {
+  removeElement (elem: Element, oldNextSibling: Node | null, oldParent: Node, text?: string): this {
     if (!this.undoManager_) { return this }
     this.addCommand_(new RemoveElementCommand(elem, oldNextSibling, oldParent, text))
     return this
@@ -129,11 +134,11 @@ class HistoryRecordingService {
   /**
    * Add a `ChangeElementCommand` to the history or current batch command.
    * @param {Element} elem - The DOM element that was changed
-   * @param {module:history.CommandAttributes} attrs - An object with the attributes to be changed and the values they had *before* the change
+   * @param {CommandAttributes} attrs - An object with the attributes to be changed and the values they had *before* the change
    * @param {string} [text] - An optional string visible to user related to this change
-   * @returns {module:history.HistoryRecordingService}
+   * @returns {HistoryRecordingService}
    */
-  changeElement (elem, attrs, text) {
+  changeElement (elem: Element, attrs: CommandAttributes, text?: string): this {
     if (!this.undoManager_) { return this }
     this.addCommand_(new ChangeElementCommand(elem, attrs, text))
     return this
@@ -142,11 +147,11 @@ class HistoryRecordingService {
   /**
    * Private function to add a command to the history or current batch command.
    * @private
-   * @param {Command} cmd
-   * @returns {module:history.HistoryRecordingService|void}
+   * @param {BatchCommand | MoveElementCommand | InsertElementCommand | RemoveElementCommand | ChangeElementCommand} cmd
+   * @returns {undefined}
    */
-  addCommand_ (cmd) {
-    if (!this.undoManager_) { return this }
+  private addCommand_ (cmd: BatchCommand | MoveElementCommand | InsertElementCommand | RemoveElementCommand | ChangeElementCommand): undefined {
+    if (!this.undoManager_) { return undefined }
     if (this.currentBatchCommand_) {
       this.currentBatchCommand_.addSubCommand(cmd)
     } else {
@@ -155,9 +160,14 @@ class HistoryRecordingService {
     return undefined
   }
 }
+
 /**
- * @memberof module:history.HistoryRecordingService
- * @property {module:history.HistoryRecordingService} NO_HISTORY - Singleton that can be passed to functions that record history, but the caller requires that no history be recorded.
+ * @property {HistoryRecordingService} NO_HISTORY - Singleton that can be passed to functions that record history, but the caller requires that no history be recorded.
  */
-HistoryRecordingService.NO_HISTORY = new HistoryRecordingService(null)
+interface HistoryRecordingServiceStatic {
+  NO_HISTORY: HistoryRecordingService
+}
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+;(HistoryRecordingService as unknown as HistoryRecordingServiceStatic).NO_HISTORY = new HistoryRecordingService(null)
+
 export default HistoryRecordingService

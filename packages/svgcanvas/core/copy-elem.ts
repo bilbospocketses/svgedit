@@ -5,10 +5,10 @@ import dataStorage from './dataStorage.js'
  * Create a clone of an element, updating its ID and its children's IDs when needed.
  * @function module:utilities.copyElem
  * @param {Element} el - DOM element to clone
- * @param {module:utilities.GetNextID} getNextId - The getter of the next unique ID.
+ * @param {() => string} getNextId - The getter of the next unique ID.
  * @returns {Element} The cloned element
  */
-export const copyElem = (el, getNextId) => {
+export const copyElem = (el: Element, getNextId: () => string): Element => {
   const ownerDocument = el?.ownerDocument || document
   // manually create a copy of the element
   const newEl = ownerDocument.createElementNS(el.namespaceURI, el.nodeName)
@@ -27,7 +27,7 @@ export const copyElem = (el, getNextId) => {
   el.childNodes.forEach((child) => {
     switch (child.nodeType) {
       case 1: // element node
-        newEl.append(copyElem(child, getNextId))
+        newEl.append(copyElem(child as Element, getNextId))
         break
       case 3: // text node
       case 4: // cdata section node
