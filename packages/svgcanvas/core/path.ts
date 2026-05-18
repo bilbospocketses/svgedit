@@ -12,43 +12,27 @@ import { shortFloat } from './units.js'
 import { transformPoint, getTransformList } from './math.js'
 import {
   getRotationAngle, getBBox,
-  getRefElem, findDefs,
-  getBBox as utilsGetBBox
+  getRefElem, findDefs
 } from './utilities.js'
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore — path-method.js not yet converted to TS (Task 9b)
-import * as pathMethodModule from './path-method.js'
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore — path-actions.js not yet converted to TS (Task 9b)
-import * as pathActionsModule from './path-actions.js'
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const { init: pathMethodInit, ptObjToArrMethod, getGripPtMethod, getPointFromGripMethod, addPointGripMethod, getGripContainerMethod, addCtrlGripMethod, getCtrlLineMethod, getPointGripMethod, getControlPointsMethod, replacePathSegMethod, getSegSelectorMethod, Path } = pathMethodModule as any
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const { init: pathActionsInit, pathActionsMethod } = pathActionsModule as any
-
-// Minimal type for the pathSegList shim consumed by recalcRotatedPath() and convertPath().
-// Full type lives on PathDataListShim in path-method.ts (deferred to Task 9b).
-// TODO(9b): replace this local interface with the global SVGPathElement.pathSegList augmentation.
-interface PathSeg {
-  pathSegType: number
-  x?: number
-  y?: number
-  x1?: number
-  y1?: number
-  x2?: number
-  y2?: number
-  r1?: number
-  r2?: number
-  angle?: number
-  largeArcFlag?: boolean
-  sweepFlag?: boolean
-  [key: string]: number | boolean | undefined
-}
-
-interface PathSegList {
-  readonly numberOfItems: number
-  getItem(i: number): PathSeg
-}
+import {
+  init as pathMethodInit,
+  ptObjToArrMethod,
+  getGripPtMethod,
+  getPointFromGripMethod,
+  addPointGripMethod,
+  getGripContainerMethod,
+  addCtrlGripMethod,
+  getCtrlLineMethod,
+  getPointGripMethod,
+  getControlPointsMethod,
+  replacePathSegMethod,
+  getSegSelectorMethod,
+  Path
+} from './path-method.js'
+import {
+  init as pathActionsInit,
+  pathActionsMethod
+} from './path-actions.js'
 
 const segData: Record<number, string[]> = {
   2: ['x', 'y'], // PATHSEG_MOVETO_ABS
@@ -103,8 +87,7 @@ export const setLinkControlPoints = (lcp: boolean): void => {
  * @type {null|module:path.Path}
  * @memberof module:path
 */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export let path: any = null
+export let path: Path | null = null
 
 /**
 * @external MouseEvent
@@ -520,7 +503,7 @@ const getRotVals = (x: number, y: number): XYPoint => {
 */
 export const recalcRotatedPath = (): void => {
   const currentPath = path?.elem
-  if (!currentPath) { return }
+  if (!currentPath || !path) { return }
   angle = getRotationAngle(currentPath, true)
   if (!angle) { return }
   // selectedBBoxes[0] = path.oldbbox;
@@ -542,14 +525,14 @@ export const recalcRotatedPath = (): void => {
   newcx = r * Math.cos(theta) + oldcx
   newcy = r * Math.sin(theta) + oldcy
 
-  // Cast to PathSegList shim — pathSegList is attached by path-method.js at runtime.
-  const list = (currentPath as unknown as { pathSegList: PathSegList }).pathSegList
+  const list = currentPath.pathSegList
   if (!list) { return }
 
   let i = list.numberOfItems
   while (i) {
     i -= 1
     const seg = list.getItem(i)
+    if (!seg) { continue }
     const type = seg.pathSegType
     if (type === 1) { continue }
 
@@ -623,7 +606,7 @@ export const clearData = (): void => {
 * @returns {void}
 */
 export const reorientGrads = (elem: Element, m: SVGMatrix): void => {
-  const bb = utilsGetBBox(elem)
+  const bb = getBBox(elem)
   if (!bb) { return }
   for (let i = 0; i < 2; i++) {
     const type = i === 0 ? 'fill' : 'stroke'
@@ -696,8 +679,7 @@ const pathMap: (string | number)[] = [
  * @returns {string}
  */
 export const convertPath = (pth: SVGPathElement, toRel: boolean): string => {
-  // Cast to PathSegList shim — pathSegList is attached by path-method.js at runtime.
-  const pathSegList = (pth as unknown as { pathSegList: PathSegList }).pathSegList
+  const pathSegList = pth.pathSegList
   const len = pathSegList.numberOfItems
   let curx = 0; let cury = 0
   let d = ''
@@ -705,6 +687,7 @@ export const convertPath = (pth: SVGPathElement, toRel: boolean): string => {
 
   for (let i = 0; i < len; ++i) {
     const seg = pathSegList.getItem(i)
+    if (!seg) { continue }
     // if these properties are not in the segment, set them to zero
     let x = seg.x || 0
     let y = seg.y || 0

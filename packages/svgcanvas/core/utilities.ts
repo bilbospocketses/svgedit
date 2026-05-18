@@ -305,13 +305,13 @@ interface LegacyPathSeg {
  * Get correct BBox for a path in Webkit.
  * Uses the legacy pathSegList API (polyfill-backed in this codebase).
  */
-export const getPathBBox = (path: SVGPathElement & { pathSegList: { numberOfItems: number; getItem(i: number): LegacyPathSeg } }): BBoxObject => {
+export const getPathBBox = (path: SVGPathElement & { pathSegList: { numberOfItems: number; getItem(i: number): LegacyPathSeg | null } }): BBoxObject => {
   const seglist = path.pathSegList
   const totalSegments = seglist.numberOfItems
 
   const bounds: [number[], number[]] = [[], []]
   const start = seglist.getItem(0)
-  let P0 = [start.x ?? 0, start.y ?? 0]
+  let P0 = [start?.x ?? 0, start?.y ?? 0]
 
   const getCalc = (j: number, P1: number[], P2: number[], P3: number[]) => (t: number): number => {
     const oneMinusT = 1 - t
@@ -325,6 +325,7 @@ export const getPathBBox = (path: SVGPathElement & { pathSegList: { numberOfItem
 
   for (let i = 0; i < totalSegments; i++) {
     const seg = seglist.getItem(i)
+    if (!seg) continue
 
     if (seg.x === undefined) continue
 

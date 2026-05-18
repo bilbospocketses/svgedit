@@ -1042,7 +1042,7 @@ const convertToGroup = (elem: Element): void => {
 
     walkTreePost(g, (n: Node) => {
       try {
-        recalculateDimensions(n)
+        recalculateDimensions(n as Element)
       } catch (e) {
         error('Error recalculating dimensions', e, 'selected-elem')
       }

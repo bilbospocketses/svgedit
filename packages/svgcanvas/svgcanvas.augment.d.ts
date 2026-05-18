@@ -11,14 +11,11 @@
 // Task 10 (C6) deletes the shim; at that point this augment file plus
 // the future svgcanvas.ts class become the SvgCanvas type source.
 //
-// NOTE: other core/*.js files (clear.js, draw.js, undo.js, select.js,
-// paint.js, blur-event.js, text-actions.js, copy-elem.js, paste-elem.js,
-// historyrecording.js, recalculate.js, path-actions.js,
-// path-method.js) also wire methods that the shim currently covers.
-// svgroot.ts is a leaf with no wired-on methods (pure factory function).
-// Each will be added here as their core/*.js converts to .ts in Tasks
-// 5-9 — at which point Task 10 can remove the shim safely. Task 10
-// MUST audit the shim's surviving declarations and migrate any that
+// NOTE: remaining core/*.js files (clear.js, draw.js, undo.js, select.js,
+// copy-elem.js, historyrecording.js) still wire methods covered by the shim.
+// All of path-actions.ts, path-method.ts, recalculate.ts, svg-exec.ts are
+// now .ts (Task 9b complete). svgroot.ts is a leaf with no wired-on methods.
+// Task 10 MUST audit the shim's surviving declarations and migrate any that
 // aren't class-owned on SvgCanvas (svgcanvas.js) to this augment file.
 
 import type {} from './svgcanvas'
@@ -74,8 +71,10 @@ declare module './svgcanvas' {
     mouseUpEvent: (evt: MouseEvent) => void
     mouseOutEvent: (evt: MouseEvent) => void
     DOMMouseScrollEvent: (e: WheelEvent) => void
-    dragStartTransforms: Map<Element, string> | null
-    hasDragStartTransform: boolean
+    // dragStartTransforms and hasDragStartTransform are never initialized in
+    // init(); only set conditionally inside event handlers — optional under exactOptionalPropertyTypes
+    dragStartTransforms?: Map<Element, string>
+    hasDragStartTransform?: boolean
     // addedNew is only ever set inside a conditional (event.js:972) and is
     // never initialized in init(); optional under exactOptionalPropertyTypes
     addedNew?: boolean
@@ -117,16 +116,16 @@ declare module './svgcanvas' {
     recalculateAllSelectedDimensions: (...args: unknown[]) => unknown
     setRotationAngle: (...args: unknown[]) => unknown
 
-    // From core/svg-exec.js (init wires these on)
-    importSvgString: (...args: unknown[]) => unknown
-    uniquifyElems: (...args: unknown[]) => unknown
-    setUseData: (...args: unknown[]) => unknown
-    convertGradients: (...args: unknown[]) => unknown
-    removeUnusedDefElems: (...args: unknown[]) => unknown
-    svgCanvasToString: (...args: unknown[]) => unknown
-    svgToString: (...args: unknown[]) => unknown
-    rasterExport: (...args: unknown[]) => unknown
-    exportPDF: (...args: unknown[]) => unknown
+    // From core/svg-exec.ts (init wires these on)
+    importSvgString: (xmlString: string, preserveDimension?: boolean) => Element | null
+    uniquifyElems: (g: Element) => void
+    setUseData: (parent: Element) => void
+    convertGradients: (elem: Element) => void
+    removeUnusedDefElems: () => number
+    svgCanvasToString: () => string
+    svgToString: (elem: Element, indent: number) => string
+    rasterExport: (imgType?: string, quality?: number, windowName?: string, opts?: Record<string, unknown>) => Promise<Record<string, unknown>>
+    exportPDF: (windowName?: string, outputType?: string) => Promise<Record<string, unknown>>
     // current_drawing_ is a pseudo-private (trailing-underscore); attached
     // in svgcanvas.js constructor, not by an init() call. Renamed to
     // currentDrawing in Task 17 (C13) — keep the underscore form here
