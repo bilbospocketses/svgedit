@@ -40,12 +40,16 @@ Once all files in a task are converted, run the full verification gate (see belo
 ## Per-task verification gate (run after each conversion task, before commit)
 
 ```bash
-npx tsc --noEmit                # type-check ALL files in project
+npx tsc --build                 # type-check BOTH root + packages/svgcanvas workspace
 npm run lint                    # eslint clean, --max-warnings 0
 npm run build                   # both packages/svgcanvas and root build
 npx vitest run                  # all unit tests pass
 node scripts/run-e2e.mjs        # all 81 Playwright tests pass
 ```
+
+**`tsc --build` vs `tsc --noEmit`** — `tsc --noEmit` alone runs against the ROOT tsconfig.json, which has `include: ["src/editor/**/*.ts", "scripts/**/*.ts", "*.config.ts"]` and does NOT include `packages/svgcanvas/**/*.ts`. The workspace package has its own tsconfig at `packages/svgcanvas/tsconfig.json` with `isolatedDeclarations: true` plus stricter emit settings. `tsc --build` follows the root's `references: [{ "path": "./packages/svgcanvas" }]` and type-checks BOTH. Bare `npx tsc --noEmit` silently passes when workspace .ts files have isolatedDeclarations errors — a real defect found during Task 5 verification.
+
+For per-file iteration (faster than `--build` because no emit): `npx tsc -p packages/svgcanvas/tsconfig.json --noEmit` for workspace files, or `npx tsc --noEmit` for root-scope files. But the per-task gate above runs `--build` to catch both.
 
 If ANY gate fails, fix before committing. Do not commit broken intermediate state.
 
@@ -523,7 +527,7 @@ Coordinate math; depends on `math.ts` and `namespaces.ts`. Types similar to math
 - [ ] **Step 9: Run full verification gate**
 
 ```bash
-npx tsc --noEmit && npm run lint && npm run build && npx vitest run && node scripts/run-e2e.mjs
+npx tsc --build && npm run lint && npm run build && npx vitest run && node scripts/run-e2e.mjs
 ```
 
 All pass. Test counts unchanged.
@@ -618,7 +622,7 @@ Element-copy logic. Apply playbook.
 - [ ] **Step 9: Run full verification gate**
 
 ```bash
-npx tsc --noEmit && npm run lint && npm run build && npx vitest run && node scripts/run-e2e.mjs
+npx tsc --build && npm run lint && npm run build && npx vitest run && node scripts/run-e2e.mjs
 ```
 
 - [ ] **Step 10: Commit**
@@ -707,7 +711,7 @@ Audit-flagged: `:215-216` runExtensions @todo (preserve, embed-API design input)
 - [ ] **Step 9: Run full verification gate**
 
 ```bash
-npx tsc --noEmit && npm run lint && npm run build && npx vitest run && node scripts/run-e2e.mjs
+npx tsc --build && npm run lint && npm run build && npx vitest run && node scripts/run-e2e.mjs
 ```
 
 - [ ] **Step 10: Commit**
@@ -828,7 +832,7 @@ Root SVG element handling. Apply playbook.
 - [ ] **Step 8: Run full verification gate**
 
 ```bash
-npx tsc --noEmit && npm run lint && npm run build && npx vitest run && node scripts/run-e2e.mjs
+npx tsc --build && npm run lint && npm run build && npx vitest run && node scripts/run-e2e.mjs
 ```
 
 If e2e fails: investigate immediately. core/ conversions are the highest-risk surface for runtime regression.
@@ -883,7 +887,7 @@ Check `packages/svgcanvas/package.json` for `"types": "..."` field. Update from 
 - [ ] **Step 5: Run full verification gate**
 
 ```bash
-npx tsc --noEmit && npm run lint && npm run build && npx vitest run && node scripts/run-e2e.mjs
+npx tsc --build && npm run lint && npm run build && npx vitest run && node scripts/run-e2e.mjs
 ```
 
 - [ ] **Step 6: Commit**
@@ -987,7 +991,7 @@ npx tsc --noEmit
 - [ ] **Step 10: Run full verification gate**
 
 ```bash
-npx tsc --noEmit && npm run lint && npm run build && npx vitest run && node scripts/run-e2e.mjs
+npx tsc --build && npm run lint && npm run build && npx vitest run && node scripts/run-e2e.mjs
 ```
 
 - [ ] **Step 11: Commit**
@@ -1037,7 +1041,7 @@ For elix-bound components (extending elix `WrappedStandardElement` or similar), 
 - [ ] **Step 3: Run full verification gate**
 
 ```bash
-npx tsc --noEmit && npm run lint && npm run build && npx vitest run && node scripts/run-e2e.mjs
+npx tsc --build && npm run lint && npm run build && npx vitest run && node scripts/run-e2e.mjs
 ```
 
 - [ ] **Step 4: Commit**
@@ -1077,7 +1081,7 @@ npx tsc --noEmit
 - [ ] **Step 3: Run full verification gate**
 
 ```bash
-npx tsc --noEmit && npm run lint && npm run build && npx vitest run && node scripts/run-e2e.mjs
+npx tsc --build && npm run lint && npm run build && npx vitest run && node scripts/run-e2e.mjs
 ```
 
 - [ ] **Step 4: Commit**
@@ -1123,7 +1127,7 @@ Each extension `init()` function has a different shape. Type the `module:SVGEdit
 - [ ] **Step 3: Run full verification gate**
 
 ```bash
-npx tsc --noEmit && npm run lint && npm run build && npx vitest run && node scripts/run-e2e.mjs
+npx tsc --build && npm run lint && npm run build && npx vitest run && node scripts/run-e2e.mjs
 ```
 
 - [ ] **Step 4: Commit**
@@ -1176,7 +1180,7 @@ Audit-flagged: `:169, 696` native `prompt()`, `:623` native `alert()` — preser
 - [ ] **Step 5: Run full verification gate**
 
 ```bash
-npx tsc --noEmit && npm run lint && npm run build && npx vitest run && node scripts/run-e2e.mjs
+npx tsc --build && npm run lint && npm run build && npx vitest run && node scripts/run-e2e.mjs
 ```
 
 - [ ] **Step 6: Commit**
@@ -1268,7 +1272,7 @@ npm install --save-dev @types/node@^22.10.0
 - [ ] **Step 9: Run full verification gate**
 
 ```bash
-npx tsc --noEmit && npm run lint && npm run build && npx vitest run && tsx scripts/run-e2e.ts
+npx tsc --build && npm run lint && npm run build && npx vitest run && tsx scripts/run-e2e.ts
 ```
 
 (Note: e2e invocation changed from `node scripts/run-e2e.mjs` to `tsx scripts/run-e2e.ts` everywhere.)
@@ -1331,7 +1335,7 @@ If any matches: those are likely string-key accesses or comments. Update by hand
 - [ ] **Step 3: Run full verification gate**
 
 ```bash
-npx tsc --noEmit && npm run lint && npm run build && npx vitest run && tsx scripts/run-e2e.ts
+npx tsc --build && npm run lint && npm run build && npx vitest run && tsx scripts/run-e2e.ts
 ```
 
 - [ ] **Step 4: Commit**

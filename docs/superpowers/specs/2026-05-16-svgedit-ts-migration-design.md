@@ -43,7 +43,7 @@ This spec covers **only Step 3**. Steps 1 and 2 land first as mostly-mechanical 
   - `current_drawing_` → `currentDrawing`
   - Trailing-underscore pseudo-privates throughout `core/` → `#` private fields (`historyrecording.js`, `layer.js`, `draw.js Drawing`, `undo.js handler_`, `recalculate.js`, etc.)
 - Linter swap: drop `standard` (no TS support); add `eslint` v9 + `@typescript-eslint/parser` + `@typescript-eslint/eslint-plugin` (flat config `eslint.config.js`).
-- Build wiring: Vite handles `.ts` natively (no plugin needed); add `tsc --noEmit` as a CI gate alongside lint + tests.
+- Build wiring: Vite handles `.ts` natively (no plugin needed); add `tsc --build` as a CI gate alongside lint + tests (`--build` follows the root's `references` to also check `packages/svgcanvas` workspace, which a bare `tsc --noEmit` skips).
 - Drop `vite-plugin-istanbul` + remove the coverage scaffolding in `tests/e2e/fixtures.js` and `scripts/copy-static.mjs` (todo #8 — confirmed user choice during audit Area I; bundled here to avoid touching `vite.config` twice).
 
 ### Out of scope (deferred to follow-up PRs after Step 3 lands)
@@ -230,7 +230,7 @@ Three checkpoints: per-file (developer loop), per-area-commit (must pass before 
 
 ### Per-area-commit (must pass before commit lands)
 
-- `npx tsc --noEmit` (full project) — clean.
+- `npx tsc --build` (root + `packages/svgcanvas` workspace via project references) — clean. `npx tsc --noEmit` alone is INSUFFICIENT: it only type-checks files matched by the root tsconfig's `include`, which excludes `packages/svgcanvas/**/*.ts`. Task 5 verification missed real `isolatedDeclarations` errors in `packages/svgcanvas/common/` until `tsc --build` was run.
 - `npm run lint` — clean.
 - `npx vitest run` — all pass; counts shouldn't change vs. branch-cut baseline (master HEAD baseline 2026-05-18: 564/564; re-measured at branch cut per plan Task 5 Step 1 and pinned into this section then).
 - `npm run build` — both `packages/svgcanvas` build and root build complete; produces `dist/editor/` artifacts.
@@ -240,7 +240,7 @@ Three checkpoints: per-file (developer loop), per-area-commit (must pass before 
 
 | Gate | Tool | Pass criterion |
 |---|---|---|
-| Type-check | `tsc --noEmit` | Zero errors. Zero `any`-suppressions added vs. master baseline (count + diff). |
+| Type-check | `tsc --build` | Zero errors across root + workspace. Zero `any`-suppressions added vs. master baseline (count + diff). |
 | Lint | `eslint .` | Zero errors, zero warnings. `--max-warnings 0`. |
 | Unit tests | `vitest run` | All pass (master HEAD 2026-05-18 baseline: 564). Zero counts change vs. branch-cut baseline. |
 | E2e tests | `node scripts/run-e2e.mjs` | All pass on Chromium + Firefox (master HEAD 2026-05-18 baseline: 192 = 96 per browser). |
