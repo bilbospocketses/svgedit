@@ -891,9 +891,7 @@ class TopPanel {
     } else {
       // regular URL
       const promised = editor.svgCanvas.embedImage(url)
-      // eslint-disable-next-line promise/catch-or-return
       promised
-        // eslint-disable-next-line promise/always-return
         .then(
           () => {
             // switch into "select" mode if we've clicked on an element

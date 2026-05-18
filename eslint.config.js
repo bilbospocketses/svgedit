@@ -1,7 +1,6 @@
 import { defineConfig } from 'eslint/config'
 import tseslint from 'typescript-eslint'
 import globals from 'globals'
-import pluginPromise from 'eslint-plugin-promise'
 
 export default defineConfig([
   {
@@ -31,28 +30,19 @@ export default defineConfig([
     files: ['**/*.js', '**/*.mjs', '**/*.cjs'],
     extends: [...tseslint.configs.recommended]
   },
-  // Global settings applied to all files
+  // Linter options applied globally
   {
     linterOptions: {
-      // Stale eslint-disable directives from standard's bundled plugins (e.g. promise/)
-      // are present in source files. Demote to warn rather than error; backlog cleanup.
       reportUnusedDisableDirectives: 'warn'
-    },
+    }
+  },
+  // Globals applied to all files
+  {
     languageOptions: {
       globals: {
         ...globals.browser,
         ...globals.node
       }
-    },
-    // Register promise plugin so existing eslint-disable-next-line promise/* directives
-    // in source files don't cause "rule not found" errors. Rules are all set to 'off'
-    // (we don't enforce them); the registration just makes the disable directives valid.
-    plugins: {
-      promise: pluginPromise
-    },
-    rules: {
-      'promise/catch-or-return': 'off',
-      'promise/always-return': 'off'
     }
   },
   // Project-specific overrides for .ts files — strict errors; tighten over time
@@ -64,13 +54,16 @@ export default defineConfig([
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }]
     }
   },
-  // Declaration files (.d.ts) — downgrade type-strictness for existing hand-authored decls
+  // packages/svgcanvas/svgcanvas.d.ts — the existing hand-written shim slated for
+  // removal in Task 10. Downgrade its strictness so it doesn't block lint while it
+  // still lives on the branch. New hand-authored .d.ts files (e.g. the Task 3
+  // svgcanvas.augment.d.ts) inherit strict rules from the .ts block above.
   {
-    files: ['**/*.d.ts'],
+    files: ['packages/svgcanvas/svgcanvas.d.ts'],
     rules: {
-      '@typescript-eslint/no-explicit-any': 'warn',           // TODO: backlog — existing d.ts violations
-      '@typescript-eslint/no-unsafe-function-type': 'warn',   // TODO: backlog — existing d.ts violations
-      '@typescript-eslint/no-redundant-type-constituents': 'off' // type-checked rule off for d.ts
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unsafe-function-type': 'warn',
+      '@typescript-eslint/no-redundant-type-constituents': 'off'
     }
   },
   // Project-specific overrides for .js files — warn for existing violations; backlog cleanup
