@@ -4,6 +4,8 @@
  * @copyright 2011 Jeff Schiller
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument */
+
 import Paint from './paint.js'
 import { NS } from './namespaces.js'
 import {
@@ -15,65 +17,67 @@ import {
 } from './units.js'
 import { getParents } from '../common/util.js'
 
-let svgCanvas = null
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let svgCanvas: any = null
 
 /**
 * @function module:elem-get-set.init
 * @param {module:elem-get-set.elemContext} elemContext
 * @returns {void}
 */
-export const init = (canvas) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const init = (canvas: any): void => {
   svgCanvas = canvas
-  svgCanvas.getBold = getBoldMethod // Check whether selected element is bold or not.
-  svgCanvas.setBold = setBoldMethod // Make the selected element bold or normal.
-  svgCanvas.getItalic = getItalicMethod // Check whether selected element is in italics or not.
-  svgCanvas.setItalic = setItalicMethod // Make the selected element italic or normal.
-  svgCanvas.hasTextDecoration = hasTextDecorationMethod // Check whether the selected element has the given text decoration or not.
-  svgCanvas.addTextDecoration = addTextDecorationMethod // Adds the given value to the text decoration
-  svgCanvas.removeTextDecoration = removeTextDecorationMethod // Removes the given value from the text decoration
-  svgCanvas.setTextAnchor = setTextAnchorMethod // Set the new text anchor.
-  svgCanvas.setLetterSpacing = setLetterSpacingMethod // Set the new letter spacing.
-  svgCanvas.setWordSpacing = setWordSpacingMethod // Set the new word spacing.
-  svgCanvas.setTextLength = setTextLengthMethod // Set the new text length.
-  svgCanvas.setLengthAdjust = setLengthAdjustMethod // Set the new length adjust.
-  svgCanvas.getFontFamily = getFontFamilyMethod // The current font family
-  svgCanvas.setFontFamily = setFontFamilyMethod // Set the new font family.
-  svgCanvas.setFontColor = setFontColorMethod // Set the new font color.
-  svgCanvas.getFontColor = getFontColorMethod // The current font color
-  svgCanvas.getFontSize = getFontSizeMethod // The current font size
-  svgCanvas.setFontSize = setFontSizeMethod // Applies the given font size to the selected element.
-  svgCanvas.getText = getTextMethod // current text (`textContent`) of the selected element
-  svgCanvas.setTextContent = setTextContentMethod // Updates the text element with the given string.
-  svgCanvas.setImageURL = setImageURLMethod // Sets the new image URL for the selected image element
-  svgCanvas.setLinkURL = setLinkURLMethod // Sets the new link URL for the selected anchor element.
-  svgCanvas.setRectRadius = setRectRadiusMethod // Sets the `rx` and `ry` values to the selected `rect` element
-  svgCanvas.makeHyperlink = makeHyperlinkMethod // Wraps the selected element(s) in an anchor element or converts group to one.
+  svgCanvas.getBold = getBoldMethod
+  svgCanvas.setBold = setBoldMethod
+  svgCanvas.getItalic = getItalicMethod
+  svgCanvas.setItalic = setItalicMethod
+  svgCanvas.hasTextDecoration = hasTextDecorationMethod
+  svgCanvas.addTextDecoration = addTextDecorationMethod
+  svgCanvas.removeTextDecoration = removeTextDecorationMethod
+  svgCanvas.setTextAnchor = setTextAnchorMethod
+  svgCanvas.setLetterSpacing = setLetterSpacingMethod
+  svgCanvas.setWordSpacing = setWordSpacingMethod
+  svgCanvas.setTextLength = setTextLengthMethod
+  svgCanvas.setLengthAdjust = setLengthAdjustMethod
+  svgCanvas.getFontFamily = getFontFamilyMethod
+  svgCanvas.setFontFamily = setFontFamilyMethod
+  svgCanvas.setFontColor = setFontColorMethod
+  svgCanvas.getFontColor = getFontColorMethod
+  svgCanvas.getFontSize = getFontSizeMethod
+  svgCanvas.setFontSize = setFontSizeMethod
+  svgCanvas.getText = getTextMethod
+  svgCanvas.setTextContent = setTextContentMethod
+  svgCanvas.setImageURL = setImageURLMethod
+  svgCanvas.setLinkURL = setLinkURLMethod
+  svgCanvas.setRectRadius = setRectRadiusMethod
+  svgCanvas.makeHyperlink = makeHyperlinkMethod
   svgCanvas.removeHyperlink = removeHyperlinkMethod
-  svgCanvas.setSegType = setSegTypeMethod // Sets the new segment type to the selected segment(s).
-  svgCanvas.setStrokeWidth = setStrokeWidthMethod // Sets the stroke width for the current selected elements.
-  svgCanvas.getResolution = getResolutionMethod // The current dimensions and zoom level in an object
-  svgCanvas.getTitle = getTitleMethod // the current group/SVG's title contents or `undefined` if no element
-  svgCanvas.setGroupTitle = setGroupTitleMethod // Sets the group/SVG's title content.
-  svgCanvas.setStrokeAttr = setStrokeAttrMethod // Set the given stroke-related attribute the given value for selected elements.
-  svgCanvas.setBackground = setBackgroundMethod // Set the background of the editor (NOT the actual document).
-  svgCanvas.setDocumentTitle = setDocumentTitleMethod // Adds/updates a title element for the document with the given name.
-  svgCanvas.getEditorNS = getEditorNSMethod // Returns the editor's namespace URL, optionally adding it to the root element.
-  svgCanvas.setResolution = setResolutionMethod // Changes the document's dimensions to the given size.
-  svgCanvas.setBBoxZoom = setBBoxZoomMethod // Sets the zoom level on the canvas-side based on the given value.
-  svgCanvas.setCurrentZoom = setZoomMethod // Sets the zoom to the given level.
-  svgCanvas.setColor = setColorMethod // Change the current stroke/fill color/gradien
-  svgCanvas.setGradient = setGradientMethod // Apply the current gradient to selected element's fill or stroke.
-  svgCanvas.setPaint = setPaintMethod // Set a color/gradient to a fill/stroke.
+  svgCanvas.setSegType = setSegTypeMethod
+  svgCanvas.setStrokeWidth = setStrokeWidthMethod
+  svgCanvas.getResolution = getResolutionMethod
+  svgCanvas.getTitle = getTitleMethod
+  svgCanvas.setGroupTitle = setGroupTitleMethod
+  svgCanvas.setStrokeAttr = setStrokeAttrMethod
+  svgCanvas.setBackground = setBackgroundMethod
+  svgCanvas.setDocumentTitle = setDocumentTitleMethod
+  svgCanvas.getEditorNS = getEditorNSMethod
+  svgCanvas.setResolution = setResolutionMethod
+  svgCanvas.setBBoxZoom = setBBoxZoomMethod
+  svgCanvas.setCurrentZoom = setZoomMethod
+  svgCanvas.setColor = setColorMethod
+  svgCanvas.setGradient = setGradientMethod
+  svgCanvas.setPaint = setPaintMethod
 }
 
 /**
 * @function module:elem-get-set.SvgCanvas#getResolution
 * @returns {DimensionsAndZoom} The current dimensions and zoom level in an object
 */
-const getResolutionMethod = () => {
-  const zoom = svgCanvas.getZoom()
-  const w = svgCanvas.getSvgContent().getAttribute('width') / zoom
-  const h = svgCanvas.getSvgContent().getAttribute('height') / zoom
+const getResolutionMethod = (): { w: number; h: number; zoom: number } => {
+  const zoom: number = svgCanvas.getZoom()
+  const w: number = svgCanvas.getSvgContent().getAttribute('width') / zoom
+  const h: number = svgCanvas.getSvgContent().getAttribute('height') / zoom
 
   return {
     w,
@@ -85,23 +89,23 @@ const getResolutionMethod = () => {
 /**
 * @function module:elem-get-set.SvgCanvas#getTitle
 * @param {Element} [elem]
-* @returns {string|void} the current group/SVG's title contents or
-* `undefined` if no element is passed nd there are no selected elements.
+* @returns {string|void}
 */
-const getTitleMethod = (elem) => {
-  const selectedElements = svgCanvas.getSelectedElements()
+const getTitleMethod = (elem?: Element): string | undefined => {
+  const selectedElements: Element[] = svgCanvas.getSelectedElements()
   const dataStorage = svgCanvas.getDataStorage()
-  elem = elem || selectedElements[0]
+  elem = elem ?? selectedElements[0]
   if (!elem) { return undefined }
   if (dataStorage.has(elem, 'gsvg')) {
-    elem = dataStorage.get(elem, 'gsvg')
+    elem = dataStorage.get(elem, 'gsvg') as Element
   } else if (dataStorage.has(elem, 'symbol')) {
-    elem = dataStorage.get(elem, 'symbol')
+    elem = dataStorage.get(elem, 'symbol') as Element
   }
+  if (!elem) { return undefined }
   const childs = elem.childNodes
   for (const child of childs) {
     if (child.nodeName === 'title') {
-      return child.textContent
+      return child.textContent ?? ''
     }
   }
   return ''
@@ -111,17 +115,16 @@ const getTitleMethod = (elem) => {
 * Sets the group/SVG's title content.
 * @function module:elem-get-set.SvgCanvas#setGroupTitle
 * @param {string} val
-* @todo Combine this with `setDocumentTitle`
 * @returns {void}
 */
-const setGroupTitleMethod = (val) => {
+const setGroupTitleMethod = (val: string): void => {
   const {
     InsertElementCommand, RemoveElementCommand,
     ChangeElementCommand, BatchCommand
   } = svgCanvas.history
-  const selectedElements = svgCanvas.getSelectedElements()
+  const selectedElements: Element[] = svgCanvas.getSelectedElements()
   const dataStorage = svgCanvas.getDataStorage()
-  let elem = selectedElements[0]
+  let elem: Element | null = selectedElements[0] ?? null
   if (!elem) { return }
   if (dataStorage.has(elem, 'gsvg')) {
     elem = dataStorage.get(elem, 'gsvg')
@@ -132,7 +135,7 @@ const setGroupTitleMethod = (val) => {
 
   const batchCmd = new BatchCommand('Set Label')
 
-  let title = null
+  let title: ChildNode | null = null
   for (const child of elem.childNodes) {
     if (child.nodeName === 'title') {
       title = child
@@ -142,22 +145,19 @@ const setGroupTitleMethod = (val) => {
 
   if (val.length === 0) {
     if (!title) { return }
-    // Remove title element
     const { nextSibling } = title
     title.remove()
     batchCmd.addSubCommand(new RemoveElementCommand(title, nextSibling, elem))
   } else if (title) {
-    // Change title contents
     const oldText = title.textContent
     if (oldText === val) { return }
     title.textContent = val
     batchCmd.addSubCommand(new ChangeElementCommand(title, { '#text': oldText }))
   } else {
-    // Add title element
-    title = svgCanvas.getDOMDocument().createElementNS(NS.SVG, 'title')
-    title.textContent = val
-    elem.insertBefore(title, elem.firstChild)
-    batchCmd.addSubCommand(new InsertElementCommand(title))
+    const newTitle = svgCanvas.getDOMDocument().createElementNS(NS.SVG, 'title')
+    newTitle.textContent = val
+    elem.insertBefore(newTitle, elem.firstChild)
+    batchCmd.addSubCommand(new InsertElementCommand(newTitle))
   }
 
   if (!batchCmd.isEmpty()) {
@@ -167,22 +167,20 @@ const setGroupTitleMethod = (val) => {
 
 /**
 * Adds/updates a title element for the document with the given name.
-* This is an undoable action.
 * @function module:elem-get-set.SvgCanvas#setDocumentTitle
-* @param {string} newTitle - String with the new title
+* @param {string} newTitle
 * @returns {void}
 */
-const setDocumentTitleMethod = (newTitle) => {
+const setDocumentTitleMethod = (newTitle: string): void => {
   const {
     InsertElementCommand, RemoveElementCommand,
     ChangeElementCommand, BatchCommand
   } = svgCanvas.history
-  const svgContent = svgCanvas.getSvgContent()
+  const svgContent: Element = svgCanvas.getSvgContent()
 
   const batchCmd = new BatchCommand('Change Image Title')
 
-  /** @type {Element|null} */
-  let docTitle = null
+  let docTitle: ChildNode | null = null
   for (const child of svgContent.childNodes) {
     if (child.nodeName === 'title') {
       docTitle = child
@@ -192,17 +190,16 @@ const setDocumentTitleMethod = (newTitle) => {
 
   if (!docTitle) {
     if (!newTitle.length) { return }
-    docTitle = svgCanvas.getDOMDocument().createElementNS(NS.SVG, 'title')
-    docTitle.textContent = newTitle
-    svgContent.insertBefore(docTitle, svgContent.firstChild)
-    batchCmd.addSubCommand(new InsertElementCommand(docTitle))
+    const created = svgCanvas.getDOMDocument().createElementNS(NS.SVG, 'title')
+    created.textContent = newTitle
+    svgContent.insertBefore(created, svgContent.firstChild)
+    batchCmd.addSubCommand(new InsertElementCommand(created))
   } else if (newTitle.length) {
     const oldTitle = docTitle.textContent
     if (oldTitle === newTitle) { return }
     docTitle.textContent = newTitle
     batchCmd.addSubCommand(new ChangeElementCommand(docTitle, { '#text': oldTitle }))
   } else {
-    // No title given, so element is not necessary
     const { nextSibling } = docTitle
     docTitle.remove()
     batchCmd.addSubCommand(new RemoveElementCommand(docTitle, nextSibling, svgContent))
@@ -216,35 +213,32 @@ const setDocumentTitleMethod = (newTitle) => {
 /**
 * Changes the document's dimensions to the given size.
 * @function module:elem-get-set.SvgCanvas#setResolution
-* @param {Float|"fit"} x - Number with the width of the new dimensions in user units.
-* Can also be the string "fit" to indicate "fit to content".
-* @param {Float} y - Number with the height of the new dimensions in user units.
-* @fires module:elem-get-set.SvgCanvas#event:changed
-* @returns {boolean} Indicates if resolution change was successful.
-* It will fail on "fit to content" option with no content to fit to.
+* @param {Float|"fit"} x
+* @param {Float} y
+* @returns {boolean}
 */
-const setResolutionMethod = (x, y) => {
+const setResolutionMethod = (x: number | 'fit', y: number): boolean => {
   const { ChangeElementCommand, BatchCommand } = svgCanvas.history
-  const res = svgCanvas.getResolution()
+  const res: { w: number; h: number } = svgCanvas.getResolution()
   const { w, h } = res
-  let batchCmd
+  let batchCmd: { addSubCommand: (c: unknown) => void; isEmpty: () => boolean } | undefined
 
   if (x === 'fit') {
-    // Get bounding box
     const bbox = getStrokedBBoxDefaultVisible()
 
     if (bbox) {
       batchCmd = new BatchCommand('Fit Canvas to Content')
-      const visEls = getVisibleElements()
+      const visEls: Element[] = getVisibleElements()
       svgCanvas.addToSelection(visEls)
-      const dx = []; const dy = []
-      visEls.forEach((_item, _i) => {
+      const dx: number[] = []
+      const dy: number[] = []
+      visEls.forEach(() => {
         dx.push(bbox.x * -1)
         dy.push(bbox.y * -1)
       })
 
       const cmd = svgCanvas.moveSelectedElements(dx, dy, false)
-      if (cmd) {
+      if (cmd && batchCmd) {
         batchCmd.addSubCommand(cmd)
       }
       svgCanvas.clearSelection()
@@ -255,22 +249,22 @@ const setResolutionMethod = (x, y) => {
       return false
     }
   }
-  const newW = convertToNum('width', x)
-  const newH = convertToNum('height', y)
+  const newW = convertToNum('width', String(x))
+  const newH = convertToNum('height', String(y))
   if (newW !== w || newH !== h) {
     if (!batchCmd) {
       batchCmd = new BatchCommand('Change Image Dimensions')
     }
-    const svgContent = svgCanvas.getSvgContent()
+    const svgContent: Element = svgCanvas.getSvgContent()
     const oldViewBox = svgContent.getAttribute('viewBox')
 
-    svgContent.setAttribute('width', newW)
-    svgContent.setAttribute('height', newH)
+    svgContent.setAttribute('width', String(newW))
+    svgContent.setAttribute('height', String(newH))
 
     svgCanvas.contentW = newW
     svgCanvas.contentH = newH
-    svgContent.setAttribute('viewBox', [0, 0, newW, newH].join(' '))
-    batchCmd.addSubCommand(new ChangeElementCommand(svgContent, { width: w, height: h, viewBox: oldViewBox }))
+    svgContent.setAttribute('viewBox', [0, 0, newW, newH].join(' '));
+    (batchCmd as { addSubCommand: (c: unknown) => void }).addSubCommand(new ChangeElementCommand(svgContent, { width: w, height: h, viewBox: oldViewBox }))
 
     svgCanvas.addCommandToHistory(batchCmd)
     svgCanvas.call('changed', [svgContent])
@@ -279,12 +273,12 @@ const setResolutionMethod = (x, y) => {
 }
 
 /**
-* Returns the editor's namespace URL, optionally adding it to the root element.
+* Returns the editor's namespace URL.
 * @function module:elem-get-set.SvgCanvas#getEditorNS
-* @param {boolean} [add] - Indicates whether or not to add the namespace value
-* @returns {string} The editor's namespace URL
+* @param {boolean} [add]
+* @returns {string}
 */
-const getEditorNSMethod = (add) => {
+const getEditorNSMethod = (add?: boolean): string => {
   if (add) {
     svgCanvas.getSvgContent().setAttribute('xmlns:se', NS.SE)
   }
@@ -292,49 +286,42 @@ const getEditorNSMethod = (add) => {
 }
 
 /**
- * @typedef {PlainObject} module:elem-get-set.ZoomAndBBox
- * @property {Float} zoom
- * @property {module:utilities.BBoxObject} bbox
- */
-/**
 * Sets the zoom level on the canvas-side based on the given value.
 * @function module:elem-get-set.SvgCanvas#setBBoxZoom
-* @param {"selection"|"canvas"|"content"|"layer"|module:SVGEditor.BBoxObjectWithFactor} val - Bounding box object to zoom to or string indicating zoom option. Note: the object value type is defined in `svg-editor.js`
-* @param {Integer} editorW - The editor's workarea box's width
-* @param {Integer} editorH - The editor's workarea box's height
 * @returns {module:elem-get-set.ZoomAndBBox|void}
 */
-const setBBoxZoomMethod = (val, editorW, editorH) => {
-  const zoom = svgCanvas.getZoom()
-  const selectedElements = svgCanvas.getSelectedElements()
+const setBBoxZoomMethod = (val: unknown, editorW: number, editorH: number): { zoom: number; bbox: unknown } | undefined => {
+  const zoom: number = svgCanvas.getZoom()
+  const selectedElements: (Element | null)[] = svgCanvas.getSelectedElements()
   let spacer = 0.85
-  let bb
-  const calcZoom = (bb) => {
-    if (!bb) { return undefined }
+  let bb: { width: number; height: number; x: number; y: number; zoom?: number; factor?: number } | undefined
+
+  const calcZoom = (bbox: { width: number; height: number; x: number; y: number } | undefined): { zoom: number; bbox: unknown } | undefined => {
+    if (!bbox) { return undefined }
     if (!Number.isFinite(editorW) || !Number.isFinite(editorH) || editorW <= 0 || editorH <= 0) {
       return undefined
     }
-    if (!Number.isFinite(bb.width) || !Number.isFinite(bb.height) || bb.width <= 0 || bb.height <= 0) {
+    if (!Number.isFinite(bbox.width) || !Number.isFinite(bbox.height) || bbox.width <= 0 || bbox.height <= 0) {
       return undefined
     }
-    const wZoom = Math.round((editorW / bb.width) * 100 * spacer) / 100
-    const hZoom = Math.round((editorH / bb.height) * 100 * spacer) / 100
-    const zoom = Math.min(wZoom, hZoom)
-    if (!Number.isFinite(zoom) || zoom <= 0) {
+    const wZoom = Math.round((editorW / bbox.width) * 100 * spacer) / 100
+    const hZoom = Math.round((editorH / bbox.height) * 100 * spacer) / 100
+    const newZoom = Math.min(wZoom, hZoom)
+    if (!Number.isFinite(newZoom) || newZoom <= 0) {
       return undefined
     }
-    svgCanvas.setZoom(zoom)
-    return { zoom, bbox: bb }
+    svgCanvas.setZoom(newZoom)
+    return { zoom: newZoom, bbox }
   }
 
   if (val && typeof val === 'object') {
-    bb = val
+    bb = val as { width: number; height: number; x: number; y: number; zoom?: number; factor?: number }
     if (bb.width === 0 || bb.height === 0) {
       let newzoom = zoom
-      if (Number.isFinite(bb.zoom) && bb.zoom > 0) {
-        newzoom = bb.zoom
-      } else if (Number.isFinite(bb.factor) && bb.factor > 0) {
-        newzoom = zoom * bb.factor
+      if (Number.isFinite(bb.zoom) && (bb.zoom ?? 0) > 0) {
+        newzoom = bb.zoom ?? zoom
+      } else if (Number.isFinite(bb.factor) && (bb.factor ?? 0) > 0) {
+        newzoom = zoom * (bb.factor ?? 1)
       }
       if (Number.isFinite(newzoom) && newzoom > 0) {
         svgCanvas.setZoom(newzoom)
@@ -347,19 +334,19 @@ const setBBoxZoomMethod = (val, editorW, editorH) => {
   switch (val) {
     case 'selection': {
       if (!selectedElements[0]) { return undefined }
-      const selectedElems = selectedElements.filter(Boolean)
-      bb = getStrokedBBoxDefaultVisible(selectedElems)
+      const selectedElems = selectedElements.filter((e): e is Element => e !== null)
+      bb = getStrokedBBoxDefaultVisible(selectedElems) as typeof bb
       break
     } case 'canvas': {
-      const res = svgCanvas.getResolution()
+      const res: { w: number; h: number } = svgCanvas.getResolution()
       spacer = 0.95
       bb = { width: res.w, height: res.h, x: 0, y: 0 }
       break
     } case 'content':
-      bb = getStrokedBBoxDefaultVisible()
+      bb = getStrokedBBoxDefaultVisible() as typeof bb
       break
     case 'layer':
-      bb = getStrokedBBoxDefaultVisible(getVisibleElements(svgCanvas.getCurrentDrawing().getCurrentLayer()))
+      bb = getStrokedBBoxDefaultVisible(getVisibleElements(svgCanvas.getCurrentDrawing().getCurrentLayer())) as typeof bb
       break
     default:
       return undefined
@@ -370,16 +357,15 @@ const setBBoxZoomMethod = (val, editorW, editorH) => {
 /**
 * Sets the zoom to the given level.
 * @function module:elem-get-set.SvgCanvas#setZoom
-* @param {Float} zoomLevel - Float indicating the zoom level to change to
-* @fires module:elem-get-set.SvgCanvas#event:ext_zoomChanged
+* @param {Float} zoomLevel
 * @returns {void}
 */
-const setZoomMethod = (zoomLevel) => {
+const setZoomMethod = (zoomLevel: number): void => {
   if (!Number.isFinite(zoomLevel) || zoomLevel <= 0) {
     return
   }
-  const selectedElements = svgCanvas.getSelectedElements()
-  const res = svgCanvas.getResolution()
+  const selectedElements: (Element | null)[] = svgCanvas.getSelectedElements()
+  const res: { w: number; h: number } = svgCanvas.getResolution()
   const w = res.w / zoomLevel
   const h = res.h / zoomLevel
   if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) {
@@ -390,7 +376,7 @@ const setZoomMethod = (zoomLevel) => {
   selectedElements.forEach((elem) => {
     if (!elem) { return }
     const selector = svgCanvas.selectorManager.requestSelector(elem)
-    selector && selector.resize()
+    if (selector) { selector.resize() }
   })
   svgCanvas.pathActions.zoomChange()
   svgCanvas.runExtensions('zoomChanged', zoomLevel)
@@ -399,23 +385,15 @@ const setZoomMethod = (zoomLevel) => {
 /**
 * Change the current stroke/fill color/gradient value.
 * @function module:elem-get-set.SvgCanvas#setColor
-* @param {string} type - String indicating fill or stroke
-* @param {string} val - The value to set the stroke attribute to
-* @param {boolean} preventUndo - Boolean indicating whether or not svgCanvas should be an undoable option
-* @fires module:elem-get-set.SvgCanvas#event:changed
 * @returns {void}
 */
-const setColorMethod = (type, val, preventUndo) => {
-  const selectedElements = svgCanvas.getSelectedElements()
+const setColorMethod = (type: string, val: string, preventUndo?: boolean): void => {
+  const selectedElements: (Element | null)[] = svgCanvas.getSelectedElements()
   svgCanvas.setCurShape(type, val)
   svgCanvas.setCurProperties(`${type}_paint`, { type: 'solidColor' })
-  const elems = []
-  /**
-*
-* @param {Element} e
-* @returns {void}
-*/
-  const addNonG = (e) => {
+  const elems: Element[] = []
+
+  const addNonG = (e: Element): void => {
     if (e.nodeName !== 'g') {
       elems.push(e)
     }
@@ -448,26 +426,21 @@ const setColorMethod = (type, val, preventUndo) => {
 /**
 * Apply the current gradient to selected element's fill or stroke.
 * @function module:elem-get-set.SvgCanvas#setGradient
-* @param {"fill"|"stroke"} type - String indicating "fill" or "stroke" to apply to an element
 * @returns {void}
 */
-const setGradientMethod = (type) => {
+const setGradientMethod = (type: string): void => {
   if (!svgCanvas.getCurProperties(`${type}_paint`) ||
     svgCanvas.getCurProperties(`${type}_paint`).type === 'solidColor') { return }
   const canvas = svgCanvas
   let grad = canvas[type + 'Grad']
   if (!grad) { return }
-  // find out if there is a duplicate gradient already in the defs
-  const duplicateGrad = findDuplicateGradient(grad)
+  const duplicateGrad = findDuplicateGradient(grad as SVGGradientElement)
   const defs = findDefs()
-  // no duplicate found, so import gradient into defs
   if (!duplicateGrad) {
-    // const origGrad = grad;
     grad = svgCanvas.getDOMDocument().importNode(grad, true)
     defs.append(grad)
-    // get next id and set it on the grad
     grad.id = svgCanvas.getNextId()
-  } else { // use existing gradient
+  } else {
     grad = duplicateGrad
   }
   svgCanvas.setColor(type, `url(#${grad.id})`)
@@ -475,11 +448,8 @@ const setGradientMethod = (type) => {
 
 /**
 * Check if exact gradient already exists.
-* @function module:svgcanvas~findDuplicateGradient
-* @param {SVGGradientElement} grad - The gradient DOM element to compare to others
-* @returns {SVGGradientElement} The existing gradient if found, `null` if not
 */
-const findDuplicateGradient = (grad) => {
+const findDuplicateGradient = (grad: SVGGradientElement | null): SVGGradientElement | null => {
   if (!grad) {
     return null
   }
@@ -489,9 +459,10 @@ const findDuplicateGradient = (grad) => {
   const defs = findDefs()
   const existingGrads = defs.querySelectorAll('linearGradient, radialGradient')
   let i = existingGrads.length
-  const radAttrs = ['r', 'cx', 'cy', 'fx', 'fy']
+  const radAttrs = ['r', 'cx', 'cy', 'fx', 'fy'] as const
   while (i--) {
     const og = existingGrads[i]
+    if (!og) { continue }
     if (og.tagName !== grad.tagName) {
       continue
     }
@@ -504,14 +475,14 @@ const findDuplicateGradient = (grad) => {
         continue
       }
     } else {
-      const gradAttrs = {
+      const gradAttrs: Record<string, number> = {
         r: Number(grad.getAttribute('r')),
         cx: Number(grad.getAttribute('cx')),
         cy: Number(grad.getAttribute('cy')),
         fx: Number(grad.getAttribute('fx')),
         fy: Number(grad.getAttribute('fy'))
       }
-      const ogAttrs = {
+      const ogAttrs: Record<string, number> = {
         r: Number(og.getAttribute('r')),
         cx: Number(og.getAttribute('cx')),
         cy: Number(og.getAttribute('cy')),
@@ -527,7 +498,6 @@ const findDuplicateGradient = (grad) => {
       if (diff) { continue }
     }
 
-    // else could be a duplicate, iterate through stops
     const stops = grad.getElementsByTagNameNS(NS.SVG, 'stop')
     const ostops = og.getElementsByTagNameNS(NS.SVG, 'stop')
 
@@ -539,6 +509,7 @@ const findDuplicateGradient = (grad) => {
     while (j--) {
       const stop = stops[j]
       const ostop = ostops[j]
+      if (!stop || !ostop) { break }
 
       if (stop.getAttribute('offset') !== ostop.getAttribute('offset') ||
         stop.getAttribute('stop-opacity') !== ostop.getAttribute('stop-opacity') ||
@@ -548,9 +519,9 @@ const findDuplicateGradient = (grad) => {
     }
 
     if (j === -1) {
-      return og
+      return og as SVGGradientElement
     }
-  } // for each gradient in defs
+  }
 
   return null
 }
@@ -558,16 +529,12 @@ const findDuplicateGradient = (grad) => {
 /**
 * Set a color/gradient to a fill/stroke.
 * @function module:elem-get-set.SvgCanvas#setPaint
-* @param {"fill"|"stroke"} type - String with "fill" or "stroke"
-* @param {} paint - The paint object to apply
 * @returns {void}
 */
-const setPaintMethod = (type, paint) => {
-  // make a copy
+const setPaintMethod = (type: string, paint: ConstructorParameters<typeof Paint>[0]): void => {
   const p = new Paint(paint)
   svgCanvas.setPaintOpacity(type, p.alpha / 100, true)
 
-  // now set the current paint object
   svgCanvas.setCurProperties(`${type}_paint`, p)
   switch (p.type) {
     case 'solidColor':
@@ -583,27 +550,20 @@ const setPaintMethod = (type, paint) => {
 
 /**
 * Sets the stroke width for the current selected elements.
-* When attempting to set a line's width to 0, this changes it to 1 instead.
 * @function module:elem-get-set.SvgCanvas#setStrokeWidth
-* @param {Float} val - A Float indicating the new stroke width value
-* @fires module:elem-get-set.SvgCanvas#event:changed
 * @returns {void}
 */
-const setStrokeWidthMethod = (val) => {
-  const selectedElements = svgCanvas.getSelectedElements()
+const setStrokeWidthMethod = (val: number): void => {
+  const selectedElements: (Element | null)[] = svgCanvas.getSelectedElements()
   if (val === 0 && ['line', 'path'].includes(svgCanvas.getMode())) {
     svgCanvas.setStrokeWidth(1)
     return
   }
   svgCanvas.setCurProperties('stroke_width', val)
 
-  const elems = []
-  /**
-*
-* @param {Element} e
-* @returns {void}
-*/
-  const addNonG = (e) => {
+  const elems: Element[] = []
+
+  const addNonG = (e: Element): void => {
     if (e.nodeName !== 'g') {
       elems.push(e)
     }
@@ -628,22 +588,19 @@ const setStrokeWidthMethod = (val) => {
 /**
 * Set the given stroke-related attribute the given value for selected elements.
 * @function module:elem-get-set.SvgCanvas#setStrokeAttr
-* @param {string} attr - String with the attribute name
-* @param {string|Float} val - String or number with the attribute value
-* @fires module:elem-get-set.SvgCanvas#event:changed
 * @returns {void}
 */
-const setStrokeAttrMethod = (attr, val) => {
-  const selectedElements = svgCanvas.getSelectedElements()
+const setStrokeAttrMethod = (attr: string, val: string | number): void => {
+  const selectedElements: (Element | null)[] = svgCanvas.getSelectedElements()
   svgCanvas.setCurShape(attr.replace('-', '_'), val)
-  const elems = []
+  const elems: Element[] = []
 
   let i = selectedElements.length
   while (i--) {
     const elem = selectedElements[i]
     if (elem) {
       if (elem.tagName === 'g') {
-        walkTree(elem, (e) => { if (e.nodeName !== 'g') { elems.push(e) } })
+        walkTree(elem, (e: Element) => { if (e.nodeName !== 'g') { elems.push(e) } })
       } else {
         elems.push(elem)
       }
@@ -655,19 +612,19 @@ const setStrokeAttrMethod = (attr, val) => {
   }
 }
 
-const getSelectedTextElements = () => {
-  return svgCanvas.getSelectedElements().filter(el => el?.tagName === 'text')
+const getSelectedTextElements = (): Element[] => {
+  return (svgCanvas.getSelectedElements() as (Element | null)[]).filter((el): el is Element => el?.tagName === 'text')
 }
 
-const getChangedTextElements = (textElements, attr, newValue) => {
+const getChangedTextElements = (textElements: Element[], attr: string, newValue: string | number): Element[] => {
   const normalizedValue = String(newValue)
   return textElements.filter((elem) => {
     const oldValue = attr === '#text' ? elem.textContent : elem.getAttribute(attr)
-    return (oldValue || '') !== normalizedValue
+    return (oldValue ?? '') !== normalizedValue
   })
 }
 
-const notifyTextChange = (textElements) => {
+const notifyTextChange = (textElements: Element[]): void => {
   if (textElements.length > 0) {
     svgCanvas.call('changed', textElements)
   }
@@ -675,21 +632,16 @@ const notifyTextChange = (textElements) => {
 
 /**
  * Check if all selected text elements are in bold.
- * @function module:svgcanvas.SvgCanvas#getBold
- * @returns {boolean} `true` if all selected elements are bold, `false` otherwise.
  */
-const getBoldMethod = () => {
+const getBoldMethod = (): boolean => {
   const textElements = getSelectedTextElements()
   return textElements.every(el => el.getAttribute('font-weight') === 'bold')
 }
 
 /**
  * Make the selected element(s) bold or normal.
- * @function module:svgcanvas.SvgCanvas#setBold
- * @param {boolean} b - Indicates bold (`true`) or normal (`false`)
- * @returns {void}
  */
-const setBoldMethod = (b) => {
+const setBoldMethod = (b: boolean): void => {
   const textElements = getSelectedTextElements()
   const value = b ? 'bold' : 'normal'
   const changedTextElements = getChangedTextElements(textElements, 'font-weight', value)
@@ -703,27 +655,23 @@ const setBoldMethod = (b) => {
 }
 
 /**
- * Check if all selected text elements have the given text decoration value or not.
- * @returns {boolean} Indicates whether or not elements have the text decoration value
+ * Check if all selected elements have the given text decoration value.
  */
-const hasTextDecorationMethod = (value) => {
+const hasTextDecorationMethod = (value: string): boolean => {
   const textElements = getSelectedTextElements()
-  return textElements.every(el => (el.getAttribute('text-decoration') || '').includes(value))
+  return textElements.every(el => (el.getAttribute('text-decoration') ?? '').includes(value))
 }
 
 /**
- * Adds the given text decoration value
- * @param value The text decoration value
- * @returns {void}
+ * Adds the given text decoration value.
  */
-const addTextDecorationMethod = (value) => {
+const addTextDecorationMethod = (value: string): void => {
   const { ChangeElementCommand, BatchCommand } = svgCanvas.history
   const textElements = getSelectedTextElements()
 
   const batchCmd = new BatchCommand()
-  textElements.forEach(elem => {
-    const oldValue = elem.getAttribute('text-decoration') || ''
-    // Add the new text decoration value if it did not exist
+  textElements.forEach((elem: Element) => {
+    const oldValue = elem.getAttribute('text-decoration') ?? ''
     if (!oldValue.includes(value)) {
       batchCmd.addSubCommand(new ChangeElementCommand(elem, { 'text-decoration': oldValue }))
       svgCanvas.changeSelectedAttributeNoUndo('text-decoration', `${oldValue} ${value}`.trim(), [elem])
@@ -733,23 +681,21 @@ const addTextDecorationMethod = (value) => {
     svgCanvas.undoMgr.addCommandToHistory(batchCmd)
   }
 
-  if (!textElements.some(el => el.textContent)) {
+  if (!textElements.some((el: Element) => el.textContent)) {
     svgCanvas.textActions.setCursor()
   }
 }
 
 /**
- * Removes the given text decoration value
- * @param value The text decoration value
- * @returns {void}
+ * Removes the given text decoration value.
  */
-const removeTextDecorationMethod = (value) => {
+const removeTextDecorationMethod = (value: string): void => {
   const { ChangeElementCommand, BatchCommand } = svgCanvas.history
   const textElements = getSelectedTextElements()
 
   const batchCmd = new BatchCommand()
-  textElements.forEach(elem => {
-    const actualValues = elem.getAttribute('text-decoration') || ''
+  textElements.forEach((elem: Element) => {
+    const actualValues = elem.getAttribute('text-decoration') ?? ''
     batchCmd.addSubCommand(new ChangeElementCommand(elem, { 'text-decoration': actualValues }))
     svgCanvas.changeSelectedAttributeNoUndo('text-decoration', actualValues.replace(value, '').trim(), [elem])
   })
@@ -757,28 +703,23 @@ const removeTextDecorationMethod = (value) => {
     svgCanvas.undoMgr.addCommandToHistory(batchCmd)
   }
 
-  if (!textElements.some(el => el.textContent)) {
+  if (!textElements.some((el: Element) => el.textContent)) {
     svgCanvas.textActions.setCursor()
   }
 }
 
 /**
  * Check if all selected elements have an italic font style.
- * @function module:svgcanvas.SvgCanvas#getItalic
- * @returns {boolean} `true` if all selected elements are in italics, `false` otherwise.
  */
-const getItalicMethod = () => {
+const getItalicMethod = (): boolean => {
   const textElements = getSelectedTextElements()
   return textElements.every(el => el.getAttribute('font-style') === 'italic')
 }
 
 /**
  * Make the selected element(s) italic or normal.
- * @function module:svgcanvas.SvgCanvas#setItalic
- * @param {boolean} i - Indicates italic (`true`) or normal (`false`)
- * @returns {void}
  */
-const setItalicMethod = (i) => {
+const setItalicMethod = (i: boolean): void => {
   const textElements = getSelectedTextElements()
   const value = i ? 'italic' : 'normal'
   const changedTextElements = getChangedTextElements(textElements, 'font-style', value)
@@ -792,11 +733,9 @@ const setItalicMethod = (i) => {
 }
 
 /**
- * @function module:svgcanvas.SvgCanvas#setTextAnchorMethod Set the new text anchor
- * @param {string} value - The text anchor value (start, middle or end)
- * @returns {void}
+ * Set the new text anchor.
  */
-const setTextAnchorMethod = (value) => {
+const setTextAnchorMethod = (value: string): void => {
   const textElements = getSelectedTextElements()
   const changedTextElements = getChangedTextElements(textElements, 'text-anchor', value)
   if (changedTextElements.length > 0) {
@@ -806,11 +745,9 @@ const setTextAnchorMethod = (value) => {
 }
 
 /**
- * @function module:svgcanvas.SvgCanvas#setLetterSpacingMethod Set the new letter spacing
- * @param {string} value - The letter spacing value
- * @returns {void}
+ * Set the new letter spacing.
  */
-const setLetterSpacingMethod = (value) => {
+const setLetterSpacingMethod = (value: string): void => {
   const textElements = getSelectedTextElements()
   const changedTextElements = getChangedTextElements(textElements, 'letter-spacing', value)
   if (changedTextElements.length > 0) {
@@ -823,11 +760,9 @@ const setLetterSpacingMethod = (value) => {
 }
 
 /**
- * @function module:svgcanvas.SvgCanvas#setWordSpacingMethod Set the new word spacing
- * @param {string} value - The word spacing value
- * @returns {void}
+ * Set the new word spacing.
  */
-const setWordSpacingMethod = (value) => {
+const setWordSpacingMethod = (value: string): void => {
   const textElements = getSelectedTextElements()
   const changedTextElements = getChangedTextElements(textElements, 'word-spacing', value)
   if (changedTextElements.length > 0) {
@@ -840,11 +775,9 @@ const setWordSpacingMethod = (value) => {
 }
 
 /**
- * @function module:svgcanvas.SvgCanvas#setTextLengthMethod Set the new text length
- * @param {string} value - The text length value
- * @returns {void}
+ * Set the new text length.
  */
-const setTextLengthMethod = (value) => {
+const setTextLengthMethod = (value: string): void => {
   const textElements = getSelectedTextElements()
   const changedTextElements = getChangedTextElements(textElements, 'textLength', value)
   if (changedTextElements.length > 0) {
@@ -857,11 +790,9 @@ const setTextLengthMethod = (value) => {
 }
 
 /**
- * @function module:svgcanvas.SvgCanvas#setLengthAdjustMethod Set the new length adjust
- * @param {string} value - The length adjust value
- * @returns {void}
+ * Set the new length adjust.
  */
-const setLengthAdjustMethod = (value) => {
+const setLengthAdjustMethod = (value: string): void => {
   const textElements = getSelectedTextElements()
   const changedTextElements = getChangedTextElements(textElements, 'lengthAdjust', value)
   if (changedTextElements.length > 0) {
@@ -874,20 +805,16 @@ const setLengthAdjustMethod = (value) => {
 }
 
 /**
-* @function module:svgcanvas.SvgCanvas#getFontFamily
-* @returns {string} The current font family
-*/
-const getFontFamilyMethod = () => {
-  return svgCanvas.getCurText('font_family')
+ * @returns {string} The current font family
+ */
+const getFontFamilyMethod = (): string => {
+  return svgCanvas.getCurText('font_family') as string
 }
 
 /**
-* Set the new font family.
-* @function module:svgcanvas.SvgCanvas#setFontFamily
-* @param {string} val - String with the new font family
-* @returns {void}
-*/
-const setFontFamilyMethod = (val) => {
+ * Set the new font family.
+ */
+const setFontFamilyMethod = (val: string): void => {
   const textElements = getSelectedTextElements()
   const changedTextElements = getChangedTextElements(textElements, 'font-family', val)
   svgCanvas.setCurText('font_family', val)
@@ -901,12 +828,9 @@ const setFontFamilyMethod = (val) => {
 }
 
 /**
-* Set the new font color.
-* @function module:svgcanvas.SvgCanvas#setFontColor
-* @param {string} val - String with the new font color
-* @returns {void}
-*/
-const setFontColorMethod = (val) => {
+ * Set the new font color.
+ */
+const setFontColorMethod = (val: string): void => {
   const textElements = getSelectedTextElements()
   const changedTextElements = getChangedTextElements(textElements, 'fill', val)
   svgCanvas.setCurText('fill', val)
@@ -917,28 +841,23 @@ const setFontColorMethod = (val) => {
 }
 
 /**
-* @function module:svgcanvas.SvgCanvas#getFontColor
-* @returns {string} The current font color
-*/
-const getFontColorMethod = () => {
-  return svgCanvas.getCurText('fill')
+ * @returns {string} The current font color
+ */
+const getFontColorMethod = (): string => {
+  return svgCanvas.getCurText('fill') as string
 }
 
 /**
-* @function module:svgcanvas.SvgCanvas#getFontSize
-* @returns {Float} The current font size
-*/
-const getFontSizeMethod = () => {
-  return svgCanvas.getCurText('font_size')
+ * @returns {number} The current font size
+ */
+const getFontSizeMethod = (): number => {
+  return svgCanvas.getCurText('font_size') as number
 }
 
 /**
-* Applies the given font size to the selected element.
-* @function module:svgcanvas.SvgCanvas#setFontSize
-* @param {Float} val - Float with the new font size
-* @returns {void}
-*/
-const setFontSizeMethod = (val) => {
+ * Applies the given font size to the selected element.
+ */
+const setFontSizeMethod = (val: number): void => {
   const textElements = getSelectedTextElements()
   const changedTextElements = getChangedTextElements(textElements, 'font-size', val)
   svgCanvas.setCurText('font_size', val)
@@ -952,38 +871,29 @@ const setFontSizeMethod = (val) => {
 }
 
 /**
-* @function module:svgcanvas.SvgCanvas#getText
-* @returns {string} The current text (`textContent`) of the selected element
-*/
-const getTextMethod = () => {
-  const selectedElements = svgCanvas.getSelectedElements()
+ * @returns {string} The current text content of the selected element
+ */
+const getTextMethod = (): string => {
+  const selectedElements: (Element | null)[] = svgCanvas.getSelectedElements()
   const selected = selectedElements[0]
-  return (selected) ? selected.textContent : ''
+  return selected ? (selected.textContent ?? '') : ''
 }
 
 /**
-* Updates the text element with the given string.
-* @function module:svgcanvas.SvgCanvas#setTextContent
-* @param {string} val - String with the new text
-* @returns {void}
-*/
-const setTextContentMethod = (val) => {
+ * Updates the text element with the given string.
+ */
+const setTextContentMethod = (val: string): void => {
   svgCanvas.changeSelectedAttribute('#text', val)
   svgCanvas.textActions.init(val)
   svgCanvas.textActions.setCursor()
 }
 
 /**
-* Sets the new image URL for the selected image element. Updates its size if
-* a new URL is given.
-* @function module:svgcanvas.SvgCanvas#setImageURL
-* @param {string} val - String with the image URL/path
-* @fires module:svgcanvas.SvgCanvas#event:changed
-* @returns {void}
-*/
-const setImageURLMethod = (val) => {
+ * Sets the new image URL for the selected image element.
+ */
+const setImageURLMethod = (val: string): void => {
   const { ChangeElementCommand, BatchCommand } = svgCanvas.history
-  const selectedElements = svgCanvas.getSelectedElements()
+  const selectedElements: (Element | null)[] = svgCanvas.getSelectedElements()
   const elem = selectedElements[0]
   if (!elem) { return }
 
@@ -996,7 +906,6 @@ const setImageURLMethod = (val) => {
   const curHref = getHref(elem)
   const hrefChanged = curHref !== val
 
-  // Do nothing if no URL change or size change
   if (!hrefChanged && !setsize) {
     return
   }
@@ -1011,7 +920,7 @@ const setImageURLMethod = (val) => {
   }
 
   let finalized = false
-  const finalize = () => {
+  const finalize = (): void => {
     if (finalized) { return }
     finalized = true
     if (batchCmd.isEmpty()) { return }
@@ -1020,46 +929,43 @@ const setImageURLMethod = (val) => {
   }
 
   const img = new Image()
-  img.onload = () => {
+  img.onload = (): void => {
     const changes = {
       width: elem.getAttribute('width'),
       height: elem.getAttribute('height')
     }
-    elem.setAttribute('width', img.width)
-    elem.setAttribute('height', img.height)
+    elem.setAttribute('width', String(img.width))
+    elem.setAttribute('height', String(img.height))
 
     const selector = svgCanvas.selectorManager.requestSelector(elem)
-    selector && selector.resize()
+    if (selector) { selector.resize() }
 
     batchCmd.addSubCommand(new ChangeElementCommand(elem, changes))
     finalize()
   }
-  img.onerror = () => {
+  img.onerror = (): void => {
     finalize()
   }
   img.src = val
 }
 
 /**
-* Sets the new link URL for the selected anchor element.
-* @function module:svgcanvas.SvgCanvas#setLinkURL
-* @param {string} val - String with the link URL/path
-* @returns {void}
-*/
-const setLinkURLMethod = (val) => {
+ * Sets the new link URL for the selected anchor element.
+ */
+const setLinkURLMethod = (val: string): void => {
   const { ChangeElementCommand, BatchCommand } = svgCanvas.history
-  const selectedElements = svgCanvas.getSelectedElements()
-  let elem = selectedElements[0]
+  const selectedElements: (Element | null)[] = svgCanvas.getSelectedElements()
+  let elem: Element | null = selectedElements[0] ?? null
   if (!elem) { return }
   if (elem.tagName !== 'a') {
-    // See if parent is an anchor
     const parentsA = getParents(elem.parentNode, 'a')
     if (parentsA?.length) {
-      elem = parentsA[0]
+      elem = (parentsA[0] as Element) ?? null
     } else {
       return
     }
   }
+  if (!elem) { return }
 
   const curHref = getHref(elem)
 
@@ -1076,16 +982,11 @@ const setLinkURLMethod = (val) => {
 }
 
 /**
-* Sets the `rx` and `ry` values to the selected `rect` element
-* to change its corner radius.
-* @function module:svgcanvas.SvgCanvas#setRectRadius
-* @param {string|Float} val - The new radius
-* @fires module:svgcanvas.SvgCanvas#event:changed
-* @returns {void}
-*/
-const setRectRadiusMethod = (val) => {
+ * Sets the `rx` and `ry` values to the selected `rect` element.
+ */
+const setRectRadiusMethod = (val: string | number): void => {
   const { ChangeElementCommand } = svgCanvas.history
-  const selectedElements = svgCanvas.getSelectedElements()
+  const selectedElements: (Element | null)[] = svgCanvas.getSelectedElements()
   const selected = selectedElements[0]
   if (selected?.tagName !== 'rect') { return }
 
@@ -1104,58 +1005,43 @@ const setRectRadiusMethod = (val) => {
     (hasCurrentRx && hasCurrentRy && currentRx === radius && currentRy === radius)
   if (already) { return }
 
-  selected.setAttribute('rx', radius)
-  selected.setAttribute('ry', radius)
+  selected.setAttribute('rx', String(radius))
+  selected.setAttribute('ry', String(radius))
   svgCanvas.addCommandToHistory(new ChangeElementCommand(selected, { rx: oldRx, ry: oldRy }, 'Radius'))
   svgCanvas.call('changed', [selected])
 }
 
 /**
-* Wraps the selected element(s) in an anchor element or converts group to one.
-* @function module:svgcanvas.SvgCanvas#makeHyperlink
-* @param {string} url
-* @returns {void}
-*/
-const makeHyperlinkMethod = (url) => {
+ * Wraps the selected element(s) in an anchor element.
+ */
+const makeHyperlinkMethod = (url: string): void => {
   svgCanvas.groupSelectedElements('a', url)
 }
 
 /**
-* @function module:svgcanvas.SvgCanvas#removeHyperlink
-* @returns {void}
-*/
-const removeHyperlinkMethod = () => {
+ * Removes the hyperlink wrapping.
+ */
+const removeHyperlinkMethod = (): void => {
   svgCanvas.ungroupSelectedElement()
 }
 
 /**
-* Group: Element manipulation.
-*/
-
-/**
-* Sets the new segment type to the selected segment(s).
-* @function module:svgcanvas.SvgCanvas#setSegType
-* @param {Integer} newType - New segment type. See {@link https://www.w3.org/TR/SVG/paths.html#InterfaceSVGPathSeg} for list
-* @returns {void}
-*/
-const setSegTypeMethod = (newType) => {
+ * Sets the new segment type to the selected segment(s).
+ */
+const setSegTypeMethod = (newType: number): void => {
   svgCanvas.pathActions.setSegType(newType)
 }
 
 /**
-* Set the background of the editor (NOT the actual document).
-* @function module:svgcanvas.SvgCanvas#setBackground
-* @param {string} color - String with fill color to apply
-* @param {string} url - URL or path to image to use
-* @returns {void}
-*/
-const setBackgroundMethod = (color, url) => {
+ * Set the background of the editor.
+ */
+const setBackgroundMethod = (color: string, url: string): void => {
   const bg = getElement('canvasBackground')
   if (!bg) { return }
   const border = bg.querySelector('rect')
   if (!border) { return }
-  let bgImg = getElement('background_image')
-  let bgPattern = getElement('background_pattern')
+  let bgImg: Element | null = getElement('background_image')
+  let bgPattern: Element | null = getElement('background_pattern')
   border.setAttribute('fill', color === 'chessboard' ? '#fff' : color)
   if (color === 'chessboard') {
     if (!bgPattern) {
@@ -1174,8 +1060,10 @@ const setBackgroundMethod = (color, url) => {
           'R0lGODlhEAAQAIAAAP///9bW1iH5BAAAAAAALAAAAAAQABAAAAIfjG+' +
           'gq4jM3IFLJgpswNly/XkcBpIiVaInlLJr9FZWAQA7);'
       })
-      bgPattern.append(div)
-      bg.append(bgPattern)
+      if (bgPattern) {
+        bgPattern.append(div)
+        bg.append(bgPattern)
+      }
     }
   } else if (bgPattern) {
     bgPattern.remove()
@@ -1191,8 +1079,8 @@ const setBackgroundMethod = (color, url) => {
         style: 'pointer-events:none'
       })
     }
-    setHref(bgImg, url)
-    bg.append(bgImg)
+    setHref(bgImg as Element, url)
+    bg.append(bgImg as Node)
   } else if (bgImg) {
     bgImg.remove()
   }
