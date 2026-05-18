@@ -6,7 +6,7 @@
 
 **Architecture:** Single PR (`feat/ts-migration`) with 18 ordered commits. Bottom-up by audit area (`common/` → `core/` → `svgcanvas` barrel → editor → scripts). Wired-on `SvgCanvas` methods declared via central `.d.ts` augmentation; runtime structure preserved. Tests stay JS for this PR (deferred to follow-up). File splits, mutable-export refactors, and bug fixes all deferred.
 
-**Tech Stack:** TypeScript 5.x, ESLint v9 + `@typescript-eslint/parser` v8 + `@typescript-eslint/eslint-plugin` v8 (flat config), Vite 7 (handles `.ts` natively via esbuild), Vitest 4, Playwright 1.57.
+**Tech Stack:** TypeScript 6.x, ESLint v9 + `@typescript-eslint/parser` v8 + `@typescript-eslint/eslint-plugin` v8 (flat config via `defineConfig` from `eslint/config`), Vite 7 (handles `.ts` natively via esbuild), Vitest 4, Playwright 1.57.
 
 **Spec:** `docs/superpowers/specs/2026-05-16-svgedit-ts-migration-design.md`
 
@@ -81,7 +81,7 @@ git tag pre-ts-migration        # safety tag for worst-case rollback
 - [ ] **Step 2: Install TypeScript**
 
 ```bash
-npm install --save-dev typescript@^5.7.0
+npm install --save-dev typescript@^6.0.3
 ```
 
 - [ ] **Step 3: Create root tsconfig.json**
@@ -172,10 +172,11 @@ npm install --save-dev eslint@^9.18.0 @typescript-eslint/parser@^8.20.0 @typescr
 Create file `eslint.config.js` at repo root:
 
 ```js
+import { defineConfig } from 'eslint/config'
 import tseslint from 'typescript-eslint'
 import globals from 'globals'
 
-export default tseslint.config(
+export default defineConfig([
   {
     ignores: [
       'dist/**',
@@ -208,8 +209,10 @@ export default tseslint.config(
     files: ['tests/**/*.js', '*.config.{js,mjs,ts}'],
     extends: [tseslint.configs.disableTypeChecked]
   }
-)
+])
 ```
+
+**Note:** The template above is the starting point. With the codebase still being mostly `.js` mid-migration, this template will fail `recommendedTypeChecked` against `.js` files (they're not in a TS Program). Anticipated adjustment at Step 4 verification: split the type-checked rules into a `files: ['**/*.ts', '**/*.tsx']` block and use plain `tseslint.configs.recommended` for `.js`. See the actual shipped `eslint.config.js` on this branch for the resolved pattern.
 
 - [ ] **Step 3: Update lint script in package.json**
 
