@@ -677,7 +677,7 @@ git mv packages/svgcanvas/core/select.js packages/svgcanvas/core/select.ts
 npx tsc --noEmit
 ```
 
-`SelectModule` singleton class — convert as-is. Audit-flagged: `:423` `isWebkit()` Chrome-7 workaround (preserve, todo #10).
+`SelectModule` singleton class — convert as-is. (Step 1.5 already dropped the previously-flagged `:423` `isWebkit()` Chrome-7 workaround along with the `isWebkit` getter export; no special handling needed. Verify line numbers shifted before typing.)
 
 - [ ] **Step 7: Convert selected-elem.js**
 
@@ -736,6 +736,13 @@ npx tsc --noEmit
 
 Audit-flagged: `:77 export let path = null` — type as `Path | null`. Consumers will need null-narrowing; if a callsite was missing a null-check, type as-is + `// @ts-expect-error: pre-existing null-misuse — see todo #10`. NO behavior changes.
 
+**Also from Step 1 (verify-then-delete ABORTED):** `path.js:644 export const convertPath` STILL EXISTS. See inline comment at `path.js:630-643` (added in Step 1 commit `a63fc744`) explaining why — APIs are incompatible with `path-actions.js:54` version, consolidation is a real refactor deferred. Type `convertPath` as-is:
+- `pth: SVGPathElement` (or shim-augmented type — see Task 9 Step 4 for the `pathSegList` augmentation)
+- `pathSegList: PathDataListShim` (provided by `PathDataListShim` in `path-method.ts`)
+- `seg.pathSegType: number`, `seg.x` / `y` / `x1` / `y1` / `x2` / `y2: number | undefined`
+
+NO behavior changes; consolidation refactor goes in a follow-up PR after the migration lands.
+
 - [ ] **Step 3: Convert path-actions.js**
 
 ```bash
@@ -743,7 +750,7 @@ git mv packages/svgcanvas/core/path-actions.js packages/svgcanvas/core/path-acti
 npx tsc --noEmit
 ```
 
-Heavy path operations. Audit-flagged: `:41-209` convertPath (preserve), `:887-899` Opera-bug commented (already noise — leave commented for cleanup follow-up), `:1167-1170` `if (window.opera)` (preserve, dropped in Step 1 cleanup theoretically — verify it's gone before this task).
+Heavy path operations. Audit-flagged (current line numbers from master HEAD post-Step-2): `:54` `export const convertPath` + `:1242` `convertPath` method form (preserve typing as-is; both use the `pathSegList` shim API — match the augmentation declared in Task 9 Step 4). Step 1 already dropped the `:887-899` Opera-bug commented block + `:1167-1170` `if (window.opera)` branch — no special handling needed.
 
 - [ ] **Step 4: Convert path-method.js**
 
@@ -752,7 +759,27 @@ git mv packages/svgcanvas/core/path-method.js packages/svgcanvas/core/path-metho
 npx tsc --noEmit
 ```
 
-`PathDataListShim` class is the bridge for `pathSegList` API. After Step 2 (pathseg drop), the `createSVGPathSeg*` polyfill is gone — `PathDataListShim` is the canonical implementation. Type carefully so consumers see the shim's interface as fully `pathSegList`-compatible.
+`PathDataListShim` class is the bridge for the legacy `pathSegList` API. After Step 2 (pathseg drop), the `createSVGPathSeg*` polyfill is gone — `PathDataListShim` is the canonical `pathSegList` implementation. Type carefully so consumers (`path.ts:644 convertPath`, `path-actions.ts:54 convertPath`, `path-actions.ts:1242 convertPath` method form, etc.) see the shim's interface as fully `pathSegList`-compatible.
+
+**Also from Step 2 — declare `path-data-polyfill` globals:** the new SVG 2 `SVGPathElement.getPathData()` / `setPathData()` methods are provided globally by `path-data-polyfill` (loaded via `svgcanvas.js` import). TS lib.dom doesn't declare them yet. Add a global declaration — preferred location is the project root augment file or `src/global.d.ts`:
+
+```ts
+// path-data-polyfill provides these globally on every SVGPathElement
+interface SVGPathElement {
+  getPathData(opts?: { normalize?: boolean }): Array<{ type: string; values: number[] }>
+  setPathData(data: Array<{ type: string; values: number[] }>): void
+}
+```
+
+Without this, every callsite in `path-actions.ts` that uses `pth.getPathData()` (8 sites added in Step 2) and `path-method.ts` (2 sites) will hit a TS error. Add at C0/C2 scaffold time OR in this task.
+
+**Also: augment for `pathSegList`** — `PathDataListShim` is exposed via `Object.defineProperty(SVGPathElement.prototype, 'pathSegList', ...)` (verify in `path-method.ts`). Add a matching declaration so consumers see `pth.pathSegList` typed:
+
+```ts
+interface SVGPathElement {
+  readonly pathSegList: PathDataListShim
+}
+```
 
 - [ ] **Step 5: Convert recalculate.js**
 
@@ -770,15 +797,15 @@ git mv packages/svgcanvas/core/svg-exec.js packages/svgcanvas/core/svg-exec.ts
 npx tsc --noEmit
 ```
 
-Audit-flagged sites:
+Audit-flagged sites (post-Step-1.5 baseline; line numbers may have shifted — verify against current source before typing):
 - `:252` `_moz-math-font-style` — preserve
-- `:503-512`, `:712-722` Firefox bug 353575 workarounds — preserve
 - `:516` setUseData on undo/redo — preserve
 - `:633-639`, `:763-766` importSvgString edge cases — preserve
 - `:985` console.error vs error() — preserve
 - `:1112`, `:1117` uniquifyElems bugs — preserve
-- `:1269` isWebkit workaround — preserve
 - `:1278` multi-element gradient duplication — preserve
+
+**Already gone (Step 1.5):** the previously-flagged Firefox bug 353575 workarounds at `:503-512` + `:712-722` and the `:1269` `isWebkit()` workaround were all dropped after browser-compat regression tests confirmed them obsolete.
 
 Many wired methods; update augment file.
 
@@ -1082,7 +1109,7 @@ npx tsc --noEmit
 - `ext-overview_window/ext-overview_window.ts:122-123` `evt.originalEvent.layerX` — preserve (currently disabled; fix when reviving per todo #3)
 - `ext-overview_window/dragmove/dragmove.js` — convert as utility; no special notes
 - `ext-storage/storageDialog.js` — convert as dialog; matches dialogs/ patterns
-- `ext-storage/ext-storage.ts:208` `window.widget` branch — already deleted in Step 1; verify gone
+- `ext-storage/ext-storage.ts` — Step 1 already deleted the `window.widget` branch; nothing to preserve
 
 Each extension `init()` function has a different shape. Type the `module:SVGEditor` parameter consistently — declare an `EditorContext` interface in `src/editor/typedefs.ts` and import it in every `init()`.
 

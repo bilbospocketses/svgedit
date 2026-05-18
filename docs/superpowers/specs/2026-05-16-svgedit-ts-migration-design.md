@@ -54,11 +54,12 @@ This spec covers **only Step 3**. Steps 1 and 2 land first as mostly-mechanical 
 - `convertToPath` cleanup, `seZoom.js` inverted-guard refactor, `ColorValuePicker.js`/`Slider.js` modernization.
 - elix→Lit migration (#3, dedicated brainstorm later).
 
-### Already done by Step 1 + Step 2 (not this PR's job)
+### Already done by Step 1 + Step 1.5 + Step 2 (not this PR's job)
 - All pre-migration deletions (`browser-not-supported.*`, `ext-helloworld/`, dead `window.widget`, IE6 `jQuery.jPicker`, Opera `path-actions` blocks, MathML allowlist, Optimistik `oi:`, commented-out namespaces, brand/URL updates).
-- `path.js:633-786 convertPath` verify-then-delete (duplicate of `path-actions.js:41-209`).
-- `Editor.js:439-456 getParents` verify-then-delete.
-- Pathseg drop (8 `createSVGPathSeg*` refactors + polyfill removal).
+- `Editor.js:439-456 getParents` verify-then-delete (succeeded; deleted in Step 1).
+- `path.js:633-786 convertPath` verify-then-delete was **ABORTED** in Step 1 (audit doc corrected via commit `a63fc744`; inline comment now at `path.js:630-643` explains why). `convertPath` still exists at `path.js:644`; APIs are incompatible with `path-actions.js:54` version. Consolidation is a real refactor, deferred. Step 3 types it as-is.
+- Step 1.5 dropped four browser-compat workarounds confirmed obsolete by regression tests: `select.js:423` + `svg-exec.js:1269` `isWebkit()` Chrome-7 (plus `isWebkit` getter + export removed); `svg-exec.js:503-512` + `:712-722` Firefox bug 353575.
+- Pathseg drop: **10** `createSVGPathSeg*` refactors (`path-actions.js` × 8 + `path-method.js` × 2; the audit's "8 sites" count was wrong — caught via manual smoke). `pathseg` runtime dep removed; `path-data-polyfill` (SVG 2 spec polyfill) is the replacement in BOTH prod (`svgcanvas.js` import) and test env.
 
 ---
 
@@ -223,9 +224,9 @@ Three checkpoints: per-file (developer loop), per-area-commit (must pass before 
 
 - `npx tsc --noEmit` (full project) — clean.
 - `npm run lint` — clean.
-- `npx vitest run` — 565/565 pass (no test conversions in this PR; counts shouldn't change).
+- `npx vitest run` — all pass; counts shouldn't change vs. branch-cut baseline (master HEAD baseline 2026-05-18: 564/564; re-measured at branch cut per plan Task 5 Step 1 and pinned into this section then).
 - `npm run build` — both `packages/svgcanvas` build and root build complete; produces `dist/editor/` artifacts.
-- `node scripts/run-e2e.mjs` — **81/81 Playwright tests pass after every conversion commit** (no manual smoke between commits — manual testing is reserved for post-migration validation).
+- `node scripts/run-e2e.mjs` — **all Playwright tests pass after every conversion commit** on Chromium + Firefox (master HEAD baseline 2026-05-18: 192 = 96 per browser; re-measured at branch cut). No manual smoke between commits — manual testing is reserved for post-migration validation.
 
 ### PR-merge gate (full bar before merging to master)
 
@@ -233,8 +234,8 @@ Three checkpoints: per-file (developer loop), per-area-commit (must pass before 
 |---|---|---|
 | Type-check | `tsc --noEmit` | Zero errors. Zero `any`-suppressions added vs. master baseline (count + diff). |
 | Lint | `eslint .` | Zero errors, zero warnings. `--max-warnings 0`. |
-| Unit tests | `vitest run` | 565/565 pass. (Zero counts change vs. master.) |
-| E2e tests | `node scripts/run-e2e.mjs` | 81/81 pass on Windows + Linux Vite preview. |
+| Unit tests | `vitest run` | All pass (master HEAD 2026-05-18 baseline: 564). Zero counts change vs. branch-cut baseline. |
+| E2e tests | `node scripts/run-e2e.mjs` | All pass on Chromium + Firefox (master HEAD 2026-05-18 baseline: 192 = 96 per browser). |
 | Build | `npm run build` | `dist/editor/` produced; file count and approximate sizes match master baseline ±5%. |
 | `.d.ts` emission | `tsc --build packages/svgcanvas` | `packages/svgcanvas/dist/svgcanvas.d.ts` produced; covers the `SvgCanvas` interface fully. |
 | Bundle smoke | Manual | Built `dist/` loads in Chrome 130, Firefox 135, Edge 130; default extensions all init; can draw rect, save SVG, reload, modify, save again. |
@@ -248,8 +249,9 @@ These are the conversion sites where TS's strict mode is most likely to surface 
 | Site | Why it's risky |
 |---|---|
 | `path.js:77 export let path = null` | Mutable export typed as `Path \| null` → consumers get null-narrowing requirements; first-pass typing might miss a callsite where `path` is dereferenced without check. |
-| `core/svg-exec.js` — `uniquifyElems` (1112, 1117), `convertGradients` (1278), `setUseData` (516), Firefox bug 353575 workarounds (503-512, 712-722) | Audit flagged real correctness gaps. Strict typing here will surface implicit-any issues in callbacks. |
-| `core/path-actions.js` — `convertPath` (41), Opera-bug commented blocks (887-899) | Heavy use of `pathSegList` shim. Type interactions between `PathDataListShim` and `SVGPathElement.pathSegList` need clean interface. |
+| `path.js:644 export const convertPath` | Verify-then-delete ABORTED in Step 1; STILL EXISTS and uses `pathSegList` via `PathDataListShim`. Type `pathSegList: PathDataListShim` and `seg.pathSegType: number`, `seg.x`/`x1`/`x2`/`y`/`y1`/`y2: number \| undefined`. Likely re-uses `PathDataListShim` interface from `path-method.ts`. |
+| `core/svg-exec.js` — `uniquifyElems` (1112, 1117), `convertGradients` (1278), `setUseData` (516) | Audit flagged real correctness gaps. Strict typing here will surface implicit-any issues in callbacks. (The Firefox bug 353575 + isWebkit workarounds previously here were dropped in Step 1.5; check current line numbers before typing.) |
+| `core/path-actions.js` — `convertPath` (54) + method form at `1242` | Heavy use of `pathSegList` shim. Type interactions between `PathDataListShim` and `SVGPathElement.pathSegList` need clean interface. (Step 1 already dropped the `:887-899` Opera-bug commented block + `:1167-1170` `if (window.opera)` branch.) |
 | `core/event.js` — `<a>` parent walk (951), browser-bug branches (957, 986) | Heavy event handling; lots of implicit `any` on event params today. |
 | `core/recalculate.js` (~700 lines `recalculateDimensions`) | Single huge function; type-check pass will surface dozens of inference issues. Defer the file split (per Section 2) but type the existing structure carefully. |
 | `core/select.js` `SelectModule` singleton | Singleton pattern + module mutation; type as-is per Section 2, but the `init()` pattern needs careful augment-file entry. |
