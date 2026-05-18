@@ -14,7 +14,7 @@
     "packages/svgcanvas"
   ],
   "scripts": {
-    "lint": "standard .",
+    "lint": "eslint .",
     "pretest": "npm run lint",
     "test": "vitest run --coverage && node scripts/run-e2e.mjs",
     "build": "vite build packages/svgcanvas && vite build",
@@ -45,19 +45,6 @@
     "not IE 11",
     "not OperaMini all"
   ],
-  "standard": {
-    "ignore": [
-      "_reference/"
-    ],
-    "globals": [
-      "assert",
-      "expect"
-    ],
-    "env": [
-      "mocha",
-      "browser"
-    ]
-  },
   "dependencies": {
     "@svgedit/svgcanvas": "7.4.1",
     "browser-fs-access": "0.38.0",
@@ -69,11 +56,16 @@
   "devDependencies": {
     "@playwright/test": "^1.57.0",
     "@rollup/plugin-dynamic-import-vars": "2.1.5",
+    "@typescript-eslint/eslint-plugin": "^8.59.3",
+    "@typescript-eslint/parser": "^8.59.3",
     "@vitest/coverage-v8": "^4.0.16",
+    "eslint": "^9.39.4",
+    "eslint-plugin-promise": "^7.3.0",
+    "globals": "^15.15.0",
     "jamilih": "0.63.1",
     "jsdom": "^27.4.0",
-    "standard": "17.1.2",
     "typescript": "^5.9.3",
+    "typescript-eslint": "^8.59.3",
     "vite": "^7.3.2",
     "vite-plugin-istanbul": "^7.2.1",
     "vite-plugin-string": "^1.2.3",
