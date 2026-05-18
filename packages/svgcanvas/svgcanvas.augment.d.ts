@@ -13,8 +13,9 @@
 //
 // NOTE: other core/*.js files (clear.js, draw.js, undo.js, select.js,
 // paint.js, blur-event.js, text-actions.js, copy-elem.js, paste-elem.js,
-// historyrecording.js, recalculate.js, svgroot.js, path-actions.js,
+// historyrecording.js, recalculate.js, path-actions.js,
 // path-method.js) also wire methods that the shim currently covers.
+// svgroot.ts is a leaf with no wired-on methods (pure factory function).
 // Each will be added here as their core/*.js converts to .ts in Tasks
 // 5-9 — at which point Task 10 can remove the shim safely. Task 10
 // MUST audit the shim's surviving declarations and migrate any that
@@ -66,37 +67,37 @@ declare module './svgcanvas' {
     setGradient: (...args: unknown[]) => unknown
     setPaint: (...args: unknown[]) => unknown
 
-    // From core/event.js (init wires these on)
-    mouseDownEvent: (...args: unknown[]) => unknown
-    mouseMoveEvent: (...args: unknown[]) => unknown
-    dblClickEvent: (...args: unknown[]) => unknown
-    mouseUpEvent: (...args: unknown[]) => unknown
-    mouseOutEvent: (...args: unknown[]) => unknown
-    DOMMouseScrollEvent: (...args: unknown[]) => unknown
+    // From core/event.ts (init wires these on)
+    mouseDownEvent: (evt: MouseEvent) => void
+    mouseMoveEvent: (evt: MouseEvent) => void
+    dblClickEvent: (evt: MouseEvent) => void
+    mouseUpEvent: (evt: MouseEvent) => void
+    mouseOutEvent: (evt: MouseEvent) => void
+    DOMMouseScrollEvent: (e: WheelEvent) => void
     dragStartTransforms: Map<Element, string> | null
     hasDragStartTransform: boolean
     // addedNew is only ever set inside a conditional (event.js:972) and is
     // never initialized in init(); optional under exactOptionalPropertyTypes
     addedNew?: boolean
 
-    // From core/path.js (init wires these on)
+    // From core/path.ts (init wires these on)
     replacePathSeg: (...args: unknown[]) => unknown
     addPointGrip: (...args: unknown[]) => unknown
-    removePath_: (...args: unknown[]) => unknown
-    getPath_: (...args: unknown[]) => unknown
+    removePath_: (id: string) => void
+    getPath_: (elem: SVGPathElement) => unknown
     addCtrlGrip: (...args: unknown[]) => unknown
     getCtrlLine: (...args: unknown[]) => unknown
     getGripPt: (...args: unknown[]) => unknown
     getPointFromGrip: (...args: unknown[]) => unknown
-    setLinkControlPoints: (...args: unknown[]) => unknown
-    reorientGrads: (...args: unknown[]) => unknown
-    recalcRotatedPath: (...args: unknown[]) => unknown
-    getSegData: () => unknown
-    getUIStrings: () => unknown
+    setLinkControlPoints: (lcp: boolean) => void
+    reorientGrads: (elem: Element, m: SVGMatrix) => void
+    recalcRotatedPath: () => void
+    getSegData: () => Record<number, string[]>
+    getUIStrings: () => Record<string, string>
     getPathObj: () => unknown
-    setPathObj: (...args: unknown[]) => unknown
-    getPathFuncs: () => unknown
-    getLinkControlPts: () => unknown
+    setPathObj: (obj: unknown) => void
+    getPathFuncs: () => (string | number)[]
+    getLinkControlPts: () => boolean
 
     // From core/selected-elem.js (init wires these on)
     pushGroupProperties: (...args: unknown[]) => unknown

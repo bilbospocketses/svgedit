@@ -13,11 +13,11 @@ import { NS } from './namespaces.js'
 * @param {[number, number]} dimensions - [width, height] of the root SVG
 * @returns {SVGSVGElement}
 */
-export const svgRootElement = (svgdoc, dimensions) => {
+export const svgRootElement = (svgdoc: Document, dimensions: [number, number]): SVGSVGElement => {
   const w = String(dimensions[0])
   const h = String(dimensions[1])
 
-  const root = svgdoc.createElementNS(NS.SVG, 'svg')
+  const root = svgdoc.createElementNS(NS.SVG, 'svg') as SVGSVGElement
   root.setAttribute('id', 'svgroot')
   root.setAttribute('xlinkns', NS.XLINK)
   root.setAttribute('width', w)

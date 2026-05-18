@@ -6,6 +6,8 @@
  * @copyright 2011 Alexis Deveria, 2011 Jeff Schiller
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return */
+
 import { shortFloat } from './units.js'
 import { transformPoint, getTransformList } from './math.js'
 import {
@@ -13,17 +15,42 @@ import {
   getRefElem, findDefs,
   getBBox as utilsGetBBox
 } from './utilities.js'
-import {
-  init as pathMethodInit, ptObjToArrMethod, getGripPtMethod,
-  getPointFromGripMethod, addPointGripMethod, getGripContainerMethod, addCtrlGripMethod,
-  getCtrlLineMethod, getPointGripMethod, getControlPointsMethod, replacePathSegMethod,
-  getSegSelectorMethod, Path
-} from './path-method.js'
-import {
-  init as pathActionsInit, pathActionsMethod
-} from './path-actions.js'
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore — path-method.js not yet converted to TS (Task 9b)
+import * as pathMethodModule from './path-method.js'
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore — path-actions.js not yet converted to TS (Task 9b)
+import * as pathActionsModule from './path-actions.js'
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const { init: pathMethodInit, ptObjToArrMethod, getGripPtMethod, getPointFromGripMethod, addPointGripMethod, getGripContainerMethod, addCtrlGripMethod, getCtrlLineMethod, getPointGripMethod, getControlPointsMethod, replacePathSegMethod, getSegSelectorMethod, Path } = pathMethodModule as any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const { init: pathActionsInit, pathActionsMethod } = pathActionsModule as any
 
-const segData = {
+// Minimal type for the pathSegList shim consumed by recalcRotatedPath() and convertPath().
+// Full type lives on PathDataListShim in path-method.ts (deferred to Task 9b).
+// TODO(9b): replace this local interface with the global SVGPathElement.pathSegList augmentation.
+interface PathSeg {
+  pathSegType: number
+  x?: number
+  y?: number
+  x1?: number
+  y1?: number
+  x2?: number
+  y2?: number
+  r1?: number
+  r2?: number
+  angle?: number
+  largeArcFlag?: boolean
+  sweepFlag?: boolean
+  [key: string]: number | boolean | undefined
+}
+
+interface PathSegList {
+  readonly numberOfItems: number
+  getItem(i: number): PathSeg
+}
+
+const segData: Record<number, string[]> = {
   2: ['x', 'y'], // PATHSEG_MOVETO_ABS
   4: ['x', 'y'], // PATHSEG_LINETO_ABS
   6: ['x', 'y', 'x1', 'y1', 'x2', 'y2'], // PATHSEG_CURVETO_CUBIC_ABS
@@ -35,37 +62,39 @@ const segData = {
   18: ['x', 'y'] // PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS
 }
 
-let svgCanvas
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let svgCanvas: any = null
 /**
  * @tutorial LocaleDocs
  * @typedef {module:locale.LocaleStrings|PlainObject} module:path.uiStrings
  * @property {PlainObject<string, string>} ui
 */
 
-const uiStrings = {}
+const uiStrings: Record<string, string> = {}
 /**
 * @function module:path.setUiStrings
-* @param {module:path.uiStrings} strs
+* @param {{ ui: Record<string, string> }} strs
 * @returns {void}
 */
-export const setUiStrings = (strs) => {
+export const setUiStrings = (strs: { ui: Record<string, string> }): void => {
   Object.assign(uiStrings, strs.ui)
 }
 
-let pathFuncs = []
+let pathFuncs: (string | number)[] = []
 
 let linkControlPts = true
 
 // Stores references to paths via IDs.
 // TODO: Make this cross-document happy.
-let pathData = {}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let pathData: Record<string, any> = {}
 
 /**
 * @function module:path.setLinkControlPoints
 * @param {boolean} lcp
 * @returns {void}
 */
-export const setLinkControlPoints = (lcp) => {
+export const setLinkControlPoints = (lcp: boolean): void => {
   linkControlPts = lcp
 }
 
@@ -74,7 +103,8 @@ export const setLinkControlPoints = (lcp) => {
  * @type {null|module:path.Path}
  * @memberof module:path
 */
-export let path = null
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export let path: any = null
 
 /**
 * @external MouseEvent
@@ -224,7 +254,8 @@ export let path = null
 * @param {module:path.EditorContext} editorContext
 * @returns {void}
 */
-export const init = (canvas) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const init = (canvas: any): void => {
   svgCanvas = canvas
   svgCanvas.replacePathSeg = replacePathSegMethod
   svgCanvas.addPointGrip = addPointGripMethod
@@ -240,7 +271,8 @@ export const init = (canvas) => {
   svgCanvas.getSegData = () => { return segData }
   svgCanvas.getUIStrings = () => { return uiStrings }
   svgCanvas.getPathObj = () => { return path }
-  svgCanvas.setPathObj = (obj) => { path = obj }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  svgCanvas.setPathObj = (obj: any) => { path = obj }
   svgCanvas.getPathFuncs = () => { return pathFuncs }
   svgCanvas.getLinkControlPts = () => { return linkControlPts }
   pathFuncs = [0, 'ClosePath']
@@ -256,7 +288,7 @@ export const init = (canvas) => {
   pathMethodInit(svgCanvas)
 }
 
- 
+
 /**
 * @function module:path.ptObjToArr
 * @todo See if this should just live in `replacePathSeg`
@@ -264,8 +296,8 @@ export const init = (canvas) => {
 * @param {SVGPathSegMovetoAbs|SVGPathSegLinetoAbs|SVGPathSegCurvetoCubicAbs|SVGPathSegCurvetoQuadraticAbs|SVGPathSegArcAbs|SVGPathSegLinetoHorizontalAbs|SVGPathSegLinetoVerticalAbs|SVGPathSegCurvetoCubicSmoothAbs|SVGPathSegCurvetoQuadraticSmoothAbs} segItem
 * @returns {ArgumentsArray}
 */
- 
-export const ptObjToArr = ptObjToArrMethod
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const ptObjToArr: (...args: any[]) => any = ptObjToArrMethod
 
 /**
 * @function module:path.getGripPt
@@ -273,7 +305,8 @@ export const ptObjToArr = ptObjToArrMethod
 * @param {module:math.XYObject} altPt
 * @returns {module:math.XYObject}
 */
-export const getGripPt = getGripPtMethod
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const getGripPt: (...args: any[]) => any = getGripPtMethod
 
 /**
 * @function module:path.getPointFromGrip
@@ -281,7 +314,8 @@ export const getGripPt = getGripPtMethod
 * @param {module:path.Path} pth
 * @returns {module:math.XYObject}
 */
-export const getPointFromGrip = getPointFromGripMethod
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const getPointFromGrip: (...args: any[]) => any = getPointFromGripMethod
 
 /**
 * Requires prior call to `setUiStrings` if `xlink:title`
@@ -292,13 +326,15 @@ export const getPointFromGrip = getPointFromGripMethod
 * @param {Integer} y
 * @returns {SVGCircleElement}
 */
-export const addPointGrip = addPointGripMethod
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const addPointGrip: (...args: any[]) => any = addPointGripMethod
 
 /**
 * @function module:path.getGripContainer
 * @returns {Element}
 */
-export const getGripContainer = getGripContainerMethod
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const getGripContainer: () => any = getGripContainerMethod
 
 /**
 * Requires prior call to `setUiStrings` if `xlink:title`
@@ -307,14 +343,16 @@ export const getGripContainer = getGripContainerMethod
 * @param {string} id
 * @returns {SVGCircleElement}
 */
-export const addCtrlGrip = addCtrlGripMethod
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const addCtrlGrip: (...args: any[]) => any = addCtrlGripMethod
 
 /**
 * @function module:path.getCtrlLine
 * @param {string} id
 * @returns {SVGLineElement}
 */
-export const getCtrlLine = getCtrlLineMethod
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const getCtrlLine: (...args: any[]) => any = getCtrlLineMethod
 
 /**
 * @function module:path.getPointGrip
@@ -322,14 +360,16 @@ export const getCtrlLine = getCtrlLineMethod
 * @param {boolean} update
 * @returns {SVGCircleElement}
 */
-export const getPointGrip = getPointGripMethod
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const getPointGrip: (...args: any[]) => any = getPointGripMethod
 
 /**
 * @function module:path.getControlPoints
 * @param {Segment} seg
 * @returns {PlainObject<string, SVGLineElement|SVGCircleElement>}
 */
-export const getControlPoints = getControlPointsMethod
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const getControlPoints: (...args: any[]) => any = getControlPointsMethod
 
 /**
 * This replaces the segment at the given index. Type is given as number.
@@ -340,7 +380,8 @@ export const getControlPoints = getControlPointsMethod
 * @param {SVGPathElement} elem
 * @returns {void}
 */
-export const replacePathSeg = replacePathSegMethod
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const replacePathSeg: (...args: any[]) => any = replacePathSegMethod
 
 /**
 * @function module:path.getSegSelector
@@ -348,7 +389,8 @@ export const replacePathSeg = replacePathSegMethod
 * @param {boolean} update
 * @returns {SVGPathElement}
 */
-export const getSegSelector = getSegSelectorMethod
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const getSegSelector: (...args: any[]) => any = getSegSelectorMethod
 
 /**
  * @typedef {PlainObject} Point
@@ -356,15 +398,20 @@ export const getSegSelector = getSegSelectorMethod
  * @property {Integer} y The y value
  */
 
+interface XYPoint {
+  x: number
+  y: number
+}
+
 /**
 * Takes three points and creates a smoother line based on them.
 * @function module:path.smoothControlPoints
-* @param {Point} ct1 - Object with x and y values (first control point)
-* @param {Point} ct2 - Object with x and y values (second control point)
-* @param {Point} pt - Object with x and y values (third point)
-* @returns {Point[]} Array of two "smoothed" point objects
+* @param {XYPoint} ct1 - Object with x and y values (first control point)
+* @param {XYPoint} ct2 - Object with x and y values (second control point)
+* @param {XYPoint} pt - Object with x and y values (third point)
+* @returns {SVGPoint[] | undefined} Array of two "smoothed" point objects
 */
-export const smoothControlPoints = (ct1, ct2, pt) => {
+export const smoothControlPoints = (ct1: XYPoint, ct2: XYPoint, pt: XYPoint): SVGPoint[] | undefined => {
   // each point must not be the origin
   const x1 = ct1.x - pt.x
   const y1 = ct1.y - pt.y
@@ -385,7 +432,7 @@ export const smoothControlPoints = (ct1, ct2, pt) => {
     const angleBetween = Math.abs(anglea - angleb)
     const angleDiff = Math.abs(Math.PI - angleBetween) / 2
 
-    let newAnglea; let newAngleb
+    let newAnglea: number; let newAngleb: number
     if (anglea - angleb > 0) {
       newAnglea = angleBetween < Math.PI ? (anglea + angleDiff) : (anglea - angleDiff)
       newAngleb = angleBetween < Math.PI ? (angleb - angleDiff) : (angleb + angleDiff)
@@ -410,7 +457,8 @@ export const smoothControlPoints = (ct1, ct2, pt) => {
 * @param {SVGPathElement} elem
 * @returns {module:path.Path}
 */
-export const getPath_ = (elem) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const getPath_ = (elem: SVGPathElement): any => {
   let p = pathData[elem.id]
   if (!p) {
     p = pathData[elem.id] = new Path(elem)
@@ -423,13 +471,17 @@ export const getPath_ = (elem) => {
 * @param {string} id
 * @returns {void}
 */
-export const removePath_ = (id) => {
+export const removePath_ = (id: string): void => {
   if (id in pathData) { delete pathData[id] }
 }
 
-let newcx; let newcy; let oldcx; let oldcy; let angle
+let newcx: number
+let newcy: number
+let oldcx: number
+let oldcy: number
+let angle: number
 
-const getRotVals = (x, y) => {
+const getRotVals = (x: number, y: number): XYPoint => {
   let dx = x - oldcx
   let dy = y - oldcy
 
@@ -466,7 +518,7 @@ const getRotVals = (x, y) => {
 * be optimized or even taken care of by `recalculateDimensions`
 * @returns {void}
 */
-export const recalcRotatedPath = () => {
+export const recalcRotatedPath = (): void => {
   const currentPath = path?.elem
   if (!currentPath) { return }
   angle = getRotationAngle(currentPath, true)
@@ -490,7 +542,8 @@ export const recalcRotatedPath = () => {
   newcx = r * Math.cos(theta) + oldcx
   newcy = r * Math.sin(theta) + oldcy
 
-  const list = currentPath.pathSegList
+  // Cast to PathSegList shim — pathSegList is attached by path-method.js at runtime.
+  const list = (currentPath as unknown as { pathSegList: PathSegList }).pathSegList
   if (!list) { return }
 
   let i = list.numberOfItems
@@ -503,7 +556,7 @@ export const recalcRotatedPath = () => {
     const props = segData[type]
     if (!props) { continue }
 
-    const newVals = {}
+    const newVals: Record<string, number> = {}
     if (seg.x !== null && seg.x !== undefined && seg.y !== null && seg.y !== undefined) {
       const rvals = getRotVals(seg.x, seg.y)
       newVals.x = rvals.x
@@ -522,10 +575,10 @@ export const recalcRotatedPath = () => {
 
     const points = props.map((prop) => {
       if (Object.prototype.hasOwnProperty.call(newVals, prop)) {
-        return newVals[prop]
+        return newVals[prop] as number
       }
       const val = seg[prop]
-      return val === null || val === undefined ? 0 : val
+      return (val === null || val === undefined) ? 0 : (val as number)
     })
     replacePathSeg(type, i, points)
   } // loop for each point
@@ -558,7 +611,7 @@ export const recalcRotatedPath = () => {
 * @function module:path.clearData
 * @returns {void}
 */
-export const clearData = () => {
+export const clearData = (): void => {
   pathData = {}
 }
 
@@ -569,18 +622,19 @@ export const clearData = () => {
 * @param {SVGMatrix} m
 * @returns {void}
 */
-export const reorientGrads = (elem, m) => {
+export const reorientGrads = (elem: Element, m: SVGMatrix): void => {
   const bb = utilsGetBBox(elem)
+  if (!bb) { return }
   for (let i = 0; i < 2; i++) {
     const type = i === 0 ? 'fill' : 'stroke'
     const attrVal = elem.getAttribute(type)
     if (attrVal && attrVal.startsWith('url(')) {
       const grad = getRefElem(attrVal)
-      if (grad.tagName === 'linearGradient') {
-        let x1 = grad.getAttribute('x1') || 0
-        let y1 = grad.getAttribute('y1') || 0
-        let x2 = grad.getAttribute('x2') || 1
-        let y2 = grad.getAttribute('y2') || 0
+      if (grad && grad.tagName === 'linearGradient') {
+        let x1: number = Number(grad.getAttribute('x1') ?? '0') || 0
+        let y1: number = Number(grad.getAttribute('y1') ?? '0') || 0
+        let x2: number = Number(grad.getAttribute('x2') ?? '1') || 1
+        let y2: number = Number(grad.getAttribute('y2') ?? '0') || 0
 
         // Convert to USOU points
         x1 = (bb.width * x1) + bb.x
@@ -600,9 +654,9 @@ export const reorientGrads = (elem, m) => {
           y2: (pt2.y - bb.y) / bb.height
         }
 
-        const newgrad = grad.cloneNode(true)
+        const newgrad = grad.cloneNode(true) as Element
         for (const [key, value] of Object.entries(gCoords)) {
-          newgrad.setAttribute(key, value)
+          newgrad.setAttribute(key, String(value))
         }
         newgrad.id = svgCanvas.getNextId()
         findDefs().append(newgrad)
@@ -617,7 +671,7 @@ export const reorientGrads = (elem, m) => {
 * @name module:path.pathMap
 * @type {GenericArray}
 */
-const pathMap = [
+const pathMap: (string | number)[] = [
   0, 'z', 'M', 'm', 'L', 'l', 'C', 'c', 'Q', 'q', 'A', 'a',
   'H', 'h', 'V', 'v', 'S', 's', 'T', 't'
 ]
@@ -641,12 +695,13 @@ const pathMap = [
  * @param {boolean} toRel - true of convert to relative
  * @returns {string}
  */
-export const convertPath = (pth, toRel) => {
-  const { pathSegList } = pth
+export const convertPath = (pth: SVGPathElement, toRel: boolean): string => {
+  // Cast to PathSegList shim — pathSegList is attached by path-method.js at runtime.
+  const pathSegList = (pth as unknown as { pathSegList: PathSegList }).pathSegList
   const len = pathSegList.numberOfItems
   let curx = 0; let cury = 0
   let d = ''
-  let lastM = null
+  let lastM: [number, number] | null = null
 
   for (let i = 0; i < len; ++i) {
     const seg = pathSegList.getItem(i)
@@ -659,7 +714,9 @@ export const convertPath = (pth, toRel) => {
     let y2 = seg.y2 || 0
 
     const type = seg.pathSegType
-    let letter = pathMap[type][toRel ? 'toLowerCase' : 'toUpperCase']()
+    const mapEntry = pathMap[type]
+    if (!mapEntry) { continue }
+    let letter = (mapEntry as string)[toRel ? 'toLowerCase' : 'toUpperCase']()
 
     switch (type) {
       case 1: // z,Z closepath (Z/z)
@@ -669,9 +726,9 @@ export const convertPath = (pth, toRel) => {
           cury = lastM[1]
         }
         break
+      // @ts-expect-error: intentional fallthrough — H adjusts x then shares h path
       case 12: // absolute horizontal line (H)
         x -= curx
-      // Fallthrough
       case 13: // relative horizontal line (h)
         if (toRel) {
           y = 0
@@ -686,9 +743,9 @@ export const convertPath = (pth, toRel) => {
         // Convert to "line" for easier editing
         d += pathDSegment(letter, [[x, y]])
         break
+      // @ts-expect-error: intentional fallthrough — V adjusts y then shares v path
       case 14: // absolute vertical line (V)
         y -= cury
-      // Fallthrough
       case 15: // relative vertical line (v)
         if (toRel) {
           x = 0
@@ -706,10 +763,10 @@ export const convertPath = (pth, toRel) => {
       case 2: // absolute move (M)
       case 4: // absolute line (L)
       case 18: // absolute smooth quad (T)
+      // @ts-expect-error: intentional fallthrough — absolute arc adjusts coords then shares relative path
       case 10: // absolute elliptical arc (A)
         x -= curx
         y -= cury
-      // Fallthrough
       case 5: // relative line (l)
       case 3: // relative move (m)
       case 19: // relative smooth quad (t)
@@ -726,10 +783,10 @@ export const convertPath = (pth, toRel) => {
 
         d += pathDSegment(letter, [[x, y]])
         break
+      // @ts-expect-error: intentional fallthrough — C adjusts coords then shares c path
       case 6: // absolute cubic (C)
         x -= curx; x1 -= curx; x2 -= curx
         y -= cury; y1 -= cury; y2 -= cury
-      // Fallthrough
       case 7: // relative cubic (c)
         if (toRel) {
           curx += x
@@ -742,10 +799,10 @@ export const convertPath = (pth, toRel) => {
         }
         d += pathDSegment(letter, [[x1, y1], [x2, y2], [x, y]])
         break
+      // @ts-expect-error: intentional fallthrough — Q adjusts coords then shares q path
       case 8: // absolute quad (Q)
         x -= curx; x1 -= curx
         y -= cury; y1 -= cury
-      // Fallthrough
       case 9: // relative quad (q)
         if (toRel) {
           curx += x
@@ -769,16 +826,16 @@ export const convertPath = (pth, toRel) => {
           curx = x
           cury = y
         }
-        d += pathDSegment(letter, [[seg.r1, seg.r2]], [
-          seg.angle,
+        d += pathDSegment(letter, [[seg.r1 ?? 0, seg.r2 ?? 0]], [
+          seg.angle ?? 0,
           (seg.largeArcFlag ? 1 : 0),
           (seg.sweepFlag ? 1 : 0)
         ], [x, y])
         break
+      // @ts-expect-error: intentional fallthrough — S adjusts coords then shares s path
       case 16: // absolute smooth cubic (S)
         x -= curx; x2 -= curx
         y -= cury; y2 -= cury
-      // Fallthrough
       case 17: // relative smooth cubic (s)
         if (toRel) {
           curx += x
@@ -800,21 +857,19 @@ export const convertPath = (pth, toRel) => {
  * TODO: refactor callers in `convertPath` to use `getPathDFromSegments` instead of this function.
  * Legacy code refactored from `svgcanvas.pathActions.convertPath`.
  * @param {string} letter - path segment command (letter in potentially either case from {@link module:path.pathMap}; see [SVGPathSeg#pathSegTypeAsLetter]{@link https://www.w3.org/TR/SVG/single-page.html#paths-__svg__SVGPathSeg__pathSegTypeAsLetter})
- * @param {GenericArray<GenericArray<Integer>>} points - x,y points
- * @param {GenericArray<GenericArray<Integer>>} [morePoints] - x,y points
- * @param {Integer[]} [lastPoint] - x,y point
+ * @param {number[][]} points - x,y points
+ * @param {Array<number>} [morePoints] - additional numeric params
+ * @param {number[]} [lastPoint] - x,y point
  * @returns {string}
  */
-const pathDSegment = (letter, points, morePoints, lastPoint) => {
-  points.forEach((pnt, i) => {
-    points[i] = shortFloat(pnt)
-  })
-  let segment = letter + points.join(' ')
+const pathDSegment = (letter: string, points: number[][], morePoints?: number[], lastPoint?: number[]): string => {
+  const floatPoints = points.map((pnt) => shortFloat(pnt as [number, number]))
+  let segment = letter + floatPoints.join(' ')
   if (morePoints) {
     segment += ` ${morePoints.join(' ')}`
   }
   if (lastPoint) {
-    segment += ` ${shortFloat(lastPoint)}`
+    segment += ` ${shortFloat(lastPoint as [number, number])}`
   }
   return segment
 }
@@ -823,5 +878,6 @@ const pathDSegment = (letter, points, morePoints, lastPoint) => {
 * Group: Path edit functions.
 * Functions relating to editing path elements.
 */
-export const pathActions = pathActionsMethod
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const pathActions: any = pathActionsMethod
 // end pathActions
