@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noEmit": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["vite/client", "vitest"],
+    "paths": {
+      "@svgedit/svgcanvas": ["./packages/svgcanvas/svgcanvas.ts"],
+      "@svgedit/svgcanvas/*": ["./packages/svgcanvas/*"]
+    }
+  },
+  "include": ["src/editor/**/*.ts", "scripts/**/*.ts", "*.config.ts"],
+  "references": [{ "path": "./packages/svgcanvas" }]
+}

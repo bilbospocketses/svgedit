@@ -73,6 +73,7 @@
     "jamilih": "0.63.1",
     "jsdom": "^27.4.0",
     "standard": "17.1.2",
+    "typescript": "^5.9.3",
     "vite": "^7.3.2",
     "vite-plugin-istanbul": "^7.2.1",
     "vite-plugin-string": "^1.2.3",
