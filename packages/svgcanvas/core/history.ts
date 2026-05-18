@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+ 
 /**
  * For command history tracking and undo functionality.
  * @module history

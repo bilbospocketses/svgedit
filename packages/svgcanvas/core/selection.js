@@ -210,7 +210,7 @@ const getMouseTargetMethod = (evt) => {
  * @param {string} name
  * @returns {boolean}
  */
-/* eslint-disable max-len */
+ 
 /**
  * @todo Consider: Should this return an array by default, so extension results aren't overwritten?
  * @todo Would be easier to document if passing in object with key of action and vars as value; could then define an interface which tied both together
@@ -220,7 +220,7 @@ const getMouseTargetMethod = (evt) => {
  * @param {boolean} [returnArray]
  * @returns {GenericArray<module:svgcanvas.ExtensionStatus>|module:svgcanvas.ExtensionStatus|false} See {@tutorial ExtensionDocs} on the ExtensionStatus.
  */
-/* eslint-enable max-len */
+ 
 const runExtensionsMethod = (
   action,
   vars,

@@ -211,7 +211,7 @@ export const init = (canvas) => {
   svgCanvas = canvas
 }
 
-/* eslint-disable max-len */
+ 
 /**
 * @function module:path.ptObjToArr
 * @todo See if this should just live in `replacePathSeg`
@@ -219,7 +219,7 @@ export const init = (canvas) => {
 * @param {SVGPathSegMovetoAbs|SVGPathSegLinetoAbs|SVGPathSegCurvetoCubicAbs|SVGPathSegCurvetoQuadraticAbs|SVGPathSegArcAbs|SVGPathSegLinetoHorizontalAbs|SVGPathSegLinetoVerticalAbs|SVGPathSegCurvetoCubicSmoothAbs|SVGPathSegCurvetoQuadraticSmoothAbs} segItem
 * @returns {ArgumentsArray}
 */
-/* eslint-enable max-len */
+ 
 export const ptObjToArrMethod = (type, segItem) => {
   const segData = svgCanvas.getSegData()
   const props = segData[type]

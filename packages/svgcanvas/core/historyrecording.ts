@@ -167,7 +167,7 @@ class HistoryRecordingService {
 interface HistoryRecordingServiceStatic {
   NO_HISTORY: HistoryRecordingService
 }
-// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+ 
 ;(HistoryRecordingService as unknown as HistoryRecordingServiceStatic).NO_HISTORY = new HistoryRecordingService(null)
 
 export default HistoryRecordingService

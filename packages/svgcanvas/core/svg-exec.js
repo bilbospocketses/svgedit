@@ -71,7 +71,7 @@ export const init = canvas => {
  */
 const svgCanvasToString = () => {
   // keep calling it until there are none to remove
-  while (svgCanvas.removeUnusedDefElems() > 0) {} // eslint-disable-line no-empty
+  while (svgCanvas.removeUnusedDefElems() > 0) {}  
 
   svgCanvas.pathActions.clear(true)
 

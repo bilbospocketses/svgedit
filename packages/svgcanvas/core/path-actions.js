@@ -1172,7 +1172,7 @@ class PathActions {
     return this.#smoothPolylineIntoPath(element)
   }
 
-  /* eslint-enable  */
+   
   /**
   * @param {?Integer} v See {@link https://www.w3.org/TR/SVG/single-page.html#paths-InterfaceSVGPathSeg}
   * @returns {void}

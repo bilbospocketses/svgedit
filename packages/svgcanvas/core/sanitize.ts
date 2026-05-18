@@ -18,7 +18,7 @@ const FONT_ATTRIBUTES = ['font-family', 'font-size', 'font-stretch', 'font-style
  * This defines which elements and attributes that we support (or at least
  * don't remove).
  */
-/* eslint-disable max-len */
+ 
 const svgGenericWhiteList: string[] = ['class', 'id', 'display', 'transform', 'style']
 const svgWhiteList_: Record<string, string[]> = {
   // SVG Elements

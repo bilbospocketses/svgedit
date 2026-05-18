@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument */
 // svgCanvas is opaquely typed (typed in Task 10 C6); file-level disable matches utilities.ts pattern
 /**
  * Tools for undo.
@@ -29,7 +29,7 @@ let svgCanvas: any = null
 */
 export const init = (canvas: unknown): void => {
   svgCanvas = canvas
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+   
   svgCanvas.undoMgr = getUndoManager()
 }
 
