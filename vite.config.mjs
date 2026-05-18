@@ -2,7 +2,6 @@ import { resolve } from 'node:path'
 import { defineConfig } from 'vite'
 import dynamicImportVars from '@rollup/plugin-dynamic-import-vars'
 import string from 'vite-plugin-string'
-import istanbul from 'vite-plugin-istanbul'
 
 const editorEntries = [
   resolve(__dirname, 'src/editor/index.html'),
@@ -10,7 +9,6 @@ const editorEntries = [
   resolve(__dirname, 'src/editor/xdomain-index.html')
 ]
 
-const coverageEnabled = process.env.COVERAGE === 'true' || process.env.NODE_ENV === 'test'
 const htmlStringPlugin = string({
   include: [
     'src/editor/dialogs/**/*.html',
@@ -51,13 +49,6 @@ export default defineConfig({
       }),
       apply: 'build'
     },
-    coverageEnabled &&
-      istanbul({
-        include: ['src/editor/**', 'packages/svgcanvas/**'],
-        exclude: ['node_modules', 'dist', 'packages/**/dist'],
-        extension: ['.js'],
-        forceBuildInstrument: true
-      }),
     {
       name: 'svgedit-html-asset-string',
       enforce: 'pre',

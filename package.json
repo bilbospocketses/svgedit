@@ -66,7 +66,6 @@
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.59.3",
     "vite": "^7.3.2",
-    "vite-plugin-istanbul": "^7.2.1",
     "vite-plugin-string": "^1.2.3",
     "vitest": "^4.0.16"
   },
