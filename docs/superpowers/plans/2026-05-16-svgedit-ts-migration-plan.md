@@ -92,7 +92,7 @@ Create file `tsconfig.json` at repo root:
 {
   "compilerOptions": {
     "strict": true,
-    "target": "ES2022",
+    "target": "ES2025",
     "module": "ESNext",
     "moduleResolution": "bundler",
     "esModuleInterop": true,
@@ -103,8 +103,11 @@ Create file `tsconfig.json` at repo root:
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
     "noEmit": true,
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "lib": ["ES2025", "DOM", "DOM.Iterable"],
     "types": ["vite/client", "vitest"],
     "paths": {
       "@svgedit/svgcanvas": ["./packages/svgcanvas/svgcanvas.ts"],
@@ -127,6 +130,7 @@ Create file `packages/svgcanvas/tsconfig.json`:
     "composite": true,
     "declaration": true,
     "declarationMap": true,
+    "isolatedDeclarations": true,
     "outDir": "./dist",
     "rootDir": "./",
     "noEmit": false

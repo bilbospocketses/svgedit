@@ -72,7 +72,7 @@ Two `tsconfig.json` files — root for the editor + scripts, package one for the
 {
   "compilerOptions": {
     "strict": true,
-    "target": "ES2022",
+    "target": "ES2025",
     "module": "ESNext",
     "moduleResolution": "bundler",
     "esModuleInterop": true,
@@ -83,8 +83,11 @@ Two `tsconfig.json` files — root for the editor + scripts, package one for the
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
     "noEmit": true,
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "lib": ["ES2025", "DOM", "DOM.Iterable"],
     "types": ["vite/client", "vitest"],
     "paths": {
       "@svgedit/svgcanvas": ["./packages/svgcanvas/svgcanvas.ts"],
@@ -104,6 +107,7 @@ Two `tsconfig.json` files — root for the editor + scripts, package one for the
     "composite": true,
     "declaration": true,
     "declarationMap": true,
+    "isolatedDeclarations": true,
     "outDir": "./dist",
     "rootDir": "./",
     "noEmit": false
@@ -123,6 +127,10 @@ Two `tsconfig.json` files — root for the editor + scripts, package one for the
 - **`moduleResolution: "bundler"`** — Node-resolution behavior tuned for bundlers. Avoids the `.js`-extension-in-imports issue.
 - **`paths`** — preserves the `@svgedit/svgcanvas` import alias the editor uses today; saves converting every consumer to relative paths.
 - **`noUnusedLocals` + `noUnusedParameters`** — extra catch beyond `strict`. Surfaces dead args during conversion.
+- **`noUncheckedSideEffectImports: true`** — TS 6 default; explicit documents the choice. Catches `import 'missing-module'` side-effect imports that don't resolve.
+- **`noUncheckedIndexedAccess: true`** — forces `array[i]` to be typed as `T | undefined`. Aligns with the audit's flagged bugs (rotated-bbox cross-browser at `utilities.js:941-942`, `getStrokedBBox` min/max asymmetry at `utilities.js:1126-1129`, `pathSegList`-style direct-index access throughout `path-actions.ts`). Will add narrowing requirements to Task-5+ conversions; pays for itself in latent-bug catch.
+- **`exactOptionalPropertyTypes: true`** — distinguishes `{ foo?: string }` from `{ foo: string \| undefined }`. The audit's confirmed bugs around `Config` shape mismatches benefit. Stricter than `strict`; expect to surface real callsite discipline gaps during Tasks 11–15 (`ConfigObj.ts`, `Editor.ts`, panel files).
+- **Workspace `isolatedDeclarations: true`** — library workspace (`packages/svgcanvas/`) emits `.d.ts` via `declaration: true`; this flag forces every exported function/method to have an explicit return type so each file's declarations can be produced independently. Parallelizes well + becomes critical when TS 7's Go-ported compiler ships (~10x speedup) since `isolatedDeclarations` is one of the gates for it.
 
 ### Wire-methods declaration approach
 
