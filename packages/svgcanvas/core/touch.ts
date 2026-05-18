@@ -1,15 +1,17 @@
 // http://ross.posterous.com/2008/08/19/iphone-touch-events-in-javascript/
-/**
- *
- * @param {Event} ev
- * @returns {void}
- */
-const touchHandler = (ev) => {
+
+/** Minimal shape of the canvas context needed by touch.ts init(). */
+interface TouchCanvasContext {
+  svgroot: EventTarget & { addEventListener: EventTarget['addEventListener'] }
+}
+
+const touchHandler = (ev: TouchEvent): void => {
   ev.preventDefault()
   const { changedTouches } = ev
   const first = changedTouches[0]
+  if (!first) return
 
-  let type = ''
+  let type: string
   switch (ev.type) {
     case 'touchstart': type = 'mousedown'; break
     case 'touchmove': type = 'mousemove'; break
@@ -39,13 +41,13 @@ const touchHandler = (ev) => {
     relatedTarget: null
   })
   if (changedTouches.length < 2) {
-    first.target.dispatchEvent(simulatedEvent)
+    first.target?.dispatchEvent(simulatedEvent)
   }
 }
 
-export const init = (svgCanvas) => {
-  svgCanvas.svgroot.addEventListener('touchstart', touchHandler)
-  svgCanvas.svgroot.addEventListener('touchmove', touchHandler)
-  svgCanvas.svgroot.addEventListener('touchend', touchHandler)
-  svgCanvas.svgroot.addEventListener('touchcancel', touchHandler)
+export const init = (svgCanvas: TouchCanvasContext): void => {
+  svgCanvas.svgroot.addEventListener('touchstart', touchHandler as EventListener)
+  svgCanvas.svgroot.addEventListener('touchmove', touchHandler as EventListener)
+  svgCanvas.svgroot.addEventListener('touchend', touchHandler as EventListener)
+  svgCanvas.svgroot.addEventListener('touchcancel', touchHandler as EventListener)
 }

@@ -1,26 +1,41 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /**
  * Mathematical utilities.
  * @module math
  * @license MIT
  *
- * ©2010 Alexis Deveria, ©2010 Jeff Schiller
- */
-
-/**
- * @typedef {Object} AngleCoord45
- * @property {number} x - The angle-snapped x value
- * @property {number} y - The angle-snapped y value
- * @property {number} a - The angle (in radians) at which to snap
- */
-
-/**
- * @typedef {Object} XYObject
- * @property {number} x
- * @property {number} y
+ * (c)2010 Alexis Deveria, (c)2010 Jeff Schiller
  */
 
 import { NS } from './namespaces.js'
 import { warn } from '../common/logger.js'
+
+/** A coordinate with x and y values. */
+export interface XYObject {
+  x: number
+  y: number
+}
+
+/** Result of snapToAngle: snapped x/y coords + the snap angle (radians). */
+export interface AngleCoord45 {
+  x: number
+  y: number
+  a: number
+}
+
+/** A transformed box with all four corners and the axis-aligned bounding box. */
+export interface TransformedBox {
+  tl: XYObject
+  tr: XYObject
+  bl: XYObject
+  br: XYObject
+  aabox: {
+    x: number
+    y: number
+    width: number
+    height: number
+  }
+}
 
 // Constants
 const NEAR_ZERO = 1e-10
@@ -28,8 +43,8 @@ const NEAR_ZERO = 1e-10
 // Create a throwaway SVG element for matrix operations
 const svg = document.createElementNS(NS.SVG, 'svg')
 
-const createTransformFromMatrix = (m) => {
-  const createFallback = (matrix) => {
+const createTransformFromMatrix = (m: SVGMatrix): SVGTransform => {
+  const createFallback = (matrix: SVGMatrix): SVGMatrix => {
     const fallback = svg.createSVGMatrix()
     Object.assign(fallback, {
       a: matrix.a,
@@ -44,15 +59,15 @@ const createTransformFromMatrix = (m) => {
 
   try {
     return svg.createSVGTransformFromMatrix(m)
-  } catch (e) {
+  } catch {
     const t = svg.createSVGTransform()
     try {
       t.setMatrix(m)
       return t
-    } catch (err) {
+    } catch {
       try {
         return svg.createSVGTransformFromMatrix(createFallback(m))
-      } catch (e2) {
+      } catch {
         t.setMatrix(createFallback(m))
         return t
       }
@@ -62,43 +77,38 @@ const createTransformFromMatrix = (m) => {
 
 /**
  * Transforms a point by a given matrix without DOM calls.
- * @function transformPoint
- * @param {number} x - The x coordinate
- * @param {number} y - The y coordinate
- * @param {SVGMatrix} m - The transformation matrix
- * @returns {XYObject} The transformed point
  */
-export const transformPoint = (x, y, m) => ({
+export const transformPoint = (x: number, y: number, m: SVGMatrix): XYObject => ({
   x: m.a * x + m.c * y + m.e,
   y: m.b * x + m.d * y + m.f
 })
 
 /**
  * Gets the transform list (baseVal) from an element if it exists.
- * @function getTransformList
- * @param {Element} elem - An SVG element or element with a transform list
- * @returns {SVGTransformList|undefined} The transform list, if any
  */
-export const getTransformList = elem => {
-  if (elem.transform?.baseVal) {
-    return elem.transform.baseVal
+export const getTransformList = (elem: Element): SVGTransformList | undefined => {
+  const withTransform = elem as Element & {
+    transform?: { baseVal: SVGTransformList }
+    gradientTransform?: { baseVal: SVGTransformList }
+    patternTransform?: { baseVal: SVGTransformList }
   }
-  if (elem.gradientTransform?.baseVal) {
-    return elem.gradientTransform.baseVal
+  if (withTransform.transform?.baseVal) {
+    return withTransform.transform.baseVal
   }
-  if (elem.patternTransform?.baseVal) {
-    return elem.patternTransform.baseVal
+  if (withTransform.gradientTransform?.baseVal) {
+    return withTransform.gradientTransform.baseVal
+  }
+  if (withTransform.patternTransform?.baseVal) {
+    return withTransform.patternTransform.baseVal
   }
   warn('No transform list found. Check browser compatibility.', elem, 'math')
+  return undefined
 }
 
 /**
  * Checks if a matrix is the identity matrix.
- * @function isIdentity
- * @param {SVGMatrix} m - The matrix to check
- * @returns {boolean} True if it's an identity matrix (1,0,0,1,0,0)
  */
-export const isIdentity = m =>
+export const isIdentity = (m: SVGMatrix): boolean =>
   Math.abs(m.a - 1) < NEAR_ZERO &&
   Math.abs(m.b) < NEAR_ZERO &&
   Math.abs(m.c) < NEAR_ZERO &&
@@ -109,20 +119,19 @@ export const isIdentity = m =>
 /**
  * Multiplies multiple matrices together (m1 * m2 * ...).
  * Near-zero values are rounded to zero.
- * @function matrixMultiply
- * @param {...SVGMatrix} args - The matrices to multiply
- * @returns {SVGMatrix} The resulting matrix
  */
-export const matrixMultiply = (...args) => {
+export const matrixMultiply = (...args: SVGMatrix[]): SVGMatrix => {
   if (args.length === 0) {
     return svg.createSVGMatrix()
   }
 
-  const normalizeNearZero = (matrix) => {
-    const props = ['a', 'b', 'c', 'd', 'e', 'f']
+  const normalizeNearZero = (matrix: SVGMatrix): SVGMatrix => {
+    const props = ['a', 'b', 'c', 'd', 'e', 'f'] as const
     for (const prop of props) {
       if (Math.abs(matrix[prop]) < NEAR_ZERO) {
-        matrix[prop] = 0
+        // SVGMatrix properties are read-only on the interface but writable at runtime
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ;(matrix as any)[prop] = 0
       }
     }
     return matrix
@@ -166,11 +175,8 @@ export const matrixMultiply = (...args) => {
 
 /**
  * Checks if a transform list includes a non-identity matrix transform.
- * @function hasMatrixTransform
- * @param {SVGTransformList} [tlist] - The transform list to check
- * @returns {boolean} True if a matrix transform is found
  */
-export const hasMatrixTransform = tlist => {
+export const hasMatrixTransform = (tlist: SVGTransformList | undefined | null): boolean => {
   if (!tlist) return false
   for (let i = 0; i < tlist.numberOfItems; i++) {
     const xform = tlist.getItem(i)
@@ -185,29 +191,9 @@ export const hasMatrixTransform = tlist => {
 }
 
 /**
- * @typedef {Object} TransformedBox
- * @property {XYObject} tl - Top-left coordinate
- * @property {XYObject} tr - Top-right coordinate
- * @property {XYObject} bl - Bottom-left coordinate
- * @property {XYObject} br - Bottom-right coordinate
- * @property {Object} aabox
- * @property {number} aabox.x - Axis-aligned x
- * @property {number} aabox.y - Axis-aligned y
- * @property {number} aabox.width - Axis-aligned width
- * @property {number} aabox.height - Axis-aligned height
- */
-
-/**
  * Transforms a rectangular box using a given matrix.
- * @function transformBox
- * @param {number} l - Left coordinate
- * @param {number} t - Top coordinate
- * @param {number} w - Width
- * @param {number} h - Height
- * @param {SVGMatrix} m - Transformation matrix
- * @returns {TransformedBox} The transformed box information
  */
-export const transformBox = (l, t, w, h, m) => {
+export const transformBox = (l: number, t: number, w: number, h: number, m: SVGMatrix): TransformedBox => {
   const tl = transformPoint(l, t, m)
   const tr = transformPoint(l + w, t, m)
   const bl = transformPoint(l, t + h, m)
@@ -234,22 +220,21 @@ export const transformBox = (l, t, w, h, m) => {
 
 /**
  * Consolidates a transform list into a single matrix transform without modifying the original list.
- * @function transformListToTransform
- * @param {SVGTransformList} tlist - The transform list
- * @param {number} [min=0] - Optional start index
- * @param {number} [max] - Optional end index, defaults to tlist length-1
- * @returns {SVGTransform} A single transform from the combined matrices
  */
-export const transformListToTransform = (tlist, min = 0, max = null) => {
+export const transformListToTransform = (
+  tlist: SVGTransformList | undefined | null,
+  min = 0,
+  max: number | null = null
+): SVGTransform => {
   if (!tlist) {
     return createTransformFromMatrix(svg.createSVGMatrix())
   }
 
-  const start = Number.parseInt(min, 10)
-  const end = Number.parseInt(max ?? tlist.numberOfItems - 1, 10)
+  const start = Number.parseInt(String(min), 10)
+  const end = Number.parseInt(String(max ?? tlist.numberOfItems - 1), 10)
   const [low, high] = [Math.min(start, end), Math.max(start, end)]
 
-  const matrices = []
+  const matrices: SVGMatrix[] = []
   for (let i = low; i <= high; i++) {
     const matrix = (i >= 0 && i < tlist.numberOfItems)
       ? tlist.getItem(i).matrix
@@ -274,25 +259,16 @@ export const transformListToTransform = (tlist, min = 0, max = null) => {
 
 /**
  * Gets the matrix of a given element's transform list.
- * @function getMatrix
- * @param {Element} elem - The element to check
- * @returns {SVGMatrix} The transformation matrix
  */
-export const getMatrix = elem => {
+export const getMatrix = (elem: Element): SVGMatrix => {
   const tlist = getTransformList(elem)
   return transformListToTransform(tlist).matrix
 }
 
 /**
  * Returns a coordinate snapped to the nearest 45-degree angle.
- * @function snapToAngle
- * @param {number} x1 - First point's x
- * @param {number} y1 - First point's y
- * @param {number} x2 - Second point's x
- * @param {number} y2 - Second point's y
- * @returns {AngleCoord45} The angle-snapped coordinates and angle
  */
-export const snapToAngle = (x1, y1, x2, y2) => {
+export const snapToAngle = (x1: number, y1: number, x2: number, y2: number): AngleCoord45 => {
   const snap = Math.PI / 4 // 45 degrees
   const dx = x2 - x1
   const dy = y2 - y1
@@ -307,15 +283,18 @@ export const snapToAngle = (x1, y1, x2, y2) => {
   }
 }
 
+/** A rectangle with x, y, width, height. */
+export interface Rect {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
 /**
  * Checks if two rectangles intersect.
- * Both r1 and r2 are expected to have {x, y, width, height}.
- * @function rectsIntersect
- * @param {{x:number,y:number,width:number,height:number}} r1 - First rectangle
- * @param {{x:number,y:number,width:number,height:number}} r2 - Second rectangle
- * @returns {boolean} True if the rectangles intersect
  */
-export const rectsIntersect = (r1, r2) =>
+export const rectsIntersect = (r1: Rect, r2: Rect): boolean =>
   r2.x < r1.x + r1.width &&
   r2.x + r2.width > r1.x &&
   r2.y < r1.y + r1.height &&

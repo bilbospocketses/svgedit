@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return */
 /**
  * Manipulating coordinates.
  * @module coords
@@ -22,9 +23,56 @@ import {
 } from './math.js'
 import { convertToNum } from './units.js'
 
-let svgCanvas = null
+/** Minimal canvas context shape for coords.ts init(). */
+interface CoordsCanvasContext {
+  getGridSnapping?(): boolean
+  getSvgRoot?(): SVGSVGElement
+  getCurrentDrawing?(): { getNextId?(): string } | null
+  getDrawing?(): { getNextId?(): string } | null
+  getDataStorage?(): { get(elem: unknown, key: string): unknown }
+}
 
-const flipBoxCoordinate = (value) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let svgCanvas: any = null
+
+/** A path segment entry with type + optional coordinate fields. */
+interface PathSegEntry {
+  type: number
+  x?: number
+  y?: number
+  x1?: number
+  y1?: number
+  x2?: number
+  y2?: number
+  r1?: number
+  r2?: number
+  angle?: number
+  largeArcFlag?: number | boolean
+  sweepFlag?: number | boolean
+}
+
+/** The changes dict used in remapElement. */
+interface RemapChanges {
+  x?: number
+  y?: number
+  width?: number
+  height?: number
+  cx?: number
+  cy?: number
+  rx?: number
+  ry?: number
+  r?: number
+  x1?: number
+  y1?: number
+  x2?: number
+  y2?: number
+  points?: Array<{ x: number; y: number }>
+  d?: PathSegEntry[]
+  'font-size'?: number
+  [key: string]: unknown
+}
+
+const flipBoxCoordinate = (value: string | null | undefined): string | null => {
   if (value === null || value === undefined) return null
   const str = String(value).trim()
   if (!str) return null
@@ -38,7 +86,7 @@ const flipBoxCoordinate = (value) => {
   return Number.isNaN(num) ? str : String(1 - num)
 }
 
-const flipAttributeInBoxUnits = (elem, attr) => {
+const flipAttributeInBoxUnits = (elem: Element, attr: string): void => {
   const value = elem.getAttribute(attr)
   if (value === null || value === undefined) return
 
@@ -50,42 +98,37 @@ const flipAttributeInBoxUnits = (elem, attr) => {
 
 /**
  * Initialize the coords module with the SVG canvas.
- * @function module:coords.init
- * @param {Object} canvas - The SVG canvas object
- * @returns {void}
  */
-export const init = canvas => {
+export const init = (canvas: CoordsCanvasContext): void => {
   svgCanvas = canvas
 }
 
 // Map path segment types to their corresponding commands
-const pathMap = [
+const pathMap: Array<number | string> = [
   0, 'z', 'M', 'm', 'L', 'l', 'C', 'c', 'Q', 'q', 'A', 'a', 'H', 'h', 'V', 'v', 'S', 's', 'T', 't'
 ]
 
 /**
  * Applies coordinate changes to an element based on the given matrix.
- * @function module:coords.remapElement
- * @param {Element} selected - The DOM element to remap
- * @param {Object} changes - An object containing attribute changes
- * @param {SVGMatrix} m - The transformation matrix
- * @returns {void}
  */
-export const remapElement = (selected, changes, m) => {
-  const remap = (x, y) => transformPoint(x, y, m)
-  const scalew = (w) => m.a * w
-  const scaleh = (h) => m.d * h
-  const doSnapping =
-    svgCanvas.getGridSnapping?.() &&
-    selected?.parentNode?.parentNode?.localName === 'svg'
+export const remapElement = (selected: Element, changes: RemapChanges, m: SVGMatrix): void => {
+  const remap = (x: number, y: number) => transformPoint(x, y, m)
+  const scalew = (w: number): number => m.a * w
+  const scaleh = (h: number): number => m.d * h
+  const doSnapping: boolean =
+    Boolean(svgCanvas.getGridSnapping?.()) &&
+    (selected?.parentNode as Element | null)?.parentNode instanceof Element &&
+    (selected?.parentNode?.parentNode as Element | null)?.localName === 'svg'
 
-  const finishUp = () => {
+  const finishUp = (): void => {
     if (doSnapping) {
       for (const [attr, value] of Object.entries(changes)) {
-        changes[attr] = snapToGrid(value)
+        if (typeof value === 'number') {
+          changes[attr] = snapToGrid(value)
+        }
       }
     }
-    assignAttributes(selected, changes, 1000, true)
+    assignAttributes(selected, changes as Record<string, string | number>, 1000, true)
   }
 
   const box = getBBox(selected)
@@ -103,7 +146,7 @@ export const remapElement = (selected, changes, m) => {
       // userSpaceOnUse gradients do not need object-bounding-box correction.
       if (grad.getAttribute('gradientUnits') === 'userSpaceOnUse') return
 
-      const newgrad = grad.cloneNode(true)
+      const newgrad = grad.cloneNode(true) as Element
       if (m.a < 0) {
         // Flip x
         if (tagName === 'lineargradient') {
@@ -157,14 +200,16 @@ export const remapElement = (selected, changes, m) => {
       if (elName === 'image' && (m.a < 0 || m.d < 0)) {
         // Convert to matrix if flipped
         const chlist = getTransformList(selected)
-        const mt = svgCanvas.getSvgRoot().createSVGTransform()
-        mt.setMatrix(matrixMultiply(transformListToTransform(chlist).matrix, m))
-        chlist.clear()
-        chlist.appendItem(mt)
+        if (chlist) {
+          const mt = svgCanvas.getSvgRoot().createSVGTransform()
+          mt.setMatrix(matrixMultiply(transformListToTransform(chlist).matrix, m))
+          chlist.clear()
+          chlist.appendItem(mt)
+        }
       } else {
-        const pt1 = remap(changes.x, changes.y)
-        changes.width = scalew(changes.width)
-        changes.height = scaleh(changes.height)
+        const pt1 = remap(changes.x ?? 0, changes.y ?? 0)
+        changes.width = scalew(changes.width ?? 0)
+        changes.height = scaleh(changes.height ?? 0)
         changes.x = pt1.x + Math.min(0, changes.width)
         changes.y = pt1.y + Math.min(0, changes.height)
         changes.width = Math.abs(changes.width)
@@ -174,20 +219,20 @@ export const remapElement = (selected, changes, m) => {
       break
     }
     case 'ellipse': {
-      const c = remap(changes.cx, changes.cy)
+      const c = remap(changes.cx ?? 0, changes.cy ?? 0)
       changes.cx = c.x
       changes.cy = c.y
-      changes.rx = Math.abs(scalew(changes.rx))
-      changes.ry = Math.abs(scaleh(changes.ry))
+      changes.rx = Math.abs(scalew(changes.rx ?? 0))
+      changes.ry = Math.abs(scaleh(changes.ry ?? 0))
       finishUp()
       break
     }
     case 'circle': {
-      const c = remap(changes.cx, changes.cy)
+      const c = remap(changes.cx ?? 0, changes.cy ?? 0)
       changes.cx = c.x
       changes.cy = c.y
       // Take the minimum of the new dimensions for the new circle radius
-      const tbox = transformBox(box.x, box.y, box.width, box.height, m)
+      const tbox = transformBox(box?.x ?? 0, box?.y ?? 0, box?.width ?? 0, box?.height ?? 0, m)
       const w = tbox.tr.x - tbox.tl.x
       const h = tbox.bl.y - tbox.tl.y
       changes.r = Math.min(Math.abs(w / 2), Math.abs(h / 2))
@@ -195,8 +240,8 @@ export const remapElement = (selected, changes, m) => {
       break
     }
     case 'line': {
-      const pt1 = remap(changes.x1, changes.y1)
-      const pt2 = remap(changes.x2, changes.y2)
+      const pt1 = remap(changes.x1 ?? 0, changes.y1 ?? 0)
+      const pt2 = remap(changes.x2 ?? 0, changes.y2 ?? 0)
       changes.x1 = pt1.x
       changes.y1 = pt1.y
       changes.x2 = pt2.x
@@ -205,7 +250,7 @@ export const remapElement = (selected, changes, m) => {
       break
     }
     case 'text': {
-      const pt = remap(changes.x, changes.y)
+      const pt = remap(changes.x ?? 0, changes.y ?? 0)
       changes.x = pt.x
       changes.y = pt.y
 
@@ -226,19 +271,19 @@ export const remapElement = (selected, changes, m) => {
       // Handle child 'tspan' elements
       const childNodes = selected.childNodes
       for (let i = 0; i < childNodes.length; i++) {
-        const child = childNodes[i]
+        const child = childNodes[i] as Element
         if (child.nodeType === 1 && child.tagName === 'tspan') {
-          const childChanges = {}
+          const childChanges: RemapChanges = {}
           const hasX = child.hasAttribute('x')
           const hasY = child.hasAttribute('y')
           if (hasX) {
-            const childX = convertToNum('x', child.getAttribute('x'))
-            const childPtX = remap(childX, changes.y).x
+            const childX = convertToNum('x', child.getAttribute('x') ?? '0')
+            const childPtX = remap(childX, changes.y ?? 0).x
             childChanges.x = childPtX
           }
           if (hasY) {
-            const childY = convertToNum('y', child.getAttribute('y'))
-            const childPtY = remap(changes.x, childY).y
+            const childY = convertToNum('y', child.getAttribute('y') ?? '0')
+            const childPtY = remap(changes.x ?? 0, childY).y
             childChanges.y = childPtY
           }
 
@@ -251,15 +296,15 @@ export const remapElement = (selected, changes, m) => {
             childChanges['font-size'] = tspanFSNum * Math.abs(m.a)
           }
 
-          if (hasX || hasY || childChanges['font-size']) {
-            assignAttributes(child, childChanges, 1000, true)
+          if (hasX || hasY || childChanges['font-size'] !== undefined) {
+            assignAttributes(child, childChanges as Record<string, string | number>, 1000, true)
           }
         }
       }
       break
     }
     case 'tspan': {
-      const pt = remap(changes.x, changes.y)
+      const pt = remap(changes.x ?? 0, changes.y ?? 0)
       changes.x = pt.x
       changes.y = pt.y
 
@@ -280,34 +325,36 @@ export const remapElement = (selected, changes, m) => {
       const dataStorage = svgCanvas.getDataStorage()
       const gsvg = dataStorage.get(selected, 'gsvg')
       if (gsvg) {
-        assignAttributes(gsvg, changes, 1000, true)
+        assignAttributes(gsvg as Element, changes as Record<string, string | number>, 1000, true)
       }
       break
     }
     case 'polyline':
     case 'polygon': {
-      changes.points.forEach(pt => {
+      changes.points?.forEach(pt => {
         const { x, y } = remap(pt.x, pt.y)
         pt.x = x
         pt.y = y
       })
-      const pstr = changes.points.map(pt => `${pt.x},${pt.y}`).join(' ')
+      const pstr = (changes.points ?? []).map(pt => `${pt.x},${pt.y}`).join(' ')
       selected.setAttribute('points', pstr)
       break
     }
     case 'path': {
-      const supportsPathData =
-        typeof selected.getPathData === 'function' &&
-        typeof selected.setPathData === 'function'
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const selectedPath = selected as any
+      const supportsPathData: boolean =
+        typeof selectedPath.getPathData === 'function' &&
+        typeof selectedPath.setPathData === 'function'
 
       // Handle path segments
-      const segList = supportsPathData ? null : selected.pathSegList
-      const len = supportsPathData ? selected.getPathData().length : segList.numberOfItems
+      const segList = supportsPathData ? null : selectedPath.pathSegList
+      const len: number = supportsPathData ? selectedPath.getPathData().length : segList.numberOfItems
       const det = m.a * m.d - m.b * m.c
       const shouldToggleArcSweep = det < 0
       changes.d = []
       if (supportsPathData) {
-        const pathDataSegments = selected.getPathData()
+        const pathDataSegments = selectedPath.getPathData()
         for (let i = 0; i < len; ++i) {
           const seg = pathDataSegments[i]
           // Normalize 'Z' -> 'z': pathMap only contains lowercase 'z' (SVG spec
@@ -317,39 +364,34 @@ export const remapElement = (selected, changes, m) => {
           const t = seg.type === 'Z' ? 'z' : seg.type
           const type = pathMap.indexOf(t)
           if (type === -1) continue
-          const values = seg.values || []
-          const entry = { type }
+          const values: number[] = seg.values || []
+          const entry: PathSegEntry = { type }
+          // Use ?? 0 fallbacks for noUncheckedIndexedAccess (values[] is a well-typed number array
+          // populated from seg.values which is always the correct length per SVG path spec)
           switch (t.toUpperCase()) {
             case 'M':
             case 'L':
             case 'T':
-              [entry.x, entry.y] = values
+              entry.x = values[0] ?? 0; entry.y = values[1] ?? 0
               break
             case 'H':
-              [entry.x] = values
+              entry.x = values[0] ?? 0
               break
             case 'V':
-              [entry.y] = values
+              entry.y = values[0] ?? 0
               break
             case 'C':
-              [entry.x1, entry.y1, entry.x2, entry.y2, entry.x, entry.y] = values
+              entry.x1 = values[0] ?? 0; entry.y1 = values[1] ?? 0; entry.x2 = values[2] ?? 0; entry.y2 = values[3] ?? 0; entry.x = values[4] ?? 0; entry.y = values[5] ?? 0
               break
             case 'S':
-              [entry.x2, entry.y2, entry.x, entry.y] = values
+              entry.x2 = values[0] ?? 0; entry.y2 = values[1] ?? 0; entry.x = values[2] ?? 0; entry.y = values[3] ?? 0
               break
             case 'Q':
-              [entry.x1, entry.y1, entry.x, entry.y] = values
+              entry.x1 = values[0] ?? 0; entry.y1 = values[1] ?? 0; entry.x = values[2] ?? 0; entry.y = values[3] ?? 0
               break
             case 'A':
-              [
-                entry.r1,
-                entry.r2,
-                entry.angle,
-                entry.largeArcFlag,
-                entry.sweepFlag,
-                entry.x,
-                entry.y
-              ] = values
+              entry.r1 = values[0] ?? 0; entry.r2 = values[1] ?? 0; entry.angle = values[2] ?? 0
+              entry.largeArcFlag = values[3] ?? 0; entry.sweepFlag = values[4] ?? 0; entry.x = values[5] ?? 0; entry.y = values[6] ?? 0
               break
             default:
               break
@@ -377,19 +419,20 @@ export const remapElement = (selected, changes, m) => {
       }
 
       const firstseg = changes.d[0]
-      let currentpt
-      if (len > 0) {
-        currentpt = remap(firstseg.x, firstseg.y)
-        changes.d[0].x = currentpt.x
-        changes.d[0].y = currentpt.y
+      let currentpt: { x: number; y: number } | undefined
+      if (len > 0 && firstseg) {
+        currentpt = remap(firstseg.x ?? 0, firstseg.y ?? 0)
+        firstseg.x = currentpt.x
+        firstseg.y = currentpt.y
       }
       for (let i = 1; i < len; ++i) {
         const seg = changes.d[i]
+        if (!seg) continue
         const { type } = seg
         // If absolute or first segment, remap x, y, x1, y1, x2, y2
         if (type % 2 === 0) {
-          const thisx = seg.x !== undefined ? seg.x : currentpt.x // For V commands
-          const thisy = seg.y !== undefined ? seg.y : currentpt.y // For H commands
+          const thisx = seg.x !== undefined ? seg.x : (currentpt?.x ?? 0) // For V commands
+          const thisy = seg.y !== undefined ? seg.y : (currentpt?.y ?? 0) // For H commands
           const pt = remap(thisx, thisy)
           seg.x = pt.x
           seg.y = pt.y
@@ -404,8 +447,8 @@ export const remapElement = (selected, changes, m) => {
             seg.y2 = pt2.y
           }
           if (type === 10) {
-            seg.r1 = Math.abs(scalew(seg.r1))
-            seg.r2 = Math.abs(scaleh(seg.r2))
+            seg.r1 = Math.abs(scalew(seg.r1 ?? 0))
+            seg.r2 = Math.abs(scaleh(seg.r2 ?? 0))
             if (shouldToggleArcSweep) {
               seg.sweepFlag = Number(seg.sweepFlag) ? 0 : 1
               if (typeof seg.angle === 'number') {
@@ -422,8 +465,8 @@ export const remapElement = (selected, changes, m) => {
           if (seg.x2 !== undefined) seg.x2 = scalew(seg.x2)
           if (seg.y2 !== undefined) seg.y2 = scaleh(seg.y2)
           if (type === 11) {
-            seg.r1 = Math.abs(scalew(seg.r1))
-            seg.r2 = Math.abs(scaleh(seg.r2))
+            seg.r1 = Math.abs(scalew(seg.r1 ?? 0))
+            seg.r2 = Math.abs(scaleh(seg.r2 ?? 0))
             if (shouldToggleArcSweep) {
               seg.sweepFlag = Number(seg.sweepFlag) ? 0 : 1
               if (typeof seg.angle === 'number') {
@@ -435,9 +478,9 @@ export const remapElement = (selected, changes, m) => {
       }
 
       let dstr = ''
-      changes.d.forEach(seg => {
+      ;(changes.d ?? []).forEach((seg: PathSegEntry) => {
         const { type } = seg
-        const letter = pathMap[type]
+        const letter = pathMap[type] ?? ''
         dstr += letter
         switch (type) {
           case 1: // closepath (z) -- no operands
