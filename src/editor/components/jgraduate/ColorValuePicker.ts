@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
 /**
 * @external Math
 */
@@ -7,7 +8,7 @@
 * @param {Float} precision
 * @returns {Float}
 */
-function toFixedNumeric (value, precision) {
+function toFixedNumeric (value: number, precision: number = 0): number {
   if (precision === undefined) precision = 0
   return Math.round(value * (10 ** precision)) / (10 ** precision)
 }
@@ -21,16 +22,19 @@ export default class ColorValuePicker {
    * @param {external:jQuery.fn.$.fn.jPicker} bindedHex
    * @param {Float} alphaPrecision
    */
-  constructor (picker, color, bindedHex, alphaPrecision) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  constructor (picker: Element, color: any, bindedHex: any, alphaPrecision: number) {
     const that = this // private properties and methods
-    const inputs = picker.querySelectorAll('td.Text input')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const inputs: any[] = Array.from(picker.querySelectorAll('td.Text input'))
     // input box key down - use arrows to alter color
     /**
      *
      * @param {Event} e
      * @returns {Event|false|void}
      */
-    function keyDown (e) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function keyDown (e: any): Event | false | undefined {
       if (e.target.value === '' && e.target !== hex && ((bindedHex && e.target !== bindedHex) || !bindedHex)) return undefined
       if (!validateKey(e)) return e
       switch (e.target) {
@@ -127,7 +131,8 @@ export default class ColorValuePicker {
     * @returns {Event|void}
     * @todo Why is this returning an event?
     */
-    function keyUp (e) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function keyUp (e: any): Event | undefined {
       if (e.target.value === '' && e.target !== hex &&
         ((bindedHex && e.target !== bindedHex) ||
         !bindedHex)) return undefined
@@ -183,7 +188,8 @@ export default class ColorValuePicker {
     * @param {Event} e
     * @returns {void}
     */
-    function blur (e) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function blur (e: any): void {
       if (color.value) {
         switch (e.target) {
           case red:
@@ -231,7 +237,8 @@ export default class ColorValuePicker {
     * @param {Event} e
     * @returns {boolean}
     */
-    function validateKey (e) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function validateKey (e: any): boolean {
       switch (e.keyCode) {
         case 9:
         case 16:
@@ -239,8 +246,8 @@ export default class ColorValuePicker {
         case 37:
         case 39:
           return false
-        case 'c'.charCodeAt():
-        case 'v'.charCodeAt():
+        case 'c'.charCodeAt(0):
+        case 'v'.charCodeAt(0):
           if (e.ctrlKey) return false
       }
       return true
@@ -253,8 +260,9 @@ export default class ColorValuePicker {
     * @param {Float} max
     * @returns {Float|string} Returns a number or numeric string
     */
-    function setValueInRange (value, min, max) {
-      if (value === '' || isNaN(value)) return min
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function setValueInRange (value: any, min: number, max: number): any {
+      if (value === '' || isNaN(Number(value))) return min
       if (value > max) return max
       if (value < min) return min
       return value
@@ -264,7 +272,9 @@ export default class ColorValuePicker {
     * @param {Element} context
     * @returns {void}
     */
-    function colorChanged (ui, context) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function colorChanged (ui: any, context: any): void {
       const all = ui.val('all')
       if (context !== red) red.value = (all ? all.r : '')
       if (context !== green) green.value = (all ? all.g : '')
@@ -329,16 +339,24 @@ export default class ColorValuePicker {
       hex = null
       ahex = null
     }
-    let
-      red = inputs[3]
-    let green = inputs[4]
-    let blue = inputs[5]
-    let alpha = inputs.length > 7 ? inputs[6] : null
-    let hue = inputs[0]
-    let saturation = inputs[1]
-    let value = inputs[2]
-    let hex = inputs[(inputs.length > 7) ? 7 : 6]
-    let ahex = inputs.length > 7 ? inputs[8] : null
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let red: any = inputs[3]
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let green: any = inputs[4]
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let blue: any = inputs[5]
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let alpha: any = inputs.length > 7 ? inputs[6] : null
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let hue: any = inputs[0]
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let saturation: any = inputs[1]
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let value: any = inputs[2]
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let hex: any = inputs[(inputs.length > 7) ? 7 : 6]
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let ahex: any = inputs.length > 7 ? inputs[8] : null
     Object.assign(that, { destroy })
     red.addEventListener('keyup', keyUp)
     green.addEventListener('keyup', keyUp)
