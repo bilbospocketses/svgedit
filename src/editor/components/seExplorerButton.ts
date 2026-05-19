@@ -1,9 +1,24 @@
-/* globals svgEditor */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const svgEditor: any
 
 /**
  * @class ExplorerButton
  */
 export class ExplorerButton extends HTMLElement {
+  _shadowRoot: ShadowRoot
+  $button: Element
+  $overall: Element
+  $img: HTMLImageElement
+  $menu: Element
+  $handle: Element
+  $lib: Element
+  files: string[]
+  imgPath: string
+  template: HTMLTemplateElement
+  currentAction: Element
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data: Record<string, any>
+
   /**
     * @function constructor
     */
@@ -11,23 +26,25 @@ export class ExplorerButton extends HTMLElement {
     super()
     // create the shadowDom and insert the template
     // create the shadowDom and insert the template
-    this.imgPath = svgEditor.configObj.curConfig.imgPath
+    this.imgPath = svgEditor.configObj.curConfig.imgPath as string
     this.template = this.createTemplate(this.imgPath)
     this._shadowRoot = this.attachShadow({ mode: 'open' })
     this._shadowRoot.append(this.template.content.cloneNode(true))
     // locate the component
-    this.$button = this._shadowRoot.querySelector('.menu-button')
-    this.$overall = this._shadowRoot.querySelector('.overall')
-    this.$img = this._shadowRoot.querySelector('.menu-button img')
-    this.$menu = this._shadowRoot.querySelector('.menu')
-    this.$handle = this._shadowRoot.querySelector('.handle')
-    this.$lib = this._shadowRoot.querySelector('.image-lib')
+    this.$button = this._shadowRoot.querySelector('.menu-button') as Element
+    this.$overall = this._shadowRoot.querySelector('.overall') as Element
+    this.$img = this._shadowRoot.querySelector('.menu-button img') as HTMLImageElement
+    this.$menu = this._shadowRoot.querySelector('.menu') as Element
+    this.$handle = this._shadowRoot.querySelector('.handle') as Element
+    this.$lib = this._shadowRoot.querySelector('.image-lib') as Element
     this.files = []
-    this.imgPath = svgEditor.configObj.curConfig.imgPath
+    this.imgPath = svgEditor.configObj.curConfig.imgPath as string
+    this.currentAction = this.$button
+    this.data = {}
 
     // Closes opened (pressed) lib menu on click on the canvas
     const workarea = document.getElementById('workarea')
-    workarea.addEventListener('click', (e) => {
+    workarea?.addEventListener('click', (_e) => {
       this.$menu.classList.remove('open')
       this.$lib.classList.remove('open-lib')
     })
@@ -39,7 +56,7 @@ export class ExplorerButton extends HTMLElement {
    * @returns {any} template
    */
 
-  createTemplate (imgPath) {
+  createTemplate (imgPath: string): HTMLTemplateElement {
     const template = document.createElement('template')
     template.innerHTML = `
     <style>
@@ -130,6 +147,7 @@ export class ExplorerButton extends HTMLElement {
         <img class="button-icon" src="explorer.svg" alt="icon">
         <div class="handle"></div>
       </div>
+      <!-- TODO: see todo #10 — HTML syntax error: class="image-lib"" (extra quote in original) preserved as-is -->
       <div class="image-lib">
         <se-button></se-button>
      </div>
@@ -155,7 +173,7 @@ export class ExplorerButton extends HTMLElement {
    * @param {string} newValue
    * @returns {void}
    */
-  async attributeChangedCallback (name, oldValue, newValue) {
+  async attributeChangedCallback (name: string, oldValue: string, newValue: string): Promise<void> {
     if (oldValue === newValue) return
     switch (name) {
       case 'title':
@@ -183,7 +201,7 @@ export class ExplorerButton extends HTMLElement {
           const response = await fetch(`${newValue}index.json`)
           const json = await response.json()
           const { lib } = json
-          this.$menu.innerHTML = lib.map((menu, i) => (
+          this.$menu.innerHTML = (lib as string[]).map((menu: string, i: number) => (
           `<div data-menu="${menu}" class="menu-item ${(i === 0) ? 'pressed' : ''} ">${menu}</div>`
           )).join('')
           await this.updateLib(lib[0])
@@ -204,15 +222,15 @@ export class ExplorerButton extends HTMLElement {
    * @function get
    * @returns {any}
    */
-  get title () {
-    return this.getAttribute('title')
+  get title (): string {
+    return this.getAttribute('title') ?? ''
   }
 
   /**
    * @function set
    * @returns {void}
    */
-  set title (value) {
+  set title (value: string) {
     this.setAttribute('title', value)
   }
 
@@ -228,12 +246,12 @@ export class ExplorerButton extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set pressed (value) {
+  set pressed (value: boolean) {
     // boolean value => existence = true
     if (value) {
       this.setAttribute('pressed', 'true')
     } else {
-      this.removeAttribute('pressed', '')
+      this.removeAttribute('pressed')
     }
   }
 
@@ -249,12 +267,12 @@ export class ExplorerButton extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set disabled (value) {
+  set disabled (value: boolean) {
     // boolean value => existence = true
     if (value) {
       this.setAttribute('disabled', 'true')
     } else {
-      this.removeAttribute('disabled', '')
+      this.removeAttribute('disabled')
     }
   }
 
@@ -264,37 +282,38 @@ export class ExplorerButton extends HTMLElement {
    */
   connectedCallback () {
     // capture click event on the button to manage the logic
-    const onClickHandler = (ev) => {
+    const onClickHandler = (ev: Event) => {
       ev.stopPropagation()
-      switch (ev.target.nodeName) {
+      const target = ev.target as HTMLElement
+      switch (target.nodeName) {
         case 'SE-EXPLORERBUTTON':
           this.$menu.classList.toggle('open')
           this.$lib.classList.toggle('open-lib')
           break
         case 'SE-BUTTON':
         // change to the current action
-          this.currentAction = ev.target
-          this.$img.setAttribute('src', this.currentAction.getAttribute('src'))
-          this.dataset.draw = this.data[this.currentAction.dataset.shape]
-          this._shadowRoot.querySelectorAll('.image-lib [pressed]').forEach((b) => { b.pressed = false })
+          this.currentAction = target
+          this.$img.setAttribute('src', this.currentAction.getAttribute('src') ?? '')
+          this.dataset.draw = this.data[target.dataset.shape ?? '']
+          this._shadowRoot.querySelectorAll('.image-lib [pressed]').forEach((b) => { (b as ExplorerButton).pressed = false })
           this.currentAction.setAttribute('pressed', 'pressed')
           // and close the menu
           this.$menu.classList.remove('open')
           this.$lib.classList.remove('open-lib')
           break
         case 'DIV':
-          if (ev.target.classList[0] === 'handle') {
+          if (target.classList[0] === 'handle') {
           // this is a click on the handle so let's open/close the menu.
             this.$menu.classList.toggle('open')
             this.$lib.classList.toggle('open-lib')
           } else {
             this._shadowRoot.querySelectorAll('.menu > .pressed').forEach((b) => { b.classList.remove('pressed') })
-            ev.target.classList.add('pressed')
-            this.updateLib(ev.target.dataset.menu)
+            target.classList.add('pressed')
+            void this.updateLib(target.dataset.menu ?? '')
           }
           break
         default:
-          console.error('unknown nodeName for:', ev.target, ev.target.className)
+          console.error('unknown nodeName for:', target, target.className)
       }
     }
     // capture event from slots
@@ -309,7 +328,7 @@ export class ExplorerButton extends HTMLElement {
    * @param {string} lib
    * @returns {void}
    */
-  async updateLib (lib) {
+  async updateLib (lib: string): Promise<void> {
     const libDir = this.getAttribute('lib')
     try {
       // initialize buttons for all shapes defined for this library
