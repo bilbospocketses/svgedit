@@ -5,38 +5,34 @@
  * @author Adam Bender
  */
 
-let contextMenuExtensions = {}
+/** Action callback for a context menu item. */
+type MenuItemAction = (...args: unknown[]) => unknown
+
+/** A context menu item descriptor. */
+interface MenuItem {
+  id: string
+  label: string
+  action: MenuItemAction
+  shortcut?: string
+}
+
+let contextMenuExtensions: Record<string, MenuItem> = {}
 
 /**
- * Signature depends on what the user adds; in the case of our uses with
- * SVGEditor, no parameters are passed nor anything expected for a return.
- * @callback module:contextmenu.MenuItemAction
- * @param {...args} args
- * @returns {any}
-*/
-
-/**
-* @typedef {PlainObject} module:contextmenu.MenuItem
-* @property {string} id
-* @property {string} label
-* @property {module:contextmenu.MenuItemAction} action
-*/
-
-/**
-* @param {module:contextmenu.MenuItem} menuItem
+* @param {MenuItem} menuItem
 * @returns {boolean}
 */
-const menuItemIsValid = function (menuItem) {
-  return menuItem && menuItem.id && menuItem.label && menuItem.action && typeof menuItem.action === 'function'
+const menuItemIsValid = function (menuItem: MenuItem): boolean {
+  return Boolean(menuItem && menuItem.id && menuItem.label && menuItem.action && typeof menuItem.action === 'function')
 }
 
 /**
 * @function module:contextmenu.add
-* @param {module:contextmenu.MenuItem} menuItem
+* @param {MenuItem} menuItem
 * @throws {Error|TypeError}
 * @returns {void}
 */
-export const add = function (menuItem) {
+export const add = function (menuItem: MenuItem): void {
   // menuItem: {id, label, shortcut, action}
   if (!menuItemIsValid(menuItem)) {
     throw new TypeError(
@@ -57,30 +53,36 @@ export const add = function (menuItem) {
 * @param {string} handlerKey
 * @returns {boolean}
 */
-export const hasCustomHandler = function (handlerKey) {
+export const hasCustomHandler = function (handlerKey: string): boolean {
   return Boolean(contextMenuExtensions[handlerKey])
 }
 
 /**
 * @function module:contextmenu.getCustomHandler
 * @param {string} handlerKey
-* @returns {module:contextmenu.MenuItemAction}
+* @returns {MenuItemAction}
 */
-export const getCustomHandler = function (handlerKey) {
-  return contextMenuExtensions[handlerKey].action
+export const getCustomHandler = function (handlerKey: string): MenuItemAction {
+  // Non-null assertion: callers check hasCustomHandler first
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return contextMenuExtensions[handlerKey]!.action
 }
 
 /**
-* @param {module:contextmenu.MenuItem} menuItem
+* @param {MenuItem} menuItem
 * @returns {void}
 */
-const injectExtendedContextMenuItemIntoDom = function (menuItem) {
+const injectExtendedContextMenuItemIntoDom = function (menuItem: MenuItem): void {
   if (!Object.keys(contextMenuExtensions).length) {
     // all menuItems appear at the bottom of the menu in their own container.
     // if this is the first extension menu we need to add the separator.
+    // TODO: see todo #10 — appendChild with string arg is a pre-existing bug (should be a Node)
+    // @ts-expect-error: pre-existing bug — appendChild expects Node not string; preserved verbatim
     document.getElementById('cmenu_canvas').appendChild('<li class=\'separator\'>')
   }
   const shortcut = menuItem.shortcut || ''
+  // TODO: see todo #10 — appendChild with string arg is a pre-existing bug (should be a Node)
+  // @ts-expect-error: pre-existing bug — appendChild expects Node not string; preserved verbatim
   document.getElementById('cmenu_canvas').appendChild(`
     <li class='disabled'><a href='#${menuItem.id}'>${menuItem.label}<span class='shortcut'>${shortcut}</span></a></li>`)
 }
@@ -89,7 +91,7 @@ const injectExtendedContextMenuItemIntoDom = function (menuItem) {
 * @function module:contextmenu.injectExtendedContextMenuItemsIntoDom
 * @returns {void}
 */
-export const injectExtendedContextMenuItemsIntoDom = function () {
+export const injectExtendedContextMenuItemsIntoDom = function (): void {
   Object.values(contextMenuExtensions).forEach((menuItem) => {
     injectExtendedContextMenuItemIntoDom(menuItem)
   })
@@ -98,4 +100,4 @@ export const injectExtendedContextMenuItemsIntoDom = function () {
 * @function module:contextmenu.resetCustomMenus
 * @returns {void}
 */
-export const resetCustomMenus = function () { contextMenuExtensions = {} }
+export const resetCustomMenus = function (): void { contextMenuExtensions = {} }
