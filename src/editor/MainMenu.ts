@@ -1,18 +1,26 @@
-/* globals seAlert */
+/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument */
 import SvgCanvas from '@svgedit/svgcanvas'
 import { isChrome } from '@svgedit/svgcanvas/common/browser.js'
 
 const { $id, $click, convertUnit, isValidUnit } = SvgCanvas
 const homePage = 'https://github.com/bilbospocketses/svgedit'
 
+/** `seAlert` is a custom element dialog registered globally at runtime. */
+declare function seAlert (msg: string): void
+
+/** The editor instance — typed loosely to avoid circular reference. */
+type EditorInstance = any
+
 /**
  *
  */
 class MainMenu {
+  editor: EditorInstance
+
   /**
    * @param {PlainObject} editor svgedit handler
    */
-  constructor (editor) {
+  constructor (editor: EditorInstance) {
     this.editor = editor
     /**
      * @type {Integer}
@@ -24,10 +32,11 @@ class MainMenu {
    *
    * @returns {void}
    */
-  hideDocProperties () {
+  hideDocProperties (): void {
     const $imgDialog = $id('se-img-prop')
+    if (!$imgDialog) return
     $imgDialog.setAttribute('dialog', 'close')
-    $imgDialog.setAttribute('save', this.editor.configObj.pref('img_save'))
+    $imgDialog.setAttribute('save', String(this.editor.configObj.pref('img_save') ?? ''))
     this.editor.docprops = false
   }
 
@@ -35,8 +44,9 @@ class MainMenu {
    *
    * @returns {void}
    */
-  hidePreferences () {
+  hidePreferences (): void {
     const $editDialog = $id('se-edit-prefs')
+    if (!$editDialog) return
     $editDialog.setAttribute('dialog', 'close')
     this.editor.configObj.preferences = false
   }
@@ -45,16 +55,18 @@ class MainMenu {
    * @param {Event} e
    * @returns {boolean} Whether there were problems saving the document properties
    */
-  saveDocProperties (e) {
+  saveDocProperties (e: any): boolean {
     // set title
     const { title, w, h, save } = e.detail
     // set document title
     this.editor.svgCanvas.setDocumentTitle(title)
 
+    // @ts-expect-error: isValidUnit called with 2 args; pre-existing pattern — selectedElement optional in practice
     if (w !== 'fit' && !isValidUnit('width', w)) {
       seAlert(this.editor.i18next.t('notification.invalidAttrValGiven'))
       return false
     }
+    // @ts-expect-error: isValidUnit called with 2 args; pre-existing pattern — selectedElement optional in practice
     if (h !== 'fit' && !isValidUnit('height', h)) {
       seAlert(this.editor.i18next.t('notification.invalidAttrValGiven'))
       return false
@@ -76,7 +88,8 @@ class MainMenu {
    * @function module:SVGthis.savePreferences
    * @returns {Promise<void>}
    */
-  async savePreferences (e) {
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async savePreferences (e: any): Promise<void> {
     const {
       lang,
       bgcolor,
@@ -115,14 +128,14 @@ class MainMenu {
    * @param e
    * @returns {Promise<void>} Resolves to `undefined`
    */
-  async clickExport (e) {
+  async clickExport (e: any): Promise<void> {
     if (e?.detail?.trigger !== 'ok' || e?.detail?.imgType === undefined) {
       return
     }
     const imgType = e?.detail?.imgType
     const quality = e?.detail?.quality ? e?.detail?.quality / 100 : 1
     // Open placeholder window (prevents popup)
-    let exportWindowName
+    let exportWindowName: string | undefined
 
     /**
      *
@@ -157,12 +170,13 @@ class MainMenu {
    *
    * @returns {void}
    */
-  showDocProperties () {
+  showDocProperties (): void {
     if (this.editor.docprops) {
       return
     }
     this.editor.docprops = true
     const $imgDialog = $id('se-img-prop')
+    if (!$imgDialog) return
 
     // update resolution option with actual resolution
     const resolution = this.editor.svgCanvas.getResolution()
@@ -172,9 +186,9 @@ class MainMenu {
       resolution.h =
         convertUnit(resolution.h) + this.editor.configObj.curConfig.baseUnit
     }
-    $imgDialog.setAttribute('save', this.editor.configObj.pref('img_save'))
-    $imgDialog.setAttribute('width', resolution.w)
-    $imgDialog.setAttribute('height', resolution.h)
+    $imgDialog.setAttribute('save', String(this.editor.configObj.pref('img_save') ?? ''))
+    $imgDialog.setAttribute('width', String(resolution.w))
+    $imgDialog.setAttribute('height', String(resolution.h))
     $imgDialog.setAttribute('title', this.editor.svgCanvas.getDocumentTitle())
     $imgDialog.setAttribute('dialog', 'open')
   }
@@ -183,31 +197,32 @@ class MainMenu {
    *
    * @returns {void}
    */
-  showPreferences () {
+  showPreferences (): void {
     if (this.editor.configObj.preferences) {
       return
     }
     this.editor.configObj.preferences = true
     const $editDialog = $id('se-edit-prefs')
+    if (!$editDialog) return
     // Update background color with current one
     const canvasBg = this.editor.configObj.curPrefs.bkgd_color
     const url = this.editor.configObj.pref('bkgd_url')
     if (url) {
-      $editDialog.setAttribute('bgurl', url)
+      $editDialog.setAttribute('bgurl', String(url))
     }
     $editDialog.setAttribute(
       'gridsnappingon',
-      this.editor.configObj.curConfig.gridSnapping
+      String(this.editor.configObj.curConfig.gridSnapping)
     )
     $editDialog.setAttribute(
       'gridsnappingstep',
-      this.editor.configObj.curConfig.snappingStep
+      String(this.editor.configObj.curConfig.snappingStep)
     )
     $editDialog.setAttribute(
       'gridcolor',
-      this.editor.configObj.curConfig.gridColor
+      String(this.editor.configObj.curConfig.gridColor)
     )
-    $editDialog.setAttribute('canvasbg', canvasBg)
+    $editDialog.setAttribute('canvasbg', String(canvasBg ?? ''))
     $editDialog.setAttribute('dialog', 'open')
   }
 
@@ -215,14 +230,14 @@ class MainMenu {
    *
    * @returns {void}
    */
-  openHomePage () {
+  openHomePage (): void {
     window.open(homePage, '_blank')
   }
 
   /**
    * @type {module}
    */
-  init () {
+  init (): void {
     // add Top panel
     const template = document.createElement('template')
     template.innerHTML = `
@@ -238,46 +253,47 @@ class MainMenu {
     /**
      * Associate all button actions as well as non-button keyboard shortcuts.
      */
-    $click($id('tool_export'), function () {
+    $click($id('tool_export') as EventTarget, function () {
       document
         .getElementById('se-export-dialog')
-        .setAttribute('dialog', 'open')
+        ?.setAttribute('dialog', 'open')
     })
-    $id('se-export-dialog').addEventListener(
+    $id('se-export-dialog')?.addEventListener(
       'change',
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       this.clickExport.bind(this)
     )
-    $id('tool_docprops').addEventListener(
+    $id('tool_docprops')?.addEventListener(
       'click',
       this.showDocProperties.bind(this)
     )
-    $id('tool_editor_prefs').addEventListener(
+    $id('tool_editor_prefs')?.addEventListener(
       'click',
       this.showPreferences.bind(this)
     )
-    $id('tool_editor_homepage').addEventListener(
+    $id('tool_editor_homepage')?.addEventListener(
       'click',
       this.openHomePage.bind(this)
     )
-    $id('se-img-prop').addEventListener(
+    $id('se-img-prop')?.addEventListener(
       'change',
-      function (e) {
+      ((e: any) => {
         if (e.detail.dialog === 'closed') {
           this.hideDocProperties()
         } else {
           this.saveDocProperties(e)
         }
-      }.bind(this)
+      })
     )
-    $id('se-edit-prefs').addEventListener(
+    $id('se-edit-prefs')?.addEventListener(
       'change',
-      function (e) {
+      ((e: any) => {
         if (e.detail.dialog === 'closed') {
           this.hidePreferences()
         } else {
-          this.savePreferences(e)
+          void this.savePreferences(e)
         }
-      }.bind(this)
+      })
     )
   }
 }
