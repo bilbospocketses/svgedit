@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (post-parity ruleset tightening — 2026-05-19)
+- Pure API-state changes (no source commits) — pushes svgedit ahead of peer parity on three dimensions.
+- **Branch ruleset `16565370`:**
+  - `pull_request.allowed_merge_methods`: `["merge","squash","rebase"]` → `["squash","merge"]`. Hardware-enforces the CLAUDE.md "squash, never rebase" SOP — the "Rebase and merge" button no longer renders in the GitHub UI. Eliminates the accidental-unsigned-commit class that left old `verified:false` commits in ws-scrcpy-web's pre-lockdown history. (`gh api -X PUT /repos/.../rulesets/16565370 --input ...` — full GET → mutate → PUT script in `feedback_*` memory.)
+  - `required_status_checks`: added `Analyze (javascript-typescript)` + `Analyze (actions)` alongside the existing `build-and-test`. CodeQL findings now block merge. Demonstrated need: PR #8's first push had 2 new high-severity polynomial-redos alerts that were technically mergeable under the old config; the new config would have blocked.
+- **Tag ruleset `16565201`:** added `required_signatures` to the rules array (was `[deletion, non_fast_forward]`, now `[deletion, non_fast_forward, required_signatures]`). Tags pushed without `git tag -s` (or with mis-configured SSH signing) now fail at push.
+- **`secret_scanning_non_provider_patterns` + `secret_scanning_validity_checks` BLOCKED:** both require GitHub Advanced Security (GHAS, $49/active-committer/month for orgs). `PATCH /repos/.../security_and_analysis` returns 200 OK silently without applying state changes on free public repos. Deferred indefinitely; will be revisited if GitHub expands free coverage. Lesson captured: GHAS-gated security features fail silently on the free tier — not with an error.
+
 ### Fixed (CodeQL alert triage — 2026-05-19)
 - **All 8 open CodeQL alerts cleared on `master`** (4 fixed + 2 dismissed earlier as auto-resolution + 2 fixed in this PR). Final state: 0 open CodeQL alerts, parity with control-menu / ws-scrcpy-web.
 - **`packages/svgcanvas/core/utilities.js` — 2× `js/polynomial-redos` (high) — FIXED**
