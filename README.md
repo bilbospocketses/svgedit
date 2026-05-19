@@ -59,4 +59,6 @@ Original `svgedit` is the work of a long line of contributors over 15+ years —
 
 ## License
 
-Inherits the upstream multi-license (MIT, Apache-2.0, ISC, LGPL-3.0-or-later, X11). See `LICENSE-MIT.txt`.
+This fork is licensed under **GPL-3.0-only** (see `LICENSE`).
+
+Inherited upstream code retains its original licenses (MIT, Apache-2.0, ISC, LGPL-3.0-or-later, X11) — see `LICENSE-MIT.txt` and the per-file headers in the codebase.
