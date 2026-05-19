@@ -1,32 +1,45 @@
-/* globals svgEditor */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const svgEditor: any
 import { t } from '../locale.js'
 
 /**
  * @class FlyingButton
  */
 export class FlyingButton extends HTMLElement {
+  _shadowRoot: ShadowRoot
+  $button: Element
+  $handle: Element
+  $overall: Element
+  $img: HTMLImageElement
+  $menu: Element
+  $elements: Element[]
+  imgPath: string
+  template: HTMLTemplateElement
+  activeSlot: Element
+
   /**
     * @function constructor
     */
   constructor () {
     super()
     // create the shadowDom and insert the template
-    this.imgPath = svgEditor.configObj.curConfig.imgPath
+    this.imgPath = svgEditor.configObj.curConfig.imgPath as string
     this.template = this.createTemplate(this.imgPath)
     this._shadowRoot = this.attachShadow({ mode: 'open' })
     this._shadowRoot.append(this.template.content.cloneNode(true))
     // locate the component
-    this.$button = this._shadowRoot.querySelector('.menu-button')
-    this.$handle = this._shadowRoot.querySelector('.handle')
-    this.$overall = this._shadowRoot.querySelector('.overall')
-    this.$img = this._shadowRoot.querySelector('img')
-    this.$menu = this._shadowRoot.querySelector('.menu')
+    this.$button = this._shadowRoot.querySelector('.menu-button') as Element
+    this.$handle = this._shadowRoot.querySelector('.handle') as Element
+    this.$overall = this._shadowRoot.querySelector('.overall') as Element
+    this.$img = this._shadowRoot.querySelector('img') as HTMLImageElement
+    this.$menu = this._shadowRoot.querySelector('.menu') as Element
     // the last element of the div is the slot
     // we retrieve all elements added in the slot (i.e. se-buttons)
-    this.$elements = this.$menu.lastElementChild.assignedElements()
+    this.$elements = (this.$menu.lastElementChild as HTMLSlotElement).assignedElements()
+    this.activeSlot = this.$elements[0] as Element
 
     // Closes opened menu on click
-    document.addEventListener('click', e => {
+    document.addEventListener('click', (_e) => {
       if (this.opened) {
         this.opened = false
       }
@@ -39,7 +52,7 @@ export class FlyingButton extends HTMLElement {
    * @returns {any} template
    */
 
-  createTemplate (imgPath) {
+  createTemplate (imgPath: string): HTMLTemplateElement {
     const template = document.createElement('template')
     template.innerHTML = `
       <style>
@@ -143,7 +156,7 @@ export class FlyingButton extends HTMLElement {
    * @param {string} newValue
    * @returns {void}
    */
-  attributeChangedCallback (name, oldValue, newValue) {
+  attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
     if (oldValue === newValue) return
     switch (name) {
       case 'title':
@@ -183,15 +196,15 @@ export class FlyingButton extends HTMLElement {
    * @function get
    * @returns {any}
    */
-  get title () {
-    return this.getAttribute('title')
+  get title (): string {
+    return this.getAttribute('title') ?? ''
   }
 
   /**
    * @function set
    * @returns {void}
    */
-  set title (value) {
+  set title (value: string) {
     this.setAttribute('title', value)
   }
 
@@ -207,12 +220,12 @@ export class FlyingButton extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set pressed (value) {
+  set pressed (value: boolean) {
     // boolean value => existence = true
     if (value) {
       this.setAttribute('pressed', 'true')
     } else {
-      this.removeAttribute('pressed', '')
+      this.removeAttribute('pressed')
       // close also the menu if open
       this.removeAttribute('opened')
     }
@@ -230,7 +243,7 @@ export class FlyingButton extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set opened (value) {
+  set opened (value: boolean) {
     // boolean value => existence = true
     if (value) {
       this.setAttribute('opened', 'opened')
@@ -251,12 +264,12 @@ export class FlyingButton extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set disabled (value) {
+  set disabled (value: boolean) {
     // boolean value => existence = true
     if (value) {
       this.setAttribute('disabled', 'true')
     } else {
-      this.removeAttribute('disabled', '')
+      this.removeAttribute('disabled')
     }
   }
 
@@ -265,25 +278,27 @@ export class FlyingButton extends HTMLElement {
    * @returns {void}
    */
   connectedCallback () {
-    this.activeSlot = this.shadowRoot.querySelector('slot').assignedElements()[0]
+    const slot = this.shadowRoot?.querySelector('slot') as HTMLSlotElement
+    this.activeSlot = slot.assignedElements()[0] as Element
     this.$img.setAttribute('src', this.imgPath + '/' + this.activeSlot.getAttribute('src'))
     // capture click event on the button to manage the logic
-    const onClickHandler = (ev) => {
+    const onClickHandler = (ev: Event) => {
       ev.stopPropagation()
-      switch (ev.target.nodeName) {
+      const target = ev.target as Element
+      switch (target.nodeName) {
         case 'SE-FLYINGBUTTON':
           if (this.pressed) {
             this.setAttribute('opened', 'opened')
           } else {
           // launch current action
-            this.activeSlot.click()
+            ;(this.activeSlot as HTMLElement).click()
             this.setAttribute('pressed', 'pressed')
           }
           break
         case 'SE-BUTTON':
         // change to the current action
-          this.$img.setAttribute('src', this.imgPath + '/' + ev.target.getAttribute('src'))
-          this.activeSlot = ev.target
+          this.$img.setAttribute('src', this.imgPath + '/' + target.getAttribute('src'))
+          this.activeSlot = target
           this.setAttribute('pressed', 'pressed')
           // and close the menu
           this.$menu.classList.remove('open')
@@ -296,11 +311,11 @@ export class FlyingButton extends HTMLElement {
             this.setAttribute('opened', 'opened')
             // In case menu scroll on top or bottom position based popup position set
             const rect = this.getBoundingClientRect()
-            this.$menu.style.top = rect.top + 'px'
+            ;(this.$menu as HTMLElement).style.top = rect.top + 'px'
           }
           break
         default:
-          console.error('unkonw nodeName for:', ev.target, ev.target.className)
+          console.error('unkonw nodeName for:', target, (target as HTMLElement).className)
       }
     }
     // capture event from slots
