@@ -1,5 +1,8 @@
-/* globals svgEditor */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const svgEditor: any
+// @ts-expect-error: JS file; will be converted to TS in this task (PaintBox and jQuery.jGraduate)
 import { jGraduate, jGraduateMethod } from './jgraduate/jQuery.jGraduate.js'
+// @ts-expect-error: JS file; will be converted to TS in this task (PaintBox)
 import PaintBox from './PaintBox.js'
 import { t } from '../locale.js'
 
@@ -650,6 +653,17 @@ div.jGraduate_Slider img {
  * @class SeColorPicker
  */
 export class SeColorPicker extends HTMLElement {
+  _shadowRoot: ShadowRoot
+  $logo: HTMLImageElement
+  $label: HTMLElement
+  $block: HTMLElement
+  paintBox: PaintBox | null
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  i18next: any
+  $picker: HTMLElement
+  $color_picker: HTMLElement
+  imgPath: string
+
   /**
    * @function constructor
    */
@@ -658,14 +672,14 @@ export class SeColorPicker extends HTMLElement {
     // create the shadowDom and insert the template
     this._shadowRoot = this.attachShadow({ mode: 'open' })
     this._shadowRoot.append(template.content.cloneNode(true))
-    this.$logo = this._shadowRoot.getElementById('logo')
-    this.$label = this._shadowRoot.getElementById('label')
-    this.$block = this._shadowRoot.getElementById('block')
+    this.$logo = this._shadowRoot.getElementById('logo') as HTMLImageElement
+    this.$label = this._shadowRoot.getElementById('label') as HTMLElement
+    this.$block = this._shadowRoot.getElementById('block') as HTMLElement
     this.paintBox = null
     this.i18next = null
-    this.$picker = this._shadowRoot.getElementById('picker')
-    this.$color_picker = this._shadowRoot.getElementById('color_picker')
-    this.imgPath = svgEditor.configObj.curConfig.imgPath
+    this.$picker = this._shadowRoot.getElementById('picker') as HTMLElement
+    this.$color_picker = this._shadowRoot.getElementById('color_picker') as HTMLElement
+    this.imgPath = svgEditor.configObj.curConfig.imgPath as string
   }
 
   /**
@@ -673,7 +687,8 @@ export class SeColorPicker extends HTMLElement {
    * @param {any} name
    * @returns {void}
    */
-  init (i18next) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  init (i18next: any) {
     this.i18next = i18next
     this.setAttribute('config-change_xxx_color', t('config.change_xxx_color'))
   }
@@ -693,7 +708,7 @@ export class SeColorPicker extends HTMLElement {
    * @param {string} newValue
    * @returns {void}
    */
-  attributeChangedCallback (name, oldValue, newValue) {
+  attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
     if (oldValue === newValue) return
     switch (name) {
       case 'src':
@@ -726,8 +741,8 @@ export class SeColorPicker extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set label (value) {
-    this.setAttribute('label', value)
+  set label (value: string | null) {
+    this.setAttribute('label', value ?? '')
   }
 
   /**
@@ -742,8 +757,8 @@ export class SeColorPicker extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set type (value) {
-    this.setAttribute('type', value)
+  set type (value: string | null) {
+    this.setAttribute('type', value ?? '')
   }
 
   /**
@@ -758,35 +773,40 @@ export class SeColorPicker extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set src (value) {
-    this.setAttribute('src', value)
+  set src (value: string | null) {
+    this.setAttribute('src', value ?? '')
   }
 
   // Wrap jGraduateMethod in a Promise
-  jGraduateMethodAsync () {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  jGraduateMethodAsync (): Promise<any> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return new Promise((resolve, reject) => {
       jGraduateMethod(
         this.$color_picker,
         {
           images: { clientPath: './components/jgraduate/images/' },
-          paint: this.paintBox.paint,
-          window: { pickerTitle: this.label },
+          paint: this.paintBox?.paint,
+          window: { pickerTitle: this.label ?? '' },
           newstop: 'inverse'
         },
-        (p) => resolve(p),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (p: any) => resolve(p),
         () => reject(new Error('jGraduate cancelled')),
         this.i18next
       )
     })
   }
 
-  async setJGraduateMethod () {
+  async setJGraduateMethod (): Promise<void> {
     try {
       const p = await this.jGraduateMethodAsync()
-      const paint = new jGraduate.Paint(p)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
+      const paint = new (jGraduate.Paint as any)(p)
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       this.setPaint(paint)
       this.dispatchEvent(new CustomEvent('change', { detail: { paint } }))
-    } catch (err) {
+    } catch (_err) {
       // Handle rejection if needed
     } finally {
       this.$color_picker.style.display = 'none'
@@ -799,13 +819,15 @@ export class SeColorPicker extends HTMLElement {
    * @param {bool} apply
    * @returns {void}
    */
-  update (svgCanvas, selectedElement, apply) {
-    const paint = this.paintBox.update(svgCanvas, selectedElement)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  update (svgCanvas: any, selectedElement: any, apply: boolean): void {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    const paint = this.paintBox?.update(svgCanvas, selectedElement)
 
     // We check if the color picker popup is already open
     if (this.$color_picker.style.display === 'block') {
       // We recreate the color picker popup with the current color of the selected elements
-      this.setJGraduateMethod()
+      void this.setJGraduateMethod()
     }
 
     if (paint && apply) {
@@ -823,8 +845,10 @@ export class SeColorPicker extends HTMLElement {
    * @param {PlainObject} paint
    * @returns {void}
    */
-  setPaint (paint) {
-    this.paintBox.setPaint(paint)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  setPaint (paint: any): void {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    this.paintBox?.setPaint(paint)
   }
 
   /**
@@ -832,9 +856,9 @@ export class SeColorPicker extends HTMLElement {
    * @returns {void}
    */
   connectedCallback () {
-    this.paintBox = new PaintBox(this.$block, this.type)
+    this.paintBox = new PaintBox(this.$block, this.type ?? '')
     svgEditor.$click(this.$picker, () => {
-      this.setJGraduateMethod()
+      void this.setJGraduateMethod()
     })
   }
 }
