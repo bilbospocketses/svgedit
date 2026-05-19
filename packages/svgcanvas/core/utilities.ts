@@ -127,11 +127,13 @@ export const dataURLToObjectURL = (dataurl: string): string => {
   }
 
   const [prefix, suffix] = dataurl.split(',')
-  const colonIdx = prefix ? prefix.indexOf(':') : -1
-  const semiIdx = colonIdx >= 0 ? prefix.indexOf(';', colonIdx + 1) : -1
-  if (colonIdx < 0 || semiIdx <= colonIdx + 1 || !suffix) {
+  if (!prefix || !suffix) {
     return ''
   }
+  const colonIdx = prefix.indexOf(':')
+  if (colonIdx < 0) return ''
+  const semiIdx = prefix.indexOf(';', colonIdx + 1)
+  if (semiIdx <= colonIdx + 1) return ''
   const mime = prefix.slice(colonIdx + 1, semiIdx)
   const bstr = atob(suffix)
   const u8arr = new Uint8Array(bstr.length)

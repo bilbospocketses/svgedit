@@ -17,7 +17,7 @@ export const svgRootElement = (svgdoc: Document, dimensions: [number, number]): 
   const w = String(dimensions[0])
   const h = String(dimensions[1])
 
-  const root = svgdoc.createElementNS(NS.SVG, 'svg') as SVGSVGElement
+  const root = svgdoc.createElementNS(NS.SVG, 'svg') as unknown as SVGSVGElement
   root.setAttribute('id', 'svgroot')
   root.setAttribute('xlinkns', NS.XLINK)
   root.setAttribute('width', w)
