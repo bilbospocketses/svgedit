@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `github/codeql-action/upload-sarif@9e0d7b8d25671d64c341c19c0152d693099fb5ba # v4.35.5` (NEW; github-owned)
 - **Allowed-actions config** — added `ossf/scorecard-action@*` to `actions_permissions.selected_actions.patterns_allowed`. Pre-change svgedit had no third-party patterns (only `github_owned_allowed=true` + `sha_pinning_required=true`); this is the first non-github-owned third-party action allowlisted.
 - **Master branch ruleset `16565370`** — `required_status_checks` extended with a 4th context `Scorecard analysis` alongside the existing `build-and-test` + `Analyze (javascript-typescript)` + `Analyze (actions)`. Hard-gates merges on Scorecard findings; PR trigger in the workflow is what makes this satisfiable (without firing on PRs, the required check would never report and merges would block forever).
-- Cross-repo carryover: ws-scrcpy-web still lacks `scorecard.yml`; tracked separately (not in this PR's scope).
+- Cross-repo state at landing: ws-scrcpy-web shipped its own Scorecard workflow earlier the same day via wssw PR [#31](https://github.com/bilbospocketses/ws-scrcpy-web/pull/31) (`976d764`); control-menu via CM PRs #14 + #15. All three repos are at OpenSSF Scorecard parity post-merge. (Original PR #10 body claimed wssw "still lacks `scorecard.yml`" — fact-check miss before PR draft; corrected here.)
 
 ### Changed (post-parity ruleset tightening — 2026-05-19)
 - Pure API-state changes (no source commits) — pushes svgedit ahead of peer parity on three dimensions.
