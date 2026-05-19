@@ -12,16 +12,22 @@
 
 import enStrings from './locale/lang.en.js'
 
-const bundles = { translation: enStrings }
+/** A bundle is a nested dictionary of string values. */
+type Bundle = Record<string, unknown>
 
-const lookup = (obj, dotted) => {
+const bundles: Record<string, Bundle> = { translation: enStrings }
+
+const lookup = (obj: Bundle | null | undefined, dotted: string): unknown => {
   if (obj == null) return undefined
-  return dotted.split('.').reduce((acc, k) => (acc == null ? acc : acc[k]), obj)
+  return dotted.split('.').reduce((acc: unknown, k: string) => {
+    if (acc == null || typeof acc !== 'object') return acc
+    return (acc as Record<string, unknown>)[k]
+  }, obj as unknown)
 }
 
-const interpolate = (str, vars) => {
-  if (typeof str !== 'string' || !vars) return str
-  return str.replace(/\{\{(\w+)\}\}/g, (_match, key) => (key in vars ? String(vars[key]) : `{{${key}}}`))
+const interpolate = (str: unknown, vars?: Record<string, unknown>): string => {
+  if (typeof str !== 'string' || !vars) return typeof str === 'string' ? str : ''
+  return str.replace(/\{\{(\w+)\}\}/g, (_match, key: string) => (key in vars ? String(vars[key]) : `{{${key}}}`))
 }
 
 /**
@@ -33,8 +39,8 @@ const interpolate = (str, vars) => {
  * @param {object} [vars]
  * @returns {string}
  */
-export const t = (key, vars) => {
-  if (Array.isArray(key)) key = key[0]
+export const t = (keyArg: string | string[], vars?: Record<string, unknown>): string => {
+  const key: string = Array.isArray(keyArg) ? (keyArg[0] ?? '') : keyArg
   if (typeof key !== 'string') return key
 
   let ns = 'translation'
@@ -57,17 +63,17 @@ export const t = (key, vars) => {
  * Used by `addResourceBundle` so extension-loaded translation bundles
  * augment the base bundle without clobbering sibling namespaces.
  */
-const deepMerge = (target, source) => {
+const deepMerge = (target: Bundle, source: Bundle): Bundle => {
   if (target == null || typeof target !== 'object') return source
   if (source == null || typeof source !== 'object') return target
-  const result = { ...target }
+  const result: Bundle = { ...target }
   for (const [key, value] of Object.entries(source)) {
     const targetVal = result[key]
     const bothObjects = (
       value !== null && typeof value === 'object' && !Array.isArray(value) &&
       targetVal !== null && typeof targetVal === 'object' && !Array.isArray(targetVal)
     )
-    result[key] = bothObjects ? deepMerge(targetVal, value) : value
+    result[key] = bothObjects ? deepMerge(targetVal as Bundle, value as Bundle) : value
   }
   return result
 }
@@ -87,8 +93,8 @@ const deepMerge = (target, source) => {
  */
 const i18nextFacade = {
   t,
-  addResourceBundle (_lang, ns, dict) {
-    bundles[ns] = deepMerge(bundles[ns] || {}, dict)
+  addResourceBundle (_lang: string, ns: string, dict: Bundle) {
+    bundles[ns] = deepMerge(bundles[ns] ?? {}, dict)
   }
 }
 
@@ -98,6 +104,6 @@ const i18nextFacade = {
  *
  * @returns {Promise<{langParam: string, i18next: object}>}
  */
-export const putLocale = async function () {
-  return { langParam: 'en', i18next: i18nextFacade }
+export const putLocale = function (): Promise<{ langParam: string; i18next: typeof i18nextFacade }> {
+  return Promise.resolve({ langParam: 'en', i18next: i18nextFacade })
 }
