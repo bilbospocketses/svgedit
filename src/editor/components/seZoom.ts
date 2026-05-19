@@ -1,4 +1,5 @@
-/* globals svgEditor */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const svgEditor: any
 const template = document.createElement('template')
 template.innerHTML = `
   <style>
@@ -75,7 +76,7 @@ template.innerHTML = `
     margin-top: 2px;
   }
   #options-container {
-    position:fixed;
+    position:fixed; /* TODO: see todo #10 — missing semicolon after position:fixed in original, preserved as-is */
     display:flex;
     flex-direction:column;
     background-color:var(--icon-bg-color);
@@ -108,6 +109,22 @@ template.innerHTML = `
 `
 
 class SeZoom extends HTMLElement {
+  _shadowRoot: ShadowRoot
+  slotElement: HTMLSlotElement
+  inputElement: HTMLInputElement
+  clickArea: HTMLElement
+  imgPath: string
+  downImageElement: HTMLImageElement
+  imageElement: HTMLImageElement
+  arrowUp: HTMLElement
+  arrowDown: HTMLElement
+  optionsContainer: HTMLElement
+  changedTimeout: ReturnType<typeof setTimeout> | null
+  options: Element[]
+  selectedValue: string | null
+  incrementHold: boolean
+  decrementHold: boolean
+
   constructor () {
     super()
 
@@ -116,6 +133,10 @@ class SeZoom extends HTMLElement {
     this.handleKeyDown = this.handleKeyDown.bind(this)
     this.initPopup = this.initPopup.bind(this)
     this.handleInput = this.handleInput.bind(this)
+    this.options = []
+    this.selectedValue = null
+    this.incrementHold = false
+    this.decrementHold = false
 
     // create the shadowDom and insert the template
     this._shadowRoot = this.attachShadow({ mode: 'open' })
@@ -123,58 +144,58 @@ class SeZoom extends HTMLElement {
     this._shadowRoot.append(template.content.cloneNode(true))
 
     // prepare the slot element
-    this.slotElement = this._shadowRoot.querySelector('slot')
+    this.slotElement = this._shadowRoot.querySelector('slot') as HTMLSlotElement
     this.slotElement.addEventListener(
       'slotchange',
       this.handleOptionsChange.bind(this)
     )
 
     // hookup events for the input box
-    this.inputElement = this._shadowRoot.querySelector('input')
+    this.inputElement = this._shadowRoot.querySelector('input') as HTMLInputElement
     this.inputElement.addEventListener('click', this.handleClick.bind(this))
     this.inputElement.addEventListener('change', this.handleInput)
     this.inputElement.addEventListener('keydown', this.handleKeyDown)
 
-    this.clickArea = this._shadowRoot.querySelector('#down')
+    this.clickArea = this._shadowRoot.querySelector('#down') as HTMLElement
     this.clickArea.addEventListener('click', this.handleClick.bind(this))
 
-    this.imgPath = svgEditor.configObj.curConfig.imgPath
+    this.imgPath = svgEditor.configObj.curConfig.imgPath as string
 
-    this.downImageElement = this.clickArea.querySelector('img')
+    this.downImageElement = this.clickArea.querySelector('img') as HTMLImageElement
     this.downImageElement.setAttribute(
       'src',
       (this.imgPath + '/' + this.downImageElement.getAttribute('src'))
     )
 
     // set src for imageElement
-    this.imageElement = this._shadowRoot.querySelector('img')
+    this.imageElement = this._shadowRoot.querySelector('img') as HTMLImageElement
     this.imageElement.setAttribute(
       'src',
       (this.imgPath + '/' + this.getAttribute('src'))
     )
 
     // hookup events for arrow buttons
-    this.arrowUp = this._shadowRoot.querySelector('#arrow-up')
+    this.arrowUp = this._shadowRoot.querySelector('#arrow-up') as HTMLElement
     this.arrowUp.addEventListener('click', this.increment.bind(this))
-    this.arrowUp.addEventListener('mousedown', e =>
+    this.arrowUp.addEventListener('mousedown', (_e) =>
       this.handleMouseDown('up', true)
     )
-    this.arrowUp.addEventListener('mouseleave', e => this.handleMouseUp('up'))
-    this.arrowUp.addEventListener('mouseup', e => this.handleMouseUp('up'))
+    this.arrowUp.addEventListener('mouseleave', (_e) => this.handleMouseUp('up'))
+    this.arrowUp.addEventListener('mouseup', (_e) => this.handleMouseUp('up'))
 
-    this.arrowDown = this._shadowRoot.querySelector('#arrow-down')
+    this.arrowDown = this._shadowRoot.querySelector('#arrow-down') as HTMLElement
     this.arrowDown.addEventListener('click', this.decrement.bind(this))
-    this.arrowDown.addEventListener('mousedown', e =>
+    this.arrowDown.addEventListener('mousedown', (_e) =>
       this.handleMouseDown('down', true)
     )
-    this.arrowDown.addEventListener('mouseleave', e =>
+    this.arrowDown.addEventListener('mouseleave', (_e) =>
       this.handleMouseUp('down')
     )
-    this.arrowDown.addEventListener('mouseup', e => this.handleMouseUp('down'))
+    this.arrowDown.addEventListener('mouseup', (_e) => this.handleMouseUp('down'))
 
     this.optionsContainer = this._shadowRoot.querySelector(
       '#options-container'
-    )
+    ) as HTMLElement
 
     // add an event listener to close the popup
     document.addEventListener('click', e => this.handleClose(e))
@@ -189,16 +210,16 @@ class SeZoom extends HTMLElement {
    * @function get
    * @returns {any}
    */
-  get value () {
-    return this.getAttribute('value')
+  get value (): string {
+    return this.getAttribute('value') ?? ''
   }
 
   /**
    * @function set
    * @returns {void}
    */
-  set value (value) {
-    this.setAttribute('value', value)
+  set value (value: string | number) {
+    this.setAttribute('value', String(value))
   }
 
   /**
@@ -208,11 +229,12 @@ class SeZoom extends HTMLElement {
    * @param {string} newValue
    * @returns {void}
    */
-  attributeChangedCallback (name, oldValue, newValue) {
+  // TODO: see todo #10 — inverted-guard attributeChangedCallback: runs inner block when old===new; preserved as-is
+  attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
     if (oldValue === newValue) {
       switch (name) {
         case 'value':
-          if (parseInt(this.inputElement.value) !== newValue) {
+          if (parseInt(this.inputElement.value) !== parseInt(newValue)) {
             this.inputElement.value = newValue
           }
           break
@@ -235,10 +257,10 @@ class SeZoom extends HTMLElement {
    * @function handleOptionsChange
    * @returns {void}
    */
-  handleOptionsChange () {
+  handleOptionsChange (): void {
     if (this.slotElement.assignedElements().length > 0) {
       this.options = this.slotElement.assignedElements()
-      this.selectedValue = this.options[0].textContent
+      this.selectedValue = this.options[0]?.textContent ?? null
 
       this.initPopup()
 
@@ -263,9 +285,10 @@ class SeZoom extends HTMLElement {
    * @param {Event} e
    * @returns {void}
    */
-  handleSelect (e) {
-    this.value = e.target.getAttribute('value')
-    this.title = e.target.getAttribute('text')
+  handleSelect (e: Event): void {
+    const target = e.target as Element
+    this.value = target.getAttribute('value') ?? ''
+    this.title = target.getAttribute('text') ?? ''
   }
 
   /**
@@ -290,7 +313,7 @@ class SeZoom extends HTMLElement {
    * @returns {void}
    * Close the popup menu
    */
-  handleClose (e) {
+  handleClose (e: Event): void {
     if (e.target !== this) {
       this.optionsContainer.style.display = 'none'
       this.inputElement.blur()
@@ -322,7 +345,7 @@ class SeZoom extends HTMLElement {
    * @function increment
    * @returns {void}
    */
-  increment () {
+  increment (): void {
     this.value = parseInt(this.value) + 10
   }
 
@@ -330,11 +353,12 @@ class SeZoom extends HTMLElement {
    * @function decrement
    * @returns {void}
    */
-  decrement () {
-    if (this.value - 10 <= 0) {
+  decrement (): void {
+    const current = parseInt(this.value)
+    if (current - 10 <= 0) {
       this.value = 10
     } else {
-      this.value = parseInt(this.value) - 10
+      this.value = current - 10
     }
   }
 
@@ -345,7 +369,7 @@ class SeZoom extends HTMLElement {
    * @returns {void}
    * Increment/Decrement on mouse held down, if its the first call add a delay before starting
    */
-  handleMouseDown (dir, isFirst) {
+  handleMouseDown (dir: string, isFirst: boolean): void {
     if (dir === 'up') {
       this.incrementHold = true
       !isFirst && this.increment()
@@ -378,7 +402,7 @@ class SeZoom extends HTMLElement {
    * @param {string} dir
    * @returns {void}
    */
-  handleMouseUp (dir) {
+  handleMouseUp (dir: string): void {
     if (dir === 'up') {
       this.incrementHold = false
     } else {
@@ -391,7 +415,7 @@ class SeZoom extends HTMLElement {
    * @param {Event} e
    * @returns {void}
    */
-  handleKeyDown (e) {
+  handleKeyDown (e: KeyboardEvent): void {
     if (e.key === 'ArrowUp') {
       this.increment()
     } else if (e.key === 'ArrowDown') {
