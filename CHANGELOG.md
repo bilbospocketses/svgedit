@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (Dependabot vulnerability cleanup — 2026-05-19)
+- Cleared **all 31** open Dependabot alerts surfaced by the 2026-05-18 master lockdown (1 critical, 13 high, 17 moderate). Final state: 0 open alerts, `npm audit` reports 0 vulnerabilities.
+- **Direct-dep bumps:**
+  - `jspdf 4.0.0 -> 4.2.1` — closes 9 alerts (HTML injection, PDF object injection in FreeText/AcroForm/addJS, DoS via GIF/BMP, XMP metadata injection, race condition).
+  - `vite ^7.3.1 -> ^7.3.2` — closes 3 alerts (`server.fs.deny` bypass via queries, WebSocket arbitrary file read, optimized-deps `.map` path traversal). Lockfile resolves to 7.3.3.
+- **`overrides` block** added to `package.json` to force transitive resolutions onto fixed versions:
+  - `dompurify ^3.4.0` — closes 9 alerts (FORBID_TAGS bypass, SAFE_FOR_TEMPLATES bypass, prototype pollution, ADD_TAGS / ADD_ATTR predicate bypasses, USE_PROFILES prototype pollution, mutation-XSS, CUSTOM_ELEMENT_HANDLING fallback XSS). Lockfile resolves to 3.4.5.
+  - `flatted ^3.4.2` — closes 1 alert (prototype pollution via `parse()`).
+  - `postcss ^8.5.10` — closes 1 alert (XSS via unescaped `</style>` in CSS stringify output). Lockfile resolves to 8.5.14.
+  - `rollup ^4.59.0` — closes 1 alert (arbitrary file write via path traversal). Lockfile resolves to 4.60.4.
+  - `glob ^10.5.0` — closes 1 alert (CLI command injection via `-c`/`--cmd`).
+- **`npm audit fix --package-lock-only`** resolved the remaining 6 transitive alerts in the eslint / istanbul / brace-expansion / ajv / ws / minimatch (9.x) / picomatch (4.x) / js-yaml (4.x) chains — all semver-compatible.
+- Tracks `todo_svgedit.md` item #14 (the surfacing entry from the lockdown pass); item closes when this PR lands.
+
 ### Added (repo hygiene + security baseline — 2026-05-19)
 - `LICENSE` (GPL-3.0-only) added at repo root. Matches Control Menu / ws-scrcpy-web. Inherited upstream code retains its original licenses; `LICENSE-MIT.txt` preserved at root for upstream attribution.
 - `SECURITY.md` — private vulnerability reporting flow via GitHub Security Advisories with 72h acknowledgement SLA. Scope: svgedit web app + build pipeline + extension loader + embed entry points + export modules. Out-of-scope: upstream dep vulns (report upstream), browser-engine bugs, self-XSS.
