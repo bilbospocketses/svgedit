@@ -1,4 +1,5 @@
-/* globals svgEditor */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const svgEditor: any
 import 'elix/define/MenuItem.js'
 import './sePlainMenuButton.js'
 
@@ -34,6 +35,13 @@ template.innerHTML = `
  * @class SeMenu
  */
 export class SeMenu extends HTMLElement {
+  _shadowRoot: ShadowRoot
+  $menu: Element
+  // TODO: see todo #10 — shadowDOM-piercing preserved; will be removed when #3 (elix→Lit) lands
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  $label: any
+  imgPath: string
+
   /**
     * @function constructor
     */
@@ -42,9 +50,11 @@ export class SeMenu extends HTMLElement {
     // create the shadowDom and insert the template
     this._shadowRoot = this.attachShadow({ mode: 'open' })
     this._shadowRoot.append(template.content.cloneNode(true))
-    this.$menu = this._shadowRoot.querySelector('elix-menu-button')
-    this.$label = this.$menu.shadowRoot.querySelector('#popupToggle').shadowRoot
-    this.imgPath = svgEditor.configObj.curConfig.imgPath
+    this.$menu = this._shadowRoot.querySelector('elix-menu-button') as Element
+    // TODO: see todo #10 — shadowDOM-piercing; replaced when #3 (elix→Lit) lands
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+    this.$label = (this.$menu as any).shadowRoot.querySelector('#popupToggle').shadowRoot
+    this.imgPath = svgEditor.configObj.curConfig.imgPath as string
   }
 
   /**
@@ -62,7 +72,7 @@ export class SeMenu extends HTMLElement {
    * @param {string} newValue
    * @returns {void}
    */
-  attributeChangedCallback (name, oldValue, newValue) {
+  attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
     const image = new Image()
     if (oldValue === newValue) return
     switch (name) {
@@ -94,8 +104,8 @@ export class SeMenu extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set label (value) {
-    this.setAttribute('label', value)
+  set label (value: string | null) {
+    this.setAttribute('label', value ?? '')
   }
 
   /**
@@ -110,8 +120,8 @@ export class SeMenu extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set src (value) {
-    this.setAttribute('src', value)
+  set src (value: string | null) {
+    this.setAttribute('src', value ?? '')
   }
 }
 
