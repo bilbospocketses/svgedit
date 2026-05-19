@@ -1,4 +1,5 @@
-/* globals svgEditor */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const svgEditor: any
 import '../dialogs/se-elix/define/NumberSpinBox.js'
 import { t } from '../locale.js'
 
@@ -55,6 +56,15 @@ template.innerHTML = `
  * @class SESpinInput
  */
 export class SESpinInput extends HTMLElement {
+  _shadowRoot: ShadowRoot
+  $div: HTMLDivElement
+  $img: HTMLImageElement
+  $label: HTMLElement
+  $event: CustomEvent
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  $input: any
+  imgPath: string
+
   /**
     * @function constructor
     */
@@ -64,12 +74,12 @@ export class SESpinInput extends HTMLElement {
     this._shadowRoot = this.attachShadow({ mode: 'open' })
     this._shadowRoot.append(template.content.cloneNode(true))
     // locate the component
-    this.$div = this._shadowRoot.querySelector('div')
-    this.$img = this._shadowRoot.querySelector('img')
-    this.$label = this._shadowRoot.getElementById('label')
+    this.$div = this._shadowRoot.querySelector('div') as HTMLDivElement
+    this.$img = this._shadowRoot.querySelector('img') as HTMLImageElement
+    this.$label = this._shadowRoot.getElementById('label') as HTMLElement
     this.$event = new CustomEvent('change')
     this.$input = this._shadowRoot.querySelector('elix-number-spin-box')
-    this.imgPath = svgEditor.configObj.curConfig.imgPath
+    this.imgPath = svgEditor.configObj.curConfig.imgPath as string
   }
 
   /**
@@ -87,7 +97,7 @@ export class SESpinInput extends HTMLElement {
    * @param {string} newValue
    * @returns {void}
    */
-  attributeChangedCallback (name, oldValue, newValue) {
+  attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
     if (oldValue === newValue) return
     switch (name) {
       case 'title':
@@ -103,8 +113,11 @@ export class SESpinInput extends HTMLElement {
         break
       case 'size':
       // access to the underlying input box
+        // TODO: see todo #10 — shadowDOM-piercing; replaced when #3 (elix→Lit) lands
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         this.$input.shadowRoot.getElementById('input').size = newValue
         // below seems mandatory to override the default width style that takes precedence on size
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         this.$input.shadowRoot.getElementById('input').style.width = 'unset'
         break
       case 'step':
@@ -133,15 +146,15 @@ export class SESpinInput extends HTMLElement {
    * @function get
    * @returns {any}
    */
-  get title () {
-    return this.getAttribute('title')
+  get title (): string {
+    return this.getAttribute('title') ?? ''
   }
 
   /**
    * @function set
    * @returns {void}
    */
-  set title (value) {
+  set title (value: string) {
     this.setAttribute('title', value)
   }
 
@@ -157,14 +170,15 @@ export class SESpinInput extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set label (value) {
-    this.setAttribute('label', value)
+  set label (value: string | null) {
+    this.setAttribute('label', value ?? '')
   }
 
   /**
    * @function get
    * @returns {any}
    */
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   get value () {
     return this.$input.value
   }
@@ -173,7 +187,7 @@ export class SESpinInput extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set value (value) {
+  set value (value: string) {
     this.$input.value = value
   }
 
@@ -189,8 +203,8 @@ export class SESpinInput extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set src (value) {
-    this.setAttribute('src', value)
+  set src (value: string | null) {
+    this.setAttribute('src', value ?? '')
   }
 
   /**
@@ -205,8 +219,8 @@ export class SESpinInput extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set size (value) {
-    this.setAttribute('size', value)
+  set size (value: string | null) {
+    this.setAttribute('size', value ?? '')
   }
 
   /**
@@ -214,27 +228,31 @@ export class SESpinInput extends HTMLElement {
    * @returns {void}
    */
   connectedCallback () {
+    // TODO: see todo #10 — shadowDOM-piercing; replaced when #3 (elix→Lit) lands
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const shadow = this.$input.shadowRoot
-    const childNodes = Array.from(shadow.childNodes)
+    const childNodes = Array.from((shadow as ShadowRoot).childNodes)
     childNodes.forEach((childNode) => {
-      if (childNode?.id === 'input') {
+      if ((childNode as HTMLElement).id === 'input') {
         childNode.addEventListener('keyup', (e) => {
           e.preventDefault()
-          if (!isNaN(e.target.value)) {
-            this.value = e.target.value
+          const val = (e.target as HTMLInputElement).value
+          if (!isNaN(Number(val))) {
+            this.value = val
             this.dispatchEvent(this.$event)
           }
         })
       }
     })
-    this.$input.addEventListener('change', (e) => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    this.$input.addEventListener('change', (e: Event) => {
       e.preventDefault()
-      this.value = e.target.value
+      this.value = (e.target as HTMLInputElement).value
       this.dispatchEvent(this.$event)
     })
-    svgEditor.$click(this.$input, (e) => {
+    svgEditor.$click(this.$input, (e: Event) => {
       e.preventDefault()
-      this.value = e.target.value
+      this.value = (e.target as HTMLInputElement).value
       this.dispatchEvent(this.$event)
     })
   }
