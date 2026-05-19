@@ -1,5 +1,6 @@
 import { template } from 'elix/src/base/internal.js'
 import { fragmentFrom } from 'elix/src/core/htmlLiterals.js'
+// @ts-expect-error: no declaration file for elix/src/plain/PlainButton.js
 import PlainButton from 'elix/src/plain/PlainButton.js'
 
 /**
@@ -7,12 +8,15 @@ import PlainButton from 'elix/src/plain/PlainButton.js'
  * Button with a border in the Plain reference design system
  *
  */
-class SePlainBorderButton extends PlainButton {
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+class SePlainBorderButton extends (PlainButton as unknown as typeof HTMLElement) {
   /**
     * @function get
     * @returns {PlainObject}
   */
-  get [template] () {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  get [template] (): any {
+    // @ts-expect-error: elix computed property key not in HTMLElement type
     const result = super[template]
     result.content.append(
       fragmentFrom.html`
