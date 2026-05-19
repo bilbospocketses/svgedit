@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (OpenSSF Scorecard supply-chain visibility — 2026-05-19)
+- Closes audit finding: `svgedit missing scorecard.yml — supply-chain visibility gap`. Cross-repo parity with control-menu (which shipped Scorecard in CM PR #14 + the SHA-pin hot-fix in #15).
+- **New `.github/workflows/scorecard.yml`** — weekly cron `0 13 * * 1` (Mon 13:00 UTC) + `push: master` + `pull_request: master` + `branch_protection_rule` triggers. Runs the OSSF Scorecard check suite (Branch-Protection, Pinned-Dependencies, Dangerous-Workflow, Token-Permissions, SAST, Signed-Releases, etc.), uploads SARIF to the Security tab alongside CodeQL alerts, and publishes the public score to `api.securityscorecards.dev` (badge URL `https://scorecard.dev/viewer/?uri=github.com/bilbospocketses/svgedit`). `publish_results` gated to `github.event_name == 'push'` so PR runs skip publishing (a PR-HEAD SHA isn't on master yet — OpenSSF webapp's commit-graph verifier rejects with "imposter commit" 400, same failure mode as the annotated-tag-object SHA we documented in `feedback_action_sha_pin_commit_not_tag_object.md`).
+- **Top-level `permissions: read-all`** + job-level scoped grants (`security-events: write` for SARIF upload, `id-token: write` for OIDC publish, `contents: read`, `actions: read`). Tight job-level permissions satisfy Scorecard's own Token-Permissions check.
+- **All 4 actions SHA-pinned to commit SHAs (not tag-object SHAs)** with precise `# vX.Y.Z` comments — applies both standing repo lessons inline:
+  - `actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2` (already in `ci.yml`, same pin)
+  - `ossf/scorecard-action@4eaacf0543bb3f2c246792bd56e8cdeffafb205a # v2.4.3` (NEW — added to `patterns_allowed` in same PR)
+  - `actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1` (NEW; github-owned, covered by `github_owned_allowed=true`)
+  - `github/codeql-action/upload-sarif@9e0d7b8d25671d64c341c19c0152d693099fb5ba # v4.35.5` (NEW; github-owned)
+- **Allowed-actions config** — added `ossf/scorecard-action@*` to `actions_permissions.selected_actions.patterns_allowed`. Pre-change svgedit had no third-party patterns (only `github_owned_allowed=true` + `sha_pinning_required=true`); this is the first non-github-owned third-party action allowlisted.
+- **Master branch ruleset `16565370`** — `required_status_checks` extended with a 4th context `Scorecard analysis` alongside the existing `build-and-test` + `Analyze (javascript-typescript)` + `Analyze (actions)`. Hard-gates merges on Scorecard findings; PR trigger in the workflow is what makes this satisfiable (without firing on PRs, the required check would never report and merges would block forever).
+- Cross-repo carryover: ws-scrcpy-web still lacks `scorecard.yml`; tracked separately (not in this PR's scope).
+
 ### Changed (post-parity ruleset tightening — 2026-05-19)
 - Pure API-state changes (no source commits) — pushes svgedit ahead of peer parity on three dimensions.
 - **Branch ruleset `16565370`:**
