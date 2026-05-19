@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (CodeQL alert triage — 2026-05-19)
+- **All 8 open CodeQL alerts cleared on `master`** (4 fixed + 2 dismissed earlier as auto-resolution + 2 fixed in this PR). Final state: 0 open CodeQL alerts, parity with control-menu / ws-scrcpy-web.
+- **`packages/svgcanvas/core/utilities.js` — 2× `js/polynomial-redos` (high) — FIXED**
+  - **`dropXMLInternalSubset`**: replaced regex with `String.indexOf` walk. First attempt at deterministic regex (`/(<!DOCTYPE[^[]*\[)[\s\S]*?(\?]>)/`) still tripped CodeQL because unanchored regex matching is O(N²) at the engine level (N positions × N work per attempt). String-operation walk is strictly O(N).
+  - **`dataURLToObjectURL`**: same — replaced `prefix.match(/:(.*?);/)` with paired `indexOf(':')` + `indexOf(';', colonIdx+1)` + `slice`. Equivalent MIME extraction semantics, strictly O(N).
+- **`packages/svgcanvas/core/svgroot.js` — 4× `js/html-constructed-from-input` (medium) — FIXED**
+  - `svgRootElement` rewritten from template-literal XML construction + `text2xml` parse + `importNode` round-trip → direct `createElementNS` + `setAttribute` element building. Eliminates the entire "construct HTML string from library input" class of vulnerability that CodeQL flagged. Same DOM tree produced (svg/defs/filter/feGaussianBlur/feOffset/feMerge/feMergeNode). Dimensions explicitly stringified via `String()` before `setAttribute`. `text2xml` import removed (no longer needed). Net +24 lines for the more explicit construction.
+- **`_reference/embed-api-v6/embedapi.js` — 2× `js/unvalidated-dynamic-method-call` (high) — DISMISSED**
+  - Both alerts dismissed via API with rationale: preserved V6-era reference code (per `project_svgedit.md` and README §Embedding), retained as design input for the future V7+ embed API but never imported/executed at runtime. Original source already carried `// lgtm [js/unvalidated-dynamic-method-call]` suppression comments + documented rationale (callbackID checked numeric AND `t.callbacks[callbackID]` existence checked AND calls limited to allowedOrigins). Will be re-evaluated when V7 embed API is implemented. Mirrors ws-scrcpy-web's §28 "dismissed with rationale" pattern.
+
 ### Fixed (Dependabot vulnerability cleanup — 2026-05-19)
 - Cleared **all 31** open Dependabot alerts surfaced by the 2026-05-18 master lockdown (1 critical, 13 high, 17 moderate). Final state: 0 open alerts, `npm audit` reports 0 vulnerabilities.
 - **Direct-dep bumps:**
