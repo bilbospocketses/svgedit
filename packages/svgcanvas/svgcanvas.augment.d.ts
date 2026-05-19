@@ -116,7 +116,7 @@ declare module './svgcanvas' {
     // From core/selection.js (init wires these on)
     clearSelection: (noCall?: boolean) => void
     getMouseTarget: (...args: unknown[]) => unknown
-    addToSelection: (...args: unknown[]) => unknown
+    addToSelection: (elemsToAdd: Element[], showGrips?: boolean) => void
     getIntersectionList: (...args: unknown[]) => unknown
     runExtensions: (...args: unknown[]) => unknown
     groupSvgElem: (...args: unknown[]) => unknown
