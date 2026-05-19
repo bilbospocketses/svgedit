@@ -1,13 +1,18 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
 import ListComboBox from 'elix/define/ListComboBox.js'
 import { defaultState } from 'elix/src/base/internal.js'
 import { templateFrom, fragmentFrom } from 'elix/src/core/htmlLiterals.js'
 import { internal } from 'elix'
+// @ts-expect-error: local elix override; no declaration file exists yet
 import NumberSpinBox from '../dialogs/se-elix/define/NumberSpinBox.js'
 
 /**
  * @class Dropdown
  */
-class Dropdown extends ListComboBox {
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+class Dropdown extends (ListComboBox as any) {
+  $img!: HTMLImageElement
+  $input!: HTMLElement
   /**
     * @function get
     * @returns {PlainObject}
@@ -68,7 +73,7 @@ class Dropdown extends ListComboBox {
    * @param {string} newValue
    * @returns {void}
    */
-  attributeChangedCallback (name, oldValue, newValue) {
+  attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
     if (oldValue === newValue) return
     switch (name) {
       case 'title':
@@ -91,7 +96,7 @@ class Dropdown extends ListComboBox {
     * @param {PlainObject} changed
     * @returns {void}
     */
-  [internal.render] (changed) {
+  [internal.render] (changed: Record<string, boolean>) {
     super[internal.render](changed)
     if (this[internal.firstRender]) {
       this.$img = this.shadowRoot.querySelector('img')
@@ -101,16 +106,16 @@ class Dropdown extends ListComboBox {
       this.$img.setAttribute('src', this[internal.state].src)
     }
     if (changed.inputsize) {
-      this.$input.shadowRoot.querySelector('[part~="input"]').style.width = this[internal.state].inputsize
+      ;(this.$input.shadowRoot?.querySelector('[part~="input"]') as HTMLElement | null)?.style.setProperty('width', this[internal.state].inputsize)
     }
     if (changed.inputPartType) {
       // Wire up handler on new input.
-      this.addEventListener('close', (e) => {
+      ;(this as unknown as HTMLElement).addEventListener('close', (e) => {
         e.preventDefault()
-        const value = e.detail?.closeResult?.getAttribute('value')
+        const value = (e as CustomEvent).detail?.closeResult?.getAttribute('value')
         if (value) {
           const closeEvent = new CustomEvent('change', { detail: { value } })
-          this.dispatchEvent(closeEvent)
+          ;(this as unknown as HTMLElement).dispatchEvent(closeEvent)
         }
       })
     }
@@ -128,7 +133,7 @@ class Dropdown extends ListComboBox {
    * @function src
    * @returns {void}
    */
-  set src (src) {
+  set src (src: string) {
     this[internal.setState]({ src })
   }
 
@@ -144,7 +149,7 @@ class Dropdown extends ListComboBox {
    * @function src
    * @returns {void}
    */
-  set inputsize (inputsize) {
+  set inputsize (inputsize: string) {
     this[internal.setState]({ inputsize })
   }
 
@@ -160,13 +165,13 @@ class Dropdown extends ListComboBox {
    * @function value
    * @returns {void}
    */
-  set value (value) {
+  set value (value: string) {
     this[internal.setState]({ value })
   }
 }
 
 // Register
-customElements.define('se-dropdown', Dropdown)
+customElements.define('se-dropdown', Dropdown as unknown as CustomElementConstructor)
 
 /*
 {TODO
