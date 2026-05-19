@@ -1,5 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const svgEditor: any
 import { t } from '../locale.js'
 
 const template = document.createElement('template')
@@ -70,7 +68,7 @@ export class SeList extends HTMLElement {
     this.$label = this._shadowRoot.querySelector('label') as HTMLLabelElement
     this.$selection = this.$dropdown.querySelector('#selected-value') as HTMLElement
     this.items = this.querySelectorAll('se-list-item')
-    this.imgPath = svgEditor.configObj.curConfig.imgPath as string
+    this.imgPath = svgEditor.configObj.curConfig.imgPath
     this.$optionsContainer = this._shadowRoot.querySelector('#options-container') as HTMLElement
     this.$optionsContainer.classList.add('closed')
     this.$selection.addEventListener('click', this.toggleList)
@@ -242,6 +240,7 @@ export class SeList extends HTMLElement {
    * @returns {void}
    */
   connectedCallback () {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const currentObj = this
     this.$dropdown.addEventListener('selectedindexchange', (e) => {
       const detail = (e as CustomEvent).detail as { selectedItem?: string } | undefined

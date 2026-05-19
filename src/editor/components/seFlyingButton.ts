@@ -1,5 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const svgEditor: any
 import { t } from '../locale.js'
 
 /**
@@ -23,7 +21,7 @@ export class FlyingButton extends HTMLElement {
   constructor () {
     super()
     // create the shadowDom and insert the template
-    this.imgPath = svgEditor.configObj.curConfig.imgPath as string
+    this.imgPath = svgEditor.configObj.curConfig.imgPath
     this.template = this.createTemplate(this.imgPath)
     this._shadowRoot = this.attachShadow({ mode: 'open' })
     this._shadowRoot.append(this.template.content.cloneNode(true))

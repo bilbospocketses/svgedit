@@ -1,4 +1,23 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */
+// jGraduate (legacy jQuery plugin) ships as 'any'; cleanup deferred to #3 (Lit migration)
 import { findPos } from '@svgedit/svgcanvas/common/util.js'
+
+/** Callback registered via `bind()`. Receives the slider instance twice (self, context). */
+type SliderCallback = (self: Slider, context: Slider) => void
+
+/** Value object passed to/returned from `val()`. */
+interface SliderXY {
+  x?: number
+  y?: number
+}
+
+/** Range bounds object passed to/returned from `range()`. */
+interface SliderRange {
+  minX?: number
+  maxX?: number
+  minY?: number
+  maxY?: number
+}
 
 interface SliderBar extends HTMLElement {
   w: number
@@ -11,8 +30,7 @@ interface SliderArrow extends HTMLImageElement {
 }
 
 interface SliderOptions {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  arrow?: { image?: any; width?: number; height?: number }
+  arrow?: { image?: string; width?: number; height?: number }
   map?: { width?: number; height?: number }
 }
 
@@ -21,8 +39,7 @@ interface SliderOptions {
  * @param {any} val
  * @returns {boolean}
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const isNullish = (val: any): val is null | undefined => {
+const isNullish = (val: unknown): val is null | undefined => {
   return val === null || val === undefined
 }
 /**
@@ -36,14 +53,14 @@ export default class Slider {
    * @param {module:jPicker.SliderOptions} options
    */
   constructor (bar: SliderBar, options: SliderOptions) {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const that = this
     /**
      * Fire events on the supplied `context`
      * @param {module:jPicker.JPickerInit} context
      * @returns {void}
      */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    function fireChangeEvents (context: any): void {
+    function fireChangeEvents (context: Slider): void {
       changeEvents.forEach((changeEvent) => {
         changeEvent.call(that, that, context)
       })
@@ -156,12 +173,11 @@ export default class Slider {
      * @param {module:jPicker.Slider} context
      * @returns {module:math.XYObject|Float|void}
      */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    function val (name: any, value?: any, context?: any): any {
+    function val (name: string | null | undefined, value?: SliderXY | number, context?: Slider): SliderXY | number | undefined {
       const set = value !== undefined
       if (!set) {
-        if (isNullish(name)) name = 'xy'
-        switch (name.toLowerCase()) {
+        const n = isNullish(name) ? 'xy' : name
+        switch (n.toLowerCase()) {
           case 'x': return x
           case 'y': return y
           case 'xy':
@@ -171,20 +187,24 @@ export default class Slider {
       if (!isNullish(context) && context === that) return undefined
       let changed = false
 
-      let newX; let newY
-      if (isNullish(name)) name = 'xy'
-      switch (name.toLowerCase()) {
+      let newX: number | undefined; let newY: number | undefined
+      const ns = isNullish(name) ? 'xy' : name
+      const v = value as SliderXY | number | undefined
+      switch (ns.toLowerCase()) {
         case 'x':
-          newX = (value && ((value.x && value.x | 0) || value | 0)) || 0
+          newX = (v && (typeof v === 'number' ? v : (v.x ?? 0)) | 0) || 0
           break
         case 'y':
-          newY = (value && ((value.y && value.y | 0) || value | 0)) || 0
+          newY = (v && (typeof v === 'number' ? v : (v.y ?? 0)) | 0) || 0
           break
         case 'xy':
-        default:
-          newX = (value && value.x && value.x | 0) || 0
-          newY = (value && value.y && value.y | 0) || 0
+        default: {
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- cast required to access .x/.y when v is unknown
+          const vobj = (typeof v === 'object' ? v : {}) as SliderXY
+          newX = ((vobj.x ?? 0) | 0) || 0
+          newY = ((vobj.y ?? 0) | 0) || 0
           break
+        }
       }
       if (!isNullish(newX)) {
         if (newX < minX) newX = minX
@@ -202,7 +222,7 @@ export default class Slider {
           changed = true
         }
       }
-      changed && fireChangeEvents.call(that, context || that)
+      if (changed) { fireChangeEvents.call(that, context ?? that) }
       return undefined
     }
 
@@ -228,55 +248,56 @@ export default class Slider {
      * @param {module:jPicker.MinMaxRangeXY} value
      * @returns {module:jPicker.MinMaxRangeXY|module:jPicker.MinMaxRangeX|module:jPicker.MinMaxRangeY|void}
      */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    function range (name: any, value?: any): any {
+    function range (name: string | null | undefined, value?: SliderRange | number): SliderRange | number | undefined {
       const set = value !== undefined
       if (!set) {
-        if (isNullish(name)) name = 'all'
-        switch (name.toLowerCase()) {
+        const n = isNullish(name) ? 'all' : name
+        switch (n.toLowerCase()) {
           case 'minx': return minX
           case 'maxx': return maxX
-          case 'rangex': return { minX, maxX, rangeX }
+          case 'rangex': return { minX, maxX }
           case 'miny': return minY
           case 'maxy': return maxY
-          case 'rangey': return { minY, maxY, rangeY }
+          case 'rangey': return { minY, maxY }
           case 'all':
-          default: return { minX, maxX, rangeX, minY, maxY, rangeY }
+          default: return { minX, maxX, minY, maxY }
         }
       }
-      let // changed = false,
-        newMinX
-      let newMaxX
-      let newMinY
-      let newMaxY
-      if (isNullish(name)) name = 'all'
-      switch (name.toLowerCase()) {
+      let newMinX: number | undefined
+      let newMaxX: number | undefined
+      let newMinY: number | undefined
+      let newMaxY: number | undefined
+      const ns = isNullish(name) ? 'all' : name
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- cast required to access .minX/.maxX/.minY/.maxY when value is unknown
+      const rv = (typeof value === 'object' ? value : {}) as SliderRange
+      const rnum = typeof value === 'number' ? value : 0
+      switch (ns.toLowerCase()) {
         case 'minx':
-          newMinX = (value && ((value.minX && value.minX | 0) || value | 0)) || 0
+          newMinX = (typeof value === 'number' ? rnum : (rv.minX ?? 0)) | 0
           break
         case 'maxx':
-          newMaxX = (value && ((value.maxX && value.maxX | 0) || value | 0)) || 0
+          newMaxX = (typeof value === 'number' ? rnum : (rv.maxX ?? 0)) | 0
           break
         case 'rangex':
-          newMinX = (value && value.minX && value.minX | 0) || 0
-          newMaxX = (value && value.maxX && value.maxX | 0) || 0
+          newMinX = (rv.minX ?? 0) | 0
+          newMaxX = (rv.maxX ?? 0) | 0
           break
         case 'miny':
-          newMinY = (value && ((value.minY && value.minY | 0) || value | 0)) || 0
+          newMinY = (typeof value === 'number' ? rnum : (rv.minY ?? 0)) | 0
           break
         case 'maxy':
-          newMaxY = (value && ((value.maxY && value.maxY | 0) || value | 0)) || 0
+          newMaxY = (typeof value === 'number' ? rnum : (rv.maxY ?? 0)) | 0
           break
         case 'rangey':
-          newMinY = (value && value.minY && value.minY | 0) || 0
-          newMaxY = (value && value.maxY && value.maxY | 0) || 0
+          newMinY = (rv.minY ?? 0) | 0
+          newMaxY = (rv.maxY ?? 0) | 0
           break
         case 'all':
         default:
-          newMinX = (value && value.minX && value.minX | 0) || 0
-          newMaxX = (value && value.maxX && value.maxX | 0) || 0
-          newMinY = (value && value.minY && value.minY | 0) || 0
-          newMaxY = (value && value.maxY && value.maxY | 0) || 0
+          newMinX = (rv.minX ?? 0) | 0
+          newMaxX = (rv.maxX ?? 0) | 0
+          newMinY = (rv.minY ?? 0) | 0
+          newMaxY = (rv.maxY ?? 0) | 0
           break
       }
 
@@ -302,16 +323,14 @@ export default class Slider {
     * @param {GenericCallback} callback
     * @returns {void}
     */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    function bind (callback: any): void {
+    function bind (callback: SliderCallback): void {
       if (typeof callback === 'function') changeEvents.push(callback)
     }
     /**
     * @param {GenericCallback} callback
     * @returns {void}
     */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    function unbind (callback: any): void {
+    function unbind (callback: SliderCallback): void {
       if (typeof callback !== 'function') return
       let idx: number
       while ((idx = changeEvents.indexOf(callback)) !== -1) changeEvents.splice(idx, 1)
@@ -330,8 +349,8 @@ export default class Slider {
       bar = null
       // @ts-expect-error: pre-existing null-assignment for GC, see todo #10
       arrow = null
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      changeEvents = null as any
+      // @ts-expect-error: pre-existing null-assignment for GC, see todo #10
+      changeEvents = null
     }
     let offset: { l: number; t: number } | undefined
     let timeout: ReturnType<typeof setTimeout> | undefined
@@ -344,8 +363,7 @@ export default class Slider {
     let maxY = 100
     let rangeY = 100
     let arrow: SliderArrow = bar.querySelector('img') as SliderArrow // the arrow image to drag
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let changeEvents: any[] = []
+    let changeEvents: SliderCallback[] = []
     Object.assign(that, {
       val,
       range,
@@ -354,7 +372,7 @@ export default class Slider {
       destroy
     })
     // initialize this control
-    arrow.src = options.arrow && options.arrow.image
+    arrow.src = (options.arrow?.image) ?? ''
     arrow.w = (options.arrow && options.arrow.width) || parseFloat(getComputedStyle(arrow, null).width.replace('px', ''))
     arrow.h = (options.arrow && options.arrow.height) || parseFloat(getComputedStyle(arrow, null).height.replace('px', ''))
     bar.w = (options.map && options.map.width) || parseFloat(getComputedStyle(bar, null).width.replace('px', ''))

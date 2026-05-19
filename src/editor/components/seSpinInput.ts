@@ -1,5 +1,5 @@
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const svgEditor: any
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */
+// elix custom-element base classes ship as 'any'; cleanup deferred to #3 (Lit migration)
 import '../dialogs/se-elix/define/NumberSpinBox.js'
 import { t } from '../locale.js'
 
@@ -79,7 +79,7 @@ export class SESpinInput extends HTMLElement {
     this.$label = this._shadowRoot.getElementById('label') as HTMLElement
     this.$event = new CustomEvent('change')
     this.$input = this._shadowRoot.querySelector('elix-number-spin-box')
-    this.imgPath = svgEditor.configObj.curConfig.imgPath as string
+    this.imgPath = svgEditor.configObj.curConfig.imgPath
   }
 
   /**

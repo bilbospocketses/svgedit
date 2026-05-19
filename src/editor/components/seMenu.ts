@@ -1,5 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const svgEditor: any
 import 'elix/define/MenuItem.js'
 import './sePlainMenuButton.js'
 
@@ -52,9 +50,9 @@ export class SeMenu extends HTMLElement {
     this._shadowRoot.append(template.content.cloneNode(true))
     this.$menu = this._shadowRoot.querySelector('elix-menu-button') as Element
     // TODO: see todo #10 — shadowDOM-piercing; replaced when #3 (elix→Lit) lands
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any
     this.$label = (this.$menu as any).shadowRoot.querySelector('#popupToggle').shadowRoot
-    this.imgPath = svgEditor.configObj.curConfig.imgPath as string
+    this.imgPath = svgEditor.configObj.curConfig.imgPath
   }
 
   /**
@@ -81,9 +79,11 @@ export class SeMenu extends HTMLElement {
         image.width = 24
         image.height = 24
         image.alt = 'logo'
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         this.$label.prepend(image)
         break
       case 'label':
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         this.$label.prepend(newValue)
         break
       default:

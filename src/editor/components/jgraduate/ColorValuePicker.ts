@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return */
 /**
 * @external Math
 */
@@ -24,6 +24,7 @@ export default class ColorValuePicker {
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor (picker: Element, color: any, bindedHex: any, alphaPrecision: number) {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const that = this // private properties and methods
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const inputs: any[] = Array.from(picker.querySelectorAll('td.Text input'))
@@ -36,6 +37,7 @@ export default class ColorValuePicker {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     function keyDown (e: any): Event | false | undefined {
       if (e.target.value === '' && e.target !== hex && ((bindedHex && e.target !== bindedHex) || !bindedHex)) return undefined
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       if (!validateKey(e)) return e
       switch (e.target) {
         case red:
@@ -136,6 +138,7 @@ export default class ColorValuePicker {
       if (e.target.value === '' && e.target !== hex &&
         ((bindedHex && e.target !== bindedHex) ||
         !bindedHex)) return undefined
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       if (!validateKey(e)) return e
       switch (e.target) {
         case red:
@@ -168,7 +171,7 @@ export default class ColorValuePicker {
           break
         case hex:
           hex.value = hex.value.replace(/[^a-fA-F\d]/g, '').toLowerCase().substring(0, 6)
-          bindedHex && bindedHex.val(hex.value)
+          if (bindedHex) { bindedHex.val(hex.value) }
           color.val('hex', hex.value !== '' ? hex.value : null, e.target)
           break
         case bindedHex:

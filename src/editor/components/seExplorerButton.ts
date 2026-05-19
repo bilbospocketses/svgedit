@@ -1,5 +1,5 @@
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const svgEditor: any
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */
+// elix custom-element base classes ship as 'any'; cleanup deferred to #3 (Lit migration)
 
 /**
  * @class ExplorerButton
@@ -26,7 +26,7 @@ export class ExplorerButton extends HTMLElement {
     super()
     // create the shadowDom and insert the template
     // create the shadowDom and insert the template
-    this.imgPath = svgEditor.configObj.curConfig.imgPath as string
+    this.imgPath = svgEditor.configObj.curConfig.imgPath
     this.template = this.createTemplate(this.imgPath)
     this._shadowRoot = this.attachShadow({ mode: 'open' })
     this._shadowRoot.append(this.template.content.cloneNode(true))
@@ -38,7 +38,7 @@ export class ExplorerButton extends HTMLElement {
     this.$handle = this._shadowRoot.querySelector('.handle') as Element
     this.$lib = this._shadowRoot.querySelector('.image-lib') as Element
     this.files = []
-    this.imgPath = svgEditor.configObj.curConfig.imgPath as string
+    this.imgPath = svgEditor.configObj.curConfig.imgPath
     this.currentAction = this.$button
     this.data = {}
 

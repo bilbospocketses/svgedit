@@ -1,5 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const svgEditor: any
 import { t } from '../locale.js'
 const template = document.createElement('template')
 template.innerHTML = `
@@ -70,7 +68,7 @@ export class ToolButton extends HTMLElement {
     // locate the component
     this.$div = this._shadowRoot.querySelector('div') as HTMLDivElement
     this.$img = this._shadowRoot.querySelector('img') as HTMLImageElement
-    this.imgPath = svgEditor.configObj.curConfig.imgPath as string
+    this.imgPath = svgEditor.configObj.curConfig.imgPath
   }
 
   /**

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */
+// jGraduate (legacy jQuery plugin) ships as 'any'; cleanup deferred to #3 (Lit migration)
 import { jGraduate } from './jgraduate/jQuery.jGraduate.js'
 /**
  *

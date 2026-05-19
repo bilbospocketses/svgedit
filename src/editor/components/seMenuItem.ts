@@ -1,5 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const svgEditor: any
 import 'elix/define/Menu.js'
 import 'elix/define/MenuItem.js'
 import { t } from '../locale.js'
@@ -39,11 +37,11 @@ export class SeMenuItem extends HTMLElement {
     this.$label = this._shadowRoot.querySelector('span') as HTMLSpanElement
     this.$menuitem = this._shadowRoot.querySelector('elix-menu-item') as Element
     // TODO: see todo #10 — shadowDOM-piercing; replaced when #3 (elix→Lit) lands
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
     this.$svg = (this.$menuitem as any).shadowRoot.querySelector('#checkmark')
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     this.$svg.setAttribute('style', 'display: none;')
-    this.imgPath = svgEditor.configObj.curConfig.imgPath as string
+    this.imgPath = svgEditor.configObj.curConfig.imgPath
   }
 
   /**

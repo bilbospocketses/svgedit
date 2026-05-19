@@ -1,5 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const svgEditor: any
 import { t } from '../locale.js'
 
 const template = document.createElement('template')
@@ -45,7 +43,7 @@ export class SeListItem extends HTMLElement {
     // this.$svg.setAttribute('style', 'display: none;')
     this.$img = this._shadowRoot.querySelector('img') as HTMLImageElement
     this.$img.setAttribute('style', 'display: none;')
-    this.imgPath = svgEditor.configObj.curConfig.imgPath as string
+    this.imgPath = svgEditor.configObj.curConfig.imgPath
     this.$menuitem.addEventListener('mousedown', (_e) => {
       this.$menuitem.dispatchEvent(new CustomEvent('selectedindexchange', {
         bubbles: true,

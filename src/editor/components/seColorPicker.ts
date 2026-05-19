@@ -1,5 +1,5 @@
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const svgEditor: any
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */
+// jGraduate (legacy jQuery plugin) ships as 'any'; cleanup deferred to #3 (Lit migration)
 import { jGraduate, jGraduateMethod } from './jgraduate/jQuery.jGraduate.js'
 import PaintBox from './PaintBox.js'
 import { t } from '../locale.js'
@@ -677,7 +677,7 @@ export class SeColorPicker extends HTMLElement {
     this.i18next = null
     this.$picker = this._shadowRoot.getElementById('picker') as HTMLElement
     this.$color_picker = this._shadowRoot.getElementById('color_picker') as HTMLElement
-    this.imgPath = svgEditor.configObj.curConfig.imgPath as string
+    this.imgPath = svgEditor.configObj.curConfig.imgPath
   }
 
   /**
@@ -804,7 +804,7 @@ export class SeColorPicker extends HTMLElement {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       this.setPaint(paint)
       this.dispatchEvent(new CustomEvent('change', { detail: { paint } }))
-    } catch (_err) {
+    } catch {
       // Handle rejection if needed
     } finally {
       this.$color_picker.style.display = 'none'

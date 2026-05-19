@@ -1,5 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const svgEditor: any
 const template = document.createElement('template')
 template.innerHTML = `
   <style>
@@ -153,13 +151,13 @@ class SeZoom extends HTMLElement {
     // hookup events for the input box
     this.inputElement = this._shadowRoot.querySelector('input') as HTMLInputElement
     this.inputElement.addEventListener('click', this.handleClick.bind(this))
-    this.inputElement.addEventListener('change', this.handleInput)
-    this.inputElement.addEventListener('keydown', this.handleKeyDown)
+    this.inputElement.addEventListener('change', this.handleInput.bind(this))
+    this.inputElement.addEventListener('keydown', this.handleKeyDown.bind(this))
 
     this.clickArea = this._shadowRoot.querySelector('#down') as HTMLElement
     this.clickArea.addEventListener('click', this.handleClick.bind(this))
 
-    this.imgPath = svgEditor.configObj.curConfig.imgPath as string
+    this.imgPath = svgEditor.configObj.curConfig.imgPath
 
     this.downImageElement = this.clickArea.querySelector('img') as HTMLImageElement
     this.downImageElement.setAttribute(
@@ -372,7 +370,7 @@ class SeZoom extends HTMLElement {
   handleMouseDown (dir: string, isFirst: boolean): void {
     if (dir === 'up') {
       this.incrementHold = true
-      !isFirst && this.increment()
+      if (!isFirst) { this.increment() }
 
       setTimeout(
         () => {
@@ -384,7 +382,7 @@ class SeZoom extends HTMLElement {
       )
     } else if (dir === 'down') {
       this.decrementHold = true
-      !isFirst && this.decrement()
+      if (!isFirst) { this.decrement() }
 
       setTimeout(
         () => {

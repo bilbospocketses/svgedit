@@ -1,6 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const svgEditor: any
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument */
 
 /**
  * @file jGraduate 0.4
@@ -213,11 +211,11 @@ export function jGraduateMethod (elem: any, options: any, okCallback: any, cance
         $this.paint.radialGradient = $this.paint.linearGradient = null
         break
     }
-    typeof $this.okCallback === 'function' && $this.okCallback($this.paint)
+    if (typeof $this.okCallback === 'function') { $this.okCallback($this.paint) }
     $this.style.display = 'none'
   }
   const cancelClicked = function () {
-    typeof $this.cancelCallback === 'function' && $this.cancelCallback()
+    if (typeof $this.cancelCallback === 'function') { $this.cancelCallback() }
     $this.style.display = 'none'
   }
   Object.assign($this, {
@@ -612,6 +610,7 @@ export function jGraduateMethod (elem: any, options: any, okCallback: any, cance
     path.dataset.bg = pathbg.getAttribute('id')
     path.addEventListener('dblclick', function (this: Element) {
       $this.querySelector('#jGraduate_LightBox').style.display = 'block'
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       const colorhandle = this
       let stopOpacity: number = Number(stop.getAttribute('stop-opacity')) || 1
       let stopColor: string = stop.getAttribute('stop-color') || ''

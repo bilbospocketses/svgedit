@@ -194,6 +194,7 @@ export class SeSelect extends HTMLElement {
    * @returns {void}
    */
   connectedCallback () {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const currentObj = this
     this.$select.addEventListener('change', () => {
       const value = this.$select.value

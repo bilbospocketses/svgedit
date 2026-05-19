@@ -1,6 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const svgEditor: any
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */
 
 /**
  * @file jPicker (Adapted from version 1.1.6)
@@ -97,6 +95,7 @@ export const jPicker = /** @lends external:jQuery.jPicker */ {
   * @returns {external:jQuery.jPicker.Color}
   */
   Color: function (init: any) {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const that = this
     /**
      *
@@ -209,7 +208,7 @@ export const jPicker = /** @lends external:jQuery.jPicker */ {
           v = null
           changed = true
         }
-        changed && fireChangeEvents.call(that, context || that)
+        if (changed) { fireChangeEvents.call(that, context || that) }
         return undefined
       }
       switch (name.toLowerCase()) {
@@ -572,7 +571,7 @@ export const jPicker = /** @lends external:jQuery.jPicker */ {
     }
   }
 }
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- cast required for `new Color()` etc. at constructor sites despite eslint claiming unnecessary
 const { Color, List, ColorMethods } = jPicker as any // local copies for YUI compressor
 /**
  * @function external:jQuery.fn.jPicker
@@ -962,7 +961,7 @@ export function jPickerMethod (elem: any, options: any, commitCallback: any, liv
       const all = ui.val('all')
       activePreview.style.backgroundColor = (all && '#' + all.hex) || 'transparent'
       setAlpha.call(that, activePreview, (all && toFixedNumeric((all.a * 100) / 255, 4)) || 0)
-    } catch (e) { /* empty fn */ }
+    } catch { /* empty fn */ }
   }
   /**
   * @param {external:jQuery} ui
@@ -1127,8 +1126,8 @@ export function jPickerMethod (elem: any, options: any, commitCallback: any, liv
   */
   function cancelClicked () {
     revertColor.call(that)
-    settings.window.expandable && hide.call(that)
-    typeof cancelCallback === 'function' && cancelCallback.call(that, color.active, cancelButton)
+    if (settings.window.expandable) { hide.call(that) }
+    if (typeof cancelCallback === 'function') { cancelCallback.call(that, color.active, cancelButton) }
   }
   /**
   *
@@ -1136,8 +1135,8 @@ export function jPickerMethod (elem: any, options: any, commitCallback: any, liv
   */
   function okClicked () {
     commitColor.call(that)
-    settings.window.expandable && hide.call(that)
-    typeof commitCallback === 'function' && commitCallback.call(that, color.active, okButton)
+    if (settings.window.expandable) { hide.call(that) }
+    if (typeof commitCallback === 'function') { commitCallback.call(that, color.active, okButton) }
   }
   /**
   *
@@ -1486,7 +1485,7 @@ export function jPickerMethod (elem: any, options: any, commitCallback: any, liv
     }
     setColorMode.call(that, settings.color.mode)
     color.active.bind(activeColorChanged)
-    typeof liveCallback === 'function' && color.active.bind(liveCallback)
+    if (typeof liveCallback === 'function') { color.active.bind(liveCallback) }
     color.current.bind(currentColorChanged)
     // bind to input
     if (win.expandable) {
