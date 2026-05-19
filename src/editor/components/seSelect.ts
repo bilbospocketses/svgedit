@@ -26,6 +26,10 @@ label {
  * @class SeList
  */
 export class SeSelect extends HTMLElement {
+  _shadowRoot: ShadowRoot
+  $select: HTMLSelectElement
+  $label: HTMLLabelElement
+
   /**
     * @function constructor
     */
@@ -34,8 +38,8 @@ export class SeSelect extends HTMLElement {
     // create the shadowDom and insert the template
     this._shadowRoot = this.attachShadow({ mode: 'open' })
     this._shadowRoot.append(template.content.cloneNode(true))
-    this.$select = this._shadowRoot.querySelector('select')
-    this.$label = this._shadowRoot.querySelector('label')
+    this.$select = this._shadowRoot.querySelector('select') as HTMLSelectElement
+    this.$label = this._shadowRoot.querySelector('label') as HTMLLabelElement
   }
 
   /**
@@ -53,8 +57,8 @@ export class SeSelect extends HTMLElement {
    * @param {string} newValue
    * @returns {void}
    */
-  attributeChangedCallback (name, oldValue, newValue) {
-    let options
+  attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
+    let options: string[]
     if (oldValue === newValue) return
     switch (name) {
       case 'label':
@@ -95,7 +99,7 @@ export class SeSelect extends HTMLElement {
         } else {
           options = newValue.split('::')
           options.forEach((option, index) => {
-            this.$select.children[index].setAttribute('value', option)
+            this.$select.children[index]?.setAttribute('value', option)
           })
         }
         break
@@ -117,8 +121,8 @@ export class SeSelect extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set label (value) {
-    this.setAttribute('label', value)
+  set label (value: string | null) {
+    this.setAttribute('label', value ?? '')
   }
 
   /**
@@ -133,8 +137,8 @@ export class SeSelect extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set width (value) {
-    this.setAttribute('width', value)
+  set width (value: string | null) {
+    this.setAttribute('width', value ?? '')
   }
 
   /**
@@ -149,8 +153,8 @@ export class SeSelect extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set height (value) {
-    this.setAttribute('height', value)
+  set height (value: string | null) {
+    this.setAttribute('height', value ?? '')
   }
 
   /**
@@ -165,7 +169,7 @@ export class SeSelect extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set value (value) {
+  set value (value: string) {
     this.$select.value = value
   }
 
@@ -181,8 +185,8 @@ export class SeSelect extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set disabled (value) {
-    this.$select.setAttribute('disabled', value)
+  set disabled (value: string | null) {
+    this.$select.setAttribute('disabled', value ?? '')
   }
 
   /**
