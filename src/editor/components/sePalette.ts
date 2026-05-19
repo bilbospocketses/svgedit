@@ -1,4 +1,5 @@
-/* globals svgEditor */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const svgEditor: any
 /* eslint-disable max-len */
 const palette = [
   // Todo: Make into configuration item?
@@ -118,6 +119,11 @@ template.innerHTML = `
  * @class SEPalette
  */
 export class SEPalette extends HTMLElement {
+  _shadowRoot: ShadowRoot
+  $strip: Element
+  expand_btn: HTMLButtonElement
+  popUp: HTMLElement
+
   /**
    * @function constructor
    */
@@ -126,12 +132,12 @@ export class SEPalette extends HTMLElement {
     // create the shadowDom and insert the template
     this._shadowRoot = this.attachShadow({ mode: 'open' })
     this._shadowRoot.append(template.content.cloneNode(true))
-    this.$strip = this._shadowRoot.querySelector('#js-se-palette')
+    this.$strip = this._shadowRoot.querySelector('#js-se-palette') as Element
     this.expand_btn = this._shadowRoot.querySelector(
       'button.palette_expand_btn'
-    )
-    this.popUp = this._shadowRoot.getElementById('palette_popup')
-    svgEditor.$click(this.expand_btn, (e) => {
+    ) as HTMLButtonElement
+    this.popUp = this._shadowRoot.getElementById('palette_popup') as HTMLElement
+    svgEditor.$click(this.expand_btn, (e: Event) => {
       e.stopPropagation()
       const { display } = this.popUp.style
       if (display === 'none') {
@@ -161,7 +167,7 @@ export class SEPalette extends HTMLElement {
         newDiv.style.backgroundColor = rgb
       }
       newDiv.dataset.rgb = rgb
-      const clickCb = (evt) => {
+      const clickCb = (evt: MouseEvent) => {
         evt.preventDefault()
         // shift key or right click for stroke
         const picker = evt.shiftKey || evt.button === 2 ? 'stroke' : 'fill'
@@ -194,7 +200,8 @@ export class SEPalette extends HTMLElement {
    * @param {any} name
    * @returns {void}
    */
-  init (i18next) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  init (i18next: any) {
     this.setAttribute('ui-palette_info', i18next.t('ui.palette_info'))
   }
 
@@ -213,11 +220,10 @@ export class SEPalette extends HTMLElement {
    * @param {string} newValue
    * @returns {void}
    */
-  attributeChangedCallback (name, oldValue, newValue) {
-    let node
+  attributeChangedCallback (name: string, _oldValue: string, newValue: string): void {
     if (name === 'ui-palette_info') {
-      node = this._shadowRoot.querySelector('#palette_holder')
-      node.setAttribute('title', newValue)
+      const node = this._shadowRoot.querySelector('#palette_holder')
+      node?.setAttribute('title', newValue)
     }
   }
 
