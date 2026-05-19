@@ -1,10 +1,28 @@
 import { findPos } from '@svgedit/svgcanvas/common/util.js'
+
+interface SliderBar extends HTMLElement {
+  w: number
+  h: number
+}
+
+interface SliderArrow extends HTMLImageElement {
+  w: number
+  h: number
+}
+
+interface SliderOptions {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  arrow?: { image?: any; width?: number; height?: number }
+  map?: { width?: number; height?: number }
+}
+
 /**
  * Whether a value is `null` or `undefined`.
  * @param {any} val
  * @returns {boolean}
  */
-const isNullish = (val) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const isNullish = (val: any): val is null | undefined => {
   return val === null || val === undefined
 }
 /**
@@ -17,14 +35,15 @@ export default class Slider {
    * @param {external:jQuery} bar
    * @param {module:jPicker.SliderOptions} options
    */
-  constructor (bar, options) {
+  constructor (bar: SliderBar, options: SliderOptions) {
     const that = this
     /**
      * Fire events on the supplied `context`
      * @param {module:jPicker.JPickerInit} context
      * @returns {void}
      */
-    function fireChangeEvents (context) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function fireChangeEvents (context: any): void {
       changeEvents.forEach((changeEvent) => {
         changeEvent.call(that, that, context)
       })
@@ -35,7 +54,7 @@ export default class Slider {
      * @param {external:jQuery.Event} e
      * @returns {void}
      */
-    function mouseDown (e) {
+    function mouseDown (e: MouseEvent): void {
       const off = findPos(bar)
       offset = { l: off.left | 0, t: off.top | 0 }
       clearTimeout(timeout)
@@ -53,7 +72,7 @@ export default class Slider {
      * @param {external:jQuery.Event} e
      * @returns {false}
      */
-    function mouseMove (e) {
+    function mouseMove (e: MouseEvent): false {
       clearTimeout(timeout)
       timeout = setTimeout(function () {
         setValuesFromMousePosition.call(that, e)
@@ -67,7 +86,7 @@ export default class Slider {
      * @param {external:jQuery.Event} e
      * @returns {false}
      */
-    function mouseUp (e) {
+    function mouseUp (e: MouseEvent): false {
       document.removeEventListener('mousemove', mouseMove)
       document.removeEventListener('mouseup', mouseUp)
       e.stopPropagation()
@@ -80,11 +99,11 @@ export default class Slider {
      * @param {Event} e
      * @returns {void}
      */
-    function setValuesFromMousePosition (e) {
+    function setValuesFromMousePosition (e: MouseEvent): void {
       const barW = bar.w // local copies for YUI compressor
       const barH = bar.h
-      let locX = e.pageX - offset.l
-      let locY = e.pageY - offset.t
+      let locX = e.pageX - (offset?.l ?? 0)
+      let locY = e.pageY - (offset?.t ?? 0)
       // keep the arrow within the bounds of the bar
       if (locX < 0) locX = 0
       else if (locX > barW) locX = barW
@@ -137,7 +156,8 @@ export default class Slider {
      * @param {module:jPicker.Slider} context
      * @returns {module:math.XYObject|Float|void}
      */
-    function val (name, value, context) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function val (name: any, value?: any, context?: any): any {
       const set = value !== undefined
       if (!set) {
         if (isNullish(name)) name = 'xy'
@@ -208,7 +228,8 @@ export default class Slider {
      * @param {module:jPicker.MinMaxRangeXY} value
      * @returns {module:jPicker.MinMaxRangeXY|module:jPicker.MinMaxRangeX|module:jPicker.MinMaxRangeY|void}
      */
-    function range (name, value) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function range (name: any, value?: any): any {
       const set = value !== undefined
       if (!set) {
         if (isNullish(name)) name = 'all'
@@ -281,33 +302,39 @@ export default class Slider {
     * @param {GenericCallback} callback
     * @returns {void}
     */
-    function bind (callback) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function bind (callback: any): void {
       if (typeof callback === 'function') changeEvents.push(callback)
     }
     /**
     * @param {GenericCallback} callback
     * @returns {void}
     */
-    function unbind (callback) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function unbind (callback: any): void {
       if (typeof callback !== 'function') return
-      let i
-      while ((i = changeEvents.includes(callback))) changeEvents.splice(i, 1)
+      let idx: number
+      while ((idx = changeEvents.indexOf(callback)) !== -1) changeEvents.splice(idx, 1)
     }
     /**
     *
     * @returns {void}
     */
-    function destroy () {
+    function destroy (): void {
       // unbind all possible events and null objects
       document.removeEventListener('mousemove', mouseMove)
       document.removeEventListener('mouseup', mouseUp)
       bar.removeEventListener('mousedown', mouseDown)
+      // destroy: allow GC by severing closures (pre-existing pattern)
+      // @ts-expect-error: pre-existing null-assignment for GC, see todo #10
       bar = null
+      // @ts-expect-error: pre-existing null-assignment for GC, see todo #10
       arrow = null
-      changeEvents = null
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      changeEvents = null as any
     }
-    let offset
-    let timeout
+    let offset: { l: number; t: number } | undefined
+    let timeout: ReturnType<typeof setTimeout> | undefined
     let x = 0
     let y = 0
     let minX = 0
@@ -316,8 +343,9 @@ export default class Slider {
     let minY = 0
     let maxY = 100
     let rangeY = 100
-    let arrow = bar.querySelector('img') // the arrow image to drag
-    let changeEvents = []
+    let arrow: SliderArrow = bar.querySelector('img') as SliderArrow // the arrow image to drag
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let changeEvents: any[] = []
     Object.assign(that, {
       val,
       range,
