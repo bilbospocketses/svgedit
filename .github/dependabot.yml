@@ -1,0 +1,30 @@
+# Dependabot version updates for svgedit.
+#
+# Security updates are handled separately by Dependabot security alerts (enabled
+# via repo Settings -> Code security and analysis). This file covers routine
+# non-security version bumps.
+#
+# Two ecosystems wired:
+#   - npm: covers the dep graph in package.json (Vite, Vitest, Playwright,
+#     jspdf, dompurify, elix, etc.) plus the packages/svgcanvas workspace.
+#     Dependabot auto-discovers all package.json files under the root.
+#   - github-actions: maintains the SHA-pinned action refs in
+#     .github/workflows/ci.yml. Upstream actions tag new versions periodically;
+#     without this Dependabot would never bump our pins and we would drift on
+#     security fixes shipped in the actions themselves.
+#
+# Weekly cadence keeps PR noise manageable for a solo-owned repo.
+
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
