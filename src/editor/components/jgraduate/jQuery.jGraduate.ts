@@ -21,7 +21,6 @@ declare const svgEditor: any
  * @example $.jGraduate.Paint({hex: '#rrggbb', linearGradient: o}); // throws an exception?
 */
 import SvgCanvas from '@svgedit/svgcanvas'
-// @ts-expect-error: jQuery.jPicker.js to be converted in this task
 import { jPickerDefaults, jPickerMethod } from './jQuery.jPicker.js'
 import { findPos } from '@svgedit/svgcanvas/common/util.js'
 

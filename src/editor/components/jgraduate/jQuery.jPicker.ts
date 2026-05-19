@@ -1,4 +1,7 @@
-/* globals svgEditor */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const svgEditor: any
+
 /**
  * @file jPicker (Adapted from version 1.1.6)
  *
@@ -29,8 +32,7 @@ import { findPos, mergeDeep } from '@svgedit/svgcanvas/common/util.js'
 * @param {Float} precision
 * @returns {Float}
 */
-function toFixedNumeric (value, precision) {
-  if (precision === undefined) precision = 0
+function toFixedNumeric (value: number, precision: number = 0): number {
   return Math.round(value * (10 ** precision)) / (10 ** precision)
 }
 
@@ -39,7 +41,7 @@ function toFixedNumeric (value, precision) {
  * @param {any} val
  * @returns {boolean}
  */
-const isNullish = (val) => {
+const isNullish = (val: any): val is null | undefined => {
   return val === null || val === undefined
 }
 
@@ -94,14 +96,14 @@ export const jPicker = /** @lends external:jQuery.jPicker */ {
   * @param {module:jPicker.JPickerInit} init
   * @returns {external:jQuery.jPicker.Color}
   */
-  Color: function (init) {
+  Color: function (init: any) {
     const that = this
     /**
      *
      * @param {module:jPicker.Slider} context
      * @returns {void}
      */
-    function fireChangeEvents (context) {
+    function fireChangeEvents (context: any): void {
       for (let i = 0; i < changeEvents.length; i++) changeEvents[i].call(that, that, context)
     }
 
@@ -111,12 +113,12 @@ export const jPicker = /** @lends external:jQuery.jPicker */ {
      * @param {external:jQuery.jPicker.Color} context
      * @returns {module:jPicker.JPickerInit|string|null|void}
      */
-    function val (name, value, context) {
+    function val (name?: any, value?: any, context?: any): any {
       // Kind of ugly
       const set = Boolean(value)
       if (set && value.ahex === '') value.ahex = '00000000'
       if (!set) {
-        let ret
+        let ret: any
         if (isNullish(name) || name === '') name = 'all'
         if (isNullish(r)) return null
         switch (name.toLowerCase()) {
@@ -230,7 +232,7 @@ export const jPicker = /** @lends external:jQuery.jPicker */ {
             val.call(that, 'ahex', value.ahex || value.hex || '00000000', context)
             return undefined
           }
-          const newV = {}
+          const newV: Record<string, any> = {}
           let rgb = false; let hsv = false
           if (value.r !== undefined && !name.includes('r')) name += 'r'
           if (value.g !== undefined && !name.includes('g')) name += 'g'
@@ -344,17 +346,17 @@ export const jPicker = /** @lends external:jQuery.jPicker */ {
     * @param {GenericCallback} callback
     * @returns {void}
     */
-    function bind (callback) {
+    function bind (callback: any): void {
       if (typeof callback === 'function') changeEvents.push(callback)
     }
     /**
     * @param {GenericCallback} callback
     * @returns {void}
     */
-    function unbind (callback) {
+    function unbind (callback: any): void {
       if (typeof callback !== 'function') return
-      let i
-      while ((i = changeEvents.includes(callback))) {
+      let i: number
+      while ((i = changeEvents.indexOf(callback)) !== -1) {
         changeEvents.splice(i, 1)
       }
     }
@@ -362,10 +364,11 @@ export const jPicker = /** @lends external:jQuery.jPicker */ {
     * Unset `changeEvents`
     * @returns {void}
     */
-    function destroy () {
+    function destroy (): void {
+      // @ts-expect-error: pre-existing null-assignment for GC, see todo #10
       changeEvents = null
     }
-    let r; let g; let b; let a; let h; let s; let v; let changeEvents = []
+    let r: any; let g: any; let b: any; let a: any; let h: any; let s: any; let v: any; let changeEvents: any[] = []
     Object.assign(that, {
       // public properties and methods
       val,
@@ -412,7 +415,7 @@ export const jPicker = /** @lends external:jQuery.jPicker */ {
     * @param {string} hex
     * @returns {module:jPicker.RGBA}
     */
-    hexToRgba (hex) {
+    hexToRgba (hex: any) {
       if (hex === '' || hex === 'none') return { r: null, g: null, b: null, a: null }
       hex = this.validateHex(hex)
       let r = '00'; let g = '00'; let b = '00'; let a = '255'
@@ -441,7 +444,7 @@ export const jPicker = /** @lends external:jQuery.jPicker */ {
     * @param {string} hex
     * @returns {string}
     */
-    validateHex (hex) {
+    validateHex (hex: any) {
       // if (typeof hex === 'object') return '';
       hex = hex.toLowerCase().replace(/[^a-f\d]/g, '')
       if (hex.length > 8) hex = hex.substring(0, 8)
@@ -451,14 +454,14 @@ export const jPicker = /** @lends external:jQuery.jPicker */ {
     * @param {module:jPicker.RGBA} rgba
     * @returns {string}
     */
-    rgbaToHex (rgba) {
+    rgbaToHex (rgba: any) {
       return this.intToHex(rgba.r) + this.intToHex(rgba.g) + this.intToHex(rgba.b) + this.intToHex(rgba.a)
     },
     /**
     * @param {Integer} dec
     * @returns {string}
     */
-    intToHex (dec) {
+    intToHex (dec: any) {
       let result = (dec | 0).toString(16)
       if (result.length === 1) result = ('0' + result)
       return result.toLowerCase()
@@ -467,7 +470,7 @@ export const jPicker = /** @lends external:jQuery.jPicker */ {
     * @param {string} hex
     * @returns {Integer}
     */
-    hexToInt (hex) {
+    hexToInt (hex: any) {
       return Number.parseInt(hex, 16)
     },
     /**
@@ -480,7 +483,7 @@ export const jPicker = /** @lends external:jQuery.jPicker */ {
     * @param {module:jPicker.RGB} rgb
     * @returns {module:jPicker.HSV}
     */
-    rgbToHsv (rgb) {
+    rgbToHsv (rgb: any) {
       const r = rgb.r / 255; const g = rgb.g / 255; const b = rgb.b / 255; const hsv = { h: 0, s: 0, v: 0 }
       let min = 0; let max = 0
       if (r >= g && r >= b) {
@@ -502,7 +505,7 @@ export const jPicker = /** @lends external:jQuery.jPicker */ {
         if (r === max) hsv.h = (g - b) / delta
         else if (g === max) hsv.h = 2 + (b - r) / delta
         else hsv.h = 4 + (r - g) / delta
-        hsv.h = Number.parseInt(hsv.h * 60)
+        hsv.h = Number.parseInt(String(hsv.h * 60))
         if (hsv.h < 0) hsv.h += 360
       }
       hsv.s = (hsv.s * 100) | 0
@@ -513,7 +516,7 @@ export const jPicker = /** @lends external:jQuery.jPicker */ {
     * @param {module:jPicker.HSV} hsv
     * @returns {module:jPicker.RGB}
     */
-    hsvToRgb (hsv) {
+    hsvToRgb (hsv: any) {
       const rgb = { r: 0, g: 0, b: 0, a: 100 }
       let { h, s, v } = hsv
       if (s === 0) {
@@ -569,7 +572,8 @@ export const jPicker = /** @lends external:jQuery.jPicker */ {
     }
   }
 }
-const { Color, List, ColorMethods } = jPicker // local copies for YUI compressor
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+const { Color, List, ColorMethods } = jPicker as any // local copies for YUI compressor
 /**
  * @function external:jQuery.fn.jPicker
  * @see {@link external:jQuery.fn.$.fn.jPicker}
@@ -607,12 +611,12 @@ const { Color, List, ColorMethods } = jPicker // local copies for YUI compressor
 * @param {module:jPicker.CancelCallback} [cancelCallback]
 * @returns {void}
 */
-export function jPickerMethod (elem, options, commitCallback, liveCallback, cancelCallback, i18next) {
-  let sets = mergeDeep({}, jPickerDefaults) // local copies for YUI compressor
+export function jPickerMethod (elem: any, options: any, commitCallback: any, liveCallback: any, cancelCallback: any, i18next: any): void {
+  let sets: any = mergeDeep({}, jPickerDefaults) // local copies for YUI compressor
   sets = mergeDeep(sets, options)
 
   const that = elem
-  const settings = sets
+  const settings: any = sets
   if (that.nodeName.toLowerCase() === 'input') { // Add color picker icon if binding to an input element and bind the events to the input
     Object.assign(settings, {
       window: {
@@ -649,11 +653,11 @@ export function jPickerMethod (elem, options, commitCallback, liveCallback, canc
    * @throws {Error} Invalid mode
    * @returns {void}
    */
-  function setColorMode (colorMode) {
+  function setColorMode (colorMode: any): void {
     const { active } = color // local copies for YUI compressor
     // {clientPath} = images,
     const hex = active.val('hex')
-    let rgbMap; let rgbBar
+    let rgbMap: any; let rgbBar: any
     settings.color.mode = colorMode
     switch (colorMode) {
       case 'h':
@@ -805,7 +809,7 @@ export function jPickerMethod (elem, options, commitCallback, liveCallback, canc
    * @param {?module:jPicker.Slider} context
    * @returns {void}
   */
-  function activeColorChanged (ui, context) {
+  function activeColorChanged (ui: any, context?: any): void {
     if (isNullish(context) || (context !== colorBar && context !== colorMap)) positionMapAndBarArrows.call(that, ui, context)
     setTimeout(function () {
       updatePreview.call(that, ui)
@@ -820,7 +824,7 @@ export function jPickerMethod (elem, options, commitCallback, liveCallback, canc
    * @param {?module:jPicker.Slider} context
    * @returns {void}
   */
-  function mapValueChanged (ui, context) {
+  function mapValueChanged (ui: any, context?: any): void {
     const { active } = color
     if (context !== colorMap && isNullish(active.val())) return
     const xy = ui.val('all')
@@ -853,7 +857,7 @@ export function jPickerMethod (elem, options, commitCallback, liveCallback, canc
    * @param {?module:jPicker.Slider} context
    * @returns {void}
   */
-  function colorBarValueChanged (ui, context) {
+  function colorBarValueChanged (ui: any, context?: any): void {
     const { active } = color
     if (context !== colorBar && isNullish(active.val())) return
     switch (settings.color.mode) {
@@ -887,7 +891,7 @@ export function jPickerMethod (elem, options, commitCallback, liveCallback, canc
    * @param {?module:jPicker.Slider} context
    * @returns {void}
   */
-  function positionMapAndBarArrows (ui, context) {
+  function positionMapAndBarArrows (ui: any, context?: any): void {
     if (context !== colorMap) {
       switch (settings.color.mode) {
         case 'h': {
@@ -953,7 +957,7 @@ export function jPickerMethod (elem, options, commitCallback, liveCallback, canc
   * @param {external:jQuery} ui
   * @returns {void}
   */
-  function updatePreview (ui) {
+  function updatePreview (ui: any): void {
     try {
       const all = ui.val('all')
       activePreview.style.backgroundColor = (all && '#' + all.hex) || 'transparent'
@@ -964,7 +968,7 @@ export function jPickerMethod (elem, options, commitCallback, liveCallback, canc
   * @param {external:jQuery} ui
   * @returns {void}
   */
-  function updateMapVisuals (ui) {
+  function updateMapVisuals (ui: any): void {
     switch (settings.color.mode) {
       case 'h':
         setBG.call(that, colorMapDiv, new Color({ h: ui.val('h') || 0, s: 100, v: 100 }).val('hex'))
@@ -995,7 +999,7 @@ export function jPickerMethod (elem, options, commitCallback, liveCallback, canc
   * @param {external:jQuery} ui
   * @returns {void}
   */
-  function updateBarVisuals (ui) {
+  function updateBarVisuals (ui: any): void {
     switch (settings.color.mode) {
       case 'h': {
         const a = ui.val('a')
@@ -1049,7 +1053,7 @@ export function jPickerMethod (elem, options, commitCallback, liveCallback, canc
   * @param {string} [c="transparent"]
   * @returns {void}
   */
-  function setBG (el, c) {
+  function setBG (el: any, c: any): void {
     el.style.backgroundColor = (c && c.length === 6 && '#' + c) || 'transparent'
   }
 
@@ -1058,7 +1062,7 @@ export function jPickerMethod (elem, options, commitCallback, liveCallback, canc
   * @param {string} src The image source
   * @returns {void}
   */
-  function setImg (img, src) {
+  function setImg (img: any, src: any): void {
     img.style.backgroundImage = 'url(\'' + src + '\')'
   }
   /**
@@ -1066,7 +1070,7 @@ export function jPickerMethod (elem, options, commitCallback, liveCallback, canc
   * @param {Float} y
   * @returns {void}
   */
-  function setImgLoc (img, y) {
+  function setImgLoc (img: any, y: any): void {
     img.style.top = y + 'px'
   }
   /**
@@ -1074,7 +1078,7 @@ export function jPickerMethod (elem, options, commitCallback, liveCallback, canc
   * @param {Float} alpha
   * @returns {void}
   */
-  function setAlpha (obj, alpha) {
+  function setAlpha (obj: any, alpha: any): void {
     obj.style.visibility = (alpha > 0) ? 'visible' : 'hidden'
     if (alpha > 0 && alpha < 100) {
       obj.style.opacity = toFixedNumeric(alpha / 100, 4)
@@ -1101,7 +1105,7 @@ export function jPickerMethod (elem, options, commitCallback, liveCallback, canc
   * @param {Event} e
   * @returns {void}
   */
-  function radioClicked (e) {
+  function radioClicked (e: any): void {
     const rChecks = that.querySelectorAll('input[type="radio"]:checked')
     for (const rCheck of rChecks) {
       if (rCheck.value !== e.target.value) {
@@ -1146,7 +1150,7 @@ export function jPickerMethod (elem, options, commitCallback, liveCallback, canc
   * @param {external:jQuery} ui
   * @returns {void}
   */
-  function currentColorChanged (ui) {
+  function currentColorChanged (ui: any): void {
     const hex = ui.val('hex')
     currentPreview.style.backgroundColor = (hex && '#' + hex) || 'transparent'
     setAlpha.call(that, currentPreview, toFixedNumeric(((ui.val('a') || 0) * 100) / 255, 4))
@@ -1155,7 +1159,7 @@ export function jPickerMethod (elem, options, commitCallback, liveCallback, canc
   * @param {external:jQuery} ui
   * @returns {void}
   */
-  function expandableColorChanged (ui) {
+  function expandableColorChanged (ui: any): void {
     const hex = ui.val('hex')
     const va = ui.val('va')
     iconColor.style.backgroundColor = (hex && '#' + hex) || 'transparent'
@@ -1169,7 +1173,7 @@ export function jPickerMethod (elem, options, commitCallback, liveCallback, canc
   * @param {Event} e
   * @returns {void}
   */
-  function moveBarMouseDown (e) {
+  function moveBarMouseDown (e: any): void {
     elementStartX = Number.parseInt(container.style.left)
     elementStartY = Number.parseInt(container.style.top)
     pageStartX = e.pageX
@@ -1183,7 +1187,7 @@ export function jPickerMethod (elem, options, commitCallback, liveCallback, canc
   * @param {Event} e
   * @returns {false}
   */
-  function documentMouseMove (e) {
+  function documentMouseMove (e: any): false {
     container.style.left = elementStartX - (pageStartX - e.pageX) + 'px'
     container.style.top = elementStartY - (pageStartY - e.pageY) + 'px'
     if (settings.window.expandable) {
@@ -1199,7 +1203,7 @@ export function jPickerMethod (elem, options, commitCallback, liveCallback, canc
   * @param {Event} e
   * @returns {false}
   */
-  function documentMouseUp (e) {
+  function documentMouseUp (e: any): false {
     document.removeEventListener('mousemove', documentMouseMove)
     document.removeEventListener('mouseup', documentMouseUp)
     e.stopPropagation()
@@ -1210,7 +1214,7 @@ export function jPickerMethod (elem, options, commitCallback, liveCallback, canc
   * @param {Event} e
   * @returns {false}
   */
-  function quickPickClicked (e) {
+  function quickPickClicked (e: any): false {
     e.preventDefault()
     e.stopPropagation()
     color.active.val('ahex', e.target.getAttribute('title') || null, e.target)
@@ -1273,7 +1277,7 @@ export function jPickerMethod (elem, options, commitCallback, liveCallback, canc
     container.classList.add('jPicker')
     container.classList.add('Container')
     if (win.expandable) container.style.display = 'none'
-    container.onselectstart = function (e) {
+    container.onselectstart = function (e: any) {
       if (e.target.nodeName.toLowerCase() !== 'input') return false
       return true
     }
@@ -1286,6 +1290,8 @@ export function jPickerMethod (elem, options, commitCallback, liveCallback, canc
     // Check if table with id 'fill_color' OR 'stroke_color' already exists, then remove it to avoid duplicate
     const tableIds = ['fill_color', 'stroke_color']
     tableIds.forEach((id) => {
+      // TODO: see todo #10 — jQuery-on-DOM bug; querySelector may return null; preserved as-is
+      // @ts-expect-error: pre-existing null-misuse, see todo #10
       const currTable = document.querySelector('se-colorpicker#' + id).shadowRoot.querySelector('table')
       if (currTable) { currTable.remove() }
     })
@@ -1351,6 +1357,8 @@ export function jPickerMethod (elem, options, commitCallback, liveCallback, canc
             : win.position.x === 'right'
               ? (poslt.left - 10 + (win.position.y === 'center' ? 25 : 0)) + 'px'
               : win.position.x === 'screenCenter'
+                // TODO: see todo #10 — jQuery-on-DOM bug: document.width doesn't exist; preserved as-is
+                // @ts-expect-error: pre-existing jQuery-on-DOM bug, see todo #10
                 ? ((document.width >> 1) - 260) + 'px'
                 : (poslt.left + Number.parseInt(win.position.x)) + 'px'
       container.style.top =
@@ -1595,34 +1603,34 @@ export function jPickerMethod (elem, options, commitCallback, liveCallback, canc
     cancelCallback = null
   }
 
-  let elementStartX = null // Used to record the starting css positions for dragging the control
-  let elementStartY = null
-  let pageStartX = null // Used to record the mousedown coordinates for dragging the control
-  let pageStartY = null
-  let container = null
-  let colorMapDiv = null
-  let colorBarDiv = null
-  let colorMapL1 = null // different layers of colorMap and colorBar
-  let colorMapL2 = null
-  let colorMapL3 = null
-  let colorBarL1 = null
-  let colorBarL2 = null
-  let colorBarL3 = null
-  let colorBarL4 = null
-  let colorBarL5 = null
-  let colorBarL6 = null
-  let colorMap = null // color maps
-  let colorBar = null
-  let colorPicker = null
-  let activePreview = null // color boxes above the radio buttons
-  let currentPreview = null
-  let okButton = null
-  let cancelButton = null
-  let grid = null // preset colors grid
-  let iconColor = null // iconColor for popup icon
-  let iconAlpha = null // iconAlpha for popup icon
-  let iconImage = null // iconImage popup icon
-  let moveBar = null // drag bar
+  let elementStartX: any = null // Used to record the starting css positions for dragging the control
+  let elementStartY: any = null
+  let pageStartX: any = null // Used to record the mousedown coordinates for dragging the control
+  let pageStartY: any = null
+  let container: any = null
+  let colorMapDiv: any = null
+  let colorBarDiv: any = null
+  let colorMapL1: any = null // different layers of colorMap and colorBar
+  let colorMapL2: any = null
+  let colorMapL3: any = null
+  let colorBarL1: any = null
+  let colorBarL2: any = null
+  let colorBarL3: any = null
+  let colorBarL4: any = null
+  let colorBarL5: any = null
+  let colorBarL6: any = null
+  let colorMap: any = null // color maps
+  let colorBar: any = null
+  let colorPicker: any = null
+  let activePreview: any = null // color boxes above the radio buttons
+  let currentPreview: any = null
+  let okButton: any = null
+  let cancelButton: any = null
+  let grid: any = null // preset colors grid
+  let iconColor: any = null // iconColor for popup icon
+  let iconAlpha: any = null // iconAlpha for popup icon
+  let iconImage: any = null // iconImage popup icon
+  let moveBar: any = null // drag bar
   Object.assign(that, {
     // public properties, methods, and callbacks
     commitCallback, // commitCallback function can be overridden to return the selected color to a method you specify when the user clicks "OK"
