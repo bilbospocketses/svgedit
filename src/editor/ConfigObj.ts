@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
 import { mergeDeep } from '@svgedit/svgcanvas/common/util.js'
 
 /**
@@ -6,18 +7,89 @@ import { mergeDeep } from '@svgedit/svgcanvas/common/util.js'
 * @param {string} str
 * @returns {string}
 */
-export const regexEscape = function (str) {
+export const regexEscape = function (str: string): string {
   // Originally from: http://phpjs.org/functions
   return String(str).replace(/[.\\+*?[^\]$(){}=!<>|:-]/g, '\\$&')
 }
+
+/** Preferences that can be changed in the UI and stored in the browser. */
+interface Prefs {
+  lang: string
+  bkgd_color: string
+  bkgd_url: string
+  img_save: string
+  save_notice_done: boolean | string
+  export_notice_done: boolean | string
+  [key: string]: unknown
+}
+
+/** Configuration that cannot be changed in the UI. */
+interface Config {
+  canvasName: string
+  canvas_expansion: number
+  initFill: { color: string; opacity: number }
+  initStroke: { width: number; color: string; opacity: number }
+  text: { stroke_width: number; font_size: number; font_family: string }
+  initOpacity: number
+  initTool: string
+  exportWindowType: string
+  wireframe: boolean
+  showlayers: boolean
+  no_save_warning: boolean
+  imgPath: string
+  extPath: string
+  dimensions: (number | string)[]
+  gridSnapping: boolean
+  gridColor: string
+  baseUnit: string
+  snappingStep: number
+  showRulers: boolean
+  dynamicOutput: boolean
+  preventAllURLConfig: boolean
+  preventURLContentLoading: boolean
+  lockExtensions: boolean
+  noDefaultExtensions: boolean
+  showGrid: boolean
+  noStorageOnLoad: boolean
+  forceStorage: boolean
+  emptyStorageOnDecline: boolean
+  avoidClientSide: boolean
+  avoidClientSideDownload: boolean
+  avoidClientSideOpen: boolean
+  layerView: boolean
+  extensions: string[]
+  userExtensions: { pathName: string; config: unknown }[]
+  allowedOrigins: string[]
+  [key: string]: unknown
+}
+
+/** URL data parsed from query string. */
+interface UrlData {
+  [key: string]: unknown
+}
+
+/** The editor instance passed to ConfigObj (typed loosely to avoid circular ref). */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type EditorInstance = any
+
 /**
  * @class configObj
  */
 export default class ConfigObj {
+  defaultPrefs: Prefs
+  defaultConfig: Omit<Config, 'extensions' | 'userExtensions' | 'allowedOrigins'>
+  curPrefs: Partial<Prefs>
+  urldata: UrlData
+  defaultExtensions: string[]
+  curConfig: Config
+  editor: EditorInstance
+  /** Whether preferences dialog is open. */
+  preferences = false
+
   /**
    * @param {PlainObject} editor
    */
-  constructor (editor) {
+  constructor (editor: EditorInstance) {
     /**
       * Preferences.
       * @interface module:SVGEditor.Prefs
@@ -214,7 +286,7 @@ export default class ConfigObj {
       * @todo We might instead make as a user-facing preference.
       */
       allowedOrigins: []
-    }
+    } as unknown as Config
     this.editor = editor
   }
 
@@ -248,8 +320,7 @@ export default class ConfigObj {
    * @returns {void}
    */
   loadFromURL () {
-    const self = this
-    const { search, searchParams } = new URL(location)
+    const { search, searchParams } = new URL(location.href)
     if (search) {
       this.urldata = {}
       const entries = searchParams.entries()
@@ -262,7 +333,7 @@ export default class ConfigObj {
           // Restore back to original non-deparamed value to avoid color
           //  strings being converted to numbers
           if (this.urldata[prop] === undefined) { this.urldata[prop] = {} }
-          this.urldata[prop].color = searchParams.get(`${prop}[color]`)
+          ;(this.urldata[prop] as Record<string, unknown>).color = searchParams.get(`${prop}[color]`)
         }
       })
 
@@ -271,25 +342,25 @@ export default class ConfigObj {
       }
 
       if (this.urldata.dimensions) {
-        this.urldata.dimensions = this.urldata.dimensions.split(',')
+        this.urldata.dimensions = (this.urldata.dimensions as string).split(',')
       }
 
       if (this.urldata.extensions) {
         // For security reasons, disallow cross-domain or cross-folder
         //  extensions via URL
-        this.urldata.extensions = (/[:/\\]/).test(this.urldata.extensions)
+        this.urldata.extensions = (/[:/\\]/).test(this.urldata.extensions as string)
           ? ''
-          : this.urldata.extensions.split(',')
+          : (this.urldata.extensions as string).split(',')
       }
 
       // Disallowing extension paths via URL for
       // security reasons, even for same-domain
       // ones given potential to interact in undesirable
       // ways with other script resources
-      ['userExtensions', 'imgPath']
-        .forEach(function (pathConfig) {
-          if (self.urldata[pathConfig]) {
-            delete self.urldata[pathConfig]
+      ;['userExtensions', 'imgPath']
+        .forEach((pathConfig) => {
+          if (this.urldata[pathConfig]) {
+            delete this.urldata[pathConfig]
           }
         })
 
@@ -299,7 +370,7 @@ export default class ConfigObj {
       this.setupCurConfig()
 
       if (!this.curConfig.preventURLContentLoading) {
-        let { source } = this.urldata
+        let source = this.urldata.source as string | undefined
         if (!source) { // urldata.source may have been null if it ended with '='
           const src = searchParams.get('source')
           if (src?.startsWith('data:')) {
@@ -365,7 +436,7 @@ export default class ConfigObj {
             encodeURIComponent(storeKey)
           ) + '=([^;]+)')
         )
-        this.defaultPrefs[key] = result ? decodeURIComponent(result[1]) : ''
+        this.defaultPrefs[key] = result ? decodeURIComponent(result[1] ?? '') : ''
       }
     })
   }
@@ -391,7 +462,7 @@ export default class ConfigObj {
   *   not be needed in `svgedit-config-iife.js`.
   * @returns {void}
 */
-  setConfig (opts, cfgCfg = {}) {
+  setConfig (opts: Record<string, unknown>, cfgCfg: { overwrite?: boolean; allowInitialUserOverride?: boolean } = {}) {
     /**
      *
      * @param {module:SVGEditor.Config|module:SVGEditor.Prefs} cfgObj
@@ -399,9 +470,9 @@ export default class ConfigObj {
      * @param {any} val See {@link module:SVGEditor.Config} or {@link module:SVGEditor.Prefs}
      * @returns {void}
      */
-    const extendOrAdd = (cfgObj, key, val) => {
+    const extendOrAdd = (cfgObj: Record<string, unknown>, key: string, val: unknown) => {
       if (cfgObj[key] && typeof cfgObj[key] === 'object' && !Array.isArray(cfgObj[key])) {
-        cfgObj[key] = mergeDeep(cfgObj[key], val)
+        cfgObj[key] = mergeDeep(cfgObj[key] as Record<string, unknown>, val as Record<string, unknown>)
       } else {
         cfgObj[key] = val
       }
@@ -430,7 +501,8 @@ export default class ConfigObj {
         ) {
           return
         }
-        this.curConfig[key] = this.curConfig[key].concat(val) // We will handle any dupes later
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        this.curConfig[key] = (this.curConfig[key] as any[]).concat(val) // We will handle any dupes later
       // Only allow other configObj.curConfig if defined in configObj.defaultConfig
       } else if ({}.hasOwnProperty.call(this.defaultConfig, key)) {
         if (cfgCfg.overwrite === false && (
@@ -449,7 +521,7 @@ export default class ConfigObj {
           extendOrAdd(this.defaultConfig, key, val)
         } else if (this.defaultConfig[key] && typeof this.defaultConfig[key] === 'object' && !Array.isArray(this.defaultConfig[key])) {
           this.curConfig[key] = {}
-          this.curConfig[key] = mergeDeep(this.curConfig[key], val)
+          this.curConfig[key] = mergeDeep(this.curConfig[key] as Record<string, unknown>, val as Record<string, unknown>)
         } else {
           this.curConfig[key] = val
         }
@@ -473,7 +545,7 @@ export default class ConfigObj {
   *  button to auto-calculate background, but otherwise uses `svgEditor.configObj.pref()` to
   *  be able to get default prefs or overridable settings
   */
-  pref (key, val, mayBeEmpty) {
+  pref (key: string, val?: unknown, mayBeEmpty?: boolean): unknown {
     if (mayBeEmpty || val) {
       this.curPrefs[key] = val
       return undefined
@@ -486,7 +558,7 @@ export default class ConfigObj {
    * @returns {void}
    */
   load () {
-    this.loadFromURL(this.editor)
-    this.setupCurPrefs(this.editor)
+    this.loadFromURL()
+    this.setupCurPrefs()
   }
 }
