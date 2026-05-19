@@ -1,4 +1,5 @@
-/* globals svgEditor */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const svgEditor: any
 import { t } from '../locale.js'
 const template = document.createElement('template')
 template.innerHTML = `
@@ -53,6 +54,11 @@ template.innerHTML = `
  * @class ToolButton
  */
 export class ToolButton extends HTMLElement {
+  _shadowRoot: ShadowRoot
+  $div: HTMLDivElement
+  $img: HTMLImageElement
+  imgPath: string
+
   /**
     * @function constructor
     */
@@ -62,9 +68,9 @@ export class ToolButton extends HTMLElement {
     this._shadowRoot = this.attachShadow({ mode: 'open' })
     this._shadowRoot.append(template.content.cloneNode(true))
     // locate the component
-    this.$div = this._shadowRoot.querySelector('div')
-    this.$img = this._shadowRoot.querySelector('img')
-    this.imgPath = svgEditor.configObj.curConfig.imgPath
+    this.$div = this._shadowRoot.querySelector('div') as HTMLDivElement
+    this.$img = this._shadowRoot.querySelector('img') as HTMLImageElement
+    this.imgPath = svgEditor.configObj.curConfig.imgPath as string
   }
 
   /**
@@ -82,7 +88,7 @@ export class ToolButton extends HTMLElement {
    * @param {string} newValue
    * @returns {void}
    */
-  attributeChangedCallback (name, oldValue, newValue) {
+  attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
     if (oldValue === newValue) return
     switch (name) {
       case 'title':
@@ -92,7 +98,7 @@ export class ToolButton extends HTMLElement {
         }
         break
       case 'style':
-        this.$div.style = newValue
+        this.$div.setAttribute('style', newValue)
         break
       case 'src':
         if (newValue.indexOf('data:') !== -1) {
@@ -132,15 +138,15 @@ export class ToolButton extends HTMLElement {
    * @function get
    * @returns {any}
    */
-  get title () {
-    return this.getAttribute('title')
+  get title (): string {
+    return this.getAttribute('title') ?? ''
   }
 
   /**
    * @function set
    * @returns {void}
    */
-  set title (value) {
+  set title (value: string) {
     this.setAttribute('title', value)
   }
 
@@ -156,7 +162,7 @@ export class ToolButton extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set pressed (value) {
+  set pressed (value: boolean) {
     // boolean value => existence = true
     if (value) {
       this.setAttribute('pressed', 'true')
@@ -177,7 +183,7 @@ export class ToolButton extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set disabled (value) {
+  set disabled (value: boolean) {
     // boolean value => existence = true
     if (value) {
       this.setAttribute('disabled', 'true')
@@ -198,8 +204,8 @@ export class ToolButton extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set src (value) {
-    this.setAttribute('src', value)
+  set src (value: string | null) {
+    this.setAttribute('src', value ?? '')
   }
 
   /**
@@ -214,8 +220,8 @@ export class ToolButton extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set size (value) {
-    this.setAttribute('size', value)
+  set size (value: string | null) {
+    this.setAttribute('size', value ?? '')
   }
 
   /**
@@ -229,7 +235,7 @@ export class ToolButton extends HTMLElement {
       // register the keydown event
       document.addEventListener('keydown', (e) => {
         // only track keyboard shortcuts for the body containing the svgedit editor
-        if (e.target.nodeName !== 'BODY') return
+        if ((e.target as Element).nodeName !== 'BODY') return
         // normalize key
         const key = `${(e.metaKey) ? 'meta+' : ''}${(e.ctrlKey) ? 'ctrl+' : ''}${e.key.toUpperCase()}`
         if (shortcut !== key) return
