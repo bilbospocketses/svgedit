@@ -1,4 +1,6 @@
-/* globals svgEditor */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const svgEditor: any
 
 /**
  * @file jGraduate 0.4
@@ -19,6 +21,7 @@
  * @example $.jGraduate.Paint({hex: '#rrggbb', linearGradient: o}); // throws an exception?
 */
 import SvgCanvas from '@svgedit/svgcanvas'
+// @ts-expect-error: jQuery.jPicker.js to be converted in this task
 import { jPickerDefaults, jPickerMethod } from './jQuery.jPicker.js'
 import { findPos } from '@svgedit/svgcanvas/common/util.js'
 
@@ -44,6 +47,7 @@ const ns = {
 }
 
 if (!window.console) {
+  // @ts-expect-error: partial console polyfill; replaced when environment always has console
   window.console = {
     log () { /* empty fn */ },
     dir () { /* empty fn */ }
@@ -111,6 +115,7 @@ export const jGraduateDefaults = /** @lends external:jQuery.fn.jGraduateDefaults
   newstop: 'inverse' // same, inverse, black, white
 }
 
+// TODO: see todo #10 — isGecko local; drop in code-quality follow-up, not this task
 const isGecko = navigator.userAgent.includes('Gecko/')
 
 /**
@@ -121,7 +126,7 @@ const isGecko = navigator.userAgent.includes('Gecko/')
 * @param {module:jGraduate.Attrs} attrs
 * @returns {void}
 */
-function setAttrs (elem, attrs) {
+function setAttrs (elem: any, attrs: Record<string, any>): void {
   if (isGecko) {
     Object.entries(attrs).forEach(([aname, val]) => {
       elem.setAttribute(aname, val)
@@ -144,7 +149,7 @@ function setAttrs (elem, attrs) {
 * @param {Element} newparent
 * @returns {SVGElement}
 */
-function mkElem (name, attrs, newparent) {
+function mkElem (name: string, attrs: Record<string, any>, newparent?: Element | null): any {
   const elem = document.createElementNS(ns.svg, name)
   setAttrs(elem, attrs)
   if (newparent) {
@@ -185,13 +190,14 @@ function mkElem (name, attrs, newparent) {
 * @param {external:jQuery.fn.jGraduate.CancelCallback} [cancelCallback] Called with no arguments when Cancel is pressed
 * @returns {external:jQuery}
 */
-export function jGraduateMethod (elem, options, okCallback, cancelCallback, i18next) {
+export function jGraduateMethod (elem: any, options: any, okCallback: any, cancelCallback: any, i18next: any): void {
   const $this = elem
   const $settings = Object.assign({}, jGraduateDefaults, options || {})
   const id = $this.getAttribute('id')
   const idref = '#' + $this.getAttribute('id') + ' '
 
   if (!idref) {
+    // TODO: see todo #10 — native alert(); replace with prompt/alert wrapper
     alert('Container element must have an id attribute to maintain unique id strings for sub-elements.')
     return
   }
@@ -346,7 +352,7 @@ export function jGraduateMethod (elem, options, okCallback, cancelCallback, i18n
   const SIZEX = MAX - 2 * MARGINX
   const SIZEY = MAX - 2 * MARGINY
 
-  const attrInput = {}
+  const attrInput: Record<string, any> = {}
 
   const SLIDERW = 145
   const JQSliderBars = $this.querySelectorAll('.jGraduate_SliderBar')
@@ -380,7 +386,8 @@ export function jGraduateMethod (elem, options, okCallback, cancelCallback, i18n
   // Make any missing gradients
   switch (curType) {
     case 'solidColor':
-    // fall through
+      // falls through
+    // @ts-expect-error: intentional conditional fallthrough to radialGradient, see todo #10
     case 'linearGradient':
       if (!isSolid) {
         curGradient.id = id + '_lg_jgraduate_grad'
@@ -390,7 +397,7 @@ export function jGraduateMethod (elem, options, okCallback, cancelCallback, i18n
         id: id + '_rg_jgraduate_grad'
       }, svg)
       if (curType === 'linearGradient') { break }
-    // fall through
+    // falls through
     case 'radialGradient':
       if (!isSolid) {
         curGradient.id = id + '_rg_jgraduate_grad'
@@ -401,7 +408,7 @@ export function jGraduateMethod (elem, options, okCallback, cancelCallback, i18n
       }, svg)
   }
 
-  let stopGroup // eslint-disable-line prefer-const
+  let stopGroup: any // eslint-disable-line prefer-const
   if (isSolid) {
     // JFH !!!!!!!!
     grad = curGradient = $this.querySelector('#' + id + '_lg_jgraduate_grad')
@@ -465,18 +472,18 @@ export function jGraduateMethod (elem, options, okCallback, cancelCallback, i18n
   const beginCoord = document.createElement('div')
   beginCoord.setAttribute('class', 'grad_coord jGraduate_lg_field')
   beginCoord.setAttribute('title', 'Begin Stop')
-  beginCoord.textContent = 1
-  beginCoord.style.top = y1 * MAX
-  beginCoord.style.left = x1 * MAX
+  beginCoord.textContent = '1'
+  beginCoord.style.top = String(y1 * MAX)
+  beginCoord.style.left = String(x1 * MAX)
   beginCoord.dataset.coord = 'start'
   container.appendChild(beginCoord)
 
   const endCoord = document.createElement('div')
   endCoord.setAttribute('class', 'grad_coord jGraduate_lg_field')
   endCoord.setAttribute('title', 'End stop')
-  endCoord.textContent = 2
-  endCoord.style.top = y2 * MAX
-  endCoord.style.left = x2 * MAX
+  endCoord.textContent = '2'
+  endCoord.style.top = String(y2 * MAX)
+  endCoord.style.left = String(x2 * MAX)
   endCoord.dataset.coord = 'end'
   container.appendChild(endCoord)
 
@@ -484,8 +491,8 @@ export function jGraduateMethod (elem, options, okCallback, cancelCallback, i18n
   centerCoord.setAttribute('class', 'grad_coord jGraduate_rg_field')
   centerCoord.setAttribute('title', 'Center stop')
   centerCoord.textContent = 'C'
-  centerCoord.style.top = cy * MAX
-  centerCoord.style.left = cx * MAX
+  centerCoord.style.top = String(cy * MAX)
+  centerCoord.style.left = String(cx * MAX)
   centerCoord.dataset.coord = 'center'
   container.appendChild(centerCoord)
 
@@ -493,15 +500,15 @@ export function jGraduateMethod (elem, options, okCallback, cancelCallback, i18n
   focusCoord.setAttribute('class', 'grad_coord jGraduate_rg_field')
   focusCoord.setAttribute('title', 'Focus point')
   focusCoord.textContent = 'F'
-  focusCoord.style.top = fy * MAX
-  focusCoord.style.left = fx * MAX
+  focusCoord.style.top = String(fy * MAX)
+  focusCoord.style.left = String(fx * MAX)
   focusCoord.style.display = 'none'
   focusCoord.dataset.coord = 'focus'
   focusCoord.setAttribute('id', id + '_jGraduate_focusCoord')
   container.appendChild(focusCoord)
 
-  let showFocus
-  const onAttrChangeHandler = (e, attr, isRadial) => {
+  let showFocus: boolean | undefined
+  const onAttrChangeHandler = (e: any, attr: string, isRadial: boolean) => {
     // TODO: Support values < 0 and > 1 (zoomable preview?)
     if (isNaN(Number.parseFloat(e.target.value)) || e.target.value < 0) {
       e.target.value = 0.0
@@ -519,14 +526,16 @@ export function jGraduateMethod (elem, options, okCallback, cancelCallback, i18n
       ? attr[0] === 'c' ? centerCoord : focusCoord
       : attr[1] === '1' ? beginCoord : endCoord
 
+    // @ts-expect-error: pre-existing comparison bug (boolean vs string), see todo #10
     if (attr.includes('x') === 'left') {
-      $elem.style.left = e.target.value * MAX
+      $elem.style.left = String(e.target.value * MAX)
+    // @ts-expect-error: pre-existing comparison bug (boolean vs string), see todo #10
     } else if (attr.includes('x') === 'top') {
-      $elem.style.top = e.target.value * MAX
+      $elem.style.top = String(e.target.value * MAX)
     }
   }
   for (const [, attr] of ['x1', 'y1', 'x2', 'y2', 'cx', 'cy', 'fx', 'fy'].entries()) {
-    const isRadial = isNaN(attr[1])
+    const isRadial = isNaN(Number(attr[1]))
 
     let attrval = curGradient.getAttribute(attr)
     if (!attrval) {
@@ -542,7 +551,7 @@ export function jGraduateMethod (elem, options, okCallback, cancelCallback, i18n
 
     attrInput[attr] = $this.querySelector('#' + id + '_jGraduate_' + attr)
     attrInput[attr].value = attrval
-    attrInput[attr].addEventListener('change', (evt) => onAttrChangeHandler(evt, attr, isRadial))
+    attrInput[attr].addEventListener('change', (evt: any) => onAttrChangeHandler(evt, attr, isRadial))
     attrInput[attr].dispatchEvent(new Event('change'))
   }
 
@@ -555,7 +564,7 @@ export function jGraduateMethod (elem, options, okCallback, cancelCallback, i18n
    * @param {SVGStopElement} [stopElem]
    * @returns {SVGStopElement}
    */
-  function mkStop (n, colr, opac, sel, stopElem) {
+  function mkStop (n: any, colr: any, opac: any, sel?: any, stopElem?: any): any {
     const stop = stopElem || mkElem('stop', {
       id: 'jq_stop_' + Math.floor((Math.random() * 10000) + 1),
       'stop-color': colr,
@@ -591,7 +600,7 @@ export function jGraduateMethod (elem, options, okCallback, cancelCallback, i18n
       'stroke-width': 1.5
     }, stopGroup)
 
-    path.addEventListener('mousedown', function (e) {
+    path.addEventListener('mousedown', function (this: Element, e: MouseEvent) {
       selectStop(this)
       drag = curStop
       $win.addEventListener('mousemove', dragColor)
@@ -602,12 +611,12 @@ export function jGraduateMethod (elem, options, okCallback, cancelCallback, i18n
     })
     path.dataset.stop = stop.getAttribute('id')
     path.dataset.bg = pathbg.getAttribute('id')
-    path.addEventListener('dblclick', function () {
+    path.addEventListener('dblclick', function (this: Element) {
       $this.querySelector('#jGraduate_LightBox').style.display = 'block'
       const colorhandle = this
-      let stopOpacity = Number(stop.getAttribute('stop-opacity')) || 1
-      let stopColor = stop.getAttribute('stop-color') || 1
-      let thisAlpha = (Number.parseFloat(stopOpacity) * 255).toString(16)
+      let stopOpacity: number = Number(stop.getAttribute('stop-opacity')) || 1
+      let stopColor: string = stop.getAttribute('stop-color') || ''
+      let thisAlpha = (Number.parseFloat(String(stopOpacity)) * 255).toString(16)
       while (thisAlpha.length < 2) { thisAlpha = '0' + thisAlpha }
       colr = stopColor.substr(1) + thisAlpha
       const jqPickerElem = $this.querySelector('#' + id + '_jGraduate_stopPicker')
@@ -617,13 +626,13 @@ export function jGraduateMethod (elem, options, okCallback, cancelCallback, i18n
         window: { title: 'Pick the start color and opacity for the gradient' },
         images: { clientPath: $settings.images.clientPath },
         color: { active: colr, alphaSupport: true }
-      }, function (clr) {
+      }, function (clr: any) {
         stopColor = clr.val('hex') ? ('#' + clr.val('hex')) : 'none'
         stopOpacity = clr.val('a') !== null ? clr.val('a') / 256 : 1
         colorhandle.setAttribute('fill', stopColor)
-        colorhandle.setAttribute('fill-opacity', stopOpacity)
+        colorhandle.setAttribute('fill-opacity', String(stopOpacity))
         stop.setAttribute('stop-color', stopColor)
-        stop.setAttribute('stop-opacity', stopOpacity)
+        stop.setAttribute('stop-opacity', String(stopOpacity))
         $this.querySelector('#jGraduate_LightBox').style.display = 'none'
         $this.querySelector('#' + id + '_jGraduate_stopPicker').style.display = 'none'
       }, null, function () {
@@ -669,7 +678,7 @@ export function jGraduateMethod (elem, options, okCallback, cancelCallback, i18n
 
   const stopMakerDiv = $this.querySelector('#' + id + '_jGraduate_StopSlider')
 
-  let stops; let curStop; let drag
+  let stops: any; let curStop: any; let drag: any
 
   const delStop = mkElem('path', {
     d: 'm9.75,-6l-19.5,19.5m0,-19.5l19.5,19.5',
@@ -683,13 +692,13 @@ export function jGraduateMethod (elem, options, okCallback, cancelCallback, i18n
   * @param {Element} item
   * @returns {void}
   */
-  function selectStop (item) {
+  function selectStop (item: any): void {
     if (curStop) curStop.setAttribute('stroke', '#000')
     item.setAttribute('stroke', 'blue')
     curStop = item
   }
 
-  let stopOffset
+  let stopOffset: any
 
   /**
   *
@@ -730,7 +739,7 @@ export function jGraduateMethod (elem, options, okCallback, cancelCallback, i18n
   * @param {Event} evt
   * @returns {void}
   */
-  function dragColor (evt) {
+  function dragColor (evt: any): void {
     let x = evt.pageX - stopOffset.left
     const y = evt.pageY - stopOffset.top
     x = x < 10
@@ -757,7 +766,7 @@ export function jGraduateMethod (elem, options, okCallback, cancelCallback, i18n
 
     let last = 0
     const jqStopElems = curGradient.querySelectorAll('stop');
-    [].forEach.call(jqStopElems, function (jqStopElem) {
+    Array.from(jqStopElems).forEach(function (jqStopElem: any) {
       const cur = jqStopElem.getAttribute('offset')
       const t = jqStopElem
       if (cur < last) {
@@ -789,7 +798,7 @@ export function jGraduateMethod (elem, options, okCallback, cancelCallback, i18n
 
   transImg.setAttribute('href', bgImage)
 
-  svgEditor.$click(stopMakerSVG, function (evt) {
+  svgEditor.$click(stopMakerSVG, function (evt: any) {
     stopOffset = findPos(stopMakerDiv)
     const { target } = evt
     if (target.tagName === 'path') return
@@ -814,14 +823,14 @@ export function jGraduateMethod (elem, options, okCallback, cancelCallback, i18n
     stroke: '#000'
   }, stopMakerSVG)
   const spreadMethodOpt = gradPicker.querySelector('#jGraduate_spreadMethod')
-  spreadMethodOpt.addEventListener('change', function () {
+  spreadMethodOpt.addEventListener('change', function (this: HTMLSelectElement) {
     curGradient.setAttribute('spreadMethod', this.value)
   })
 
   // handle dragging the stop around the swatch
-  let draggingCoord = null
+  let draggingCoord: any = null
 
-  const onCoordDrag = function (evt) {
+  const onCoordDrag = function (evt: any) {
     let x = evt.pageX - offset.left
     let y = evt.pageY - offset.top
 
@@ -899,7 +908,7 @@ export function jGraduateMethod (elem, options, okCallback, cancelCallback, i18n
 
   spreadMethodOpt.setAttribute('value', curGradient.getAttribute('spreadMethod') || 'pad')
 
-  let offset
+  let offset: any
 
   // No match, so show focus point
   showFocus = false
@@ -907,7 +916,7 @@ export function jGraduateMethod (elem, options, okCallback, cancelCallback, i18n
   previewRect.setAttribute('fill-opacity', gradalpha / 100)
 
   const JQGradCoords = $this.querySelectorAll('#' + id + ' div.grad_coord')
-  const onMouseDownGradCoords = (e) => {
+  const onMouseDownGradCoords = (e: any) => {
     e.preventDefault()
     draggingCoord = e.target
     offset = findPos(draggingCoord.parentNode)
@@ -939,8 +948,8 @@ export function jGraduateMethod (elem, options, okCallback, cancelCallback, i18n
 
   $this.querySelector('#' + id + '_jGraduate_match_ctr').checked = !showFocus
 
-  let lastfx; let lastfy
-  const onMatchCtrHandler = (e) => {
+  let lastfx: any; let lastfy: any
+  const onMatchCtrHandler = (e: any) => {
     showFocus = !e.target.checked
     if (showFocus) {
       focusCoord.style.display = 'block'
@@ -976,9 +985,9 @@ export function jGraduateMethod (elem, options, okCallback, cancelCallback, i18n
     stops = curGradient.getElementsByTagNameNS(ns.svg, 'stop')
   }
 
-  let slider
+  let slider: any
 
-  const setSlider = function (e) {
+  const setSlider = function (e: any) {
     const { offset: { left } } = slider
     const divi = slider.parent
     let x = (e.pageX - left - Number.parseInt(getComputedStyle(divi, null).getPropertyValue('border-left-width')))
@@ -995,8 +1004,8 @@ export function jGraduateMethod (elem, options, okCallback, cancelCallback, i18n
         curGradient.setAttribute('r', x)
         break
       case 'opacity':
-        $this.paint.alpha = Number.parseInt(x * 100)
-        previewRect.setAttribute('fill-opacity', x)
+        $this.paint.alpha = Number.parseInt(String(x * 100))
+        previewRect.setAttribute('fill-opacity', String(x))
         break
       case 'ellip':
         scaleX = 1
@@ -1087,7 +1096,7 @@ export function jGraduateMethod (elem, options, okCallback, cancelCallback, i18n
   for (const [, [type, data]] of Object.entries(Object.entries(sliders))) {
     const handle = $this.querySelector(data.handle)
     const sInput = $this.querySelector(data.input)
-    handle.addEventListener('mousedown', function (evt) {
+    handle.addEventListener('mousedown', function (evt: any) {
       const parent = handle.parentNode
       slider = {
         type,
@@ -1101,7 +1110,7 @@ export function jGraduateMethod (elem, options, okCallback, cancelCallback, i18n
       evt.preventDefault()
     })
     sInput.value = data.val
-    sInput.addEventListener('change', function () {
+    sInput.addEventListener('change', function (this: HTMLInputElement) {
       const isRad = curType === 'radialGradient'
       let val = Number(this.value)
       let xpos = 0
@@ -1151,7 +1160,7 @@ export function jGraduateMethod (elem, options, okCallback, cancelCallback, i18n
     sInput.dispatchEvent(new Event('change'))
   }
 
-  const dragSlider = function (evt) {
+  const dragSlider = function (evt: any) {
     setSlider(evt)
     evt.preventDefault()
   }
@@ -1165,7 +1174,7 @@ export function jGraduateMethod (elem, options, okCallback, cancelCallback, i18n
   // --------------
   let thisAlpha = ($this.paint.alpha * 255 / 100).toString(16)
   while (thisAlpha.length < 2) { thisAlpha = '0' + thisAlpha }
-  thisAlpha = thisAlpha.split('.')[0]
+  thisAlpha = thisAlpha.split('.')[0] ?? ''
   color = $this.paint.solidColor === 'none' ? '' : $this.paint.solidColor + thisAlpha
 
   if (!isSolid) {
@@ -1183,7 +1192,7 @@ export function jGraduateMethod (elem, options, okCallback, cancelCallback, i18n
       images: { clientPath: $settings.images.clientPath },
       color: { active: color, alphaSupport: true }
     },
-    function (clr) {
+    function (clr: any) {
       $this.paint.type = 'solidColor'
       $this.paint.alpha = clr.val('ahex') ? Math.round((clr.val('a') / 255) * 100) : 100
       $this.paint.solidColor = clr.val('hex') ? clr.val('hex') : 'none'
@@ -1197,24 +1206,24 @@ export function jGraduateMethod (elem, options, okCallback, cancelCallback, i18n
 
   // JFH !!!!
   const tabs = $this.querySelectorAll('.jGraduate_tabs li')
-  const onTabsClickHandler = (e) => {
+  const onTabsClickHandler = (e: any) => {
     for (const tab of tabs) {
       tab.classList.remove('jGraduate_tab_current')
     }
     e.target.classList.add('jGraduate_tab_current')
     const innerDivs = $this.querySelectorAll(idref + ' > div');
-    [].forEach.call(innerDivs, function (innerDiv) {
+    Array.from(innerDivs).forEach(function (innerDiv: any) {
       innerDiv.style.display = 'none'
     })
     const type = e.target.dataset.type
     gradPicker.style.display = 'block'
     if (type === 'rg' || type === 'lg') {
       const tFileds = $this.querySelectorAll('.jGraduate_' + type + '_field');
-      [].forEach.call(tFileds, function (tFiled) {
+      Array.from(tFileds).forEach(function (tFiled: any) {
         tFiled.style.display = 'block'
       })
       const t1Fileds = $this.querySelectorAll('.jGraduate_' + (type === 'lg' ? 'rg' : 'lg') + '_field');
-      [].forEach.call(t1Fileds, function (tFiled) {
+      Array.from(t1Fileds).forEach(function (tFiled: any) {
         tFiled.style.display = 'none'
       })
       $this.querySelectorAll('#' + id + '_jgraduate_rect')[0]
@@ -1255,13 +1264,13 @@ export function jGraduateMethod (elem, options, okCallback, cancelCallback, i18n
     svgEditor.$click(tab, onTabsClickHandler)
   }
   const innerDivs = $this.querySelectorAll(idref + ' > div');
-  [].forEach.call(innerDivs, function (innerDiv) {
+  Array.from(innerDivs).forEach(function (innerDiv: any) {
     innerDiv.style.display = 'none'
   })
   for (const tab of tabs) {
     tab.classList.remove('jGraduate_tab_current')
   }
-  let tab
+  let tab: any
   switch ($this.paint.type) {
     case 'linearGradient':
       tab = $this.querySelector(idref + ' .jGraduate_tab_lingrad')

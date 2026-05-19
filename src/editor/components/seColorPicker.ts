@@ -1,6 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const svgEditor: any
-// @ts-expect-error: JS file; will be converted to TS in this task (jQuery.jGraduate)
 import { jGraduate, jGraduateMethod } from './jgraduate/jQuery.jGraduate.js'
 import PaintBox from './PaintBox.js'
 import { t } from '../locale.js'

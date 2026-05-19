@@ -1,4 +1,3 @@
-// @ts-expect-error: JS file; will be converted to TS in this task (jQuery.jGraduate)
 import { jGraduate } from './jgraduate/jQuery.jGraduate.js'
 /**
  *

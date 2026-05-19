@@ -111,7 +111,6 @@ class EditorStartup {
     this.configObj.load()
     const { i18next } = await putLocale(this.configObj.pref('lang'), this.goodLangs)
     this.i18next = i18next
-    // @ts-expect-error: components/index.js is still .js; no .d.ts yet
     await import('./components/index.js')
     // @ts-expect-error: dialogs/index.js is still .js; no .d.ts yet
     await import('./dialogs/index.js')
