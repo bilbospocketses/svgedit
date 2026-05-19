@@ -14,6 +14,9 @@ template.innerHTML = `
  * @class SeText
  */
 export class SeText extends HTMLElement {
+  _shadowRoot: ShadowRoot
+  $div: HTMLDivElement
+
   /**
     * @function constructor
     */
@@ -23,7 +26,7 @@ export class SeText extends HTMLElement {
     this._shadowRoot = this.attachShadow({ mode: 'open' })
     this._shadowRoot.append(template.content.cloneNode(true))
     // locate the component
-    this.$div = this._shadowRoot.querySelector('div')
+    this.$div = this._shadowRoot.querySelector('div') as HTMLDivElement
   }
 
   /**
@@ -41,7 +44,7 @@ export class SeText extends HTMLElement {
    * @param {string} newValue
    * @returns {void}
    */
-  attributeChangedCallback (name, oldValue, newValue) {
+  attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
     if (oldValue === newValue) return
     switch (name) {
       case 'text':
@@ -51,12 +54,13 @@ export class SeText extends HTMLElement {
         this.$div.setAttribute('title', t(newValue))
         break
       case 'style':
-        this.$div.style = newValue
+        this.$div.setAttribute('style', newValue)
         break
       case 'id':
         this.$div.id = newValue
         break
       case 'value':
+        // @ts-expect-error: pre-existing null-misuse, see todo #10
         this.$div.value = newValue
         // this.$div.setAttribute("value", newValue);
         break
@@ -78,39 +82,39 @@ export class SeText extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set text (value) {
-    this.$div.setAttribute('title', t(value))
+  set text (value: string | null) {
+    this.$div.setAttribute('title', t(value ?? ''))
   }
 
   /**
    * @function get
    * @returns {any}
    */
-  get value () {
-    return this.value
+  get value (): string {
+    return this.getAttribute('value') ?? ''
   }
 
   /**
    * @function set
    * @returns {void}
    */
-  set value (value) {
-    this.value = value
+  set value (value: string) {
+    this.setAttribute('value', value)
   }
 
   /**
    * @function get
    * @returns {any}
    */
-  get title () {
-    return this.getAttribute('title')
+  get title (): string {
+    return this.getAttribute('title') ?? ''
   }
 
   /**
    * @function set
    * @returns {void}
    */
-  set title (value) {
+  set title (value: string) {
     this.setAttribute('title', value)
   }
 
