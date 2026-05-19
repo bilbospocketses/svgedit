@@ -6,31 +6,55 @@
  * @copyright 2010 Alexis Deveria, 2010 Jeff Schiller
  */
 import { NS } from './namespaces.js'
-import { text2xml } from './utilities.js'
 
 /**
-* @function module:svgcanvas.svgRootElement svgRootElement the svg node and its children.
-* @param {Element} svgdoc - window.document
-* @param {ArgumentsArray} dimensions - dimensions of width and height
-* @returns {svgRootElement}
+* @function module:svgcanvas.svgRootElement Build the canvas SVG root element + canvas-shadow defs.
+* @param {Document} svgdoc - the owner document the element will belong to
+* @param {[number, number]} dimensions - [width, height] of the root SVG
+* @returns {SVGSVGElement}
 */
 export const svgRootElement = (svgdoc, dimensions) => {
-  return svgdoc.importNode(
-    text2xml(
-      `<svg id="svgroot" xmlns="${NS.SVG}" xlinkns="${NS.XLINK}" width="${dimensions[0]}" 
-        height="${dimensions[1]}" x="${dimensions[0]}" y="${dimensions[1]}" overflow="visible">
-        <defs>
-          <filter id="canvashadow" filterUnits="objectBoundingBox">
-            <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur"/>
-            <feOffset in="blur" dx="5" dy="5" result="offsetBlur"/>
-            <feMerge>
-              <feMergeNode in="offsetBlur"/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-          </filter>
-        </defs>
-      </svg>`
-    ).documentElement,
-    true
-  )
+  const w = String(dimensions[0])
+  const h = String(dimensions[1])
+
+  const root = svgdoc.createElementNS(NS.SVG, 'svg')
+  root.setAttribute('id', 'svgroot')
+  root.setAttribute('xlinkns', NS.XLINK)
+  root.setAttribute('width', w)
+  root.setAttribute('height', h)
+  root.setAttribute('x', w)
+  root.setAttribute('y', h)
+  root.setAttribute('overflow', 'visible')
+
+  const defs = svgdoc.createElementNS(NS.SVG, 'defs')
+  const filter = svgdoc.createElementNS(NS.SVG, 'filter')
+  filter.setAttribute('id', 'canvashadow')
+  filter.setAttribute('filterUnits', 'objectBoundingBox')
+
+  const blur = svgdoc.createElementNS(NS.SVG, 'feGaussianBlur')
+  blur.setAttribute('in', 'SourceAlpha')
+  blur.setAttribute('stdDeviation', '4')
+  blur.setAttribute('result', 'blur')
+  filter.appendChild(blur)
+
+  const offset = svgdoc.createElementNS(NS.SVG, 'feOffset')
+  offset.setAttribute('in', 'blur')
+  offset.setAttribute('dx', '5')
+  offset.setAttribute('dy', '5')
+  offset.setAttribute('result', 'offsetBlur')
+  filter.appendChild(offset)
+
+  const merge = svgdoc.createElementNS(NS.SVG, 'feMerge')
+  const mn1 = svgdoc.createElementNS(NS.SVG, 'feMergeNode')
+  mn1.setAttribute('in', 'offsetBlur')
+  const mn2 = svgdoc.createElementNS(NS.SVG, 'feMergeNode')
+  mn2.setAttribute('in', 'SourceGraphic')
+  merge.appendChild(mn1)
+  merge.appendChild(mn2)
+  filter.appendChild(merge)
+
+  defs.appendChild(filter)
+  root.appendChild(defs)
+
+  return root
 }
