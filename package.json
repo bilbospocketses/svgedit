@@ -62,7 +62,7 @@
     "@svgedit/svgcanvas": "7.4.1",
     "browser-fs-access": "0.38.0",
     "elix": "15.0.1",
-    "jspdf": "4.0.0",
+    "jspdf": "4.2.1",
     "path-data-polyfill": "^1.0.10",
     "svg2pdf.js": "2.7.0"
   },
@@ -73,12 +73,19 @@
     "jamilih": "0.63.1",
     "jsdom": "^27.4.0",
     "standard": "17.1.2",
-    "vite": "^7.3.1",
+    "vite": "^7.3.2",
     "vite-plugin-istanbul": "^7.2.1",
     "vite-plugin-string": "^1.2.3",
     "vitest": "^4.0.16"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "4.55.1"
+  },
+  "overrides": {
+    "dompurify": "^3.4.0",
+    "flatted": "^3.4.2",
+    "postcss": "^8.5.10",
+    "rollup": "^4.59.0",
+    "glob": "^10.5.0"
   }
 }
