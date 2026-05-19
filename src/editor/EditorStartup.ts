@@ -1,13 +1,18 @@
-/* globals seConfirm seAlert */
+/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return */
 import {
   putLocale
 } from './locale.js'
 import {
   hasCustomHandler, getCustomHandler, injectExtendedContextMenuItemsIntoDom
 } from './contextmenu.js'
+// @ts-expect-error: *.html imported as string via vite-plugin-string; no ambient module declaration exists yet
 import editorTemplate from './templates/editorTemplate.html'
 import SvgCanvas from '@svgedit/svgcanvas'
 import Rulers from './Rulers.js'
+
+/** `seAlert` / `seConfirm` are custom element dialogs registered globally at runtime. */
+declare function seAlert (msg: string): void
+declare function seConfirm (msg: string): boolean | Promise<boolean | string>
 
 /**
    * @fires module:svgcanvas.SvgCanvas#event:svgEditorReady
@@ -35,7 +40,7 @@ const readySignal = () => {
         cancelable: true
       })
       w.document.documentElement.dispatchEvent(svgEditorReadyEvent)
-    } catch (e) { /* empty fn */ }
+    } catch { /* empty fn */ }
   }
 }
 
@@ -45,13 +50,78 @@ const { $id, $click, convertUnit } = SvgCanvas
  *
  */
 class EditorStartup {
+  // Own properties initialized in this constructor
+  extensionsAdded: boolean
+  messageQueue: any[]
+  $container: HTMLElement
+
+  // Properties set by the Editor subclass — declared here so init() can use them
+  declare configObj: any
+  declare svgCanvas: any
+  declare i18next: any
+  declare $svgEditor: HTMLElement
+  declare workarea: HTMLElement
+  declare leftPanel: any
+  declare bottomPanel: any
+  declare topPanel: any
+  declare layersPanel: any
+  declare mainMenu: any
+  declare rulers: Rulers
+  declare canvMenu: HTMLElement | null
+  declare exportWindow: Window | null
+  declare defaultImageURL: string
+  declare uiContext: string
+  declare selectedElement: Element | null
+  declare multiselected: boolean
+  declare enableToolCancel: boolean
+  declare modeEvent: any
+  declare exportWindowCt: number
+  declare exportWindowName: string | null
+  declare goodLangs: string[]
+  declare storage: Storage | null
+  declare storagePromptState: string
+  declare showSaveWarning: boolean
+  declare callbacks: any[]
+  declare isReady: boolean
+  declare shortcuts: any[]
+  declare setPanning: (active: boolean) => void
+  declare selectedChanged: (win: any, elems: any[]) => void
+  declare elementTransition: (win: any, elems: any[]) => void
+  declare elementChanged: (win: any, elems: any[]) => void
+  declare exportHandler: (win: any, data: any) => void
+  declare zoomChanged: (win: any, bbox: any, autoCenter?: boolean) => void
+  declare zoomDone: () => void
+  declare contextChanged: (win: any, context: any) => void
+  declare extAdded: (win: any, ext: any) => Promise<void> | void
+  declare elementRenamed: (win: any, renameObj: any) => void
+  declare beforeClear: (win: any) => void
+  declare afterClear: (win: any) => void
+  declare setAll: () => void
+  declare updateCanvas: (center?: boolean, newCtr?: { x: number; y: number }) => void
+  declare ready: (cb: () => any) => Promise<any>
+  declare runCallbacks: () => Promise<void>
+  declare addExtension: (name: string, initfn: any, initArgs: any) => Promise<void>
+  declare enableOrDisableClipboard: () => void
+  declare onDragEnter: (e: DragEvent) => void
+  declare onDragOver: (e: DragEvent) => void
+  declare onDragLeave: (e: DragEvent) => void
+  declare setBackground: (color: string, url: string) => void
+  declare setTitles: () => void
+  declare cancelOverlays: (e: any) => void
+  declare toggleDynamicOutput: (e: any) => void
+  declare hideSourceEditor: () => void
+  declare saveSourceEditor: (e: any) => Promise<void>
+  declare cutSelected: () => void
+  declare copySelected: () => void
+  declare moveUpDownSelected: (dir: 'Up' | 'Down') => void
+
   /**
    *
    */
-  constructor (div) {
+  constructor (div?: HTMLElement | null) {
     this.extensionsAdded = false
     this.messageQueue = []
-    this.$container = div ?? $id('svg_editor')
+    this.$container = (div ?? $id('svg_editor')) as HTMLElement
   }
 
   /**
@@ -66,42 +136,44 @@ class EditorStartup {
     this.configObj.load()
     const { i18next } = await putLocale(this.configObj.pref('lang'), this.goodLangs)
     this.i18next = i18next
+    // @ts-expect-error: components/index.js is still .js; no .d.ts yet
     await import('./components/index.js')
+    // @ts-expect-error: dialogs/index.js is still .js; no .d.ts yet
     await import('./dialogs/index.js')
     try {
       // add editor components to the DOM
       const template = document.createElement('template')
       template.innerHTML = editorTemplate
       this.$container.append(template.content.cloneNode(true))
-      this.$svgEditor = this.$container.querySelector('.svg_editor')
+      this.$svgEditor = this.$container.querySelector('.svg_editor') as HTMLElement
       // allow to prepare the dom without display
       this.$svgEditor.style.visibility = 'hidden'
-      this.workarea = $id('workarea')
+      this.workarea = $id('workarea') as HTMLElement
       // Image props dialog added to DOM
-      const newSeImgPropDialog = document.createElement('se-img-prop-dialog')
+      const newSeImgPropDialog = document.createElement('se-img-prop-dialog') as any
       newSeImgPropDialog.setAttribute('id', 'se-img-prop')
       this.$container.append(newSeImgPropDialog)
       newSeImgPropDialog.init(this.i18next)
       // editor prefences dialoag added to DOM
-      const newSeEditPrefsDialog = document.createElement('se-edit-prefs-dialog')
+      const newSeEditPrefsDialog = document.createElement('se-edit-prefs-dialog') as any
       newSeEditPrefsDialog.setAttribute('id', 'se-edit-prefs')
       this.$container.append(newSeEditPrefsDialog)
       newSeEditPrefsDialog.init(this.i18next)
       // canvas menu added to DOM
-      const dialogBox = document.createElement('se-cmenu_canvas-dialog')
+      const dialogBox = document.createElement('se-cmenu_canvas-dialog') as any
       dialogBox.setAttribute('id', 'se-cmenu_canvas')
       this.$container.append(dialogBox)
       dialogBox.init(this.i18next)
       // alertDialog added to DOM
-      const alertBox = document.createElement('se-alert-dialog')
+      const alertBox = document.createElement('se-alert-dialog') as any
       alertBox.setAttribute('id', 'se-alert-dialog')
       this.$container.append(alertBox)
       // promptDialog added to DOM
-      const promptBox = document.createElement('se-prompt-dialog')
+      const promptBox = document.createElement('se-prompt-dialog') as any
       promptBox.setAttribute('id', 'se-prompt-dialog')
       this.$container.append(promptBox)
       // Export dialog added to DOM
-      const exportDialog = document.createElement('se-export-dialog')
+      const exportDialog = document.createElement('se-export-dialog') as any
       exportDialog.setAttribute('id', 'se-export-dialog')
       this.$container.append(exportDialog)
       exportDialog.init(this.i18next)
@@ -114,7 +186,7 @@ class EditorStartup {
     * @type {module:svgcanvas.SvgCanvas}
     */
     this.svgCanvas = new SvgCanvas(
-      $id('svgcanvas'),
+      $id('svgcanvas') as HTMLElement,
       this.configObj.curConfig
     )
 
@@ -152,12 +224,12 @@ class EditorStartup {
 
     const aLink = $id('cur_context_panel')
 
-    $click(aLink, (evt) => {
-      const link = evt.target
-      if (link.hasAttribute('data-root')) {
+    $click(aLink as EventTarget, (evt: Event) => {
+      const link = evt.target as Element | null
+      if (link?.hasAttribute('data-root')) {
         this.svgCanvas.leaveContext()
       } else {
-        this.svgCanvas.setContext(link.textContent)
+        this.svgCanvas.setContext(link?.textContent ?? '')
       }
       this.svgCanvas.clearSelection()
       return false
@@ -168,20 +240,20 @@ class EditorStartup {
     this.svgCanvas.bind('transition', this.elementTransition.bind(this))
     this.svgCanvas.bind('changed', this.elementChanged.bind(this))
     this.svgCanvas.bind('exported', this.exportHandler.bind(this))
-    this.svgCanvas.bind('exportedPDF', function (win, data) {
+    this.svgCanvas.bind('exportedPDF', (_win: any, data: any) => {
       if (!data.output) { // Ignore Chrome
         return
       }
       const { exportWindowName } = data
       if (exportWindowName) {
-        this.exportWindow = window.open('', this.exportWindowName) // A hack to get the window via JSON-able name without opening a new one
+        this.exportWindow = window.open('', this.exportWindowName ?? undefined) // A hack to get the window via JSON-able name without opening a new one
       }
       if (!this.exportWindow || this.exportWindow.closed) {
         seAlert(this.i18next.t('notification.popupWindowBlocked'))
         return
       }
       this.exportWindow.location.href = data.output
-    }.bind(this))
+    })
     this.svgCanvas.bind('zoomed', this.zoomChanged.bind(this))
     this.svgCanvas.bind('zoomDone', this.zoomDone.bind(this))
     this.svgCanvas.bind(
@@ -194,9 +266,9 @@ class EditorStartup {
      * @listens module:svgcanvas.SvgCanvas#event:updateCanvas
      * @returns {void}
      */
-      function (win, { center, newCtr }) {
+      (_win: any, { center, newCtr }: { center: boolean; newCtr: { x: number; y: number } }) => {
         this.updateCanvas(center, newCtr)
-      }.bind(this)
+      }
     )
     this.svgCanvas.bind('contextset', this.contextChanged.bind(this))
     this.svgCanvas.bind('extension_added', this.extAdded.bind(this))
@@ -207,7 +279,7 @@ class EditorStartup {
 
     this.svgCanvas.textActions.setInputElem($id('text'))
 
-    this.setBackground(this.configObj.pref('bkgd_color'), this.configObj.pref('bkgd_url'))
+    this.setBackground(String(this.configObj.pref('bkgd_color') ?? ''), String(this.configObj.pref('bkgd_url') ?? ''))
 
     // update resolution option with actual resolution
     const res = this.svgCanvas.getResolution()
@@ -215,30 +287,30 @@ class EditorStartup {
       res.w = convertUnit(res.w) + this.configObj.curConfig.baseUnit
       res.h = convertUnit(res.h) + this.configObj.curConfig.baseUnit
     }
-    $id('se-img-prop').setAttribute('dialog', 'close')
-    $id('se-img-prop').setAttribute('title', this.svgCanvas.getDocumentTitle())
-    $id('se-img-prop').setAttribute('width', res.w)
-    $id('se-img-prop').setAttribute('height', res.h)
-    $id('se-img-prop').setAttribute('save', this.configObj.pref('img_save'))
+    $id('se-img-prop')?.setAttribute('dialog', 'close')
+    $id('se-img-prop')?.setAttribute('title', this.svgCanvas.getDocumentTitle())
+    $id('se-img-prop')?.setAttribute('width', String(res.w))
+    $id('se-img-prop')?.setAttribute('height', String(res.h))
+    $id('se-img-prop')?.setAttribute('save', String(this.configObj.pref('img_save') ?? ''))
 
     // Lose focus for select elements when changed (Allows keyboard shortcuts to work better)
     const selElements = document.querySelectorAll('select')
     Array.from(selElements).forEach(function (element) {
       element.addEventListener('change', function (evt) {
-        evt.currentTarget.blur()
+        ;(evt.currentTarget as HTMLElement)?.blur()
       })
     })
 
     // fired when user wants to move elements to another layer
     let promptMoveLayerOnce = false
-    $id('selLayerNames').addEventListener('change', (evt) => {
-      const destLayer = evt.detail.value
+    $id('selLayerNames')?.addEventListener('change', (evt) => {
+      const destLayer = (evt as any).detail.value
       const confirmStr = this.i18next.t('notification.QmoveElemsToLayer').replace('%s', destLayer)
       /**
     * @param {boolean} ok
     * @returns {void}
     */
-      const moveToLayer = (ok) => {
+      const moveToLayer = (ok: boolean) => {
         if (!ok) { return }
         promptMoveLayerOnce = true
         this.svgCanvas.moveSelectedToLayer(destLayer)
@@ -257,39 +329,40 @@ class EditorStartup {
         }
       }
     })
-    $id('tool_font_family').addEventListener('change', (evt) => {
-      this.svgCanvas.setFontFamily(evt.detail.value)
+    $id('tool_font_family')?.addEventListener('change', (evt) => {
+      this.svgCanvas.setFontFamily((evt as any).detail.value)
     })
 
-    $id('seg_type').addEventListener('change', (evt) => {
-      this.svgCanvas.setSegType(evt.detail.value)
+    $id('seg_type')?.addEventListener('change', (evt) => {
+      this.svgCanvas.setSegType((evt as any).detail.value)
     })
 
-    const addListenerMulti = (element, eventNames, listener) => {
+    const addListenerMulti = (element: HTMLElement, eventNames: string, listener: EventListener) => {
       eventNames.split(' ').forEach((eventName) => element.addEventListener(eventName, listener, false))
     }
 
-    addListenerMulti($id('text'), 'keyup input', (evt) => {
-      this.svgCanvas.setTextContent(evt.currentTarget.value)
+    addListenerMulti($id('text') as HTMLElement, 'keyup input', (evt: Event) => {
+      this.svgCanvas.setTextContent((evt.currentTarget as HTMLInputElement).value)
     })
 
-    $id('link_url').addEventListener('change', (evt) => {
-      if (evt.currentTarget.value.length) {
-        this.svgCanvas.setLinkURL(evt.currentTarget.value)
+    $id('link_url')?.addEventListener('change', (evt) => {
+      const val = (evt.currentTarget as HTMLInputElement).value
+      if (val.length) {
+        this.svgCanvas.setLinkURL(val)
       } else {
         this.svgCanvas.removeHyperlink()
       }
     })
 
-    $id('g_title').addEventListener('change', (evt) => {
-      this.svgCanvas.setGroupTitle(evt.currentTarget.value)
+    $id('g_title')?.addEventListener('change', (evt) => {
+      this.svgCanvas.setGroupTitle((evt.currentTarget as HTMLInputElement).value)
     })
 
-    let lastX = null; let lastY = null
+    let lastX = 0; let lastY = 0
     let panning = false; let keypan = false
     let previousMode = 'select'
 
-    $id('svgcanvas').addEventListener('mouseup', (evt) => {
+    $id('svgcanvas')?.addEventListener('mouseup', (evt) => {
       if (panning === false) { return true }
 
       this.workarea.scrollLeft -= (evt.clientX - lastX)
@@ -301,7 +374,7 @@ class EditorStartup {
       if (evt.type === 'mouseup') { panning = false }
       return false
     })
-    $id('svgcanvas').addEventListener('mousemove', (evt) => {
+    $id('svgcanvas')?.addEventListener('mousemove', (evt) => {
       if (panning === false) { return true }
 
       this.workarea.scrollLeft -= (evt.clientX - lastX)
@@ -313,7 +386,7 @@ class EditorStartup {
       if (evt.type === 'mouseup') { panning = false }
       return false
     })
-    $id('svgcanvas').addEventListener('mousedown', (evt) => {
+    $id('svgcanvas')?.addEventListener('mousedown', (evt) => {
       this.enableToolCancel = false
       if (evt.button === 1 || keypan === true) {
         // prDefault to avoid firing of browser's panning on mousewheel
@@ -345,14 +418,14 @@ class EditorStartup {
     })
 
     // Allows quick change to the select mode while panning mode is active
-    this.workarea.addEventListener('dblclick', (evt) => {
+    this.workarea.addEventListener('dblclick', (_evt) => {
       if (this.svgCanvas.getMode() === 'ext-panning') {
         this.leftPanel.clickSelect()
       }
     })
 
     document.addEventListener('keydown', (e) => {
-      if (e.target.nodeName !== 'BODY') return
+      if ((e.target as Element)?.nodeName !== 'BODY') return
       if (e.code.toLowerCase() === 'space') {
         this.svgCanvas.spaceKey = keypan = true
         e.preventDefault()
@@ -368,12 +441,12 @@ class EditorStartup {
         e.preventDefault()
         this.svgCanvas.setZoom(e.deltaY > 0 ? this.svgCanvas.getZoom() * 0.9 : this.svgCanvas.getZoom() * 1.1, true)
         this.updateCanvas(true)
-        $id('zoom').value = (this.svgCanvas.getZoom() * 100).toFixed(1)
+        ;($id('zoom') as HTMLInputElement | null)?.setAttribute('value', (this.svgCanvas.getZoom() * 100).toFixed(1))
       }
     })
 
     document.addEventListener('keyup', (e) => {
-      if (e.target.nodeName !== 'BODY') return
+      if ((e.target as Element)?.nodeName !== 'BODY') return
       if (e.code.toLowerCase() === 'space') {
         this.svgCanvas.spaceKey = keypan = false
         this.svgCanvas.setMode(previousMode === 'ext-panning' ? 'select' : previousMode ?? 'select')
@@ -392,29 +465,28 @@ class EditorStartup {
     this.setPanning = (active) => {
       this.svgCanvas.spaceKey = keypan = active
     }
-    let inp
+    let inp: HTMLElement | null = null
     /**
       *
       * @returns {void}
       */
     const unfocus = () => {
-      inp.blur()
+      inp?.blur()
     }
 
     const liElems = this.$svgEditor.querySelectorAll('button, select, input:not(#text)')
-    const self = this
-    Array.prototype.forEach.call(liElems, function (el) {
+    Array.prototype.forEach.call(liElems, (el: HTMLElement) => {
       el.addEventListener('focus', (e) => {
-        inp = e.currentTarget
-        self.uiContext = 'toolbars'
-        self.workarea.addEventListener('mousedown', unfocus)
+        inp = e.currentTarget as HTMLElement
+        this.uiContext = 'toolbars'
+        this.workarea.addEventListener('mousedown', unfocus)
       })
       el.addEventListener('blur', () => {
-        self.uiContext = 'canvas'
-        self.workarea.removeEventListener('mousedown', unfocus)
+        this.uiContext = 'canvas'
+        this.workarea.removeEventListener('mousedown', unfocus)
         // Go back to selecting text if in textedit mode
-        if (self.svgCanvas.getMode() === 'textedit') {
-          $id('text').focus()
+        if (this.svgCanvas.getMode() === 'textedit') {
+          $id('text')?.focus()
         }
       })
     })
@@ -446,8 +518,9 @@ class EditorStartup {
     window.addEventListener('resize', () => {
       Object.entries(winWh).forEach(([type, val]) => {
         const curval = (type === 'width') ? window.innerWidth - 15 : window.innerHeight
-        this.workarea['scroll' + (type === 'width' ? 'Left' : 'Top')] -= (curval - val) / 2
-        winWh[type] = curval
+        const scrollProp = ('scroll' + (type === 'width' ? 'Left' : 'Top')) as 'scrollLeft' | 'scrollTop'
+        this.workarea[scrollProp] -= (curval - val) / 2
+        ;(winWh as Record<string, number>)[type] = curval
       })
     })
 
@@ -455,23 +528,26 @@ class EditorStartup {
       this.rulers.manageScroll()
     })
 
-    $id('stroke_width').value = this.configObj.curConfig.initStroke.width
-    $id('opacity').value = this.configObj.curConfig.initOpacity * 100
+    if ($id('stroke_width')) ($id('stroke_width') as HTMLInputElement).value = String(this.configObj.curConfig.initStroke.width)
+    if ($id('opacity')) ($id('opacity') as HTMLInputElement).value = String(this.configObj.curConfig.initOpacity * 100)
     const elements = document.getElementsByClassName('push_button')
     Array.from(elements).forEach(function (element) {
       element.addEventListener('mousedown', function (event) {
-        if (!event.currentTarget.classList.contains('disabled')) {
-          event.currentTarget.classList.add('push_button_pressed')
-          event.currentTarget.classList.remove('push_button')
+        const cur = (event.currentTarget as HTMLElement)
+        if (!cur.classList.contains('disabled')) {
+          cur.classList.add('push_button_pressed')
+          cur.classList.remove('push_button')
         }
       })
       element.addEventListener('mouseout', function (event) {
-        event.currentTarget.classList.add('push_button')
-        event.currentTarget.classList.remove('push_button_pressed')
+        const cur = (event.currentTarget as HTMLElement)
+        cur.classList.add('push_button')
+        cur.classList.remove('push_button_pressed')
       })
       element.addEventListener('mouseup', function (event) {
-        event.currentTarget.classList.add('push_button')
-        event.currentTarget.classList.remove('push_button_pressed')
+        const cur = (event.currentTarget as HTMLElement)
+        cur.classList.add('push_button')
+        cur.classList.remove('push_button_pressed')
       })
     })
 
@@ -482,7 +558,7 @@ class EditorStartup {
       this.workarea.style.lineHeight = this.workarea.style.height
     }
 
-    addListenerMulti(window, 'load resize', centerCanvas)
+    ;['load', 'resize'].forEach((ev) => window.addEventListener(ev, centerCanvas))
 
     // Prevent browser from erroneously repopulating fields
     const inputEles = document.querySelectorAll('input')
@@ -494,7 +570,7 @@ class EditorStartup {
       inputEle.setAttribute('autocomplete', 'off')
     })
 
-    $id('se-svg-editor-dialog').addEventListener('change', function (e) {
+    $id('se-svg-editor-dialog')?.addEventListener('change', (e: any) => {
       if (e?.detail?.copy === 'click') {
         this.cancelOverlays(e)
       } else if (e?.detail?.dialog === 'dynamic') {
@@ -502,10 +578,10 @@ class EditorStartup {
       } else if (e?.detail?.dialog === 'closed') {
         this.hideSourceEditor()
       } else {
-        this.saveSourceEditor(e)
+        void this.saveSourceEditor(e)
       }
-    }.bind(this))
-    $id('se-cmenu_canvas').addEventListener('change', function (e) {
+    })
+    $id('se-cmenu_canvas')?.addEventListener('change', (e: any) => {
       const action = e?.detail?.trigger
       switch (action) {
         case 'delete':
@@ -544,14 +620,14 @@ class EditorStartup {
           break
         default:
           if (hasCustomHandler(action)) {
-            getCustomHandler(action).call()
+            getCustomHandler(action).call(null)
           }
           break
       }
-    }.bind(this))
+    })
 
     // Select given tool
-    this.ready(function () {
+    void this.ready(() => {
       const preTool = $id(`tool_${this.configObj.curConfig.initTool}`)
       const regTool = $id(this.configObj.curConfig.initTool)
       const selectTool = $id('tool_select')
@@ -562,11 +638,11 @@ class EditorStartup {
       } else if (regTool) {
         regTool.click()
       } else {
-        selectTool.click()
+        selectTool?.click()
       }
 
       if (this.configObj.curConfig.wireframe) {
-        $id('tool_wireframe').click()
+        $id('tool_wireframe')?.click()
       }
 
       if (this.configObj.curConfig.showRulers) {
@@ -576,44 +652,44 @@ class EditorStartup {
       }
 
       if (this.configObj.curConfig.showRulers) {
-        $editDialog.setAttribute('showrulers', true)
+        $editDialog?.setAttribute('showrulers', 'true')
       }
 
       if (this.configObj.curConfig.baseUnit) {
-        $editDialog.setAttribute('baseunit', this.configObj.curConfig.baseUnit)
+        $editDialog?.setAttribute('baseunit', this.configObj.curConfig.baseUnit)
       }
 
       if (this.configObj.curConfig.gridSnapping) {
-        $editDialog.setAttribute('gridsnappingon', true)
+        $editDialog?.setAttribute('gridsnappingon', 'true')
       }
 
       if (this.configObj.curConfig.snappingStep) {
-        $editDialog.setAttribute('gridsnappingstep', this.configObj.curConfig.snappingStep)
+        $editDialog?.setAttribute('gridsnappingstep', String(this.configObj.curConfig.snappingStep))
       }
 
       if (this.configObj.curConfig.gridColor) {
-        $editDialog.setAttribute('gridcolor', this.configObj.curConfig.gridColor)
+        $editDialog?.setAttribute('gridcolor', this.configObj.curConfig.gridColor)
       }
 
       if (this.configObj.curConfig.dynamicOutput) {
-        $editDialog.setAttribute('dynamicoutput', true)
+        $editDialog?.setAttribute('dynamicoutput', 'true')
       }
-    }.bind(this))
+    })
 
     // zoom
-    $id('zoom').value = (this.svgCanvas.getZoom() * 100).toFixed(1)
-    this.canvMenu.setAttribute('disableallmenu', true)
-    this.canvMenu.setAttribute('enablemenuitems', '#delete,#cut,#copy')
+    ;($id('zoom') as HTMLInputElement | null)?.setAttribute('value', (this.svgCanvas.getZoom() * 100).toFixed(1))
+    this.canvMenu?.setAttribute('disableallmenu', 'true')
+    this.canvMenu?.setAttribute('enablemenuitems', '#delete,#cut,#copy')
 
     this.enableOrDisableClipboard()
 
-    window.addEventListener('storage', function (e) {
+    window.addEventListener('storage', (e) => {
       if (e.key !== 'svgedit_clipboard') { return }
 
       this.enableOrDisableClipboard()
-    }.bind(this))
+    })
 
-    window.addEventListener('beforeunload', function (e) {
+    window.addEventListener('beforeunload', (e) => {
     // Suppress warning if page is empty
       if (undoMgr.getUndoStackSize() === 0) {
         this.showSaveWarning = false
@@ -627,7 +703,7 @@ class EditorStartup {
         return this.i18next.t('notification.unsavedChanges')
       }
       return true
-    }.bind(this))
+    })
 
     // Use HTML5 File API: http://www.w3.org/TR/FileAPI/
     // if browser has HTML5 File API support, then we will show the open menu item
@@ -640,10 +716,10 @@ class EditorStartup {
 
     this.updateCanvas(true)
     // Load extensions
-    this.extAndLocaleFunc()
+    void this.extAndLocaleFunc()
     // Defer injection to wait out initial menu processing. This probably goes
     //    away once all context menu behavior is brought to context menu.
-    this.ready(() => {
+    void this.ready(() => {
       injectExtendedContextMenuItemsIntoDom()
     })
     // run callbacks stored by this.ready
@@ -664,7 +740,7 @@ class EditorStartup {
     try {
       // load standard extensions
       await Promise.all(
-        this.configObj.curConfig.extensions.map(async (extname) => {
+        this.configObj.curConfig.extensions.map(async (extname: string) => {
           /**
            * @tutorial ExtensionDocs
            * @typedef {PlainObject} module:SVGthis.ExtensionObject
@@ -688,7 +764,7 @@ class EditorStartup {
       )
       // load user extensions (given as pathNames)
       await Promise.all(
-        this.configObj.curConfig.userExtensions.map(async ({ pathName, config }) => {
+        this.configObj.curConfig.userExtensions.map(async ({ pathName, config }: { pathName: string; config: unknown }) => {
           /**
            * @tutorial ExtensionDocs
            * @typedef {PlainObject} module:SVGthis.ExtensionObject
@@ -717,7 +793,7 @@ class EditorStartup {
         * @listens module:SvgCanvas#event:extensions_added
         * @returns {void}
         */
-        (_win, _data) => {
+        (_win: any, _data: any) => {
           this.extensionsAdded = true
           this.setAll()
 
@@ -748,7 +824,7 @@ class EditorStartup {
  * Listens to the mode change, listener is to be added on document
 * @param {Event} evt custom modeChange event
 */
-  modeListener (evt) {
+  modeListener (_evt: Event): void {
     const mode = this.svgCanvas.getMode()
 
     this.setCursorStyle(mode)
@@ -758,7 +834,7 @@ class EditorStartup {
    * sets cursor styling for workarea depending on the current mode
    * @param {string} mode
    */
-  setCursorStyle (mode) {
+  setCursorStyle (mode: string): void {
     let cs = 'auto'
     switch (mode) {
       case 'ext-panning':

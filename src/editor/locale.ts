@@ -104,6 +104,9 @@ const i18nextFacade = {
  *
  * @returns {Promise<{langParam: string, i18next: object}>}
  */
-export const putLocale = function (): Promise<{ langParam: string; i18next: typeof i18nextFacade }> {
+export const putLocale = function (
+  _lang?: unknown,
+  _goodLangs?: unknown
+): Promise<{ langParam: string; i18next: typeof i18nextFacade }> {
   return Promise.resolve({ langParam: 'en', i18next: i18nextFacade })
 }
