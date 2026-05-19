@@ -38,6 +38,14 @@ template.innerHTML = `
  * @class SEInput
  */
 export class SEInput extends HTMLElement {
+  _shadowRoot: ShadowRoot
+  $div: HTMLDivElement
+  $img: HTMLImageElement
+  $label: HTMLElement
+  $event: CustomEvent
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  $input: any
+
   /**
     * @function constructor
     */
@@ -47,9 +55,9 @@ export class SEInput extends HTMLElement {
     this._shadowRoot = this.attachShadow({ mode: 'open' })
     this._shadowRoot.append(template.content.cloneNode(true))
     // locate the component
-    this.$div = this._shadowRoot.querySelector('div')
-    this.$img = this._shadowRoot.querySelector('img')
-    this.$label = this.shadowRoot.getElementById('label')
+    this.$div = this._shadowRoot.querySelector('div') as HTMLDivElement
+    this.$img = this._shadowRoot.querySelector('img') as HTMLImageElement
+    this.$label = this.shadowRoot?.getElementById('label') as HTMLElement
     this.$event = new CustomEvent('change')
     this.$input = this._shadowRoot.querySelector('elix-input')
   }
@@ -69,7 +77,7 @@ export class SEInput extends HTMLElement {
    * @param {string} newValue
    * @returns {void}
    */
-  attributeChangedCallback (name, oldValue, newValue) {
+  attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
     if (oldValue === newValue) return
     switch (name) {
       case 'title':
@@ -99,15 +107,15 @@ export class SEInput extends HTMLElement {
    * @function get
    * @returns {any}
    */
-  get title () {
-    return this.getAttribute('title')
+  get title (): string {
+    return this.getAttribute('title') ?? ''
   }
 
   /**
    * @function set
    * @returns {void}
    */
-  set title (value) {
+  set title (value: string) {
     this.setAttribute('title', value)
   }
 
@@ -123,14 +131,15 @@ export class SEInput extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set label (value) {
-    this.setAttribute('label', value)
+  set label (value: string | null) {
+    this.setAttribute('label', value ?? '')
   }
 
   /**
    * @function get
    * @returns {any}
    */
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   get value () {
     return this.$input.value
   }
@@ -139,7 +148,7 @@ export class SEInput extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set value (value) {
+  set value (value: string) {
     this.$input.value = value
   }
 
@@ -155,8 +164,8 @@ export class SEInput extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set src (value) {
-    this.setAttribute('src', value)
+  set src (value: string | null) {
+    this.setAttribute('src', value ?? '')
   }
 
   /**
@@ -171,8 +180,8 @@ export class SEInput extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set size (value) {
-    this.setAttribute('size', value)
+  set size (value: string | null) {
+    this.setAttribute('size', value ?? '')
   }
 
   /**
@@ -180,14 +189,16 @@ export class SEInput extends HTMLElement {
    * @returns {void}
    */
   connectedCallback () {
-    this.$input.addEventListener('change', (e) => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    this.$input.addEventListener('change', (e: Event) => {
       e.preventDefault()
-      this.value = e.target.value
+      this.value = (e.target as HTMLInputElement).value
       this.dispatchEvent(this.$event)
     })
-    this.$input.addEventListener('keyup', (e) => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    this.$input.addEventListener('keyup', (e: Event) => {
       e.preventDefault()
-      this.value = e.target.value
+      this.value = (e.target as HTMLInputElement).value
       this.dispatchEvent(this.$event)
     })
   }
