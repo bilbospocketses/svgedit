@@ -416,6 +416,8 @@ class PathActions {
               : { type: 'C', values: [(sSeg?.x1 ?? 0) / zoom, (sSeg?.y1 ?? 0) / zoom, absX, absY, absX, absY] }
 
             const data = drawnPath.getPathData()
+            // TODO(post-migration #10): SVGPathSegment type unification — internal {type, values}
+            // shape doesn't match path-data-polyfill's SVGPathDataCommand union. See todo #10 backlog.
             data.push(newEntry as SVGPathSegment, { type: 'Z' as const, values: [] })
             drawnPath.setPathData(data)
           } else if (len < 3) {
@@ -466,6 +468,8 @@ class PathActions {
             ? { type: 'L', values: [rx, ry] }
             : { type: 'C', values: [(sSeg?.x1 ?? 0) / zoom, (sSeg?.y1 ?? 0) / zoom, (sSeg?.x2 ?? 0) / zoom, (sSeg?.y2 ?? 0) / zoom, rx, ry] }
           const data = drawnPath.getPathData()
+          // TODO(post-migration #10): SVGPathSegment type unification — internal {type, values}
+          // shape doesn't match path-data-polyfill's SVGPathDataCommand union. See todo #10 backlog.
           data.push(nextEntry as SVGPathSegment)
           drawnPath.setPathData(data)
 

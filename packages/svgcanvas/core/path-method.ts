@@ -82,6 +82,8 @@ export class PathDataListShim {
   }
 
   private _setData (data: Array<{ type: string; values: number[] }>): void {
+    // TODO(post-migration #10): SVGPathSegment type unification — internal {type, values}
+    // shape doesn't match path-data-polyfill's SVGPathDataCommand union. See todo #10 backlog.
     this.elem.setPathData(data as SVGPathSegment[])
   }
 
@@ -1008,7 +1010,11 @@ export class Path {
     }
     if (!newEntry) return
     const data = this.elem.getPathData()
+    // TODO(post-migration #10): SVGPathSegment type unification — internal {type, values}
+    // shape doesn't match path-data-polyfill's SVGPathDataCommand union. See todo #10 backlog.
     data.splice(index, 0, newEntry as SVGPathSegment)
+    // TODO(post-migration #10): SVGPathSegment type unification — internal {type, values}
+    // shape doesn't match path-data-polyfill's SVGPathDataCommand union. See todo #10 backlog.
     this.elem.setPathData(data as SVGPathSegment[])
   }
 
