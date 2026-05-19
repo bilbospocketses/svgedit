@@ -1,4 +1,5 @@
-/* globals svgEditor */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const svgEditor: any
 import 'elix/define/Menu.js'
 import 'elix/define/MenuItem.js'
 import { t } from '../locale.js'
@@ -17,6 +18,15 @@ template.innerHTML = `
  * @class SeMenuItem
  */
 export class SeMenuItem extends HTMLElement {
+  _shadowRoot: ShadowRoot
+  $img: HTMLImageElement
+  $label: HTMLSpanElement
+  $menuitem: Element
+  // TODO: see todo #10 — shadowDOM-piercing preserved; replaced when #3 (elix→Lit) lands
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  $svg: any
+  imgPath: string
+
   /**
     * @function constructor
     */
@@ -25,12 +35,15 @@ export class SeMenuItem extends HTMLElement {
     // create the shadowDom and insert the template
     this._shadowRoot = this.attachShadow({ mode: 'open' })
     this._shadowRoot.append(template.content.cloneNode(true))
-    this.$img = this._shadowRoot.querySelector('img')
-    this.$label = this._shadowRoot.querySelector('span')
-    this.$menuitem = this._shadowRoot.querySelector('elix-menu-item')
-    this.$svg = this.$menuitem.shadowRoot.querySelector('#checkmark')
+    this.$img = this._shadowRoot.querySelector('img') as HTMLImageElement
+    this.$label = this._shadowRoot.querySelector('span') as HTMLSpanElement
+    this.$menuitem = this._shadowRoot.querySelector('elix-menu-item') as Element
+    // TODO: see todo #10 — shadowDOM-piercing; replaced when #3 (elix→Lit) lands
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    this.$svg = (this.$menuitem as any).shadowRoot.querySelector('#checkmark')
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     this.$svg.setAttribute('style', 'display: none;')
-    this.imgPath = svgEditor.configObj.curConfig.imgPath
+    this.imgPath = svgEditor.configObj.curConfig.imgPath as string
   }
 
   /**
@@ -48,7 +61,7 @@ export class SeMenuItem extends HTMLElement {
    * @param {string} newValue
    * @returns {void}
    */
-  attributeChangedCallback (name, oldValue, newValue) {
+  attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
     let shortcut = ''
     if (oldValue === newValue) return
     switch (name) {
@@ -57,7 +70,7 @@ export class SeMenuItem extends HTMLElement {
         this.$img.setAttribute('src', this.imgPath + '/' + newValue)
         break
       case 'label':
-        shortcut = this.getAttribute('shortcut')
+        shortcut = this.getAttribute('shortcut') ?? ''
         this.$label.textContent = `${t(newValue)} ${shortcut ? `(${shortcut})` : ''}`
         break
       default:
@@ -78,8 +91,8 @@ export class SeMenuItem extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set label (value) {
-    this.setAttribute('label', value)
+  set label (value: string | null) {
+    this.setAttribute('label', value ?? '')
   }
 
   /**
@@ -94,8 +107,8 @@ export class SeMenuItem extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set src (value) {
-    this.setAttribute('src', value)
+  set src (value: string | null) {
+    this.setAttribute('src', value ?? '')
   }
 
   /**
@@ -109,13 +122,13 @@ export class SeMenuItem extends HTMLElement {
       // register the keydown event
       document.addEventListener('keydown', (e) => {
         // only track keyboard shortcuts for the body containing the svgedit editor
-        if (e.target.nodeName !== 'BODY') return
+        if ((e.target as Element).nodeName !== 'BODY') return
         // normalize key
         const key = `${(e.metaKey) ? 'meta+' : ''}${(e.ctrlKey) ? 'ctrl+' : ''}${(e.shiftKey) ? 'shift+' : ''}${e.key.toUpperCase()}`
         if (shortcut !== key) return
         // launch the click event
         if (this.id) {
-          document.getElementById(this.id).click()
+          document.getElementById(this.id)?.click()
         }
         e.preventDefault()
       })
