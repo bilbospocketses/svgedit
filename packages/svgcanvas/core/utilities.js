@@ -97,7 +97,13 @@ export const init = canvas => {
  * @todo This might be needed in other places `parseFromString` is used even without LGTM flagging
  */
 export const dropXMLInternalSubset = str => {
-  return str.replace(/(<!DOCTYPE[^[]*\[)[\s\S]*?(\?]>)/, '$1$2')
+  const doctypeIdx = str.indexOf('<!DOCTYPE')
+  if (doctypeIdx === -1) return str
+  const bracketIdx = str.indexOf('[', doctypeIdx)
+  if (bracketIdx === -1) return str
+  const closeIdx = str.indexOf('?]>', bracketIdx + 1)
+  if (closeIdx === -1) return str
+  return str.slice(0, bracketIdx + 1) + str.slice(closeIdx)
 }
 
 /**
@@ -192,13 +198,12 @@ export const dataURLToObjectURL = (dataurl) => {
   }
 
   const [prefix, suffix] = dataurl.split(',')
-  const mimeMatch = prefix?.match(/:([^;]*);/)
-
-  if (!mimeMatch?.[1] || !suffix) {
+  const colonIdx = prefix ? prefix.indexOf(':') : -1
+  const semiIdx = colonIdx >= 0 ? prefix.indexOf(';', colonIdx + 1) : -1
+  if (colonIdx < 0 || semiIdx <= colonIdx + 1 || !suffix) {
     return ''
   }
-
-  const mime = mimeMatch[1]
+  const mime = prefix.slice(colonIdx + 1, semiIdx)
   const bstr = atob(suffix)
   const u8arr = new Uint8Array(bstr.length)
 
