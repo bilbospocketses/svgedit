@@ -1,4 +1,4 @@
-/* globals seConfirm seAlert */
+/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-non-null-assertion */
 /**
  * The main module for the visual SVG this.
  *
@@ -21,12 +21,27 @@ import { isMac } from '@svgedit/svgcanvas/common/browser'
 import SvgCanvas from '@svgedit/svgcanvas'
 import ConfigObj from './ConfigObj.js'
 import EditorStartup from './EditorStartup.js'
+// @ts-expect-error: panels are still .js; no .d.ts yet
 import LeftPanel from './panels/LeftPanel.js'
+// @ts-expect-error: panels are still .js; no .d.ts yet
 import TopPanel from './panels/TopPanel.js'
+// @ts-expect-error: panels are still .js; no .d.ts yet
 import BottomPanel from './panels/BottomPanel.js'
+// @ts-expect-error: panels are still .js; no .d.ts yet
 import LayersPanel from './panels/LayersPanel.js'
 import MainMenu from './MainMenu.js'
 import { getParentsUntil } from '@svgedit/svgcanvas/common/util.js'
+
+/** `seAlert` / `seConfirm` are custom element dialogs registered globally at runtime. */
+declare function seAlert (msg: string): void
+declare function seConfirm (msg: string): boolean | Promise<boolean | string>
+
+/** Make window.svgEditor accessible */
+declare global {
+  interface Window {
+    svgEditor: Editor
+  }
+}
 
 const { $id, $click, decode64 } = SvgCanvas
 
@@ -34,10 +49,23 @@ const { $id, $click, decode64 } = SvgCanvas
  *
  */
 class Editor extends EditorStartup {
+  langChanged: boolean
+  showSaveWarning: boolean
+  storagePromptState: 'ignore' | 'waiting' | 'closed'
+  title: string
+  $click: typeof $click
+  customExportImage: boolean
+  customExportPDF: boolean
+  callbacks: any[]
+  curContext: string | null
+  exportWindowName: string | null
+  docprops: boolean
+  shortcuts: any[]
+
   /**
    *
    */
-  constructor (div = null) {
+  constructor (div: HTMLElement | null = null) {
     super(div)
     /**
      * @type {boolean}
@@ -308,10 +336,10 @@ class Editor extends EditorStartup {
    * @throws {Error} Upon failure to load SVG
    * @returns {void}
    */
-  loadSvgString (str, { noAlert } = {}) {
+  loadSvgString (str: string, { noAlert }: { noAlert?: boolean | undefined } = {}): void {
     const success = this.svgCanvas.setSvgString(str) !== false
     if (success) {
-      this.updateCanvas()
+      this.updateCanvas(false, undefined)
       return
     }
     if (!noAlert) seAlert(this.i18next.t('notification.errorLoadingSVG'))
@@ -369,7 +397,7 @@ class Editor extends EditorStartup {
    * @param {boolean} arg
    * @returns {void}
    */
-  randomizeIds (arg) {
+  randomizeIds (arg: boolean): void {
     this.svgCanvas.randomizeIds(arg)
   }
 
@@ -390,13 +418,14 @@ class Editor extends EditorStartup {
    * editor shortcuts init
    * @returns {void}
    */
-  setAll () {
-    const keyHandler = {} // will contain the action for each pressed key
+  setAll (): void {
+    const keyHandler: Record<string, { fn: () => void; pd: boolean }> = {} // will contain the action for each pressed key
 
-    this.shortcuts.forEach((shortcut) => {
+    this.shortcuts.forEach((shortcut: any) => {
       // Bind function to shortcut key
       if (shortcut.key) {
         // Set shortcut based on options
+        // TODO: see todo #10 — audit-flagged shortcut normalization at :410-412; preserved verbatim
         let keyval = shortcut.key
         let pd = false
         if (Array.isArray(shortcut.key)) {
@@ -407,7 +436,7 @@ class Editor extends EditorStartup {
         }
         keyval = String(keyval)
         const { fn } = shortcut
-        keyval.split('/').forEach((key) => {
+        ;(keyval as string).split('/').forEach((key: string) => {
           keyHandler[key] = { fn, pd }
         })
       }
@@ -416,7 +445,7 @@ class Editor extends EditorStartup {
     // register the keydown event
     document.addEventListener('keydown', (e) => {
       // only track keyboard shortcuts for the body containing the svgedit editor
-      if (e.target.nodeName !== 'BODY') return
+      if ((e.target as Element)?.nodeName !== 'BODY') return
       // normalize key
       const key = `${e.altKey ? 'alt+' : ''}${e.shiftKey ? 'shift+' : ''}${
         e.metaKey ? 'meta+' : ''
@@ -424,8 +453,10 @@ class Editor extends EditorStartup {
       // return if no shortcut defined for this key
       if (!keyHandler[key]) return
       // launch associated handler and preventDefault if necessary
-      keyHandler[key].fn()
-      if (keyHandler[key].pd) {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+      keyHandler[key]!.fn()
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+      if (keyHandler[key]!.pd) {
         e.preventDefault()
       }
     })
@@ -436,12 +467,12 @@ class Editor extends EditorStartup {
     const elements = document.getElementsByClassName('attr_changer')
     Array.from(elements).forEach(function (element) {
       element.addEventListener('keydown', function (evt) {
-        evt.currentTarget.dispatchEvent(new Event('change'))
+        ;(evt.currentTarget as HTMLElement)?.dispatchEvent(new Event('change'))
         evt.preventDefault()
       })
     })
-    $id('image_url').addEventListener('keydown', function (evt) {
-      evt.currentTarget.dispatchEvent(new Event('change'))
+    $id('image_url')?.addEventListener('keydown', function (evt) {
+      ;(evt.currentTarget as HTMLElement)?.dispatchEvent(new Event('change'))
       evt.preventDefault()
     })
   }
@@ -450,8 +481,8 @@ class Editor extends EditorStartup {
    * @param {string} sel Selector to match
    * @returns {module:SVGthis.ToolButton}
    */
-  getButtonData (sel) {
-    return Object.values(this.shortcuts).find((btn) => {
+  getButtonData (sel: string): any {
+    return Object.values(this.shortcuts).find((btn: any) => {
       return btn.sel === sel
     })
   }
@@ -462,7 +493,7 @@ class Editor extends EditorStartup {
    * @listens module:svgcanvas.SvgCanvas#event:exported
    * @returns {void}
    */
-  exportHandler (win, data) {
+  exportHandler (_win: any, data: any): void {
     const { issues, exportWindowName } = data
     this.exportWindow = window.open('', exportWindowName) // A hack to get the window via JSON-able name without opening a new one
     if (!this.exportWindow || this.exportWindow.closed) {
@@ -499,7 +530,7 @@ class Editor extends EditorStartup {
    * @param {string} url
    * @returns {void}
    */
-  setBackground (color, url) {
+  setBackground (color: string, url: string): void {
     // if (color == this.configObj.pref('bkgd_color') && url == this.configObj.pref('bkgd_url')) { return; }
     this.configObj.pref('bkgd_color', color)
     this.configObj.pref('bkgd_url', url, true)
@@ -514,7 +545,7 @@ class Editor extends EditorStartup {
    * @param {module:math.XYObject} newCtr
    * @returns {void}
    */
-  updateCanvas (center, newCtr) {
+  updateCanvas (center?: boolean, newCtr?: { x: number; y: number }): void {
     const zoom = this.svgCanvas.getZoom()
     const { workarea } = this
     const cnvs = $id('svgcanvas')
@@ -542,12 +573,12 @@ class Editor extends EditorStartup {
     }
 
     const oldCanY =
-      parseFloat(getComputedStyle(cnvs, null).height.replace('px', '')) / 2
+      parseFloat(getComputedStyle(cnvs!, null).height.replace('px', '')) / 2
     const oldCanX =
-      parseFloat(getComputedStyle(cnvs, null).width.replace('px', '')) / 2
+      parseFloat(getComputedStyle(cnvs!, null).width.replace('px', '')) / 2
 
-    cnvs.style.width = w + 'px'
-    cnvs.style.height = h + 'px'
+    cnvs!.style.width = w + 'px'
+    cnvs!.style.height = h + 'px'
     const newCanY = h / 2
     const newCanX = w / 2
     const offset = this.svgCanvas.updateCanvas(w, h)
@@ -600,7 +631,7 @@ class Editor extends EditorStartup {
       this.configObj.urldata.storagePrompt !== true &&
       this.storagePromptState === 'ignore'
     ) {
-      if ($id('dialog_box') != null) $id('dialog_box').style.display = 'none'
+      if ($id('dialog_box') != null) $id('dialog_box')!.style.display = 'none'
     }
   }
 
@@ -615,7 +646,7 @@ class Editor extends EditorStartup {
       }
     `
     if (document.querySelectorAll('#wireframe_rules').length > 0) {
-      document.querySelector('#wireframe_rules').textContent =
+      ;(document.querySelector('#wireframe_rules') as HTMLElement).textContent =
         this.workarea.classList.contains('wireframe') ? rule : ''
     }
   }
@@ -629,7 +660,7 @@ class Editor extends EditorStartup {
    * @fires module:svgcanvas.SvgCanvas#event:ext_selectedChanged
    * @returns {void}
    */
-  selectedChanged (win, elems) {
+  selectedChanged (_win: any, elems: any[]): void {
     const mode = this.svgCanvas.getMode()
     if (mode === 'select') {
       this.leftPanel.clickSelect()
@@ -664,7 +695,7 @@ class Editor extends EditorStartup {
    * @fires module:svgcanvas.SvgCanvas#event:ext_elementTransition
    * @returns {void}
    */
-  elementTransition (win, elems) {
+  elementTransition (_win: any, elems: any[]): void {
     const mode = this.svgCanvas.getMode()
     const elem = elems[0]
 
@@ -678,10 +709,12 @@ class Editor extends EditorStartup {
       switch (mode) {
         case 'rotate': {
           const ang = this.svgCanvas.getRotationAngle(elem)
-          $id('angle').value = ang
-          ang === 0
-            ? $id('tool_reorient').classList.add('disabled')
-            : $id('tool_reorient').classList.remove('disabled')
+          ;($id('angle') as HTMLInputElement | null)?.setAttribute('value', String(ang))
+          if (ang === 0) {
+            $id('tool_reorient')?.classList.add('disabled')
+          } else {
+            $id('tool_reorient')?.classList.remove('disabled')
+          }
           break
         }
       }
@@ -702,7 +735,7 @@ class Editor extends EditorStartup {
    * @fires module:svgcanvas.SvgCanvas#event:ext_elementChanged
    * @returns {void}
    */
-  elementChanged (win, elems) {
+  elementChanged (_win: any, elems: any[]): void {
     const mode = this.svgCanvas.getMode()
     if (mode === 'select') {
       this.leftPanel.clickSelect()
@@ -714,7 +747,7 @@ class Editor extends EditorStartup {
         this.layersPanel.populateLayers()
         // if the element changed was the svg, then it could be a resolution change
         if (isSvgElem) {
-          this.updateCanvas()
+          this.updateCanvas(false, undefined)
         }
         // Update selectedElement if element is no longer part of the image.
         // This occurs for the text elements in Firefox
@@ -750,7 +783,7 @@ class Editor extends EditorStartup {
   /**
    * @returns {void}
    */
-  elementRenamed (win, renameObj) {
+  elementRenamed (_win: any, renameObj: any): void {
     this.svgCanvas.runExtensions(
       'elementRenamed',
       /** @type {module:svgcanvas.SvgCanvas#event:ext_elementRenamed} */ {
@@ -762,14 +795,14 @@ class Editor extends EditorStartup {
   /**
    * @returns {void}
    */
-  afterClear (win) {
+  afterClear (_win: any): void {
     this.svgCanvas.runExtensions('afterClear')
   }
 
   /**
    * @returns {void}
    */
-  beforeClear (win) {
+  beforeClear (_win: any): void {
     this.svgCanvas.runExtensions('beforeClear')
   }
 
@@ -803,7 +836,7 @@ class Editor extends EditorStartup {
    * @fires module:svgcanvas.SvgCanvas#event:ext_zoomChanged
    * @returns {void}
    */
-  zoomChanged (win, bbox, autoCenter) {
+  zoomChanged (_win: any, bbox: any, autoCenter?: boolean): void {
     const scrbar = 15
     const zInfo = this.svgCanvas.setBBoxZoom(
       bbox,
@@ -825,10 +858,10 @@ class Editor extends EditorStartup {
       return
     }
 
-    $id('zoom').value = (this.svgCanvas.getZoom() * 100).toFixed(1)
+    ;($id('zoom') as HTMLInputElement | null)?.setAttribute('value', (this.svgCanvas.getZoom() * 100).toFixed(1))
 
     if (autoCenter) {
-      this.updateCanvas()
+      this.updateCanvas(false, undefined)
     } else {
       this.updateCanvas(false, {
         x: bb.x * zoomlevel + (bb.width * zoomlevel) / 2,
@@ -855,7 +888,7 @@ class Editor extends EditorStartup {
    * @listens module:svgcanvas.SvgCanvas#event:contextset
    * @returns {void}
    */
-  contextChanged (win, context) {
+  contextChanged (_win: any, context: Element | null): void {
     let linkStr = ''
     if (context) {
       let str = ''
@@ -863,8 +896,8 @@ class Editor extends EditorStartup {
         '<a href="#" data-root="y">' +
         this.svgCanvas.getCurrentDrawing().getCurrentLayerName() +
         '</a>'
-      const parentsUntil = getParentsUntil(context, '#svgcontent')
-      parentsUntil.forEach(function (parent) {
+      const parentsUntil = getParentsUntil(context, '#svgcontent') ?? []
+      ;(parentsUntil as Element[]).forEach(function (parent: Element) {
         if (parent.id) {
           str += ' > ' + parent.id
           linkStr +=
@@ -878,8 +911,8 @@ class Editor extends EditorStartup {
     } else {
       this.curContext = null
     }
-    $id('cur_context_panel').style.display = context ? 'block' : 'none'
-    $id('cur_context_panel').innerHTML = linkStr
+    $id('cur_context_panel')!.style.display = context ? 'block' : 'none'
+    $id('cur_context_panel')!.innerHTML = linkStr
   }
 
   /**
@@ -888,20 +921,21 @@ class Editor extends EditorStartup {
    * @param {string|external:jQuery} iconId
    * @returns {void}
    */
-  setIcon (elem, iconId) {
+  setIcon (elem: string, iconId: string): void {
     const img = document.createElement('img')
     img.src = this.configObj.curConfig.imgPath + iconId
-    const icon = typeof iconId === 'string' ? img : iconId.cloneNode(true)
+    // TODO: see todo #10 — setIcon investigation at :905; preserved verbatim
+    const icon = typeof iconId === 'string' ? img : (iconId as any).cloneNode(true)
     if (!icon) {
       // Todo: Investigate why this still occurs in some cases
       console.warn('NOTE: Icon image missing: ' + iconId)
       return
     }
     // empty()
-    while ($id(elem).firstChild) {
-      $id(elem).removeChild($id(elem).firstChild)
+    while ($id(elem)?.firstChild) {
+      $id(elem)!.removeChild($id(elem)!.firstChild!)
     }
-    $id(elem).appendChild(icon)
+    $id(elem)?.appendChild(icon)
   }
 
   /**
@@ -910,7 +944,8 @@ class Editor extends EditorStartup {
    * @listens module:svgcanvas.SvgCanvas#event:extension_added
    * @returns {Promise<void>|void} Resolves to `undefined`
    */
-  async extAdded (win, ext) {
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async extAdded (_win: any, ext: any): Promise<void> {
     if (!ext) {
       return undefined
     }
@@ -937,14 +972,14 @@ class Editor extends EditorStartup {
    * @param {Float} multiplier
    * @returns {void}
    */
-  zoomImage (multiplier) {
+  zoomImage (multiplier?: number): void {
     const resolution = this.svgCanvas.getResolution()
     multiplier = multiplier ? resolution.zoom * multiplier : 1
     // setResolution(res.w * multiplier, res.h * multiplier, true);
-    $id('zoom').value = (multiplier * 100).toFixed(1)
+    ;($id('zoom') as HTMLInputElement | null)?.setAttribute('value', (multiplier * 100).toFixed(1))
     this.svgCanvas.setCurrentZoom(multiplier)
     this.zoomDone()
-    this.updateCanvas(true)
+    this.updateCanvas(true, undefined)
   }
 
   /**
@@ -993,7 +1028,7 @@ class Editor extends EditorStartup {
    * @param {"Up"|"Down"} dir
    * @returns {void}
    */
-  moveUpDownSelected (dir) {
+  moveUpDownSelected (dir: 'Up' | 'Down'): void {
     if (this.selectedElement) {
       this.svgCanvas.moveUpDownSelected(dir)
     }
@@ -1004,7 +1039,7 @@ class Editor extends EditorStartup {
    * @param {Float} dy
    * @returns {void}
    */
-  moveSelected (dx, dy) {
+  moveSelected (dx: number, dy: number): void {
     if (this.selectedElement || this.multiselected) {
       if (this.configObj.curConfig.gridSnapping) {
         // Use grid snap value regardless of zoom level
@@ -1038,14 +1073,14 @@ class Editor extends EditorStartup {
    * @param {Integer} step
    * @returns {void}
    */
-  rotateSelected (cw, step) {
+  rotateSelected (cw: 0 | 1, step: number): void {
     if (!this.selectedElement || this.multiselected) {
       return
     }
     if (!cw) {
       step *= -1
     }
-    const angle = Number.parseFloat($id('angle').value) + step
+    const angle = Number.parseFloat(($id('angle') as HTMLInputElement | null)?.value ?? '0') + step
     this.svgCanvas.setRotationAngle(angle)
     this.topPanel.updateContextPanel()
   }
@@ -1054,18 +1089,18 @@ class Editor extends EditorStartup {
    *
    * @returns {void}
    */
-  hideSourceEditor () {
+  hideSourceEditor (): void {
     const $editorDialog = $id('se-svg-editor-dialog')
-    $editorDialog.setAttribute('dialog', 'closed')
+    $editorDialog?.setAttribute('dialog', 'closed')
   }
 
   /**
    * @param {Event} e
    * @returns {void} Resolves to `undefined`
    */
-  async saveSourceEditor (e) {
+  async saveSourceEditor (e: any): Promise<void> {
     const $editorDialog = $id('se-svg-editor-dialog')
-    if ($editorDialog.getAttribute('dialog') !== 'open') return
+    if ($editorDialog?.getAttribute('dialog') !== 'open') return
     const saveChanges = () => {
       this.svgCanvas.clearSelection()
       this.hideSourceEditor()
@@ -1091,10 +1126,10 @@ class Editor extends EditorStartup {
    * @param {Event} e
    * @returns {void} Resolves to `undefined`
    */
-  cancelOverlays (e) {
-    if ($id('dialog_box') != null) $id('dialog_box').style.display = 'none'
+  cancelOverlays (e: any): void {
+    if ($id('dialog_box') != null) $id('dialog_box')!.style.display = 'none'
     const $editorDialog = $id('se-svg-editor-dialog')
-    const editingsource = $editorDialog.getAttribute('dialog') === 'open'
+    const editingsource = $editorDialog?.getAttribute('dialog') === 'open'
     if (!editingsource && !this.docprops && !this.configObj.preferences) {
       if (this.curContext) {
         this.svgCanvas.leaveContext()
@@ -1120,13 +1155,13 @@ class Editor extends EditorStartup {
   /**
    * @returns {void}
    */
-  toggleDynamicOutput (e) {
+  toggleDynamicOutput (e: any): void {
     this.configObj.curConfig.dynamicOutput = e.detail.dynamic
     this.svgCanvas.setConfig(this.configObj.curConfig)
     const $editorDialog = document.getElementById('se-svg-editor-dialog')
     const origSource = this.svgCanvas.getSvgString()
-    $editorDialog.setAttribute('dialog', 'open')
-    $editorDialog.setAttribute('value', origSource)
+    $editorDialog?.setAttribute('dialog', 'open')
+    $editorDialog?.setAttribute('value', origSource)
   }
 
   /**
@@ -1136,10 +1171,10 @@ class Editor extends EditorStartup {
     let svgeditClipboard
     try {
       svgeditClipboard = this.localStorage.getItem('svgedit_clipboard')
-    } catch (err) {
+    } catch {
       /* empty fn */
     }
-    this.canvMenu.setAttribute(
+    this.canvMenu?.setAttribute(
       (svgeditClipboard ? 'en' : 'dis') + 'ablemenuitems',
       '#paste,#paste_in_place'
     )
@@ -1162,7 +1197,7 @@ class Editor extends EditorStartup {
    * @param {Event} e
    * @returns {void}
    */
-  onDragEnter (e) {
+  onDragEnter (e: DragEvent): void {
     e.stopPropagation()
     e.preventDefault()
     // and indicator should be displayed here, such as "drop files here"
@@ -1173,7 +1208,7 @@ class Editor extends EditorStartup {
    * @param {Event} e
    * @returns {void}
    */
-  onDragOver (e) {
+  onDragOver (e: DragEvent): void {
     e.stopPropagation()
     e.preventDefault()
   }
@@ -1183,7 +1218,7 @@ class Editor extends EditorStartup {
    * @param {Event} e
    * @returns {void}
    */
-  onDragLeave (e) {
+  onDragLeave (e: DragEvent): void {
     e.stopPropagation()
     e.preventDefault()
     // hypothetical indicator should be removed here
@@ -1197,13 +1232,13 @@ class Editor extends EditorStartup {
    * @fires module:svgcanvas.SvgCanvas#event:ext_langChanged
    * @returns {void} A Promise which resolves to `undefined`
    */
-  setLang (lang) {
+  setLang (lang: string): void {
     this.langChanged = true
     this.configObj.pref('lang', lang)
     const $editDialog = $id('se-edit-prefs')
-    $editDialog.setAttribute('lang', lang)
+    $editDialog?.setAttribute('lang', lang)
     const oldLayerName = $id('#layerlist')
-      ? $id('#layerlist').querySelector('tr.layersel td.layername').textContent
+      ? $id('#layerlist')!.querySelector('tr.layersel td.layername')?.textContent
       : ''
     const renameLayer =
       oldLayerName === this.i18next.t('notification.common.layer') + ' 1'
@@ -1235,7 +1270,7 @@ class Editor extends EditorStartup {
    * @param {module:SVGthis.ReadyCallback} cb Callback to be queued to invoke
    * @returns {Promise<ArbitraryCallbackResult>} Resolves when all callbacks, including the supplied have resolved
    */
-  ready (cb) {
+  ready (cb: () => any): Promise<any> {
     return new Promise((resolve, reject) => {
       if (this.isReady) {
         resolve(cb())
@@ -1276,10 +1311,10 @@ class Editor extends EditorStartup {
    * @param {boolean} [opts.noAlert=false] Option to avoid alert to user and instead get rejected promise
    * @returns {Promise<void>}
    */
-  loadFromString (str, { noAlert } = {}) {
-    return this.ready(async () => {
+  loadFromString (str: string, { noAlert }: { noAlert?: boolean | undefined } = {}): Promise<any> {
+    return this.ready(() => {
       try {
-        await this.loadSvgString(str, { noAlert })
+        this.loadSvgString(str, { noAlert })
       } catch (err) {
         if (noAlert) {
           throw err
@@ -1303,9 +1338,9 @@ class Editor extends EditorStartup {
    *   the SVG (or upon failure to parse the loaded string) when `noAlert` is
    *   enabled
    */
-  loadFromURL (url, { cache, noAlert } = {}) {
+  loadFromURL (url: string, { cache, noAlert }: { cache?: boolean | undefined; noAlert?: boolean | undefined } = {}): Promise<any> {
     return this.ready(() => {
-      return new Promise((resolve, reject) => {
+      return new Promise<void>((resolve, reject) => {
         fetch(url, { cache: cache ? 'force-cache' : 'no-cache' })
           .then((response) => {
             if (!response.ok) {
@@ -1319,8 +1354,8 @@ class Editor extends EditorStartup {
             return response.text()
           })
           .then((str) => {
-            this.loadSvgString(str, { noAlert })
-            resolve(str)
+            this.loadSvgString(str as string, { noAlert })
+            resolve()
           })
           .catch((error) => {
             if (noAlert) {
@@ -1343,19 +1378,17 @@ class Editor extends EditorStartup {
    * @param {boolean} [opts.noAlert]
    * @returns {Promise<void>} Resolves to `undefined` and rejects if loading SVG string fails and `noAlert` is enabled
    */
-  loadFromDataURI (str, { noAlert } = {}) {
+  loadFromDataURI (str: string, { noAlert }: { noAlert?: boolean | undefined } = {}): Promise<any> {
     return this.ready(() => {
       let base64 = false
-      let pre = str.match(/^data:image\/svg\+xml;base64,/)
-      if (pre) {
+      let preMatch = str.match(/^data:image\/svg\+xml;base64,/)
+      if (preMatch) {
         base64 = true
       } else {
-        pre = str.match(/^data:image\/svg\+xml(?:;|;utf8)?,/)
+        preMatch = str.match(/^data:image\/svg\+xml(?:;|;utf8)?,/)
       }
-      if (pre) {
-        pre = pre[0]
-      }
-      const src = str.slice(pre.length)
+      const pre = preMatch ? preMatch[0] : null
+      const src = str.slice((pre ?? '').length)
       return this.loadSvgString(
         base64 ? decode64(src) : decodeURIComponent(src),
         { noAlert }
@@ -1371,7 +1404,7 @@ class Editor extends EditorStartup {
    * @throws {Error} If called too early
    * @returns {Promise<void>} Resolves to `undefined`
    */
-  addExtension (name, initfn, initArgs) {
+  addExtension (name: string, initfn: any, initArgs: any): Promise<void> {
     // Note that we don't want this on this.ready since some extensions
     // may want to run before then (like server_opensave).
     if (!this.svgCanvas) {

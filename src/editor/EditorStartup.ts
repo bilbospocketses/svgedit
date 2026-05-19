@@ -85,35 +85,10 @@ class EditorStartup {
   declare isReady: boolean
   declare shortcuts: any[]
   declare setPanning: (active: boolean) => void
-  declare selectedChanged: (win: any, elems: any[]) => void
-  declare elementTransition: (win: any, elems: any[]) => void
-  declare elementChanged: (win: any, elems: any[]) => void
-  declare exportHandler: (win: any, data: any) => void
-  declare zoomChanged: (win: any, bbox: any, autoCenter?: boolean) => void
-  declare zoomDone: () => void
-  declare contextChanged: (win: any, context: any) => void
-  declare extAdded: (win: any, ext: any) => Promise<void> | void
-  declare elementRenamed: (win: any, renameObj: any) => void
-  declare beforeClear: (win: any) => void
-  declare afterClear: (win: any) => void
-  declare setAll: () => void
-  declare updateCanvas: (center?: boolean, newCtr?: { x: number; y: number }) => void
-  declare ready: (cb: () => any) => Promise<any>
-  declare runCallbacks: () => Promise<void>
-  declare addExtension: (name: string, initfn: any, initArgs: any) => Promise<void>
-  declare enableOrDisableClipboard: () => void
-  declare onDragEnter: (e: DragEvent) => void
-  declare onDragOver: (e: DragEvent) => void
-  declare onDragLeave: (e: DragEvent) => void
-  declare setBackground: (color: string, url: string) => void
-  declare setTitles: () => void
-  declare cancelOverlays: (e: any) => void
-  declare toggleDynamicOutput: (e: any) => void
-  declare hideSourceEditor: () => void
-  declare saveSourceEditor: (e: any) => Promise<void>
-  declare cutSelected: () => void
-  declare copySelected: () => void
-  declare moveUpDownSelected: (dir: 'Up' | 'Down') => void
+  // Properties/methods from Editor subclass, accessed via init() — typed loosely to avoid
+  // TS2425 conflict between 'declare' property and actual method in subclass.
+  // These are accessed through 'this' which is always the Editor instance at runtime.
+  [key: string]: any
 
   /**
    *
