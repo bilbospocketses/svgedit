@@ -142,7 +142,7 @@ export const updateClipPath = (attr: string, tx: number, ty: number, elem?: Elem
  * @param {Element} selected - The DOM element to recalculate
  * @returns {BatchCommand | null} Undo command object with the resulting change, or null if no change
  */
-export const recalculateDimensions = (selected: Element): typeof BatchCommand.prototype | null => {
+export const recalculateDimensions = (selected: Element): InstanceType<typeof BatchCommand> | null => {
   if (!selected) return null
 
   // Don't recalculate dimensions for groups - this would push their transforms down to children

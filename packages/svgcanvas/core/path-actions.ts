@@ -19,7 +19,7 @@ import {
   assignAttributes, getElement, getRotationAngle, snapToGrid,
   getBBox
 } from './utilities.js'
-import type { PathSeg } from './path-method.js'
+import type { PathSeg, Segment } from './path-method.js'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let svgCanvas: any = null
@@ -416,7 +416,7 @@ class PathActions {
               : { type: 'C', values: [(sSeg?.x1 ?? 0) / zoom, (sSeg?.y1 ?? 0) / zoom, absX, absY, absX, absY] }
 
             const data = drawnPath.getPathData()
-            data.push(newEntry, { type: 'Z', values: [] })
+            data.push(newEntry as SVGPathSegment, { type: 'Z' as const, values: [] })
             drawnPath.setPathData(data)
           } else if (len < 3) {
             keep = false
@@ -466,7 +466,7 @@ class PathActions {
             ? { type: 'L', values: [rx, ry] }
             : { type: 'C', values: [(sSeg?.x1 ?? 0) / zoom, (sSeg?.y1 ?? 0) / zoom, (sSeg?.x2 ?? 0) / zoom, (sSeg?.y2 ?? 0) / zoom, rx, ry] }
           const data = drawnPath.getPathData()
-          data.push(nextEntry)
+          data.push(nextEntry as SVGPathSegment)
           drawnPath.setPathData(data)
 
           x *= zoom
@@ -632,7 +632,7 @@ class PathActions {
       }
     } else {
       path.selected_pts = []
-      path.eachSeg(function (this: import('./path-method.js').Segment, _i: number) {
+      path.eachSeg(function (this: Segment, _i: number) {
         // eslint-disable-next-line @typescript-eslint/no-this-alias
         const seg = this
         if (!seg.next && !seg.prev) return
@@ -936,7 +936,7 @@ class PathActions {
     let openPt: number | false | null = null
     let startItem: PathSeg | null = null
 
-    path.eachSeg(function (this: import('./path-method.js').Segment, i: number) {
+    path.eachSeg(function (this: Segment, i: number) {
       if (this.type === 2 && i <= index) {
         startItem = this.item
       }

@@ -18,12 +18,11 @@ import {
   getElement
 } from './utilities.js'
 
-// Augment SVGPathElement with path-data-polyfill methods and pathSegList shim.
+// Augment SVGPathElement with the pathSegList shim.
+// getPathData and setPathData are already declared by path-data-polyfill/types.d.ts.
 declare global {
   interface SVGPathElement {
     readonly pathSegList: PathDataListShim
-    getPathData(opts?: { normalize?: boolean }): Array<{ type: string; values: number[] }>
-    setPathData(data: Array<{ type: string; values: number[] }>): void
   }
 }
 
@@ -83,7 +82,7 @@ export class PathDataListShim {
   }
 
   private _setData (data: Array<{ type: string; values: number[] }>): void {
-    this.elem.setPathData(data)
+    this.elem.setPathData(data as SVGPathSegment[])
   }
 
   get numberOfItems (): number {
@@ -1009,8 +1008,8 @@ export class Path {
     }
     if (!newEntry) return
     const data = this.elem.getPathData()
-    data.splice(index, 0, newEntry)
-    this.elem.setPathData(data)
+    data.splice(index, 0, newEntry as SVGPathSegment)
+    this.elem.setPathData(data as SVGPathSegment[])
   }
 
   /**

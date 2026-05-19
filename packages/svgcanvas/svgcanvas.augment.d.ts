@@ -5,18 +5,14 @@
 // wired-on method is added in core/*.ts (Tasks 5-9), the matching
 // declaration must be added here too.
 //
-// During Tasks 3-9, this file coexists with the legacy
-// packages/svgcanvas/svgcanvas.d.ts shim. Methods the shim already
-// declares are omitted here (no duplicate / conflicting declarations).
-// Task 10 (C6) deletes the shim; at that point this augment file plus
-// the future svgcanvas.ts class become the SvgCanvas type source.
+// As of Task 10 (C6), the legacy packages/svgcanvas/svgcanvas.d.ts shim
+// has been deleted.  This augment file plus the class in svgcanvas.ts are
+// now the sole SvgCanvas type sources.
 //
 // NOTE: remaining core/*.js files (clear.js, draw.js, undo.js, select.js,
-// copy-elem.js, historyrecording.js) still wire methods covered by the shim.
+// copy-elem.js, historyrecording.js) still wire methods covered below.
 // All of path-actions.ts, path-method.ts, recalculate.ts, svg-exec.ts are
 // now .ts (Task 9b complete). svgroot.ts is a leaf with no wired-on methods.
-// Task 10 MUST audit the shim's surviving declarations and migrate any that
-// aren't class-owned on SvgCanvas (svgcanvas.js) to this augment file.
 
 import type {} from './svgcanvas'
 
@@ -63,6 +59,9 @@ declare module './svgcanvas' {
     setColor: (...args: unknown[]) => unknown
     setGradient: (...args: unknown[]) => unknown
     setPaint: (...args: unknown[]) => unknown
+    // getResolution / setResolution are wired by elem-get-set init()
+    getResolution: () => { w: number; h: number; zoom: number }
+    setResolution: (x: number | 'fit', y: number) => boolean
 
     // From core/event.ts (init wires these on)
     mouseDownEvent: (evt: MouseEvent) => void
@@ -105,8 +104,17 @@ declare module './svgcanvas' {
     updateCanvas: (...args: unknown[]) => unknown
     cycleElement: (...args: unknown[]) => unknown
     cloneSelectedElements: (...args: unknown[]) => unknown
+    copySelectedElements: () => void
+    groupSelectedElements: (type?: string, urlArg?: string) => void
+    ungroupSelectedElement: () => void
+    moveToTopSelectedElement: () => void
+    moveToBottomSelectedElement: () => void
+    moveUpDownSelected: (dir: 'Up' | 'Down') => void
+    moveSelectedElements: (dx: number | number[], dy: number | number[], undoable?: boolean) => unknown
+    deleteSelectedElements: () => void
 
     // From core/selection.js (init wires these on)
+    clearSelection: (noCall?: boolean) => void
     getMouseTarget: (...args: unknown[]) => unknown
     addToSelection: (...args: unknown[]) => unknown
     getIntersectionList: (...args: unknown[]) => unknown
@@ -115,6 +123,10 @@ declare module './svgcanvas' {
     prepareSvg: (...args: unknown[]) => unknown
     recalculateAllSelectedDimensions: (...args: unknown[]) => unknown
     setRotationAngle: (...args: unknown[]) => unknown
+
+    // From core/undo.js (init wires these on)
+    // undoMgr is attached by undo.init() — typed via the history module's UndoManager class
+    undoMgr: import('./core/history.js').UndoManager
 
     // From core/svg-exec.ts (init wires these on)
     importSvgString: (xmlString: string, preserveDimension?: boolean) => Element | null
@@ -126,6 +138,10 @@ declare module './svgcanvas' {
     svgToString: (elem: Element, indent: number) => string
     rasterExport: (imgType?: string, quality?: number, windowName?: string, opts?: Record<string, unknown>) => Promise<Record<string, unknown>>
     exportPDF: (windowName?: string, outputType?: string) => Promise<Record<string, unknown>>
+    // setSvgString and embedImage were missing from the pre-Task-10 augment file;
+    // added here with signatures verified from svg-exec.ts implementation.
+    setSvgString: (xmlString: string, preventUndo?: boolean) => boolean
+    embedImage: (src: string) => Promise<string | false>
     // current_drawing_ is a pseudo-private (trailing-underscore); attached
     // in svgcanvas.js constructor, not by an init() call. Renamed to
     // currentDrawing in Task 17 (C13) — keep the underscore form here
