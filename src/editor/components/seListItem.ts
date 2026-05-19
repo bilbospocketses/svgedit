@@ -1,4 +1,5 @@
-/* globals svgEditor */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const svgEditor: any
 import { t } from '../locale.js'
 
 const template = document.createElement('template')
@@ -26,6 +27,11 @@ template.innerHTML = `
  * @class SeMenu
  */
 export class SeListItem extends HTMLElement {
+  _shadowRoot: ShadowRoot
+  $menuitem: Element
+  $img: HTMLImageElement
+  imgPath: string
+
   /**
     * @function constructor
     */
@@ -34,13 +40,13 @@ export class SeListItem extends HTMLElement {
     // create the shadowDom and insert the template
     this._shadowRoot = this.attachShadow({ mode: 'open' })
     this._shadowRoot.append(template.content.cloneNode(true))
-    this.$menuitem = this._shadowRoot.querySelector('[aria-label=option]')
+    this.$menuitem = this._shadowRoot.querySelector('[aria-label=option]') as Element
     // this.$svg = this.$menuitem.shadowRoot.querySelector('#checkmark')
     // this.$svg.setAttribute('style', 'display: none;')
-    this.$img = this._shadowRoot.querySelector('img')
+    this.$img = this._shadowRoot.querySelector('img') as HTMLImageElement
     this.$img.setAttribute('style', 'display: none;')
-    this.imgPath = svgEditor.configObj.curConfig.imgPath
-    this.$menuitem.addEventListener('mousedown', e => {
+    this.imgPath = svgEditor.configObj.curConfig.imgPath as string
+    this.$menuitem.addEventListener('mousedown', (_e) => {
       this.$menuitem.dispatchEvent(new CustomEvent('selectedindexchange', {
         bubbles: true,
         composed: true,
@@ -64,7 +70,7 @@ export class SeListItem extends HTMLElement {
    * @param {string} newValue
    * @returns {void}
    */
-  attributeChangedCallback (name, oldValue, newValue) {
+  attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
     if (oldValue === newValue) return
     switch (name) {
       case 'option':
@@ -106,23 +112,23 @@ export class SeListItem extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set option (value) {
-    this.setAttribute('option', value)
+  set option (value: string | null) {
+    this.setAttribute('option', value ?? '')
   }
 
   /**
    * @function get
    * @returns {any}
    */
-  get title () {
-    return this.getAttribute('title')
+  get title (): string {
+    return this.getAttribute('title') ?? ''
   }
 
   /**
    * @function set
    * @returns {void}
    */
-  set title (value) {
+  set title (value: string) {
     this.setAttribute('title', value)
   }
 
@@ -138,8 +144,8 @@ export class SeListItem extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set imgHeight (value) {
-    this.setAttribute('img-height', value)
+  set imgHeight (value: string | null) {
+    this.setAttribute('img-height', value ?? '')
   }
 
   /**
@@ -154,8 +160,8 @@ export class SeListItem extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set src (value) {
-    this.setAttribute('src', value)
+  set src (value: string | null) {
+    this.setAttribute('src', value ?? '')
   }
 }
 
