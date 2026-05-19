@@ -1,4 +1,5 @@
-/* globals svgEditor */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const svgEditor: any
 import { t } from '../locale.js'
 
 const template = document.createElement('template')
@@ -47,6 +48,16 @@ template.innerHTML = `
  * @class SeList
  */
 export class SeList extends HTMLElement {
+  _shadowRoot: ShadowRoot
+  $dropdown: HTMLElement
+  $label: HTMLLabelElement
+  $selection: HTMLElement
+  items: NodeListOf<Element>
+  imgPath: string
+  $optionsContainer: HTMLElement
+  isDropdownOpen: boolean
+  value: string
+
   /**
     * @function constructor
     */
@@ -55,19 +66,20 @@ export class SeList extends HTMLElement {
     // create the shadowDom and insert the template
     this._shadowRoot = this.attachShadow({ mode: 'open' })
     this._shadowRoot.append(template.content.cloneNode(true))
-    this.$dropdown = this._shadowRoot.querySelector('#select-container')
-    this.$label = this._shadowRoot.querySelector('label')
-    this.$selection = this.$dropdown.querySelector('#selected-value')
+    this.$dropdown = this._shadowRoot.querySelector('#select-container') as HTMLElement
+    this.$label = this._shadowRoot.querySelector('label') as HTMLLabelElement
+    this.$selection = this.$dropdown.querySelector('#selected-value') as HTMLElement
     this.items = this.querySelectorAll('se-list-item')
-    this.imgPath = svgEditor.configObj.curConfig.imgPath
-    this.$optionsContainer = this._shadowRoot.querySelector('#options-container')
+    this.imgPath = svgEditor.configObj.curConfig.imgPath as string
+    this.$optionsContainer = this._shadowRoot.querySelector('#options-container') as HTMLElement
     this.$optionsContainer.classList.add('closed')
     this.$selection.addEventListener('click', this.toggleList)
-    this.updateSelectedValue(this.items[0].getAttribute('value'))
+    this.updateSelectedValue(this.items[0]?.getAttribute('value') ?? '')
     this.isDropdownOpen = false
+    this.value = ''
   }
 
-  toggleList = (e) => {
+  toggleList = (_e: Event) => {
     if (!this.isDropdownOpen) {
       this.openDropdown()
       this.setDropdownListPosition()
@@ -76,24 +88,24 @@ export class SeList extends HTMLElement {
     }
   }
 
-  updateSelectedValue = (newValue) => {
+  updateSelectedValue = (newValue: string) => {
     Array.from(this.items).forEach((element) => {
       if (element.getAttribute('value') === newValue) {
-        element.setAttribute('selected', true)
+        element.setAttribute('selected', 'true')
         if (element.hasAttribute('src')) {
         // empty current selection children
           while (this.$selection.firstChild) { this.$selection.removeChild(this.$selection.firstChild) }
           // replace selection child with image of new value
           const img = document.createElement('img')
           img.src = this.imgPath + '/' + element.getAttribute('src')
-          img.style.height = element.getAttribute('img-height')
-          img.setAttribute('title', t(element.getAttribute('title')))
+          img.style.height = element.getAttribute('img-height') ?? ''
+          img.setAttribute('title', t(element.getAttribute('title') ?? ''))
           this.$selection.append(img)
         } else {
-          this.$selection.textContent = t(element.getAttribute('option'))
+          this.$selection.textContent = t(element.getAttribute('option') ?? '')
         }
       } else {
-        element.setAttribute('selected', false)
+        element.setAttribute('selected', 'false')
       }
     })
   }
@@ -113,7 +125,7 @@ export class SeList extends HTMLElement {
    * @param {string} newValue
    * @returns {void}
    */
-  attributeChangedCallback (name, oldValue, newValue) {
+  attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
     if (oldValue === newValue) return
     switch (name) {
       case 'title':
@@ -141,15 +153,15 @@ export class SeList extends HTMLElement {
    * @function get
    * @returns {any}
    */
-  get title () {
-    return this.getAttribute('title')
+  get title (): string {
+    return this.getAttribute('title') ?? ''
   }
 
   /**
    * @function set
    * @returns {void}
    */
-  set title (value) {
+  set title (value: string) {
     this.setAttribute('title', value)
   }
 
@@ -165,8 +177,8 @@ export class SeList extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set label (value) {
-    this.setAttribute('label', value)
+  set label (value: string | null) {
+    this.setAttribute('label', value ?? '')
   }
 
   /**
@@ -181,8 +193,8 @@ export class SeList extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set width (value) {
-    this.setAttribute('width', value)
+  set width (value: string | null) {
+    this.setAttribute('width', value ?? '')
   }
 
   /**
@@ -197,8 +209,8 @@ export class SeList extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set height (value) {
-    this.setAttribute('height', value)
+  set height (value: string | null) {
+    this.setAttribute('height', value ?? '')
   }
 
   openDropdown = () => {
@@ -232,8 +244,9 @@ export class SeList extends HTMLElement {
   connectedCallback () {
     const currentObj = this
     this.$dropdown.addEventListener('selectedindexchange', (e) => {
-      if (e?.detail?.selectedItem !== undefined) {
-        const value = e.detail.selectedItem
+      const detail = (e as CustomEvent).detail as { selectedItem?: string } | undefined
+      if (detail?.selectedItem !== undefined) {
+        const value = detail.selectedItem
         const closeEvent = new CustomEvent('change', { detail: { value } })
         currentObj.dispatchEvent(closeEvent)
         currentObj.value = value
@@ -241,14 +254,14 @@ export class SeList extends HTMLElement {
       }
     })
 
-    this.$dropdown.addEventListener('focusout', (e) => {
+    this.$dropdown.addEventListener('focusout', (_e) => {
       this.closeDropdown()
     })
 
     window.addEventListener('mousedown', e => {
       // When we click on the canvas and if the dropdown is open, then just close the dropdown and stop the event
       if (this.isDropdownOpen) {
-        if (!e.target.closest('se-list')) {
+        if (!(e.target as Element).closest('se-list')) {
           e.stopPropagation()
           this.closeDropdown()
         }
