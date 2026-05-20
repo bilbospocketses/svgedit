@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */
+// elix custom-element base classes ship as 'any'; cleanup deferred to #3 (Lit migration)
+// @ts-expect-error: no declaration file for elix/src/plain/PlainAlertDialog.js
 import PlainAlertDialog from 'elix/src/plain/PlainAlertDialog.js'
 import { template, keydown } from 'elix/src/base/internal.js'
 import { fragmentFrom } from 'elix/src/core/htmlLiterals.js'
@@ -5,12 +8,14 @@ import { fragmentFrom } from 'elix/src/core/htmlLiterals.js'
 /**
  * @class SePlainAlertDialog
  */
-export default class SePlainAlertDialog extends PlainAlertDialog {
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+export default class SePlainAlertDialog extends (PlainAlertDialog as unknown as typeof HTMLElement) {
   /**
     * @function get
     * @returns {PlainObject}
   */
-  get [template] () {
+  get [template] (): any {
+    // @ts-expect-error: elix computed property key not in HTMLElement type
     const result = super[template]
     // Replace the default slot with a new default slot and a button container.
     const defaultSlot = result.content.querySelector('#frameContent')
@@ -68,15 +73,16 @@ export default class SePlainAlertDialog extends PlainAlertDialog {
    * Tracks if users wants to cancel (close dialog without any changes) with Esc
    * if null - seConfirm will use responce.choice
    */
-  keyChoice = null
+  keyChoice: string | null = null
 
-  get [keydown] () {
+  get [keydown] (): any {
     /**
      * Listens to Esc key to close dialog
      */
-    return (e) => {
+    return (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         this.keyChoice = 'Cancel'
+        // @ts-expect-error: elix computed property key not in HTMLElement type
         this.close()
       }
     }
