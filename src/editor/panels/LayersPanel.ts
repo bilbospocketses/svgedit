@@ -1,4 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-this-alias */
+// editor / panel API surface is loosely typed; full typing deferred to follow-up
 import SvgCanvas from '@svgedit/svgcanvas'
+// @ts-expect-error: LayersPanel.html imported as string via vite-plugin-string; no ambient module declaration
 import LayersPanelHtml from './LayersPanel.html'
 
 const { $id, $click } = SvgCanvas
@@ -7,10 +10,13 @@ const { $id, $click } = SvgCanvas
  *
  */
 class LayersPanel {
+  updateContextPanel: any
+  editor: any
+
   /**
    * @param {PlainObject} editor
    */
-  constructor (editor) {
+  constructor (editor: any) {
     this.updateContextPanel = editor.topPanel.updateContextPanel.bind(editor.topPanel)
     this.editor = editor
   }
@@ -19,7 +25,7 @@ class LayersPanel {
    * @param {PlainObject} e event
    * @returns {void}
    */
-  lmenuFunc (e) {
+  lmenuFunc (e: any): void {
     const action = e?.detail?.trigger
     switch (action) {
       case 'dupe':
@@ -49,30 +55,30 @@ class LayersPanel {
     template.innerHTML = LayersPanelHtml
     this.editor.$svgEditor.append(template.content.cloneNode(true))
     // layer menu added to DOM
-    const menuMore = document.createElement('se-cmenu-layers')
+    const menuMore = document.createElement('se-cmenu-layers') as any
     menuMore.setAttribute('id', 'se-cmenu-layers-more')
     menuMore.value = 'layer_moreopts'
     menuMore.setAttribute('leftclick', true)
     this.editor.$container.append(menuMore)
     menuMore.init(i18next)
-    const menuLayerBox = document.createElement('se-cmenu-layers')
+    const menuLayerBox = document.createElement('se-cmenu-layers') as any
     menuLayerBox.setAttribute('id', 'se-cmenu-layers-list')
     menuLayerBox.value = 'layerlist'
     menuLayerBox.setAttribute('leftclick', false)
     this.editor.$container.append(menuLayerBox)
     menuLayerBox.init(i18next)
-    $click($id('layer_new'), this.newLayer.bind(this))
-    $click($id('layer_delete'), this.deleteLayer.bind(this))
-    $click($id('layer_up'), () => this.moveLayer.bind(this)(-1))
-    $click($id('layer_down'), () => this.moveLayer.bind(this)(1))
-    $click($id('layer_rename'), this.layerRename.bind(this))
-    $id('se-cmenu-layers-more').addEventListener('change', this.lmenuFunc.bind(this))
-    $id('se-cmenu-layers-list').addEventListener('change', (e) => { this.lmenuFunc(e) })
-    $click($id('sidepanel_handle'), () => this.toggleSidePanel())
+    $click($id('layer_new')!, this.newLayer.bind(this))
+    $click($id('layer_delete')!, this.deleteLayer.bind(this))
+    $click($id('layer_up')!, () => this.moveLayer.bind(this)(-1))
+    $click($id('layer_down')!, () => this.moveLayer.bind(this)(1))
+    $click($id('layer_rename')!, this.layerRename.bind(this))
+    $id('se-cmenu-layers-more')!.addEventListener('change', this.lmenuFunc.bind(this))
+    $id('se-cmenu-layers-list')!.addEventListener('change', (e) => { this.lmenuFunc(e) })
+    $click($id('sidepanel_handle')!, () => this.toggleSidePanel())
     this.toggleSidePanel(this.editor.configObj.curConfig.showlayers)
   }
 
-  toggleSidePanel (displayFlag) {
+  toggleSidePanel (displayFlag?: any): void {
     if (displayFlag === undefined) {
       this.editor.$svgEditor.classList.toggle('open')
     } else if (displayFlag) {
@@ -85,13 +91,14 @@ class LayersPanel {
   /**
    * @returns {void}
    */
-  newLayer () {
+  newLayer (): void {
     let uniqName
     let i = this.editor.svgCanvas.getCurrentDrawing().getNumLayers()
     do {
       uniqName = this.editor.i18next.t('layers.layer') + ' ' + ++i
     } while (this.editor.svgCanvas.getCurrentDrawing().hasLayer(uniqName))
 
+    // TODO: see todo #10 — native prompt(); replace with custom dialog
     const newName = prompt(
       this.editor.i18next.t('notification.enterUniqueLayerName'),
       uniqName
@@ -100,6 +107,7 @@ class LayersPanel {
       return
     }
     if (this.editor.svgCanvas.getCurrentDrawing().hasLayer(newName)) {
+      // TODO: see todo #10 — native alert(); replace with seAlert
       alert(this.editor.i18next.t('notification.dupeLayerName'))
       return
     }
@@ -123,7 +131,7 @@ class LayersPanel {
       Array.prototype.forEach.call(elements, function (el) {
         el.classList.remove('layersel')
       })
-      document.querySelector('#layerlist tr.layer').classList.add('layersel')
+      document.querySelector('#layerlist tr.layer')!.classList.add('layersel')
     }
   }
 
@@ -131,10 +139,11 @@ class LayersPanel {
    *
    * @returns {void}
    */
-  cloneLayer () {
+  cloneLayer (): void {
     const name =
       this.editor.svgCanvas.getCurrentDrawing().getCurrentLayerName() + ' copy'
 
+    // TODO: see todo #10 — native prompt(); replace with custom dialog
     const newName = prompt(
       this.editor.i18next.t('notification.enterUniqueLayerName'),
       name
@@ -143,6 +152,7 @@ class LayersPanel {
       return
     }
     if (this.editor.svgCanvas.getCurrentDrawing().hasLayer(newName)) {
+      // TODO: see todo #10 — native alert(); replace with seAlert
       alert(this.editor.i18next.t('notification.dupeLayerName'))
       return
     }
@@ -151,16 +161,16 @@ class LayersPanel {
     this.populateLayers()
   }
 
-  index (el) {
+  index (el: any): number {
     if (!el) return -1
-    return Array.from(document.querySelector('#layerlist tbody').children).indexOf(el)
+    return Array.from(document.querySelector('#layerlist tbody')!.children).indexOf(el)
   }
 
   /**
    *
    * @returns {void}
    */
-  mergeLayer () {
+  mergeLayer (): void {
     if (
       (this.index(document.querySelector('#layerlist tr.layersel')) - 1) ===
       this.editor.svgCanvas.getCurrentDrawing().getNumLayers() - 1
@@ -176,7 +186,7 @@ class LayersPanel {
    * @param {Integer} pos
    * @returns {void}
    */
-  moveLayer (pos) {
+  moveLayer (pos: number): void {
     const curPos = this.editor.svgCanvas.indexCurrentLayer()
     if (curPos !== -1) {
       this.editor.svgCanvas.setCurrentLayerPosition(curPos - pos)
@@ -187,9 +197,10 @@ class LayersPanel {
   /**
    * @returns {void}
    */
-  layerRename () {
+  layerRename (): void {
     const ele = document.querySelector('#layerlist tr.layersel td.layername')
     const oldName = (ele) ? ele.textContent : ''
+    // TODO: see todo #10 — native prompt(); replace with custom dialog
     const newName = prompt(this.editor.i18next.t('notification.enterNewLayerName'), '')
     if (!newName) {
       return
@@ -198,6 +209,7 @@ class LayersPanel {
       oldName === newName ||
       this.editor.svgCanvas.getCurrentDrawing().hasLayer(newName)
     ) {
+      // TODO: see todo #10 — native alert(); replace with seAlert
       alert(this.editor.i18next.t('notification.layerHasThatName'))
       return
     }
@@ -211,7 +223,7 @@ class LayersPanel {
    * @param {string} [layerNameToHighlight]
    * @returns {void}
    */
-  toggleHighlightLayer (layerNameToHighlight) {
+  toggleHighlightLayer (layerNameToHighlight?: any): void {
     let i
     const curNames = []
     const numLayers = this.editor.svgCanvas.getCurrentDrawing().getNumLayers()
@@ -237,13 +249,13 @@ class LayersPanel {
   /**
    * @returns {void}
    */
-  populateLayers () {
+  populateLayers (): void {
     this.editor.svgCanvas.clearSelection()
     const self = this
-    const layerlist = $id('layerlist').querySelector('tbody')
+    const layerlist = $id('layerlist')!.querySelector('tbody')!
     while (layerlist.firstChild) { layerlist.removeChild(layerlist.firstChild) }
 
-    $id('selLayerNames').setAttribute('options', '')
+    $id('selLayerNames')!.setAttribute('options', '')
     const drawing = this.editor.svgCanvas.getCurrentDrawing()
     const currentLayerName = drawing.getCurrentLayerName()
     let layer = this.editor.svgCanvas.getCurrentDrawing().getNumLayers()
@@ -261,7 +273,7 @@ class LayersPanel {
       const _eye = document.createElement('img')
       _eye.src = './images/eye.svg'
       _eye.style.width = '14px'
-      _eye.style.width = '14px'
+      _eye.style.width = '14px' // TODO: see todo #10 — duplicate assignment; second should be _eye.style.height
       layerVis.appendChild(_eye)
 
       const layerName = document.createElement('td')
@@ -273,34 +285,35 @@ class LayersPanel {
       values = (values) ? values + '::' + name : name
       text = (text) ? text + ',' + name : name
     }
-    $id('selLayerNames').setAttribute('options', text)
-    $id('selLayerNames').setAttribute('values', values)
+    $id('selLayerNames')!.setAttribute('options', text)
+    $id('selLayerNames')!.setAttribute('values', values)
     // handle selection of layer
-    const nelements = $id('layerlist').querySelectorAll('td.layername')
+    const nelements = $id('layerlist')!.querySelectorAll('td.layername')
     Array.from(nelements).forEach(function (element) {
       element.addEventListener('mouseup', function (evt) {
-        const trElements = $id('layerlist').querySelectorAll('tr.layer')
+        const trElements = $id('layerlist')!.querySelectorAll('tr.layer')
         Array.from(trElements).forEach(function (element) {
           element.classList.remove('layersel')
         })
-        evt.currentTarget.parentNode.classList.add('layersel')
-        self.editor.svgCanvas.setCurrentLayer(evt.currentTarget.textContent)
+        ;(evt.currentTarget as any).parentNode.classList.add('layersel')
+        self.editor.svgCanvas.setCurrentLayer((evt.currentTarget as any).textContent)
         // run extension when different layer is selected from listener
         self.editor.svgCanvas.runExtensions(
           'layersChanged'
         )
         evt.preventDefault()
       })
+      // TODO: see todo #10 — duplicate 'mouseup' listener; second should be 'mouseover'
       element.addEventListener('mouseup', (evt) => {
-        self.toggleHighlightLayer(evt.currentTarget.textContent)
+        self.toggleHighlightLayer((evt.currentTarget as any).textContent)
       })
       element.addEventListener('mouseout', (_evt) => {
         self.toggleHighlightLayer()
       })
     })
-    const elements = $id('layerlist').querySelectorAll('td.layervis')
+    const elements = $id('layerlist')!.querySelectorAll('td.layervis')
     Array.from(elements).forEach(function (element) {
-      $click(element, function (evt) {
+      $click(element, function (evt: any) {
         const ele = evt.currentTarget.parentNode.querySelector('td.layername')
         const name = (ele) ? ele.textContent : ''
         const vis = evt.currentTarget.classList.contains('layerinvis')
@@ -314,7 +327,7 @@ class LayersPanel {
     })
 
     // if there were too few rows, let's add a few to make it not so lonely
-    let num = 5 - $id('layerlist').querySelectorAll('tr.layer').length
+    let num = 5 - $id('layerlist')!.querySelectorAll('tr.layer').length
     while (num-- > 0) {
       // TODO: there must a better way to do this
       const tlayer = document.createElement('tr')
