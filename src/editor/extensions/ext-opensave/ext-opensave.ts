@@ -1,4 +1,6 @@
-/* globals seConfirm */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */
+// svgCanvas / extension API surface is loosely typed; cleanup deferred to #3 or follow-up
+declare function seConfirm(message: string): Promise<string>
 /**
  * @file ext-opensave.js
  *
@@ -18,9 +20,9 @@
 import { fileOpen, fileSave } from 'browser-fs-access'
 
 const name = 'opensave'
-let handle = null
+let handle: any = null
 
-const loadExtensionTranslation = async function (svgEditor) {
+const loadExtensionTranslation = async function (svgEditor: any): Promise<void> {
   let translationModule
   const lang = svgEditor.configObj.pref('lang')
   try {
@@ -34,8 +36,8 @@ const loadExtensionTranslation = async function (svgEditor) {
 
 export default {
   name,
-  async init (_S) {
-    const svgEditor = this
+  async init (this: any, _S: any) {
+    const svgEditor: any = this
     const { svgCanvas } = svgEditor
     const { $id, $click } = svgCanvas
     await loadExtensionTranslation(svgEditor)
@@ -43,7 +45,7 @@ export default {
     * @param {Event} e
     * @returns {void}
     */
-    const importImage = (e) => {
+    const importImage = (e: any) => {
       const fileInput = (e.target && e.target.type === 'file') ? e.target : null
       const resetFileInput = () => {
         if (fileInput) {
@@ -75,7 +77,7 @@ export default {
         reader = new FileReader()
         reader.onloadend = (ev) => {
           // imgImport.shiftKey (shift key pressed or not) will determine if import should preserve dimension)
-          const newElement = this.svgCanvas.importSvgString(ev.target.result, imgImport.shiftKey)
+          const newElement = this.svgCanvas.importSvgString((ev.target as any)!.result, (imgImport as any).shiftKey)
           this.svgCanvas.alignSelectedElements('m', 'page')
           this.svgCanvas.alignSelectedElements('c', 'page')
           // highlight imported element, otherwise we get strange empty selectbox
@@ -87,14 +89,15 @@ export default {
       } else {
         // bitmap handling
         reader = new FileReader()
-        reader.onloadend = ({ target: { result } }) => {
+        reader.onloadend = (ev2: any) => {
+          const result = ev2.target.result
           /**
               * Insert the new image until we know its dimensions.
               * @param {Float} imageWidth
               * @param {Float} imageHeight
               * @returns {void}
               */
-          const insertNewImage = (imageWidth, imageHeight) => {
+          const insertNewImage = (imageWidth: number, imageHeight: number) => {
             const newImage = this.svgCanvas.addSVGElementsFromJson({
               element: 'image',
               attr: {
@@ -118,7 +121,7 @@ export default {
           let imgWidth = 100
           let imgHeight = 100
           const img = new Image()
-          img.style.opacity = 0
+          img.style.opacity = '0'
           img.addEventListener('load', () => {
             imgWidth = img.offsetWidth || img.naturalWidth || img.width
             imgHeight = img.offsetHeight || img.naturalHeight || img.height
@@ -180,12 +183,12 @@ export default {
         })
         svgEditor.layersPanel.populateLayers()
       } catch (err) {
-        if (err.name !== 'AbortError') {
+        if (err instanceof Error && err.name !== 'AbortError') {
           return console.error(err)
         }
       }
     }
-    const b64toBlob = (b64Data, contentType = '', sliceSize = 512) => {
+    const b64toBlob = (b64Data: string, contentType = '', sliceSize = 512) => {
       const byteCharacters = atob(b64Data)
       const byteArrays = []
       for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
@@ -205,7 +208,7 @@ export default {
      *
      * @returns {void}
      */
-    const clickSave = async function (type) {
+    const clickSave = async function (type: string) {
       const $editorDialog = $id('se-svg-editor-dialog')
       const editingsource = $editorDialog.getAttribute('dialog') === 'open'
       if (editingsource) {
@@ -257,7 +260,7 @@ export default {
             })
           }
         } catch (err) {
-          if (err.name !== 'AbortError') {
+          if (err instanceof Error && err.name !== 'AbortError') {
             return console.error(err)
           }
         }
@@ -286,7 +289,7 @@ export default {
         $click($id('tool_save'), clickSave.bind(this, 'save'))
         $click($id('tool_save_as'), clickSave.bind(this, 'saveas'))
         // tool_import pressed with shiftKey will not scale the SVG
-        $click($id('tool_import'), (ev) => { imgImport.shiftKey = ev.shiftKey; imgImport.click() })
+        $click($id('tool_import'), (ev: any) => { (imgImport as any).shiftKey = ev.shiftKey; imgImport.click() })
       }
     }
   }
