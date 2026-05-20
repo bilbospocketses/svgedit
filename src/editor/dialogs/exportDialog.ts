@@ -1,13 +1,29 @@
-/* globals svgEditor */
 import './se-elix/define/NumberSpinBox.js'
-
+// @ts-expect-error: *.html imported as string via vite-plugin-string; no ambient module declaration
 import exportDialogHTML from './exportDialog.html'
+
+declare const svgEditor: SvgEditorGlobal
+
 const template = document.createElement('template')
-template.innerHTML = exportDialogHTML
+template.innerHTML = exportDialogHTML as string // eslint-disable-line @typescript-eslint/no-unsafe-assignment
+
 /**
  * @class SeExportDialog
  */
 export class SeExportDialog extends HTMLElement {
+  declare _shadowRoot: ShadowRoot
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  declare $dialog: any
+  declare $okBtn: Element | null
+  declare $cancelBtn: Element | null
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  declare $exportOption: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  declare $qualityCont: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  declare $input: any
+  declare value: number
+
   /**
     * @function constructor
     */
@@ -30,7 +46,8 @@ export class SeExportDialog extends HTMLElement {
    * @param {any} name
    * @returns {void}
    */
-  init (i18next) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  init (i18next: any): void {
     this.setAttribute('common-ok', i18next.t('common.ok'))
     this.setAttribute('common-cancel', i18next.t('common.cancel'))
     this.setAttribute('ui-export_type_label', i18next.t('ui.export_type_label'))
@@ -41,7 +58,7 @@ export class SeExportDialog extends HTMLElement {
    * @function observedAttributes
    * @returns {any} observed
    */
-  static get observedAttributes () {
+  static get observedAttributes (): string[] {
     return ['dialog', 'common-ok', 'common-cancel', 'ui-export_type_label']
   }
 
@@ -52,8 +69,8 @@ export class SeExportDialog extends HTMLElement {
    * @param {string} newValue
    * @returns {void}
    */
-  attributeChangedCallback (name, oldValue, newValue) {
-    let node
+  attributeChangedCallback (name: string, _oldValue: string, newValue: string): void {
+    let node: Element | null
     switch (name) {
       case 'dialog':
         if (newValue === 'open') {
@@ -63,14 +80,14 @@ export class SeExportDialog extends HTMLElement {
         }
         break
       case 'common-ok':
-        this.$okBtn.textContent = newValue
+        if (this.$okBtn) this.$okBtn.textContent = newValue
         break
       case 'common-cancel':
-        this.$cancelBtn.textContent = newValue
+        if (this.$cancelBtn) this.$cancelBtn.textContent = newValue
         break
       case 'ui-export_type_label':
         node = this._shadowRoot.querySelector('#export_select')
-        node.textContent = newValue
+        if (node) node.textContent = newValue
         break
       default:
       // super.attributeChangedCallback(name, oldValue, newValue);
@@ -82,7 +99,7 @@ export class SeExportDialog extends HTMLElement {
    * @function get
    * @returns {any}
    */
-  get dialog () {
+  get dialog (): string | null {
     return this.getAttribute('dialog')
   }
 
@@ -90,7 +107,7 @@ export class SeExportDialog extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set dialog (value) {
+  set dialog (value: string) {
     this.setAttribute('dialog', value)
   }
 
@@ -98,18 +115,20 @@ export class SeExportDialog extends HTMLElement {
    * @function connectedCallback
    * @returns {void}
    */
-  connectedCallback () {
-    this.$input.addEventListener('change', (e) => {
+  connectedCallback (): void {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    this.$input.addEventListener('change', (e: any) => {
       e.preventDefault()
       this.value = e.target.value
     })
-    svgEditor.$click(this.$input, (e) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    svgEditor.$click(this.$input, (e: any) => {
       e.preventDefault()
       this.value = e.target.value
     })
-    const onSubmitHandler = (e, action) => {
+    const onSubmitHandler = (_e: Event, action: string): void => {
       if (action === 'cancel') {
-        document.getElementById('se-export-dialog').setAttribute('dialog', 'close')
+        document.getElementById('se-export-dialog')?.setAttribute('dialog', 'close')
       } else {
         const triggerEvent = new CustomEvent('change', {
           detail: {
@@ -119,19 +138,20 @@ export class SeExportDialog extends HTMLElement {
           }
         })
         this.dispatchEvent(triggerEvent)
-        document.getElementById('se-export-dialog').setAttribute('dialog', 'close')
+        document.getElementById('se-export-dialog')?.setAttribute('dialog', 'close')
       }
     }
-    const onChangeHandler = (e) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const onChangeHandler = (e: any): void => {
       if (e.target.value === 'PDF') {
         this.$qualityCont.style.display = 'none'
       } else {
         this.$qualityCont.style.display = 'block'
       }
     }
-    svgEditor.$click(this.$okBtn, (evt) => onSubmitHandler(evt, 'ok'))
-    svgEditor.$click(this.$cancelBtn, (evt) => onSubmitHandler(evt, 'cancel'))
-    this.$exportOption.addEventListener('change', (evt) => onChangeHandler(evt))
+    svgEditor.$click(this.$okBtn as EventTarget, (evt) => onSubmitHandler(evt, 'ok'))
+    svgEditor.$click(this.$cancelBtn as EventTarget, (evt) => onSubmitHandler(evt, 'cancel'))
+    this.$exportOption.addEventListener('change', (evt: Event) => onChangeHandler(evt))
   }
 }
 
