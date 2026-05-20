@@ -881,7 +881,7 @@ class SvgCanvas {
     this.svgContent = value
   }
 
-  getrefAttrs (): string[] {
+  getRefAttrs (): string[] {
     return refAttrs
   }
 

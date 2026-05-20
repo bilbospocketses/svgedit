@@ -1009,7 +1009,7 @@ const uniquifyElemsMethod = (g: Element): void => {
         ids[el.id]!.elem = el
       }
 
-      svgCanvas.getrefAttrs().forEach((attr: string) => {
+      svgCanvas.getRefAttrs().forEach((attr: string) => {
         const attrnode = el.getAttributeNode(attr)
         if (attrnode) {
           const url = svgCanvas.getUrlFromAttr(attrnode.value) as string | null
