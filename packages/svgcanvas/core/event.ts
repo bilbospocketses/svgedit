@@ -142,7 +142,7 @@ const mouseMoveEvent = (evt: MouseEvent): void => {
   let angle: number
   let box: { x: number; y: number; width: number; height: number } | null
 
-  const pt = transformPoint(evt.clientX, evt.clientY, svgCanvas.getrootSctm())
+  const pt = transformPoint(evt.clientX, evt.clientY, svgCanvas.getRootSctm())
   const mouseX = pt.x * zoom
   const mouseY = pt.y * zoom
   // shape may be null during certain creation modes; pre-existing code
@@ -635,7 +635,7 @@ const mouseUpEvent = (evt: MouseEvent): void => {
   const tempJustSelected = svgCanvas.getJustSelected()
   svgCanvas.setJustSelected(null)
 
-  const pt = transformPoint(evt.clientX, evt.clientY, svgCanvas.getrootSctm())
+  const pt = transformPoint(evt.clientX, evt.clientY, svgCanvas.getRootSctm())
   const mouseX = pt.x * zoom
   const mouseY = pt.y * zoom
   const x = mouseX / zoom
@@ -1047,7 +1047,7 @@ const dblClickEvent = (evt: MouseEvent): void => {
   const { tagName } = mouseTarget
 
   if (tagName === 'text' && svgCanvas.getCurrentMode() !== 'textedit') {
-    const pt = transformPoint(evt.clientX, evt.clientY, svgCanvas.getrootSctm())
+    const pt = transformPoint(evt.clientX, evt.clientY, svgCanvas.getRootSctm())
     svgCanvas.textActions.select(mouseTarget, pt.x, pt.y)
   }
 
@@ -1112,7 +1112,7 @@ const mouseDownEvent = (evt: MouseEvent): void => {
   if (!screenCTM) { return }
   svgCanvas.setRootSctm(screenCTM.inverse())
 
-  const pt = transformPoint(evt.clientX, evt.clientY, svgCanvas.getrootSctm())
+  const pt = transformPoint(evt.clientX, evt.clientY, svgCanvas.getRootSctm())
   const mouseX = pt.x * zoom
   const mouseY = pt.y * zoom
 
@@ -1484,7 +1484,7 @@ const DOMMouseScrollEvent = (e: WheelEvent): void => {
   const rulerwidth = svgCanvas.getCurConfig().showRulers ? 16 : 0
 
   // mouse relative to content area in content pixels
-  const pt = transformPoint(e.clientX, e.clientY, svgCanvas.getrootSctm())
+  const pt = transformPoint(e.clientX, e.clientY, svgCanvas.getRootSctm())
 
   // full work area width in screen pixels
   const editorFullW = parseFloat(getComputedStyle(workarea!, null).width.replace('px', ''))
@@ -1495,8 +1495,8 @@ const DOMMouseScrollEvent = (e: WheelEvent): void => {
   const editorH = editorFullH - scrbar - rulerwidth
 
   // work area width in content pixels
-  const workareaViewW = editorW * svgCanvas.getrootSctm().a
-  const workareaViewH = editorH * svgCanvas.getrootSctm().d
+  const workareaViewW = editorW * svgCanvas.getRootSctm().a
+  const workareaViewH = editorH * svgCanvas.getRootSctm().d
 
   // content offset from canvas in screen pixels
   const wOffset = findPos(workarea!)
@@ -1527,7 +1527,7 @@ const DOMMouseScrollEvent = (e: WheelEvent): void => {
   factor = zoomlevel / zoom
 
   // top left of workarea in content pixels before zoom
-  const topLeftOld = transformPoint(wOffsetLeft, wOffsetTop, svgCanvas.getrootSctm())
+  const topLeftOld = transformPoint(wOffsetLeft, wOffsetTop, svgCanvas.getRootSctm())
 
   // top left of workarea in content pixels after zoom
   const topLeftNew = {

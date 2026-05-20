@@ -625,7 +625,7 @@ class SvgCanvas {
     return this
   }
 
-  getrootSctm (): SVGMatrix | null {
+  getRootSctm (): SVGMatrix | null {
     return this.rootSctm
   }
 

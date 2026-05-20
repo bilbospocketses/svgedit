@@ -372,7 +372,7 @@ class TextActions {
       return
     }
     const zoom: number = svgCanvas.getZoom()
-    const ept: XYObject = transformPoint(evt.pageX, evt.pageY, svgCanvas.getrootSctm())
+    const ept: XYObject = transformPoint(evt.pageX, evt.pageY, svgCanvas.getRootSctm())
     const mouseX = ept.x * zoom
     const mouseY = ept.y * zoom
     const pt = this.#screenToPt(mouseX, mouseY)
