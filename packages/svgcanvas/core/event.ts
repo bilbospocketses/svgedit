@@ -50,8 +50,8 @@ export const init = (canvas: any): void => {
 
 const getBsplinePoint = (t: number): { x: number; y: number } => {
   const spline = { x: 0, y: 0 }
-  const p0 = { x: svgCanvas.getControllPoint2('x'), y: svgCanvas.getControllPoint2('y') }
-  const p1 = { x: svgCanvas.getControllPoint1('x'), y: svgCanvas.getControllPoint1('y') }
+  const p0 = { x: svgCanvas.getControlPoint2('x'), y: svgCanvas.getControlPoint2('y') }
+  const p1 = { x: svgCanvas.getControlPoint1('x'), y: svgCanvas.getControlPoint1('y') }
   const p2 = { x: svgCanvas.getStart('x'), y: svgCanvas.getStart('y') }
   const p3 = { x: svgCanvas.getEnd('x'), y: svgCanvas.getEnd('y') }
   const S = 1.0 / 6.0
@@ -460,7 +460,7 @@ const mouseMoveEvent = (evt: MouseEvent): void => {
       // shape.setAttribute('points', dAttr);
       svgCanvas.setEnd('x', realX)
       svgCanvas.setEnd('y', realY)
-      if (svgCanvas.getControllPoint2('x') && svgCanvas.getControllPoint2('y')) {
+      if (svgCanvas.getControlPoint2('x') && svgCanvas.getControlPoint2('y')) {
         for (i = 0; i < svgCanvas.getStepCount() - 1; i++) {
           svgCanvas.setParameter(i / svgCanvas.getStepCount())
           svgCanvas.setNextParameter((i + 1) / svgCanvas.getStepCount())
@@ -484,10 +484,10 @@ const mouseMoveEvent = (evt: MouseEvent): void => {
           }
         }
       }
-      svgCanvas.setControllPoint2('x', svgCanvas.getControllPoint1('x'))
-      svgCanvas.setControllPoint2('y', svgCanvas.getControllPoint1('y'))
-      svgCanvas.setControllPoint1('x', svgCanvas.getStart('x'))
-      svgCanvas.setControllPoint1('y', svgCanvas.getStart('y'))
+      svgCanvas.setControlPoint2('x', svgCanvas.getControlPoint1('x'))
+      svgCanvas.setControlPoint2('y', svgCanvas.getControlPoint1('y'))
+      svgCanvas.setControlPoint1('x', svgCanvas.getStart('x'))
+      svgCanvas.setControlPoint1('y', svgCanvas.getStart('y'))
       svgCanvas.setStart({ x: svgCanvas.getEnd('x'), y: svgCanvas.getEnd('y') })
       break
       // update path stretch line coordinates
@@ -807,10 +807,10 @@ const mouseUpEvent = (evt: MouseEvent): void => {
       // Webkit ignores how we set the points attribute with commas and uses space
       // to separate all coordinates, see https://bugs.webkit.org/show_bug.cgi?id=29870
       svgCanvas.setSumDistance(0)
-      svgCanvas.setControllPoint2('x', 0)
-      svgCanvas.setControllPoint2('y', 0)
-      svgCanvas.setControllPoint1('x', 0)
-      svgCanvas.setControllPoint1('y', 0)
+      svgCanvas.setControlPoint2('x', 0)
+      svgCanvas.setControlPoint2('y', 0)
+      svgCanvas.setControlPoint1('x', 0)
+      svgCanvas.setControlPoint1('y', 0)
       svgCanvas.setStart({ x: 0, y: 0 })
       svgCanvas.setEnd('x', 0)
       svgCanvas.setEnd('y', 0)
@@ -1276,10 +1276,10 @@ const mouseDownEvent = (evt: MouseEvent): void => {
     case 'fhrect':
     case 'fhpath':
       svgCanvas.setStart({ x: realX, y: realY })
-      svgCanvas.setControllPoint1('x', 0)
-      svgCanvas.setControllPoint1('y', 0)
-      svgCanvas.setControllPoint2('x', 0)
-      svgCanvas.setControllPoint2('y', 0)
+      svgCanvas.setControlPoint1('x', 0)
+      svgCanvas.setControlPoint1('y', 0)
+      svgCanvas.setControlPoint2('x', 0)
+      svgCanvas.setControlPoint2('y', 0)
       svgCanvas.setStarted(true)
       svgCanvas.setDAttr(realX + ',' + realY + ' ')
       // Commented out as doing nothing now:

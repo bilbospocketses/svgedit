@@ -145,8 +145,8 @@ class SvgCanvas {
   rStartY: number | null
   initBbox: Record<string, number>
   sumDistance: number
-  controllPoint2: { x: number; y: number }
-  controllPoint1: { x: number; y: number }
+  controlPoint2: { x: number; y: number }
+  controlPoint1: { x: number; y: number }
   start: { x: number; y: number }
   end: { x: number; y: number }
   bSpline: { x: number; y: number }
@@ -322,8 +322,8 @@ class SvgCanvas {
     this.rStartY = null
     this.initBbox = {}
     this.sumDistance = 0
-    this.controllPoint2 = { x: 0, y: 0 }
-    this.controllPoint1 = { x: 0, y: 0 }
+    this.controlPoint2 = { x: 0, y: 0 }
+    this.controlPoint1 = { x: 0, y: 0 }
     this.start = { x: 0, y: 0 }
     this.end = { x: 0, y: 0 }
     this.bSpline = { x: 0, y: 0 }
@@ -705,12 +705,12 @@ class SvgCanvas {
     return this.nextPos[key as keyof typeof this.nextPos]
   }
 
-  getControllPoint1 (key: string): number {
-    return this.controllPoint1[key as keyof typeof this.controllPoint1]
+  getControlPoint1 (key: string): number {
+    return this.controlPoint1[key as keyof typeof this.controlPoint1]
   }
 
-  getControllPoint2 (key: string): number {
-    return this.controllPoint2[key as keyof typeof this.controllPoint2]
+  getControlPoint2 (key: string): number {
+    return this.controlPoint2[key as keyof typeof this.controlPoint2]
   }
 
   getFreehand (key: string): number | null {
@@ -741,12 +741,12 @@ class SvgCanvas {
     this.end[key as keyof typeof this.end] = value
   }
 
-  setControllPoint1 (key: string, value: number): void {
-    this.controllPoint1[key as keyof typeof this.controllPoint1] = value
+  setControlPoint1 (key: string, value: number): void {
+    this.controlPoint1[key as keyof typeof this.controlPoint1] = value
   }
 
-  setControllPoint2 (key: string, value: number): void {
-    this.controllPoint2[key as keyof typeof this.controllPoint2] = value
+  setControlPoint2 (key: string, value: number): void {
+    this.controlPoint2[key as keyof typeof this.controlPoint2] = value
   }
 
   setJustSelected (value: Element | null): void {
