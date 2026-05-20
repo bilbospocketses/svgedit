@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */
+// svgCanvas / extension API surface is loosely typed; cleanup deferred to #3 or follow-up
 /**
  * @file ext-markers.js
  *
@@ -29,8 +31,8 @@
 
 export default {
   name: 'markers',
-  async init () {
-    const svgEditor = this
+  async init (this: any) {
+    const svgEditor: any = this
     const { svgCanvas } = svgEditor
     const { BatchCommand, RemoveElementCommand, InsertElementCommand } = svgCanvas.history
     const { $id, addSVGElementsFromJson: addElem } = svgCanvas
@@ -42,7 +44,7 @@ export default {
     // the geometry is normalized to a 100x100 box with the origin at lower left
     // Safari did not like negative values for low left of viewBox
     // remember that the coordinate system has +y downward
-    const markerTypes = {
+    const markerTypes: Record<string, any> = {
       nomarker: {},
       leftarrow:
         { element: 'path', attr: { d: 'M0,50 L100,90 L70,50 L100,10 Z' } },
@@ -64,7 +66,7 @@ export default {
     * @param {"marker-start"|"marker-mid"|"marker-end"} attr
     * @returns {Element} The marker element that is linked to the graphic element
     */
-    const getLinked = (elem, attr) => {
+    const getLinked = (elem: any, attr: string) => {
       const str = elem.getAttribute(attr)
       if (!str) { return null }
       const m = str.match(/\(#(.*)\)/)
@@ -80,7 +82,7 @@ export default {
      * @param {boolean} on
      * @returns {void}
     */
-    const showPanel = (on, elem) => {
+    const showPanel = (on: boolean, elem?: any) => {
       $id('marker_panel').style.display = (on) ? 'block' : 'none'
       if (on && elem) {
         mtypes.forEach((pos) => {
@@ -99,7 +101,7 @@ export default {
     * @param {""|"nomarker"|"nomarker"|"leftarrow"|"rightarrow"|"textmarker"|"forwardslash"|"reverseslash"|"verticalslash"|"box"|"star"|"xmark"|"triangle"|"mcircle"} seType
     * @returns {SVGMarkerElement}
     */
-    const addMarker = (id, seType) => {
+    const addMarker = (id: string, seType: string) => {
       const selElems = svgCanvas.getSelectedElements()
       let marker = svgCanvas.getElement(id)
       if (marker) { return undefined }
@@ -154,7 +156,7 @@ export default {
     * @param {Element} elem
     * @returns {SVGPolylineElement}
     */
-    const convertline = (elem) => {
+    const convertline = (elem: any) => {
       // this routine came from the connectors extension
       // it is needed because midpoint markers don't work with line elements
       if (elem.tagName !== 'line') { return elem }
@@ -200,7 +202,7 @@ export default {
     *
     * @returns {void}
     */
-    const setMarker = (pos, markerType) => {
+    const setMarker = (pos: string, markerType: string) => {
       const selElems = svgCanvas.getSelectedElements()
       if (selElems.length === 0) return
       const markerName = 'marker-' + pos
@@ -230,7 +232,7 @@ export default {
      * @param {Element} elem
      * @returns {void}
     */
-    const colorChanged = (elem) => {
+    const colorChanged = (elem: any) => {
       const color = elem.getAttribute('stroke')
 
       mtypes.forEach((pos) => {
@@ -252,7 +254,7 @@ export default {
     * @param {Element} el
     * @returns {void}
     */
-    const updateReferences = (el) => {
+    const updateReferences = (el: any) => {
       const selElems = svgCanvas.getSelectedElements()
       mtypes.forEach((pos) => {
         const markerName = 'marker-' + pos
@@ -293,15 +295,15 @@ export default {
         // don't display the panels on start
         showPanel(false)
         mtypes.forEach((pos) => {
-          $id(`${pos}_marker_list_opts`).addEventListener('change', (evt) => {
+          $id(`${pos}_marker_list_opts`).addEventListener('change', (evt: any) => {
             setMarker(pos, evt.detail.value)
           })
         })
       },
-      selectedChanged (opts) {
+      selectedChanged (opts: any) {
         // Use this to update the current selected elements
         if (opts.elems.length === 0) showPanel(false)
-        opts.elems.forEach((elem) => {
+        opts.elems.forEach((elem: any) => {
           if (elem && markerElems.includes(elem.tagName)) {
             if (opts.selectedElement && !opts.multiselected) {
               showPanel(true, elem)
@@ -313,7 +315,7 @@ export default {
           }
         })
       },
-      elementChanged (opts) {
+      elementChanged (opts: any) {
         const elem = opts.elems[0]
         if (elem && (
           elem.getAttribute('marker-start') ||
