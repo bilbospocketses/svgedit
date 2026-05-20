@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */
+// svgCanvas / extension API surface is loosely typed; cleanup deferred to #3 or follow-up
 /**
  * @file ext-polystar.js
  *
@@ -10,7 +12,7 @@
 
 const name = 'polystar'
 
-const loadExtensionTranslation = async function (svgEditor) {
+const loadExtensionTranslation = async function (svgEditor: any): Promise<void> {
   let translationModule
   const lang = svgEditor.configObj.pref('lang')
   try {
@@ -24,15 +26,15 @@ const loadExtensionTranslation = async function (svgEditor) {
 
 export default {
   name,
-  async init () {
-    const svgEditor = this
+  async init (this: any) {
+    const svgEditor: any = this
     const { svgCanvas } = svgEditor
     const { ChangeElementCommand } = svgCanvas.history
-    const addToHistory = (cmd) => { svgCanvas.undoMgr.addCommandToHistory(cmd) }
+    const addToHistory = (cmd: any): void => { svgCanvas.undoMgr.addCommandToHistory(cmd) }
     const { $id, $click } = svgCanvas
-    let selElems
-    let started
-    let newFO
+    let selElems: any
+    let started: boolean
+    let newFO: any
     await loadExtensionTranslation(svgEditor)
 
     /**
@@ -40,7 +42,7 @@ export default {
      * @param {string} tool "star" or "polygone"
      * @returns {void}
      */
-    const showPanel = (on, tool) => {
+    const showPanel = (on: boolean, tool: string) => {
       if (on) {
         $id(`${tool}_panel`).style.removeProperty('display')
       } else {
@@ -54,7 +56,7 @@ export default {
      * @param {string|Float} val new value
      * @returns {void}
      */
-    const setAttr = (attr, val) => {
+    const setAttr = (attr: string, val: any) => {
       svgCanvas.changeSelectedAttribute(attr, val)
       svgCanvas.call('changed', selElems)
     }
@@ -63,13 +65,13 @@ export default {
      * @param {Float} n angle
      * @return {Float} cotangeante
      */
-    const cot = (n) => 1 / Math.tan(n)
+    const cot = (n: number): number => 1 / Math.tan(n)
 
     /**
      * @param {Float} n angle
      * @returns {Float} sec
      */
-    const sec = (n) => 1 / Math.cos(n)
+    const sec = (n: number): number => 1 / Math.cos(n)
 
     return {
       name: svgEditor.i18next.t(`${name}:name`),
@@ -91,14 +93,14 @@ export default {
         svgCanvas.insertChildAtIndex($id('tools_left'), buttonTemplate, 10)
         // handler
         $click($id('tool_star'), () => {
-          if (this.leftPanel.updateLeftPanel('tool_star')) {
+          if (svgEditor.leftPanel.updateLeftPanel('tool_star')) {
             svgCanvas.setMode('star')
             showPanel(true, 'star')
             showPanel(false, 'polygon')
           }
         })
         $click($id('tool_polygon'), () => {
-          if (this.leftPanel.updateLeftPanel('tool_polygon')) {
+          if (svgEditor.leftPanel.updateLeftPanel('tool_polygon')) {
             svgCanvas.setMode('polygon')
             showPanel(true, 'polygon')
             showPanel(false, 'star')
@@ -133,7 +135,7 @@ export default {
         // don't display the panels on start
         showPanel(false, 'star')
         showPanel(false, 'polygon')
-        $id('starNumPoints').addEventListener('change', (event) => {
+        $id('starNumPoints').addEventListener('change', (event: any) => {
           setAttr('point', event.target.value)
           const orient = 'point'
           const point = event.target.value
@@ -194,13 +196,13 @@ export default {
             }
           }
         })
-        $id('RadiusMultiplier').addEventListener('change', (event) => {
+        $id('RadiusMultiplier').addEventListener('change', (event: any) => {
           setAttr('starRadiusMultiplier', event.target.value)
         })
-        $id('radialShift').addEventListener('change', (event) => {
+        $id('radialShift').addEventListener('change', (event: any) => {
           setAttr('radialshift', event.target.value)
         })
-        $id('polySides').addEventListener('change', (event) => {
+        $id('polySides').addEventListener('change', (event: any) => {
           setAttr('sides', event.target.value)
           const sides = event.target.value
           let i = selElems.length
@@ -238,7 +240,7 @@ export default {
           }
         })
       },
-      mouseDown (opts) {
+      mouseDown (opts: any) {
         if (svgCanvas.getMode() === 'star') {
           const fill = svgCanvas.getColor('fill')
           const stroke = svgCanvas.getColor('stroke')
@@ -292,7 +294,7 @@ export default {
         }
         return undefined
       },
-      mouseMove (opts) {
+      mouseMove (opts: any) {
         if (!started) {
           return undefined
         }
@@ -311,9 +313,9 @@ export default {
 
           const circumradius =
             Math.sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy)) / 1.5
-          const RadiusMultiplier = document.getElementById('RadiusMultiplier').value
+          const RadiusMultiplier = (document.getElementById('RadiusMultiplier') as HTMLInputElement).value
           const inradius =
-            circumradius / RadiusMultiplier
+            circumradius / Number(RadiusMultiplier)
           newFO.setAttribute('r', circumradius)
           newFO.setAttribute('r2', inradius)
           newFO.setAttribute('starRadiusMultiplier', RadiusMultiplier)
@@ -414,7 +416,7 @@ export default {
         }
         return undefined
       },
-      selectedChanged (opts) {
+      selectedChanged (opts: any) {
         // Use this to update the current selected elements
         selElems = opts.elems
         let i = selElems.length
