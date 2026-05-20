@@ -2,15 +2,17 @@
 // Kailash Nadh (c) 2020.
 // MIT License.
 // can't use npm version as the dragmove is different.
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
+// dragmove utility: loose event types; cleanup deferred to #3 or follow-up
 
 let _loaded = false
-const _callbacks = []
+const _callbacks: any[] = []
 const _isTouch = window.ontouchstart !== undefined
 
-export const dragmove = function (target, handler, parent, onStart, onEnd, onDrag) {
+export const dragmove = function (target: any, handler: any, parent: any, onStart: any, onEnd: any, onDrag: any) {
   // Register a global event to capture mouse moves (once).
   if (!_loaded) {
-    document.addEventListener(_isTouch ? 'touchmove' : 'mousemove', function (e) {
+    document.addEventListener(_isTouch ? 'touchmove' : 'mousemove', function (e: any) {
       let c = e
       if (e.touches) {
         c = e.touches[0]
@@ -29,7 +31,7 @@ export const dragmove = function (target, handler, parent, onStart, onEnd, onDra
 
   // On the first click and hold, record the offset of the pointer in relation
   // to the point of click inside the element.
-  handler.addEventListener(_isTouch ? 'touchstart' : 'mousedown', function (e) {
+  handler.addEventListener(_isTouch ? 'touchstart' : 'mousedown', function (e: any) {
     e.stopPropagation()
     e.preventDefault()
     if (target.dataset.dragEnabled === 'false') {
@@ -64,7 +66,7 @@ export const dragmove = function (target, handler, parent, onStart, onEnd, onDra
   })
 
   // Register mouse-move callback to move the element.
-  _callbacks.push(function move (x, y) {
+  _callbacks.push(function move (x: number, y: number) {
     if (!isMoving) {
       return
     }
