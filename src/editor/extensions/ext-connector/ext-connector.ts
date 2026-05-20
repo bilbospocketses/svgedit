@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */
+// svgCanvas / extension API surface is loosely typed; cleanup deferred to #3 or follow-up
 /**
  * @file ext-connector.js
  *
@@ -10,7 +12,7 @@
 
 const name = 'connector'
 
-const loadExtensionTranslation = async function (svgEditor) {
+const loadExtensionTranslation = async function (svgEditor: any): Promise<void> {
   let translationModule
   const lang = svgEditor.configObj.pref('lang')
   try {
@@ -25,28 +27,29 @@ const loadExtensionTranslation = async function (svgEditor) {
 
 export default {
   name,
-  async init (S) {
-    const svgEditor = this
+  async init (this: any, S: any) {
+    const svgEditor: any = this
     const { svgCanvas } = svgEditor
     const { getElement, $id, $click, addSVGElementsFromJson } = svgCanvas
     const { svgroot, selectorManager } = S
     const seNs = svgCanvas.getEditorNS()
     await loadExtensionTranslation(svgEditor)
 
-    let startX
-    let startY
-    let curLine
-    let startElem
-    let endElem
+    let startX: number
+    let startY: number
+    let curLine: any
+    let startElem: any
+    let endElem: any
 
     let started = false
-    let connections = []
+    let connections: any[] = []
 
+    // TODO: see todo #10 — monkey-patches groupSelectedElements + moveSelectedElements; defer to #4 embed-API design
     // Save the original groupSelectedElements method
     const originalGroupSelectedElements = svgCanvas.groupSelectedElements
 
     // Override the original groupSelectedElements to exclude connectors
-    svgCanvas.groupSelectedElements = function (...args) {
+    svgCanvas.groupSelectedElements = function (...args: any[]) {
       // Remove connectors from selection
       svgCanvas.removeFromSelection(document.querySelectorAll('[id^="conn_"]'))
 
@@ -58,7 +61,7 @@ export default {
     const originalMoveSelectedElements = svgCanvas.moveSelectedElements
 
     // Override the original moveSelectedElements to handle connectors
-    svgCanvas.moveSelectedElements = function (...args) {
+    svgCanvas.moveSelectedElements = function (...args: any[]) {
       // Call the original method and store its result
       const cmd = originalMoveSelectedElements.apply(this, args)
 
@@ -77,7 +80,7 @@ export default {
      * @param {Float} offset
      * @returns {module:math.XYObject}
      */
-    const getBBintersect = (x, y, bb, offset) => {
+    const getBBintersect = (x: number, y: number, bb: any, offset?: number) => {
       // Adjust bounding box if offset is provided
       if (offset) {
         bb = { ...bb } // Create a shallow copy
@@ -119,7 +122,7 @@ export default {
      * @param {Element} line - The line element to check for a marker.
      * @returns {Float} - Returns the calculated offset if a marker is present, otherwise returns 0.
      */
-    const getOffset = (side, line) => {
+    const getOffset = (side: string, line: any) => {
       // Check for marker attribute on the given side ("marker-start" or "marker-end")
       const hasMarker = line.getAttribute('marker-' + side)
 
@@ -136,13 +139,13 @@ export default {
      * @param {boolean} on - Determines whether to show or hide the elements.
      * @returns {void}
      */
-    const showPanel = on => {
+    const showPanel = (on: boolean) => {
       // Find the 'connector_rules' or create it if it doesn't exist.
       let connRules = $id('connector_rules')
       if (!connRules) {
         connRules = document.createElement('style')
         connRules.setAttribute('id', 'connector_rules')
-        document.getElementsByTagName('head')[0].appendChild(connRules)
+        document.getElementsByTagName('head')[0]!.appendChild(connRules)
       }
 
       // Update the content of <style> element to either hide or show certain elements.
@@ -165,7 +168,7 @@ export default {
      * @param {boolean} [setMid] - Whether to set the midpoint.
      * @returns {void}
      */
-    const setPoint = (elem, pos, x, y, setMid) => {
+    const setPoint = (elem: any, pos: number | 'end', x: number, y: number, setMid?: boolean) => {
       // Create a new SVG point
       const pts = elem.points
       const pt = svgroot.createSVGPoint()
@@ -193,7 +196,7 @@ export default {
      * @param {Float} diffY
      * @returns {void}
      */
-    const updatePoints = (line, conn, bb, altBB, pre, altPre) => {
+    const updatePoints = (line: any, conn: any, bb: any, altBB: any, pre: string, altPre: string) => {
       const srcX = altBB.x + altBB.width / 2
       const srcY = altBB.y + altBB.height / 2
 
@@ -204,7 +207,7 @@ export default {
       setPoint(line, conn.is_start ? 'end' : 0, pt2.x, pt2.y, true)
     }
 
-    const updateLine = (diffX, diffY) => {
+    const updateLine = (diffX: number, diffY: number) => {
       const dataStorage = svgCanvas.getDataStorage()
 
       for (const conn of connections) {
@@ -233,7 +236,7 @@ export default {
     }
 
     // Finds connectors associated with selected elements
-    const findConnectors = (elems = []) => {
+    const findConnectors = (elems: any[] = []) => {
       // Fetch data storage object from svgCanvas
       const dataStorage = svgCanvas.getDataStorage()
 
@@ -255,7 +258,7 @@ export default {
           // If part is null or undefined, fetch it and store it
           if (!part) {
             part = document.getElementById(
-              connector.attributes['se:connector'].value.split(' ')[i]
+              ((connector.attributes as any)['se:connector']).value.split(' ')[i]
             )
             dataStorage.put(connector, `c_${pos}`, part.id)
             dataStorage.put(
@@ -313,7 +316,7 @@ export default {
      * @param {Element[]} [elems] - Optional array of selected elements.
      * @returns {void}
      */
-    const updateConnectors = elems => {
+    const updateConnectors = (elems?: any[]) => {
       const dataStorage = svgCanvas.getDataStorage()
 
       // Find connectors associated with selected elements
@@ -374,7 +377,7 @@ export default {
       // Make sure all connectors have data set
       const svgContent = svgCanvas.getSvgContent()
       const elements = svgContent.querySelectorAll('*')
-      elements.forEach(element => {
+      elements.forEach((element: any) => {
         const conn = element.getAttributeNS(seNs, 'connector')
         if (conn) {
           const connData = conn.split(' ')
@@ -402,12 +405,12 @@ export default {
          `
         $id('tools_left').append(buttonTemplate.content.cloneNode(true))
         $click($id('tool_connect'), () => {
-          if (this.leftPanel.updateLeftPanel('tool_connect')) {
+          if (svgEditor.leftPanel.updateLeftPanel('tool_connect')) {
             svgCanvas.setMode('connector')
           }
         })
       },
-      mouseDown (opts) {
+      mouseDown (opts: any) {
         // Retrieve necessary data from the SVG canvas and the event object
         const dataStorage = svgCanvas.getDataStorage()
         const svgContent = svgCanvas.getSvgContent()
@@ -477,7 +480,7 @@ export default {
 
         return undefined
       },
-      mouseMove (opts) {
+      mouseMove (opts: any) {
         // Exit early if there are no connectors
         if (connections.length === 0) return
 
@@ -521,7 +524,7 @@ export default {
           }
         }
       },
-      mouseUp (opts) {
+      mouseUp (opts: any) {
         // Get necessary data and initial setups
         const dataStorage = svgCanvas.getDataStorage()
         const svgContent = svgCanvas.getSvgContent()
@@ -615,7 +618,7 @@ export default {
           started
         }
       },
-      selectedChanged (opts) {
+      selectedChanged (opts: any) {
         // Get necessary data storage and SVG content
         const dataStorage = svgCanvas.getDataStorage()
         const svgContent = svgCanvas.getSvgContent()
@@ -648,7 +651,7 @@ export default {
         // Update connectors based on selected elements
         updateConnectors(svgCanvas.getSelectedElements())
       },
-      elementChanged (opts) {
+      elementChanged (opts: any) {
         // Get the necessary data storage
         const dataStorage = svgCanvas.getDataStorage()
 
@@ -704,13 +707,13 @@ export default {
           updateConnectors(svgCanvas.getSelectedElements())
         }
       },
-      IDsUpdated (input) {
-        const remove = []
-        input.elems.forEach(function (elem) {
+      IDsUpdated (input: any) {
+        const remove: any[] = []
+        input.elems.forEach(function (elem: any) {
           if ('se:connector' in elem.attr) {
             elem.attr['se:connector'] = elem.attr['se:connector']
               .split(' ')
-              .map(function (oldID) {
+              .map(function (oldID: string) {
                 return input.changes[oldID]
               })
               .join(' ')
@@ -724,8 +727,8 @@ export default {
         })
         return { remove }
       },
-      toolButtonStateUpdate (opts) {
-        const button = document.getElementById('tool_connect')
+      toolButtonStateUpdate (opts: any) {
+        const button = document.getElementById('tool_connect') as any
         if (opts.nostroke && button.pressed === true) {
           svgEditor.clickSelect()
         }
