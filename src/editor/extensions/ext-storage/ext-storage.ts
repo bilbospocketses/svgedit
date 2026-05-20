@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */
+// svgCanvas / extension API surface is loosely typed; cleanup deferred to #3 or follow-up
 /**
  * @file ext-storage.js
  *
@@ -32,7 +34,7 @@ const removeStoragePrefCookie = () => {
  * @param {string} cookie
  * @returns {void}
  */
-const expireCookie = cookie => {
+const expireCookie = (cookie: string) => {
   document.cookie =
     encodeURIComponent(cookie) + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT'
 }
@@ -43,26 +45,27 @@ const expireCookie = cookie => {
  * @returns {void}
  * @todo Replace the string manipulation with `searchParams.set`
  */
-const replaceStoragePrompt = val => {
-  val = val ? 'storagePrompt=' + val : ''
-  const loc = top.location // Allow this to work with the embedded editor as well
+const replaceStoragePrompt = (val?: string) => {
+  const valStr = val ? 'storagePrompt=' + val : ''
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const loc = top!.location // Allow this to work with the embedded editor as well
   if (loc.href.includes('storagePrompt=')) {
     loc.href = loc.href.replace(/([&?])storagePrompt=[^&]*(&?)/, function (
-      n0,
+      _n0,
       n1,
       amp
     ) {
-      return (val ? n1 : '') + val + (!val && amp ? n1 : amp || '')
+      return (valStr ? n1 : '') + valStr + (!valStr && amp ? n1 : amp || '')
     })
   } else {
-    loc.href += (loc.href.includes('?') ? '&' : '?') + val
+    loc.href += (loc.href.includes('?') ? '&' : '?') + valStr
   }
 }
 
 export default {
   name: 'storage',
-  init () {
-    const svgEditor = this
+  init (this: any) {
+    const svgEditor: any = this
     const { svgCanvas, storage } = svgEditor
 
     // We could empty any already-set data for users when they decline storage,
@@ -103,18 +106,19 @@ export default {
     }
 
     // storageDialog added to DOM
-    const storageBox = document.createElement('se-storage-dialog')
+    const storageBox = document.createElement('se-storage-dialog') as any
     storageBox.setAttribute('id', 'se-storage-dialog')
     svgEditor.$container.append(storageBox)
     storageBox.init(svgEditor.i18next)
 
     // manage the change in the storageDialog
 
-    storageBox.addEventListener('change', e => {
+    storageBox.addEventListener('change', (e: any) => {
       storageBox.setAttribute('dialog', 'close')
       if (e?.detail?.trigger === 'ok') {
         if (e?.detail?.select !== 'noPrefsOrContent') {
-          const storagePrompt = new URL(top.location).searchParams.get(
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          const storagePrompt = new URL(top!.location.href).searchParams.get(
             'storagePrompt'
           )
           document.cookie =
@@ -159,7 +163,7 @@ export default {
      * @param {string} svgString
      * @returns {void}
      */
-    const setSvgContentStorage = svgString => {
+    const setSvgContentStorage = (svgString: string) => {
       const name = `svgedit-${svgEditor.configObj.curConfig.canvasName}`
       if (!svgString) {
         storage.removeItem(name)
@@ -206,7 +210,7 @@ export default {
           if (storage) {
             storage.setItem(key, val)
           } else {
-            val = encodeURIComponent(val)
+            val = encodeURIComponent(val as string)
             document.cookie =
               encodeURIComponent(key) +
               '=' +
@@ -221,7 +225,8 @@ export default {
     return {
       name: 'storage',
       callback () {
-        const storagePrompt = new URL(top.location).searchParams.get(
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const storagePrompt = new URL(top!.location.href).searchParams.get(
           'storagePrompt'
         )
         // No need to run this one-time dialog again just because the user
@@ -256,9 +261,9 @@ export default {
           // Open select-with-checkbox dialog
           // From svg-editor.js
           svgEditor.storagePromptState = 'waiting'
-          const $storageDialog = document.getElementById('se-storage-dialog')
+          const $storageDialog = document.getElementById('se-storage-dialog')!
           $storageDialog.setAttribute('dialog', 'open')
-          $storageDialog.setAttribute('storage', options)
+          $storageDialog.setAttribute('storage', String(options))
         } else if (!noStorageOnLoad || forceStorage) {
           setupBeforeUnloadListener()
         }
