@@ -1,6 +1,6 @@
 import { readdir, stat } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
-import { build } from 'vite'
+import { build, type Plugin, type ResolvedConfig } from 'vite'
 import dynamicImportVars from '@rollup/plugin-dynamic-import-vars'
 import string from 'vite-plugin-string'
 
@@ -18,7 +18,7 @@ const htmlStringPlugin = string({
 })
 htmlStringPlugin.enforce = 'post'
 
-const entries = []
+const entries: string[] = []
 for (const dirent of await readdir(extensionsRoot, { withFileTypes: true })) {
   if (!dirent.isDirectory() || !dirent.name.startsWith('ext-')) continue
   // After TS migration Task 14, entry files are .ts; pre-migration code had .js.
@@ -31,7 +31,7 @@ for (const dirent of await readdir(extensionsRoot, { withFileTypes: true })) {
         entries.push(entryPath)
         break
       }
-    } catch (_err) {
+    } catch {
       // no entry file at this ext, try next
     }
   }
@@ -53,8 +53,10 @@ await build({
       name: 'svgedit-skip-vite-build-html',
       apply: 'build',
       enforce: 'pre',
-      configResolved (config) {
-        config.plugins = config.plugins.filter(plugin => plugin.name !== 'vite:build-html')
+      configResolved (config: ResolvedConfig) {
+        // plugins is readonly in ResolvedConfig; cast to write during build setup
+        ;(config as unknown as { plugins: ResolvedConfig['plugins'] }).plugins =
+          config.plugins.filter(plugin => plugin.name !== 'vite:build-html')
       }
     },
     htmlStringPlugin,
@@ -62,8 +64,8 @@ await build({
       ...dynamicImportVars({
         include: ['src/editor/extensions/*/*.js']
       }),
-      apply: 'build'
-    }
+      apply: 'build' as const
+    } as Plugin
   ],
   build: {
     outDir,
