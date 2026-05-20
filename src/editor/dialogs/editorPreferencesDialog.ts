@@ -1,11 +1,38 @@
-/* globals svgEditor */
+// @ts-expect-error: *.html imported as string via vite-plugin-string; no ambient module declaration
 import editorPreferencesDialog from './editorPreferencesDialog.html'
+
+declare const svgEditor: SvgEditorGlobal
+
 const template = document.createElement('template')
-template.innerHTML = editorPreferencesDialog
+template.innerHTML = editorPreferencesDialog as string // eslint-disable-line @typescript-eslint/no-unsafe-assignment
+/* eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- static HTML template */
 /**
  * @class SeEditPrefsDialog
  */
 export class SeEditPrefsDialog extends HTMLElement {
+  declare colorBlocks: string[]
+  declare _shadowRoot: ShadowRoot
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  declare $dialog: any
+  declare $saveBtn: Element | null
+  declare $cancelBtn: Element | null
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  declare $langSelect: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  declare $bgBlocks: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  declare $bgURL: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  declare $gridSnappingOn: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  declare $gridSnappingStep: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  declare $gridColor: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  declare $showRulers: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  declare $baseUnit: any
+
   /**
     * @function constructor
     */
@@ -33,7 +60,8 @@ export class SeEditPrefsDialog extends HTMLElement {
    * @param {any} name
    * @returns {void}
    */
-  init (i18next) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  init (i18next: any): void {
     this.setAttribute('common-ok', i18next.t('common.ok'))
     this.setAttribute('common-cancel', i18next.t('common.cancel'))
     this.setAttribute('config-editor_prefs', i18next.t('config.editor_prefs'))
@@ -54,7 +82,7 @@ export class SeEditPrefsDialog extends HTMLElement {
    * @function observedAttributes
    * @returns {any} observed
    */
-  static get observedAttributes () {
+  static get observedAttributes (): string[] {
     // eslint-disable-next-line max-len
     return ['dialog', 'lang', 'canvasbg', 'bgurl', 'gridsnappingon', 'gridsnappingstep', 'gridcolor', 'showrulers', 'baseunit', 'common-ok', 'common-cancel', 'config-editor_prefs', 'config-language', 'config-background', 'common-url', 'config-editor_bg_note', 'config-grid', 'config-snapping_onoff', 'config-snapping_stepsize', 'config-grid_color', 'config-units_and_rulers', 'config-show_rulers', 'config-base_unit']
   }
@@ -66,11 +94,12 @@ export class SeEditPrefsDialog extends HTMLElement {
    * @param {string} newValue
    * @returns {void}
    */
-  attributeChangedCallback (name, oldValue, newValue) {
+  attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
     if (oldValue === newValue) return
-    const blocks = this.$bgBlocks.querySelectorAll('div')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const blocks: any = this.$bgBlocks.querySelectorAll('div')
     const curBg = 'cur_background'
-    let node
+    let node: Element | null
     switch (name) {
       case 'dialog':
         if (newValue === 'open') {
@@ -88,7 +117,8 @@ export class SeEditPrefsDialog extends HTMLElement {
             blocks[0].classList.add(curBg)
           }
         } else {
-          blocks.forEach(function (blk) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          blocks.forEach(function (blk: any) {
             const isBg = blk.dataset.bgColor === newValue
             if (isBg) {
               blk.classList.add(curBg)
@@ -125,60 +155,62 @@ export class SeEditPrefsDialog extends HTMLElement {
         this.$baseUnit.value = newValue
         break
       case 'common-ok':
-        this.$saveBtn.textContent = newValue
+        if (this.$saveBtn) this.$saveBtn.textContent = newValue
         break
       case 'common-cancel':
-        this.$cancelBtn.textContent = newValue
+        if (this.$cancelBtn) this.$cancelBtn.textContent = newValue
         break
       case 'config-editor_prefs':
         node = this._shadowRoot.querySelector('#svginfo_editor_prefs')
-        node.textContent = newValue
+        if (node) node.textContent = newValue
         break
       case 'config-language':
         node = this._shadowRoot.querySelector('#svginfo_lang')
-        node.textContent = newValue
+        if (node) node.textContent = newValue
         break
       case 'config-background':
         node = this._shadowRoot.querySelector('#svginfo_change_background')
-        node.textContent = newValue
+        if (node) node.textContent = newValue
         break
       case 'common-url':
         node = this._shadowRoot.querySelector('#svginfo_bg_url')
-        node.textContent = newValue
+        if (node) node.textContent = newValue
         break
       case 'config-editor_bg_note':
         node = this._shadowRoot.querySelector('#svginfo_bg_note')
-        node.textContent = newValue
+        if (node) node.textContent = newValue
         break
       case 'config-grid':
         node = this._shadowRoot.querySelector('#svginfo_grid_settings')
-        node.textContent = newValue
+        if (node) node.textContent = newValue
         break
       case 'config-snapping_onoff':
         node = this._shadowRoot.querySelector('#svginfo_snap_onoff')
-        node.textContent = newValue
+        if (node) node.textContent = newValue
         break
       case 'config-snapping_stepsize':
         node = this._shadowRoot.querySelector('#svginfo_snap_step')
-        node.textContent = newValue
+        if (node) node.textContent = newValue
         break
       case 'config-grid_color':
         node = this._shadowRoot.querySelector('#svginfo_grid_color')
-        node.textContent = newValue
+        if (node) node.textContent = newValue
         break
       case 'config-units_and_rulers':
         node = this._shadowRoot.querySelector('#svginfo_units_rulers')
-        node.textContent = newValue
+        if (node) node.textContent = newValue
         break
       case 'config-show_rulers':
         node = this._shadowRoot.querySelector('#svginfo_rulers_onoff')
-        node.textContent = newValue
+        if (node) node.textContent = newValue
         break
       case 'config-base_unit':
         node = this._shadowRoot.querySelector('#svginfo_unit')
-        node.textContent = newValue
+        if (node) node.textContent = newValue
         break
       default:
+        // TODO: see todo #10 — super.attributeChangedCallback may throw if HTMLElement doesn't implement it
+        // @ts-expect-error: pre-existing null-misuse, see todo #10
         super.attributeChangedCallback(name, oldValue, newValue)
         break
     }
@@ -188,15 +220,15 @@ export class SeEditPrefsDialog extends HTMLElement {
    * @function get
    * @returns {any}
    */
-  get lang () {
-    return this.getAttribute('lang')
+  get lang (): string {
+    return this.getAttribute('lang') ?? ''
   }
 
   /**
    * @function set
    * @returns {void}
    */
-  set lang (value) {
+  set lang (value: string) {
     this.setAttribute('lang', value)
   }
 
@@ -204,7 +236,7 @@ export class SeEditPrefsDialog extends HTMLElement {
    * @function get
    * @returns {any}
    */
-  get canvasbg () {
+  get canvasbg (): string | null {
     return this.getAttribute('canvasbg')
   }
 
@@ -212,7 +244,7 @@ export class SeEditPrefsDialog extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set canvasbg (value) {
+  set canvasbg (value: string) {
     this.setAttribute('canvasbg', value)
   }
 
@@ -220,7 +252,7 @@ export class SeEditPrefsDialog extends HTMLElement {
    * @function get
    * @returns {any}
    */
-  get bgurl () {
+  get bgurl (): string | null {
     return this.getAttribute('bgurl')
   }
 
@@ -228,7 +260,7 @@ export class SeEditPrefsDialog extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set bgurl (value) {
+  set bgurl (value: string) {
     this.setAttribute('bgurl', value)
   }
 
@@ -236,7 +268,7 @@ export class SeEditPrefsDialog extends HTMLElement {
    * @function get
    * @returns {any}
    */
-  get dialog () {
+  get dialog (): string | null {
     return this.getAttribute('dialog')
   }
 
@@ -244,7 +276,7 @@ export class SeEditPrefsDialog extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set dialog (value) {
+  set dialog (value: string) {
     this.setAttribute('dialog', value)
   }
 
@@ -252,7 +284,7 @@ export class SeEditPrefsDialog extends HTMLElement {
    * @function get
    * @returns {any}
    */
-  get gridsnappingon () {
+  get gridsnappingon (): string | null {
     return this.getAttribute('gridsnappingon')
   }
 
@@ -260,7 +292,7 @@ export class SeEditPrefsDialog extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set gridsnappingon (value) {
+  set gridsnappingon (value: string) {
     this.setAttribute('gridsnappingon', value)
   }
 
@@ -268,7 +300,7 @@ export class SeEditPrefsDialog extends HTMLElement {
    * @function get
    * @returns {any}
    */
-  get gridsnappingstep () {
+  get gridsnappingstep (): string | null {
     return this.getAttribute('gridsnappingstep')
   }
 
@@ -276,7 +308,7 @@ export class SeEditPrefsDialog extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set gridsnappingstep (value) {
+  set gridsnappingstep (value: string) {
     this.setAttribute('gridsnappingstep', value)
   }
 
@@ -284,7 +316,7 @@ export class SeEditPrefsDialog extends HTMLElement {
    * @function get
    * @returns {any}
    */
-  get gridcolor () {
+  get gridcolor (): string | null {
     return this.getAttribute('gridcolor')
   }
 
@@ -292,7 +324,7 @@ export class SeEditPrefsDialog extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set gridcolor (value) {
+  set gridcolor (value: string) {
     this.setAttribute('gridcolor', value)
   }
 
@@ -300,7 +332,7 @@ export class SeEditPrefsDialog extends HTMLElement {
    * @function get
    * @returns {any}
    */
-  get showrulers () {
+  get showrulers (): string | null {
     return this.getAttribute('showrulers')
   }
 
@@ -308,7 +340,7 @@ export class SeEditPrefsDialog extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set showrulers (value) {
+  set showrulers (value: string) {
     this.setAttribute('showrulers', value)
   }
 
@@ -316,7 +348,7 @@ export class SeEditPrefsDialog extends HTMLElement {
    * @function get
    * @returns {any}
    */
-  get baseunit () {
+  get baseunit (): string | null {
     return this.getAttribute('baseunit')
   }
 
@@ -324,7 +356,7 @@ export class SeEditPrefsDialog extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set baseunit (value) {
+  set baseunit (value: string) {
     this.setAttribute('baseunit', value)
   }
 
@@ -332,7 +364,7 @@ export class SeEditPrefsDialog extends HTMLElement {
    * @function connectedCallback
    * @returns {void}
    */
-  connectedCallback () {
+  connectedCallback (): void {
     const onCancelHandler = () => {
       const closeEvent = new CustomEvent('change', {
         detail: {
@@ -374,17 +406,20 @@ export class SeEditPrefsDialog extends HTMLElement {
     })
     const blocks = this.$bgBlocks.querySelectorAll('div')
     const curBg = 'cur_background'
-    blocks.forEach(function (blk) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    blocks.forEach(function (blk: any) {
       svgEditor.$click(blk, function () {
-        blocks.forEach((el) => el.classList.remove(curBg))
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        blocks.forEach((el: any) => el.classList.remove(curBg))
         blk.classList.add(curBg)
       })
     })
-    svgEditor.$click(this.$saveBtn, onSaveHandler)
-    svgEditor.$click(this.$cancelBtn, onCancelHandler)
+    svgEditor.$click(this.$saveBtn as EventTarget, onSaveHandler)
+    svgEditor.$click(this.$cancelBtn as EventTarget, onCancelHandler)
     this.$dialog.addEventListener('close', onCancelHandler)
   }
 }
 
 // Register
-customElements.define('se-edit-prefs-dialog', SeEditPrefsDialog)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+customElements.define('se-edit-prefs-dialog', SeEditPrefsDialog as any)
