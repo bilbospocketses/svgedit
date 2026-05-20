@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process'
+import { spawn, type SpawnOptions } from 'node:child_process'
 import { readdir, stat } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
@@ -7,15 +7,15 @@ import { join } from 'node:path'
 const playwrightCache = process.env.PLAYWRIGHT_BROWSERS_PATH ||
   join(process.cwd(), 'node_modules', '.cache', 'ms-playwright')
 process.env.PLAYWRIGHT_BROWSERS_PATH = playwrightCache
-const sanitizedEnv = { ...process.env, PLAYWRIGHT_BROWSERS_PATH: playwrightCache }
-delete sanitizedEnv.ELECTRON_RUN_AS_NODE
-delete process.env.ELECTRON_RUN_AS_NODE
+const sanitizedEnv: Record<string, string | undefined> = { ...process.env, PLAYWRIGHT_BROWSERS_PATH: playwrightCache }
+delete sanitizedEnv['ELECTRON_RUN_AS_NODE']
+delete process.env['ELECTRON_RUN_AS_NODE']
 
 // shell:true on Windows so `npx`/`npm` (which are `.cmd` shims) resolve via PATHEXT.
 const isWindows = process.platform === 'win32'
-const run = (cmd, args, opts = {}) => new Promise((resolve, reject) => {
+const run = (cmd: string, args: string[], opts: SpawnOptions = {}): Promise<void> => new Promise((resolve, reject) => {
   const child = spawn(cmd, args, { stdio: 'inherit', shell: isWindows, env: sanitizedEnv, ...opts })
-  child.on('exit', code => (code === 0 ? resolve() : reject(new Error(`${cmd} exited with code ${code}`))))
+  child.on('exit', code => (code === 0 ? resolve(undefined) : reject(new Error(`${cmd} exited with code ${code}`))))
   child.on('error', reject)
 })
 
@@ -25,12 +25,12 @@ const hasPlaywright = async () => {
     return true
   } catch (error) {
     console.warn('Skipping e2e tests because Playwright is unavailable or failed to verify.')
-    console.warn(error.message || error)
+    console.warn(error instanceof Error ? error.message : String(error))
     return false
   }
 }
 
-const isBrowserInstalled = async (prefix) => {
+const isBrowserInstalled = async (prefix: string): Promise<boolean> => {
   if (!existsSync(playwrightCache)) return false
   try {
     const entries = await readdir(playwrightCache)
@@ -50,7 +50,7 @@ const ensureBrowser = async () => {
   }
 }
 
-const getLatestMtime = async (root) => {
+const getLatestMtime = async (root: string): Promise<number> => {
   let latest = 0
   const entries = await readdir(root, { withFileTypes: true })
   for (const entry of entries) {
