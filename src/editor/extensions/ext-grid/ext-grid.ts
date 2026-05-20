@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */
+// svgCanvas / extension API surface is loosely typed; cleanup deferred to #3 or follow-up
 /**
  * @file ext-grid.js
  *
@@ -9,7 +11,7 @@
 
 const name = 'grid'
 
-const loadExtensionTranslation = async function (svgEditor) {
+const loadExtensionTranslation = async function (svgEditor: any): Promise<void> {
   let translationModule
   const lang = svgEditor.configObj.pref('lang')
   try {
@@ -23,8 +25,8 @@ const loadExtensionTranslation = async function (svgEditor) {
 
 export default {
   name,
-  async init () {
-    const svgEditor = this
+  async init (this: any) {
+    const svgEditor: any = this
     await loadExtensionTranslation(svgEditor)
     const { svgCanvas } = svgEditor
     const { $id, $click, NS } = svgCanvas
@@ -92,7 +94,7 @@ export default {
      * @param {Float} zoom
      * @returns {void}
      */
-    const updateGrid = (zoom) => {
+    const updateGrid = (zoom: number) => {
       // TODO: Try this with <line> elements, then compare performance difference
       const unit = units[svgEditor.configObj.curConfig.baseUnit] // 1 = 1px
       const uMulti = unit * zoom
@@ -108,7 +110,7 @@ export default {
       // Set the canvas size to the width of the container
       hcanvas.width = bigInt
       hcanvas.height = bigInt
-      const ctx = hcanvas.getContext('2d')
+      const ctx = hcanvas.getContext('2d')!
       const curD = 0.5
       const part = bigInt / 10
 
@@ -154,7 +156,7 @@ export default {
     }
     return {
       name: svgEditor.i18next.t(`${name}:name`),
-      zoomChanged (zoom) {
+      zoomChanged (zoom: any) {
         if (showGrid) { updateGrid(zoom) }
       },
       callback () {
