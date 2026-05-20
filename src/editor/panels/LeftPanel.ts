@@ -1,4 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-non-null-assertion */
+// editor / panel API surface is loosely typed; full typing deferred to follow-up
 import SvgCanvas from '@svgedit/svgcanvas'
+// @ts-expect-error: LeftPanel.html imported as string via vite-plugin-string; no ambient module declaration
 import leftPanelHTML from './LeftPanel.html'
 
 const { $id, $qa, $click } = SvgCanvas
@@ -10,10 +13,12 @@ const { $id, $qa, $click } = SvgCanvas
  * @type {module}
  */
 class LeftPanel {
+  editor: any
+
   /**
    * @param {PlainObject} editor svgedit handler
    */
-  constructor (editor) {
+  constructor (editor: any) {
     this.editor = editor
   }
 
@@ -26,14 +31,14 @@ class LeftPanel {
    * @param {string|Element} button The DOM element or string selector representing the toolbar button
    * @returns {boolean} Whether the button was disabled or not
    */
-  updateLeftPanel (button) {
+  updateLeftPanel (button: any): boolean {
     if (button.disabled) return false
     // remove the pressed state on other(s) button(s)
     $qa('#tools_left *[pressed]').forEach((b) => {
-      b.pressed = false
+      ;(b as any).pressed = false
     })
     // pressed state for the clicked button
-    $id(button).pressed = true
+    ;($id(button) as any).pressed = true
     return true
   }
 
@@ -185,8 +190,8 @@ class LeftPanel {
   /**
    * @type {module}
    */
-  add (id, handler) {
-    $click($id(id), () => {
+  add (id: any, handler: any): void {
+    $click($id(id)!, () => {
       if (this.updateLeftPanel(id)) {
         handler()
       }
@@ -196,28 +201,28 @@ class LeftPanel {
   /**
    * @type {module}
    */
-  init () {
+  init (): void {
     // add Left panel
     const template = document.createElement('template')
     template.innerHTML = leftPanelHTML
     this.editor.$svgEditor.append(template.content.cloneNode(true))
     // register actions for left panel
-    $click($id('tool_select'), this.clickSelect.bind(this))
-    $click($id('tool_fhpath'), this.clickFHPath.bind(this))
-    $click($id('tool_text'), this.clickText.bind(this))
-    $click($id('tool_image'), this.clickImage.bind(this))
-    $click($id('tool_zoom'), this.clickZoom.bind(this))
-    $id('tool_zoom').addEventListener('dblclick', this.dblclickZoom.bind(this))
-    $click($id('tool_path'), this.clickPath.bind(this))
-    $click($id('tool_line'), this.clickLine.bind(this))
+    $click($id('tool_select')!, this.clickSelect.bind(this))
+    $click($id('tool_fhpath')!, this.clickFHPath.bind(this))
+    $click($id('tool_text')!, this.clickText.bind(this))
+    $click($id('tool_image')!, this.clickImage.bind(this))
+    $click($id('tool_zoom')!, this.clickZoom.bind(this))
+    $id('tool_zoom')!.addEventListener('dblclick', this.dblclickZoom.bind(this))
+    $click($id('tool_path')!, this.clickPath.bind(this))
+    $click($id('tool_line')!, this.clickLine.bind(this))
 
     // flyout
-    $click($id('tool_rect'), this.clickRect.bind(this))
-    $click($id('tool_square'), this.clickSquare.bind(this))
-    $click($id('tool_fhrect'), this.clickFHRect.bind(this))
-    $click($id('tool_ellipse'), this.clickEllipse.bind(this))
-    $click($id('tool_circle'), this.clickCircle.bind(this))
-    $click($id('tool_fhellipse'), this.clickFHEllipse.bind(this))
+    $click($id('tool_rect')!, this.clickRect.bind(this))
+    $click($id('tool_square')!, this.clickSquare.bind(this))
+    $click($id('tool_fhrect')!, this.clickFHRect.bind(this))
+    $click($id('tool_ellipse')!, this.clickEllipse.bind(this))
+    $click($id('tool_circle')!, this.clickCircle.bind(this))
+    $click($id('tool_fhellipse')!, this.clickFHEllipse.bind(this))
   }
 }
 
