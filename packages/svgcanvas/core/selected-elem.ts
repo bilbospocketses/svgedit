@@ -218,7 +218,7 @@ const moveSelectedElements = (dx: number | number[], dy: number | number[], undo
       }
 
       svgCanvas
-        .gettingSelectorManager()
+        .getSelectorManager()
         .requestSelector(selected)
         .resize()
     }
@@ -554,7 +554,7 @@ const deleteSelectedElements = (): void => {
     if (selected) {
       let parent = selected.parentNode as Element
       let t: Element = selected
-      svgCanvas.gettingSelectorManager().releaseSelector(t)
+      svgCanvas.getSelectorManager().releaseSelector(t)
       pathModule.removePath_(t.id)
       if (parent.tagName === 'a' && parent.childNodes.length === 1) {
         t = parent
@@ -635,7 +635,7 @@ const flipSelectedElements = (scaleX: number, scaleY: number): void => {
     }
 
     svgCanvas
-      .gettingSelectorManager()
+      .getSelectorManager()
       .requestSelector(selected)
       .resize()
   })

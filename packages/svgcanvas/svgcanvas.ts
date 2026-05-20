@@ -901,7 +901,7 @@ class SvgCanvas {
     this.curShape[key] = value
   }
 
-  gettingSelectorManager (): ReturnType<typeof getSelectorManager> {
+  getSelectorManager (): ReturnType<typeof getSelectorManager> {
     return this.selectorManager
   }
 
