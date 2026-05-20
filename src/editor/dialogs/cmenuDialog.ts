@@ -1,11 +1,31 @@
-/* globals svgEditor */
+// @ts-expect-error: *.html imported as string via vite-plugin-string; no ambient module declaration
 import cMenuDialogHTML from './cmenuDialog.html'
+
+// Template uses a static HTML file; innerHTML is safe (build-time constant, not user input)
 const template = document.createElement('template')
-template.innerHTML = cMenuDialogHTML
+template.innerHTML = cMenuDialogHTML as string // eslint-disable-line @typescript-eslint/no-unsafe-assignment
+
+declare const svgEditor: SvgEditorGlobal
+
 /**
  * @class SeCMenuDialog
  */
 export class SeCMenuDialog extends HTMLElement {
+  declare _shadowRoot: ShadowRoot
+  declare _workarea: Element | null
+  declare $dialog: HTMLElement | null
+  declare $copyLink: Element | null
+  declare $cutLink: Element | null
+  declare $pasteLink: Element | null
+  declare $pasteInPlaceLink: Element | null
+  declare $deleteLink: Element | null
+  declare $groupLink: Element | null
+  declare $ungroupLink: Element | null
+  declare $moveFrontLink: Element | null
+  declare $moveUpLink: Element | null
+  declare $moveDownLink: Element | null
+  declare $moveBackLink: Element | null
+
   /**
     * @function constructor
     */
@@ -34,7 +54,8 @@ export class SeCMenuDialog extends HTMLElement {
    * @param {any} name
    * @returns {void}
    */
-  init (i18next) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  init (i18next: any): void {
     this.setAttribute('tools-cut', i18next.t('tools.cut'))
     this.setAttribute('tools-copy', i18next.t('tools.copy'))
     this.setAttribute('tools-paste', i18next.t('tools.paste'))
@@ -52,7 +73,7 @@ export class SeCMenuDialog extends HTMLElement {
    * @function observedAttributes
    * @returns {any} observed
    */
-  static get observedAttributes () {
+  static get observedAttributes (): string[] {
     return ['disableallmenu', 'enablemenuitems', 'disablemenuitems', 'tools-cut',
       'tools-copy', 'tools-paste', 'tools-paste_in_place', 'tools-delete', 'tools-group',
       'tools-ungroup', 'tools-move_front', 'tools-move_up', 'tools-move_down',
@@ -66,9 +87,9 @@ export class SeCMenuDialog extends HTMLElement {
    * @param {string} newValue
    * @returns {void}
    */
-  attributeChangedCallback (name, oldValue, newValue) {
-    let eles = []
-    let textnode
+  attributeChangedCallback (name: string, _oldValue: string, newValue: string): void {
+    let eles: string[] = []
+    let textnode: Text | undefined
     const sdowRoot = this._shadowRoot
     switch (name) {
       case 'disableallmenu':
@@ -83,57 +104,57 @@ export class SeCMenuDialog extends HTMLElement {
         eles = newValue.split(',')
         eles.forEach(function (ele) {
           const selEle = sdowRoot.querySelector('a[href*="' + ele + '"]')
-          selEle.parentElement.classList.remove('disabled')
+          selEle?.parentElement?.classList.remove('disabled')
         })
         break
       case 'disablemenuitems':
         eles = newValue.split(',')
         eles.forEach(function (ele) {
           const selEle = sdowRoot.querySelector('a[href*="' + ele + '"]')
-          selEle.parentElement.classList.add('disabled')
+          selEle?.parentElement?.classList.add('disabled')
         })
         break
       case 'tools-cut':
         textnode = document.createTextNode(newValue)
-        this.$cutLink.prepend(textnode)
+        this.$cutLink?.prepend(textnode)
         break
       case 'tools-copy':
         textnode = document.createTextNode(newValue)
-        this.$copyLink.prepend(textnode)
+        this.$copyLink?.prepend(textnode)
         break
       case 'tools-paste':
-        this.$pasteLink.textContent = newValue
+        if (this.$pasteLink) this.$pasteLink.textContent = newValue
         break
       case 'tools-paste_in_place':
-        this.$pasteInPlaceLink.textContent = newValue
+        if (this.$pasteInPlaceLink) this.$pasteInPlaceLink.textContent = newValue
         break
       case 'tools-delete':
         textnode = document.createTextNode(newValue)
-        this.$deleteLink.prepend(textnode)
+        this.$deleteLink?.prepend(textnode)
         break
       case 'tools-group':
         textnode = document.createTextNode(newValue)
-        this.$groupLink.prepend(textnode)
+        this.$groupLink?.prepend(textnode)
         break
       case 'tools-ungroup':
         textnode = document.createTextNode(newValue)
-        this.$ungroupLink.prepend(textnode)
+        this.$ungroupLink?.prepend(textnode)
         break
       case 'tools-move_front':
         textnode = document.createTextNode(newValue)
-        this.$moveFrontLink.prepend(textnode)
+        this.$moveFrontLink?.prepend(textnode)
         break
       case 'tools-move_up':
         textnode = document.createTextNode(newValue)
-        this.$moveUpLink.prepend(textnode)
+        this.$moveUpLink?.prepend(textnode)
         break
       case 'tools-move_down':
         textnode = document.createTextNode(newValue)
-        this.$moveDownLink.prepend(textnode)
+        this.$moveDownLink?.prepend(textnode)
         break
       case 'tools-move_back':
         textnode = document.createTextNode(newValue)
-        this.$moveBackLink.prepend(textnode)
+        this.$moveBackLink?.prepend(textnode)
         break
       default:
       // super.attributeChangedCallback(name, oldValue, newValue);
@@ -145,7 +166,7 @@ export class SeCMenuDialog extends HTMLElement {
    * @function get
    * @returns {any}
    */
-  get disableallmenu () {
+  get disableallmenu (): string | null {
     return this.getAttribute('disableallmenu')
   }
 
@@ -153,7 +174,7 @@ export class SeCMenuDialog extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set disableallmenu (value) {
+  set disableallmenu (value: string) {
     this.setAttribute('disableallmenu', value)
   }
 
@@ -161,7 +182,7 @@ export class SeCMenuDialog extends HTMLElement {
    * @function get
    * @returns {any}
    */
-  get enablemenuitems () {
+  get enablemenuitems (): string | null {
     return this.getAttribute('enablemenuitems')
   }
 
@@ -169,7 +190,7 @@ export class SeCMenuDialog extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set enablemenuitems (value) {
+  set enablemenuitems (value: string) {
     this.setAttribute('enablemenuitems', value)
   }
 
@@ -177,7 +198,7 @@ export class SeCMenuDialog extends HTMLElement {
    * @function get
    * @returns {any}
    */
-  get disablemenuitems () {
+  get disablemenuitems (): string | null {
     return this.getAttribute('disablemenuitems')
   }
 
@@ -185,7 +206,7 @@ export class SeCMenuDialog extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set disablemenuitems (value) {
+  set disablemenuitems (value: string) {
     this.setAttribute('disablemenuitems', value)
   }
 
@@ -193,14 +214,15 @@ export class SeCMenuDialog extends HTMLElement {
    * @function connectedCallback
    * @returns {void}
    */
-  connectedCallback () {
+  connectedCallback (): void {
     const current = this
-    const onMenuOpenHandler = (e) => {
+    const onMenuOpenHandler = (e: MouseEvent): void => {
       e.preventDefault()
       // Detect mouse position
       let x = e.pageX
       let y = e.pageY
 
+      // TODO: see todo #10 — uses screen.* instead of window.inner* (UX bug, fix deferred)
       const xOff = screen.width - 250 // menu width
       const yOff = screen.height - (276 + 150) // menu height + bottom panel height and scroll bar
 
@@ -210,16 +232,18 @@ export class SeCMenuDialog extends HTMLElement {
       if (y > yOff) {
         y = yOff
       }
-      current.$dialog.style.top = y + 'px'
-      current.$dialog.style.left = x + 'px'
-      current.$dialog.style.display = 'block'
-    }
-    const onMenuCloseHandler = (e) => {
-      if (e.button !== 2) {
-        current.$dialog.style.display = 'none'
+      if (current.$dialog) {
+        current.$dialog.style.top = y + 'px'
+        current.$dialog.style.left = x + 'px'
+        current.$dialog.style.display = 'block'
       }
     }
-    const onMenuClickHandler = (e, action) => {
+    const onMenuCloseHandler = (e: MouseEvent): void => {
+      if (e.button !== 2) {
+        if (current.$dialog) current.$dialog.style.display = 'none'
+      }
+    }
+    const onMenuClickHandler = (_e: Event, action: string): void => {
       const triggerEvent = new CustomEvent('change', {
         detail: {
           trigger: action
@@ -227,19 +251,21 @@ export class SeCMenuDialog extends HTMLElement {
       })
       this.dispatchEvent(triggerEvent)
     }
-    this._workarea.addEventListener('contextmenu', onMenuOpenHandler)
-    this._workarea.addEventListener('mousedown', onMenuCloseHandler)
-    svgEditor.$click(this.$cutLink, (evt) => onMenuClickHandler(evt, 'cut'))
-    svgEditor.$click(this.$copyLink, (evt) => onMenuClickHandler(evt, 'copy'))
-    svgEditor.$click(this.$pasteLink, (evt) => onMenuClickHandler(evt, 'paste'))
-    svgEditor.$click(this.$pasteInPlaceLink, (evt) => onMenuClickHandler(evt, 'paste_in_place'))
-    svgEditor.$click(this.$deleteLink, (evt) => onMenuClickHandler(evt, 'delete'))
-    svgEditor.$click(this.$groupLink, (evt) => onMenuClickHandler(evt, 'group'))
-    svgEditor.$click(this.$ungroupLink, (evt) => onMenuClickHandler(evt, 'ungroup'))
-    svgEditor.$click(this.$moveFrontLink, (evt) => onMenuClickHandler(evt, 'move_front'))
-    svgEditor.$click(this.$moveUpLink, (evt) => onMenuClickHandler(evt, 'move_up'))
-    svgEditor.$click(this.$moveDownLink, (evt) => onMenuClickHandler(evt, 'move_down'))
-    svgEditor.$click(this.$moveBackLink, (evt) => onMenuClickHandler(evt, 'move_back'))
+    if (this._workarea) {
+      this._workarea.addEventListener('contextmenu', onMenuOpenHandler as EventListener)
+      this._workarea.addEventListener('mousedown', onMenuCloseHandler as EventListener)
+    }
+    svgEditor.$click(this.$cutLink as EventTarget, (evt) => onMenuClickHandler(evt, 'cut'))
+    svgEditor.$click(this.$copyLink as EventTarget, (evt) => onMenuClickHandler(evt, 'copy'))
+    svgEditor.$click(this.$pasteLink as EventTarget, (evt) => onMenuClickHandler(evt, 'paste'))
+    svgEditor.$click(this.$pasteInPlaceLink as EventTarget, (evt) => onMenuClickHandler(evt, 'paste_in_place'))
+    svgEditor.$click(this.$deleteLink as EventTarget, (evt) => onMenuClickHandler(evt, 'delete'))
+    svgEditor.$click(this.$groupLink as EventTarget, (evt) => onMenuClickHandler(evt, 'group'))
+    svgEditor.$click(this.$ungroupLink as EventTarget, (evt) => onMenuClickHandler(evt, 'ungroup'))
+    svgEditor.$click(this.$moveFrontLink as EventTarget, (evt) => onMenuClickHandler(evt, 'move_front'))
+    svgEditor.$click(this.$moveUpLink as EventTarget, (evt) => onMenuClickHandler(evt, 'move_up'))
+    svgEditor.$click(this.$moveDownLink as EventTarget, (evt) => onMenuClickHandler(evt, 'move_down'))
+    svgEditor.$click(this.$moveBackLink as EventTarget, (evt) => onMenuClickHandler(evt, 'move_back'))
   }
 }
 
