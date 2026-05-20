@@ -14,6 +14,7 @@
 interface SvgEditorConfigObj {
   curConfig: {
     imgPath: string
+    dynamicOutput: boolean
   }
 }
 

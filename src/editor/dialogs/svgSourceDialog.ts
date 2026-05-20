@@ -1,12 +1,30 @@
-/* globals svgEditor */
+// @ts-expect-error: *.html imported as string via vite-plugin-string; no ambient module declaration
 import svgSourceDialogHTML from './svgSourceDialog.html'
 
+declare const svgEditor: SvgEditorGlobal
+
 const template = document.createElement('template')
-template.innerHTML = svgSourceDialogHTML
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+template.innerHTML = svgSourceDialogHTML as string
 /**
  * @class SeSvgSourceEditorDialog
  */
 export class SeSvgSourceEditorDialog extends HTMLElement {
+  declare _shadowRoot: ShadowRoot
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  declare $dialog: any
+  declare $copyBtn: Element | null
+  declare $saveBtn: Element | null
+  declare $cancelBtn: Element | null
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  declare $sourceTxt: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  declare $copySec: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  declare $applySec: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  declare $toggleDynamic: any
+
   /**
     * @function constructor
     */
@@ -31,7 +49,8 @@ export class SeSvgSourceEditorDialog extends HTMLElement {
    * @param {any} name
    * @returns {void}
    */
-  init (i18next) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  init (i18next: any): void {
     this.setAttribute('tools-source_save', i18next.t('tools.source_save'))
     this.setAttribute('common-cancel', i18next.t('common.cancel'))
     this.setAttribute('notification-source_dialog_note', i18next.t('notification.source_dialog_note'))
@@ -42,7 +61,7 @@ export class SeSvgSourceEditorDialog extends HTMLElement {
    * @function observedAttributes
    * @returns {any} observed
    */
-  static get observedAttributes () {
+  static get observedAttributes (): string[] {
     return ['dialog', 'value', 'applysec', 'copysec', 'tools-source_save', 'common-cancel', 'notification-source_dialog_note', 'config-done']
   }
 
@@ -53,9 +72,9 @@ export class SeSvgSourceEditorDialog extends HTMLElement {
    * @param {string} newValue
    * @returns {void}
    */
-  attributeChangedCallback (name, oldValue, newValue) {
+  attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
     if (oldValue === newValue) return
-    let node
+    let node: Element | null
     switch (name) {
       case 'dialog':
         if (newValue === 'open') {
@@ -84,19 +103,21 @@ export class SeSvgSourceEditorDialog extends HTMLElement {
         this.$sourceTxt.value = newValue
         break
       case 'tools-source_save':
-        this.$saveBtn.textContent = newValue
+        if (this.$saveBtn) this.$saveBtn.textContent = newValue
         break
       case 'common-cancel':
-        this.$cancelBtn.textContent = newValue
+        if (this.$cancelBtn) this.$cancelBtn.textContent = newValue
         break
       case 'notification-source_dialog_note':
         node = this._shadowRoot.querySelector('#copy_save_note')
-        node.textContent = newValue
+        if (node) node.textContent = newValue
         break
       case 'config-done':
-        this.$copyBtn.textContent = newValue
+        if (this.$copyBtn) this.$copyBtn.textContent = newValue
         break
       default:
+        // TODO: see todo #10 — super.attributeChangedCallback may throw if HTMLElement doesn't implement it
+        // @ts-expect-error: pre-existing null-misuse, see todo #10
         super.attributeChangedCallback(name, oldValue, newValue)
         break
     }
@@ -106,7 +127,7 @@ export class SeSvgSourceEditorDialog extends HTMLElement {
    * @function get
    * @returns {any}
    */
-  get dialog () {
+  get dialog (): string | null {
     return this.getAttribute('dialog')
   }
 
@@ -114,7 +135,7 @@ export class SeSvgSourceEditorDialog extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set dialog (value) {
+  set dialog (value: string) {
     this.setAttribute('dialog', value)
   }
 
@@ -122,7 +143,7 @@ export class SeSvgSourceEditorDialog extends HTMLElement {
    * @function get
    * @returns {any}
    */
-  get value () {
+  get value (): string | null {
     return this.getAttribute('value')
   }
 
@@ -130,7 +151,7 @@ export class SeSvgSourceEditorDialog extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set value (value) {
+  set value (value: string) {
     this.setAttribute('value', value)
   }
 
@@ -138,7 +159,7 @@ export class SeSvgSourceEditorDialog extends HTMLElement {
    * @function get
    * @returns {any}
    */
-  get applysec () {
+  get applysec (): string | null {
     return this.getAttribute('applysec')
   }
 
@@ -146,7 +167,7 @@ export class SeSvgSourceEditorDialog extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set applysec (value) {
+  set applysec (value: string) {
     this.setAttribute('applysec', value)
   }
 
@@ -154,7 +175,7 @@ export class SeSvgSourceEditorDialog extends HTMLElement {
    * @function get
    * @returns {any}
    */
-  get copysec () {
+  get copysec (): string | null {
     return this.getAttribute('copysec')
   }
 
@@ -162,7 +183,7 @@ export class SeSvgSourceEditorDialog extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set copysec (value) {
+  set copysec (value: string) {
     this.setAttribute('copysec', value)
   }
 
@@ -170,7 +191,7 @@ export class SeSvgSourceEditorDialog extends HTMLElement {
    * @function connectedCallback
    * @returns {void}
    */
-  connectedCallback () {
+  connectedCallback (): void {
     const onCancelHandler = () => {
       const closeEvent = new CustomEvent('change', {
         detail: {
@@ -206,9 +227,9 @@ export class SeSvgSourceEditorDialog extends HTMLElement {
       })
       this.dispatchEvent(closeEvent)
     }
-    svgEditor.$click(this.$copyBtn, onCopyHandler)
-    svgEditor.$click(this.$saveBtn, onSaveHandler)
-    svgEditor.$click(this.$cancelBtn, onCancelHandler)
+    svgEditor.$click(this.$copyBtn as EventTarget, onCopyHandler)
+    svgEditor.$click(this.$saveBtn as EventTarget, onSaveHandler)
+    svgEditor.$click(this.$cancelBtn as EventTarget, onCancelHandler)
     svgEditor.$click(this.$toggleDynamic, onToggleDynamicHandler)
     this.$dialog.addEventListener('close', onCancelHandler)
   }
