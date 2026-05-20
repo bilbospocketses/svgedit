@@ -496,7 +496,7 @@ interface UndoableChangeEntry {
 *
 */
 export class UndoManager {
-  handler_: HistoryEventHandler | null
+  _handler: HistoryEventHandler | null
   undoStackPointer: number
   undoStack: Command[]
   // this is the stack that stores the original values, the elements and
@@ -508,7 +508,7 @@ export class UndoManager {
   * @param {HistoryEventHandler | null} historyEventHandler
   */
   constructor (historyEventHandler: HistoryEventHandler | null) {
-    this.handler_ = historyEventHandler || null
+    this._handler = historyEventHandler || null
     this.undoStackPointer = 0
     this.undoStack = []
 
@@ -562,7 +562,7 @@ export class UndoManager {
   undo (): void {
     if (this.undoStackPointer > 0) {
       const cmd = this.undoStack[--this.undoStackPointer]
-      cmd?.unapply(this.handler_)
+      cmd?.unapply(this._handler)
     }
   }
 
@@ -573,7 +573,7 @@ export class UndoManager {
   redo (): void {
     if (this.undoStackPointer < this.undoStack.length && this.undoStack.length > 0) {
       const cmd = this.undoStack[this.undoStackPointer++]
-      cmd?.apply(this.handler_)
+      cmd?.apply(this._handler)
     }
   }
 
