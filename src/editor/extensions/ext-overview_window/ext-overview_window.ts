@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument */
+// svgCanvas / extension API surface is loosely typed; cleanup deferred to #3 or follow-up
 /**
  * @file ext-overview_window.js
  *
@@ -10,10 +12,10 @@ import { dragmove } from './dragmove/dragmove.js'
 
 export default {
   name: 'overview_window',
-  init ({ _$ }) {
-    const svgEditor = this
+  init (this: any, _opts?: any) {
+    const svgEditor: any = this
     const { $id, $click } = svgEditor.svgCanvas
-    const overviewWindowGlobals = {}
+    const overviewWindowGlobals: Record<string, any> = {}
 
     // Define and insert the base html element.
     const propsWindowHtml =
@@ -97,7 +99,7 @@ export default {
       overviewWindowGlobals.viewBoxDragging = true
       updateViewPortFromViewBox()
     }
-    const onEnd = (el, parent, _x, _y) => {
+    const onEnd = (el: any, parent: any, _x: number, _y: number) => {
       if ((el.offsetLeft + el.offsetWidth) > parseFloat(getComputedStyle(parent, null).width.replace('px', ''))) {
         el.style.left = (parseFloat(getComputedStyle(parent, null).width.replace('px', '')) - el.offsetWidth) + 'px'
       } else if (el.offsetLeft < 0) {
@@ -118,8 +120,9 @@ export default {
     const parentElem = document.querySelector('#overviewMiniView')
     dragmove(dragElem, dragElem, parentElem, onStart, onEnd, onDrag)
 
-    $click($id('overviewMiniView'), (evt) => {
+    $click($id('overviewMiniView'), (evt: any) => {
       // Firefox doesn't support evt.offsetX and evt.offsetY.
+      // TODO: see todo #10 — evt.originalEvent.layerX: non-standard; fix when reviving per todo #3
       const mouseX = (evt.offsetX || evt.originalEvent.layerX)
       const mouseY = (evt.offsetY || evt.originalEvent.layerY)
       const overviewWidth = parseFloat(getComputedStyle($id('overviewMiniView'), null).width.replace('px', ''))
