@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */
+// svgCanvas / extension API surface is loosely typed; cleanup deferred to #3 or follow-up
 /**
  * @file ext-layer_view.js
  *
@@ -8,7 +10,7 @@
 
 const name = 'layer_view'
 
-const loadExtensionTranslation = async function (svgEditor) {
+const loadExtensionTranslation = async function (svgEditor: any): Promise<void> {
   let translationModule
   const lang = svgEditor.configObj.pref('lang')
   try {
@@ -22,18 +24,18 @@ const loadExtensionTranslation = async function (svgEditor) {
 
 export default {
   name,
-  async init (_S) {
-    const svgEditor = this
+  async init (this: any, _S: any) {
+    const svgEditor: any = this
     const { svgCanvas } = svgEditor
     const { $id, $click } = svgCanvas
     await loadExtensionTranslation(svgEditor)
 
-    const clickLayerView = (e) => {
+    const clickLayerView = (e?: any) => {
       $id('tool_layerView').pressed = !$id('tool_layerView').pressed
       updateLayerView(e)
     }
 
-    const updateLayerView = (e) => {
+    const updateLayerView = (_e?: any) => {
       const drawing = svgCanvas.getCurrentDrawing()
       const curLayer = drawing.getCurrentLayerName()
       let layer = drawing.getNumLayers()
@@ -46,7 +48,7 @@ export default {
         }
       }
       $id('layerlist').querySelectorAll('tr.layer').forEach(
-        function (el) {
+        function (el: any) {
           const layervis = el.querySelector('td.layervis')
           const vis = el.classList.contains('layersel') || !$id('tool_layerView').pressed ? 'layervis' : 'layerinvis layervis'
           layervis.setAttribute('class', vis)
