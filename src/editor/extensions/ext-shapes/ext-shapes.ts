@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */
+// svgCanvas / extension API surface is loosely typed; cleanup deferred to #3 or follow-up
 /**
  * @file ext-shapes.js
  *
@@ -8,7 +10,7 @@
  */
 const name = 'shapes'
 
-const loadExtensionTranslation = async function (svgEditor) {
+const loadExtensionTranslation = async function (svgEditor: any): Promise<void> {
   let translationModule
   const lang = svgEditor.configObj.pref('lang')
   try {
@@ -22,20 +24,20 @@ const loadExtensionTranslation = async function (svgEditor) {
 
 export default {
   name,
-  async init () {
-    const svgEditor = this
+  async init (this: any) {
+    const svgEditor: any = this
     const canv = svgEditor.svgCanvas
     const { $id, $click } = canv
     const svgroot = canv.getSvgRoot()
-    let lastBBox = {}
+    let lastBBox: any = {}
     await loadExtensionTranslation(svgEditor)
 
     const modeId = 'shapelib'
-    const startClientPos = {}
+    const startClientPos: any = {}
 
-    let curShape
-    let startX
-    let startY
+    let curShape: any
+    let startX: number
+    let startY: number
 
     return {
       callback () {
@@ -47,17 +49,17 @@ export default {
           `
           canv.insertChildAtIndex($id('tools_left'), buttonTemplate, 9)
           $click($id('tool_shapelib'), () => {
-            if (this.leftPanel.updateLeftPanel('tool_shapelib')) {
+            if ((svgEditor as any).leftPanel.updateLeftPanel('tool_shapelib')) {
               canv.setMode(modeId)
             }
           })
         }
       },
-      mouseDown (opts) {
+      mouseDown (opts: any) {
         const mode = canv.getMode()
         if (mode !== modeId) { return undefined }
 
-        const currentD = document.getElementById('tool_shapelib').dataset.draw
+        const currentD = document.getElementById('tool_shapelib')!.dataset.draw
         startX = opts.start_x
         const x = startX
         startY = opts.start_y
@@ -88,7 +90,7 @@ export default {
           started: true
         }
       },
-      mouseMove (opts) {
+      mouseMove (opts: any) {
         const mode = canv.getMode()
         if (mode !== modeId) { return }
 
@@ -145,7 +147,7 @@ export default {
 
         lastBBox = curShape.getBBox()
       },
-      mouseUp (opts) {
+      mouseUp (opts: any) {
         const mode = canv.getMode()
         if (mode !== modeId) { return undefined }
 
