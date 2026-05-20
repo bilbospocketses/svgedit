@@ -1,15 +1,38 @@
 import SvgCanvas from '@svgedit/svgcanvas'
-/* globals svgEditor */
+// @ts-expect-error: *.html imported as string via vite-plugin-string; no ambient module declaration
 import imagePropertiesDialogHTML from './imagePropertiesDialog.html'
+
+declare const svgEditor: SvgEditorGlobal
 
 const { isValidUnit } = SvgCanvas
 
 const template = document.createElement('template')
-template.innerHTML = imagePropertiesDialogHTML
+template.innerHTML = imagePropertiesDialogHTML as string // eslint-disable-line @typescript-eslint/no-unsafe-assignment
 /**
  * @class SeImgPropDialog
  */
 export class SeImgPropDialog extends HTMLElement {
+  declare eventlisten: boolean
+  declare _shadowRoot: ShadowRoot
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  declare $saveBtn: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  declare $cancelBtn: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  declare $resolution: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  declare $canvasTitle: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  declare $canvasWidth: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  declare $canvasHeight: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  declare $imageOptEmbed: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  declare $imageOptRef: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  declare $dialog: any
+
   /**
     * @function constructor
     */
@@ -35,7 +58,8 @@ export class SeImgPropDialog extends HTMLElement {
    * @param {any} name
    * @returns {void}
    */
-  init (i18next) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  init (i18next: any): void {
     this.setAttribute('common-ok', i18next.t('common.ok'))
     this.setAttribute('common-cancel', i18next.t('common.cancel'))
     this.setAttribute('config-image_props', i18next.t('config.image_props'))
@@ -54,7 +78,7 @@ export class SeImgPropDialog extends HTMLElement {
    * @function observedAttributes
    * @returns {any} observed
    */
-  static get observedAttributes () {
+  static get observedAttributes (): string[] {
     return ['title', 'width', 'height', 'save', 'dialog', 'embed', 'common-ok',
       'common-cancel', 'config-image_props', 'config-doc_title', 'config-doc_dims',
       'common-width', 'common-height', 'config-select_predefined',
@@ -69,9 +93,9 @@ export class SeImgPropDialog extends HTMLElement {
    * @param {string} newValue
    * @returns {void}
    */
-  attributeChangedCallback (name, oldValue, newValue) {
+  attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
     if (oldValue === newValue) return
-    let node
+    let node: Element | null
     switch (name) {
       case 'title':
         this.$canvasTitle.value = newValue
@@ -117,10 +141,13 @@ export class SeImgPropDialog extends HTMLElement {
       case 'embed':
         if (newValue.includes('one')) {
           const data = newValue.split('|')
-          if (data.length > 1) {
-            this._shadowRoot.querySelector('#image_opt_embed').setAttribute('title', data[1])
-            this._shadowRoot.querySelector('#image_opt_embed').setAttribute('disabled', 'disabled')
-            this._shadowRoot.querySelector('#image_opt_embed').style.color = '#666'
+          if (data.length > 1 && data[1] !== undefined) {
+            const embedEl = this._shadowRoot.querySelector('#image_opt_embed') as HTMLElement | null
+            if (embedEl) {
+              embedEl.setAttribute('title', data[1])
+              embedEl.setAttribute('disabled', 'disabled')
+              embedEl.style.color = '#666'
+            }
           }
         }
         break
@@ -132,45 +159,47 @@ export class SeImgPropDialog extends HTMLElement {
         break
       case 'config-image_props':
         node = this._shadowRoot.querySelector('#svginfo_image_props')
-        node.textContent = newValue
+        if (node) node.textContent = newValue
         break
       case 'config-doc_title':
         node = this._shadowRoot.querySelector('#svginfo_title')
-        node.textContent = newValue
+        if (node) node.textContent = newValue
         break
       case 'config-doc_dims':
         node = this._shadowRoot.querySelector('#svginfo_dim')
-        node.textContent = newValue
+        if (node) node.textContent = newValue
         break
       case 'common-width':
         node = this._shadowRoot.querySelector('#svginfo_width')
-        node.textContent = newValue
+        if (node) node.textContent = newValue
         break
       case 'common-height':
         node = this._shadowRoot.querySelector('#svginfo_height')
-        node.textContent = newValue
+        if (node) node.textContent = newValue
         break
       case 'config-select_predefined':
         node = this._shadowRoot.querySelector('#selectedPredefined')
-        node.textContent = newValue
+        if (node) node.textContent = newValue
         break
       case 'tools-fit-to-content':
         node = this._shadowRoot.querySelector('#fitToContent')
-        node.textContent = newValue
+        if (node) node.textContent = newValue
         break
       case 'config-included_images':
         node = this._shadowRoot.querySelector('#includedImages')
-        node.textContent = newValue
+        if (node) node.textContent = newValue
         break
       case 'config-image_opt_embed':
         node = this._shadowRoot.querySelector('#image_opt_embed')
-        node.textContent = newValue
+        if (node) node.textContent = newValue
         break
       case 'config-image_opt_ref':
         node = this._shadowRoot.querySelector('#image_opt_ref')
-        node.textContent = newValue
+        if (node) node.textContent = newValue
         break
       default:
+        // TODO: see todo #10 — super.attributeChangedCallback may throw if HTMLElement doesn't implement it
+        // @ts-expect-error: pre-existing null-misuse, see todo #10
         super.attributeChangedCallback(name, oldValue, newValue)
         break
     }
@@ -180,15 +209,15 @@ export class SeImgPropDialog extends HTMLElement {
    * @function get
    * @returns {any}
    */
-  get title () {
-    return this.getAttribute('title')
+  get title (): string {
+    return this.getAttribute('title') ?? ''
   }
 
   /**
    * @function set
    * @returns {void}
    */
-  set title (value) {
+  set title (value: string) {
     this.setAttribute('title', value)
   }
 
@@ -196,7 +225,7 @@ export class SeImgPropDialog extends HTMLElement {
    * @function get
    * @returns {any}
    */
-  get width () {
+  get width (): string | null {
     return this.getAttribute('width')
   }
 
@@ -204,7 +233,7 @@ export class SeImgPropDialog extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set width (value) {
+  set width (value: string) {
     this.setAttribute('width', value)
   }
 
@@ -212,7 +241,7 @@ export class SeImgPropDialog extends HTMLElement {
    * @function get
    * @returns {any}
    */
-  get height () {
+  get height (): string | null {
     return this.getAttribute('height')
   }
 
@@ -220,7 +249,7 @@ export class SeImgPropDialog extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set height (value) {
+  set height (value: string) {
     this.setAttribute('height', value)
   }
 
@@ -228,7 +257,7 @@ export class SeImgPropDialog extends HTMLElement {
    * @function get
    * @returns {any}
    */
-  get save () {
+  get save (): string | null {
     return this.getAttribute('save')
   }
 
@@ -236,7 +265,7 @@ export class SeImgPropDialog extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set save (value) {
+  set save (value: string) {
     this.setAttribute('save', value)
   }
 
@@ -244,7 +273,7 @@ export class SeImgPropDialog extends HTMLElement {
    * @function get
    * @returns {any}
    */
-  get dialog () {
+  get dialog (): string | null {
     return this.getAttribute('dialog')
   }
 
@@ -252,7 +281,7 @@ export class SeImgPropDialog extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set dialog (value) {
+  set dialog (value: string) {
     this.setAttribute('dialog', value)
   }
 
@@ -260,7 +289,7 @@ export class SeImgPropDialog extends HTMLElement {
    * @function get
    * @returns {any}
    */
-  get embed () {
+  get embed (): string | null {
     return this.getAttribute('embed')
   }
 
@@ -268,7 +297,7 @@ export class SeImgPropDialog extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set embed (value) {
+  set embed (value: string) {
     this.setAttribute('embed', value)
   }
 
@@ -276,8 +305,9 @@ export class SeImgPropDialog extends HTMLElement {
    * @function connectedCallback
    * @returns {void}
    */
-  connectedCallback () {
-    const onChangeHandler = (ev) => {
+  connectedCallback (): void {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const onChangeHandler = (ev: any): void => {
       if (!ev.target.selectedIndex) {
         if (this.$canvasWidth.value === 'fit') {
           this.$canvasWidth.removeAttribute('disabled')
@@ -302,11 +332,13 @@ export class SeImgPropDialog extends HTMLElement {
       let saveOpt = ''
       const w = this.$canvasWidth.value
       const h = this.$canvasHeight.value
+      // @ts-expect-error: pre-existing null-misuse, see todo #10 — isValidUnit called with 2 args (missing selectedElement)
       if (w !== 'fit' && !isValidUnit('width', w)) {
         this.$canvasWidth.parentElement.classList.add('error')
       } else {
         this.$canvasWidth.parentElement.classList.remove('error')
       }
+      // @ts-expect-error: pre-existing null-misuse, see todo #10 — isValidUnit called with 2 args (missing selectedElement)
       if (h !== 'fit' && !isValidUnit('height', w)) {
         this.$canvasHeight.parentElement.classList.add('error')
       } else {
