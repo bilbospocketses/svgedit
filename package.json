@@ -4,6 +4,7 @@
   "description": "Powerful SVG-Editor for your browser ",
   "main": "dist/editor/Editor.js",
   "module": "dist/editor/Editor.js",
+  "type": "module",
   "directories": {
     "test": "test"
   },
@@ -16,9 +17,9 @@
   "scripts": {
     "lint": "eslint .",
     "pretest": "npm run lint",
-    "test": "vitest run --coverage && node scripts/run-e2e.mjs",
+    "test": "vitest run --coverage && tsx scripts/run-e2e.ts",
     "build": "vite build packages/svgcanvas && vite build",
-    "postbuild": "node scripts/copy-static.mjs && node scripts/build-extensions.mjs",
+    "postbuild": "tsx scripts/copy-static.ts && tsx scripts/build-extensions.ts",
     "start": "vite dev --host --port 8000 --strictPort",
     "prestart": "echo svgedit is available at http://localhost:8000/src/editor/index.html",
     "start:iife": "npm run build && vite preview --host --port 8000 --strictPort --outDir dist/editor --open /iife-index.html",
