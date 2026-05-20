@@ -1,12 +1,24 @@
-/* globals svgEditor */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
+// svgCanvas / extension API surface is loosely typed; cleanup deferred to #3 or follow-up
+// @ts-expect-error: *.html imported as string via vite-plugin-string; no ambient module declaration
 import storageDialogHTML from './storageDialog.html'
 
+declare const svgEditor: SvgEditorGlobal
+
 const template = document.createElement('template')
-template.innerHTML = storageDialogHTML
+template.innerHTML = storageDialogHTML as string
 /**
  * @class SeStorageDialog
  */
 export class SeStorageDialog extends HTMLElement {
+  declare _shadowRoot: ShadowRoot
+  declare $dialog: any
+  declare $storage: any
+  declare $okBtn: any
+  declare $cancelBtn: any
+  declare $storageInput: any
+  declare $rememberInput: any
+
   /**
     * @function constructor
     */
@@ -28,7 +40,7 @@ export class SeStorageDialog extends HTMLElement {
    * @param {any} name
    * @returns {void}
    */
-  init (i18next) {
+  init (i18next: any) {
     this.setAttribute('common-ok', i18next.t('common.ok'))
     this.setAttribute('common-cancel', i18next.t('common.cancel'))
     this.setAttribute('notify-editor_pref_msg', i18next.t('notification.editorPreferencesMsg'))
@@ -54,8 +66,8 @@ export class SeStorageDialog extends HTMLElement {
    * @param {string} newValue
    * @returns {void}
    */
-  attributeChangedCallback (name, oldValue, newValue) {
-    let node
+  attributeChangedCallback (name: string, _oldValue: string | null, newValue: string | null) {
+    let node: any
     switch (name) {
       case 'dialog':
         if (newValue === 'open') {
@@ -119,8 +131,8 @@ export class SeStorageDialog extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set dialog (value) {
-    this.setAttribute('dialog', value)
+  set dialog (value: string | null) {
+    this.setAttribute('dialog', value ?? '')
   }
 
   /**
@@ -128,7 +140,7 @@ export class SeStorageDialog extends HTMLElement {
    * @returns {void}
    */
   connectedCallback () {
-    const onSubmitHandler = (e, action) => {
+    const onSubmitHandler = (_e: Event, action: string) => {
       const triggerEvent = new CustomEvent('change',
         {
           detail: {
