@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */
+// svgCanvas / extension API surface is loosely typed; cleanup deferred to #3 or follow-up
 /**
  * @file ext-panning.js
  *
@@ -12,7 +14,7 @@
 
 const name = 'panning'
 
-const loadExtensionTranslation = async function (svgEditor) {
+const loadExtensionTranslation = async function (svgEditor: any): Promise<void> {
   let translationModule
   const lang = svgEditor.configObj.pref('lang')
   try {
@@ -26,14 +28,14 @@ const loadExtensionTranslation = async function (svgEditor) {
 
 export default {
   name,
-  async init () {
-    const svgEditor = this
+  async init (this: any) {
+    const svgEditor: any = this
     await loadExtensionTranslation(svgEditor)
     const {
       svgCanvas
     } = svgEditor
     const { $id, $click } = svgCanvas
-    const insertAfter = (referenceNode, newNode) => {
+    const insertAfter = (referenceNode: any, newNode: any) => {
       referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling)
     }
     return {
@@ -47,7 +49,7 @@ export default {
         `
         insertAfter($id('tool_zoom'), buttonTemplate.content.cloneNode(true))
         $click($id('ext-panning'), () => {
-          if (this.leftPanel.updateLeftPanel('ext-panning')) {
+          if (svgEditor.leftPanel.updateLeftPanel('ext-panning')) {
             svgCanvas.setMode('ext-panning')
           }
         })
