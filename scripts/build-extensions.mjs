@@ -21,12 +21,19 @@ htmlStringPlugin.enforce = 'post'
 const entries = []
 for (const dirent of await readdir(extensionsRoot, { withFileTypes: true })) {
   if (!dirent.isDirectory() || !dirent.name.startsWith('ext-')) continue
-  const entryPath = join(extensionsRoot, dirent.name, `${dirent.name}.js`)
-  try {
-    const st = await stat(entryPath)
-    if (st.isFile()) entries.push(entryPath)
-  } catch (_err) {
-    // no entry file, skip
+  // After TS migration Task 14, entry files are .ts; pre-migration code had .js.
+  // Try .ts first, fall back to .js for safety during migration / external extensions.
+  for (const ext of ['.ts', '.js']) {
+    const entryPath = join(extensionsRoot, dirent.name, `${dirent.name}${ext}`)
+    try {
+      const st = await stat(entryPath)
+      if (st.isFile()) {
+        entries.push(entryPath)
+        break
+      }
+    } catch (_err) {
+      // no entry file at this ext, try next
+    }
   }
 }
 
