@@ -697,7 +697,7 @@ class SvgCanvas {
     return this.end[key as keyof typeof this.end]
   }
 
-  getbSpline (key: string): number {
+  getBSpline (key: string): number {
     return this.bSpline[key as keyof typeof this.bSpline]
   }
 
@@ -773,7 +773,7 @@ class SvgCanvas {
     this.sumDistance = value
   }
 
-  setbSpline (value: { x: number; y: number }): void {
+  setBSpline (value: { x: number; y: number }): void {
     this.bSpline = value
   }
 

@@ -464,22 +464,22 @@ const mouseMoveEvent = (evt: MouseEvent): void => {
         for (i = 0; i < svgCanvas.getStepCount() - 1; i++) {
           svgCanvas.setParameter(i / svgCanvas.getStepCount())
           svgCanvas.setNextParameter((i + 1) / svgCanvas.getStepCount())
-          svgCanvas.setbSpline(getBsplinePoint(svgCanvas.getNextParameter()))
-          svgCanvas.setNextPos({ x: svgCanvas.getbSpline('x'), y: svgCanvas.getbSpline('y') })
-          svgCanvas.setbSpline(getBsplinePoint(svgCanvas.getParameter()))
+          svgCanvas.setBSpline(getBsplinePoint(svgCanvas.getNextParameter()))
+          svgCanvas.setNextPos({ x: svgCanvas.getBSpline('x'), y: svgCanvas.getBSpline('y') })
+          svgCanvas.setBSpline(getBsplinePoint(svgCanvas.getParameter()))
           svgCanvas.setSumDistance(
             svgCanvas.getSumDistance() + Math.sqrt((svgCanvas.getNextPos('x') -
-              svgCanvas.getbSpline('x')) * (svgCanvas.getNextPos('x') -
-                svgCanvas.getbSpline('x')) + (svgCanvas.getNextPos('y') -
-                  svgCanvas.getbSpline('y')) * (svgCanvas.getNextPos('y') - svgCanvas.getbSpline('y')))
+              svgCanvas.getBSpline('x')) * (svgCanvas.getNextPos('x') -
+                svgCanvas.getBSpline('x')) + (svgCanvas.getNextPos('y') -
+                  svgCanvas.getBSpline('y')) * (svgCanvas.getNextPos('y') - svgCanvas.getBSpline('y')))
           )
           if (svgCanvas.getSumDistance() > svgCanvas.getThreSholdDist()) {
             svgCanvas.setSumDistance(svgCanvas.getSumDistance() - svgCanvas.getThreSholdDist())
 
             // Faster than completely re-writing the points attribute.
             const point = svgCanvas.getSvgContent().createSVGPoint()
-            point.x = svgCanvas.getbSpline('x')
-            point.y = svgCanvas.getbSpline('y')
+            point.x = svgCanvas.getBSpline('x')
+            point.y = svgCanvas.getBSpline('y')
             (shape as SVGPolylineElement).points.appendItem(point)
           }
         }
