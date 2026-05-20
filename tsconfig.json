@@ -17,7 +17,7 @@
     "exactOptionalPropertyTypes": true,
     "noEmit": true,
     "lib": ["ES2025", "DOM", "DOM.Iterable"],
-    "types": ["vite/client", "vitest"],
+    "types": ["vite/client", "vitest", "node"],
     "paths": {
       "@svgedit/svgcanvas": ["./packages/svgcanvas/svgcanvas.ts"],
       "@svgedit/svgcanvas/*": ["./packages/svgcanvas/*"]
