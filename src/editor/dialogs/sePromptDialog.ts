@@ -1,8 +1,14 @@
 import SePlainAlertDialog from './SePlainAlertDialog.js'
+
 /**
  * @class SePromptDialog
+ * Note: misnamed — this is a status-display dialog, not a prompt. Rename deferred.
  */
 export class SePromptDialog extends HTMLElement {
+  declare _shadowRoot: ShadowRoot
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  declare dialog: any
+
   /**
     * @function constructor
     */
@@ -10,14 +16,15 @@ export class SePromptDialog extends HTMLElement {
     super()
     // create the shadowDom and insert the template
     this._shadowRoot = this.attachShadow({ mode: 'open' })
-    this.dialog = new SePlainAlertDialog()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    this.dialog = new SePlainAlertDialog() as any
   }
 
   /**
    * @function observedAttributes
    * @returns {any} observed
    */
-  static get observedAttributes () {
+  static get observedAttributes (): string[] {
     return ['title', 'close']
   }
 
@@ -28,7 +35,7 @@ export class SePromptDialog extends HTMLElement {
    * @param {string} newValue
    * @returns {void}
    */
-  attributeChangedCallback (name, oldValue, newValue) {
+  attributeChangedCallback (name: string, _oldValue: string, newValue: string): void {
     switch (name) {
       case 'title':
         if (this.dialog.opened) {
@@ -55,23 +62,27 @@ export class SePromptDialog extends HTMLElement {
    * @function get
    * @returns {any}
    */
-  get title () {
-    return this.getAttribute('title')
+  get title (): string {
+    return this.getAttribute('title') ?? ''
   }
 
   /**
    * @function set
    * @returns {void}
    */
-  set title (value) {
-    this.setAttribute('title', value)
+  set title (value: string) {
+    if (value) {
+      this.setAttribute('title', value)
+    } else {
+      this.removeAttribute('title')
+    }
   }
 
   /**
    * @function get
    * @returns {any}
    */
-  get close () {
+  get close (): string | null {
     return this.getAttribute('close')
   }
 
@@ -79,7 +90,7 @@ export class SePromptDialog extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set close (value) {
+  set close (value: string | null) {
     // boolean value => existence = true
     if (value) {
       this.setAttribute('close', 'true')
@@ -90,4 +101,5 @@ export class SePromptDialog extends HTMLElement {
 }
 
 // Register
-customElements.define('se-prompt-dialog', SePromptDialog)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+customElements.define('se-prompt-dialog', SePromptDialog as any)
