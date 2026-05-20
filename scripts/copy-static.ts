@@ -7,7 +7,7 @@ const outDir = resolve(root, 'dist/editor')
 
 await mkdir(outDir, { recursive: true })
 
-const targets = [
+const targets: Array<[string, string]> = [
   ['src/editor/index.html', 'index.html'],
   ['src/editor/xdomain-index.html', 'xdomain-index.html'],
   ['src/editor/iife-index.html', 'iife-index.html'],
@@ -37,7 +37,7 @@ const svgCanvasDest = resolve(outDir, 'tests/vendor/svgcanvas')
  * @param {string} srcDir  Absolute path to source directory
  * @param {string} destDir Absolute path to destination directory
  */
-async function copyWithTsTranspile(srcDir, destDir) {
+async function copyWithTsTranspile(srcDir: string, destDir: string): Promise<void> {
   const entries = await readdir(srcDir, { withFileTypes: true })
 
   for (const entry of entries) {
