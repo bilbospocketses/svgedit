@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument */
 // svgCanvas / extension API surface is loosely typed; cleanup deferred to #3 or follow-up
 // @ts-expect-error: *.html imported as string via vite-plugin-string; no ambient module declaration
 import storageDialogHTML from './storageDialog.html'

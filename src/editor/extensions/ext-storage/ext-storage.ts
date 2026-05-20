@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-this-alias, @typescript-eslint/no-non-null-assertion, @typescript-eslint/restrict-plus-operands */
 // svgCanvas / extension API surface is loosely typed; cleanup deferred to #3 or follow-up
 /**
  * @file ext-storage.js
@@ -47,7 +47,7 @@ const expireCookie = (cookie: string) => {
  */
 const replaceStoragePrompt = (val?: string) => {
   const valStr = val ? 'storagePrompt=' + val : ''
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
   const loc = top!.location // Allow this to work with the embedded editor as well
   if (loc.href.includes('storagePrompt=')) {
     loc.href = loc.href.replace(/([&?])storagePrompt=[^&]*(&?)/, function (
@@ -117,7 +117,7 @@ export default {
       storageBox.setAttribute('dialog', 'close')
       if (e?.detail?.trigger === 'ok') {
         if (e?.detail?.select !== 'noPrefsOrContent') {
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        
           const storagePrompt = new URL(top!.location.href).searchParams.get(
             'storagePrompt'
           )
@@ -225,7 +225,7 @@ export default {
     return {
       name: 'storage',
       callback () {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      
         const storagePrompt = new URL(top!.location.href).searchParams.get(
           'storagePrompt'
         )

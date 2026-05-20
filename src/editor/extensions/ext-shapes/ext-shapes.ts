@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-this-alias, @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unused-vars */
 // svgCanvas / extension API surface is loosely typed; cleanup deferred to #3 or follow-up
 /**
  * @file ext-shapes.js
@@ -49,7 +49,7 @@ export default {
           `
           canv.insertChildAtIndex($id('tools_left'), buttonTemplate, 9)
           $click($id('tool_shapelib'), () => {
-            if ((svgEditor as any).leftPanel.updateLeftPanel('tool_shapelib')) {
+            if (svgEditor.leftPanel.updateLeftPanel('tool_shapelib')) {
               canv.setMode(modeId)
             }
           })

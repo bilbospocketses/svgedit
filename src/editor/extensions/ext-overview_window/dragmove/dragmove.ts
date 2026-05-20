@@ -2,7 +2,7 @@
 // Kailash Nadh (c) 2020.
 // MIT License.
 // can't use npm version as the dragmove is different.
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument */
 // dragmove utility: loose event types; cleanup deferred to #3 or follow-up
 
 let _loaded = false
