@@ -21,13 +21,9 @@ import { isMac } from '@svgedit/svgcanvas/common/browser'
 import SvgCanvas from '@svgedit/svgcanvas'
 import ConfigObj from './ConfigObj.js'
 import EditorStartup from './EditorStartup.js'
-// @ts-expect-error: panels are still .js; no .d.ts yet
 import LeftPanel from './panels/LeftPanel.js'
-// @ts-expect-error: panels are still .js; no .d.ts yet
 import TopPanel from './panels/TopPanel.js'
-// @ts-expect-error: panels are still .js; no .d.ts yet
 import BottomPanel from './panels/BottomPanel.js'
-// @ts-expect-error: panels are still .js; no .d.ts yet
 import LayersPanel from './panels/LayersPanel.js'
 import MainMenu from './MainMenu.js'
 import { getParentsUntil } from '@svgedit/svgcanvas/common/util.js'
