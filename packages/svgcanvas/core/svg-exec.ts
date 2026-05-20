@@ -413,7 +413,7 @@ const setSvgString = (xmlString: string, preventUndo?: boolean): boolean => {
     svgCanvas.getSvgRoot().append(svgCanvas.getSvgContent())
     const content = svgCanvas.getSvgContent() as Element
 
-    svgCanvas.current_drawing_ = new draw.Drawing(
+    svgCanvas.currentDrawing = new draw.Drawing(
       svgCanvas.getSvgContent(),
       svgCanvas.getIdPrefix()
     )

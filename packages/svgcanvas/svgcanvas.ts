@@ -159,7 +159,7 @@ class SvgCanvas {
   container: HTMLElement
   svgroot: SVGSVGElement
   svgContent: SVGSVGElement
-  current_drawing_: InstanceType<typeof draw.Drawing>
+  currentDrawing: InstanceType<typeof draw.Drawing>
   zoom: number
   currentGroup: Element | null
   curText: Record<string, any>
@@ -350,7 +350,7 @@ class SvgCanvas {
     touchInit(this)
     clearInit(this)
     this.clearSvgContentElement()
-    this.current_drawing_ = new draw.Drawing(this.svgContent, this.idPrefix)
+    this.currentDrawing = new draw.Drawing(this.svgContent, this.idPrefix)
     this.zoom = 1
 
     this.currentGroup = null
@@ -500,7 +500,7 @@ class SvgCanvas {
   }
 
   getCurrentDrawing (): InstanceType<typeof draw.Drawing> {
-    return this.current_drawing_
+    return this.currentDrawing
   }
 
   getCurShape (): Record<string, any> {
@@ -992,7 +992,7 @@ class SvgCanvas {
     this.pathActions.clear()
     this.clearSelection()
     this.clearSvgContentElement()
-    this.current_drawing_ = new draw.Drawing(this.svgContent)
+    this.currentDrawing = new draw.Drawing(this.svgContent)
     this.createLayer(undefined as unknown as string)
     this.undoMgr.resetUndoStack()
     this.selectorManager.initGroup()

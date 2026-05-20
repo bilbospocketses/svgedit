@@ -142,10 +142,9 @@ declare module './svgcanvas' {
     // added here with signatures verified from svg-exec.ts implementation.
     setSvgString: (xmlString: string, preventUndo?: boolean) => boolean
     embedImage: (src: string) => Promise<string | false>
-    // current_drawing_ is a pseudo-private (trailing-underscore); attached
-    // in svgcanvas.js constructor, not by an init() call. Renamed to
-    // currentDrawing in Task 17 (C13) — keep the underscore form here
-    // until then so consumers don't break.
-    current_drawing_: unknown
+    // currentDrawing was formerly current_drawing_ (trailing-underscore pseudo-private);
+    // renamed to currentDrawing in Task 17 (C13). Attached in svgcanvas.ts constructor,
+    // not by an init() call.
+    currentDrawing: unknown
   }
 }
