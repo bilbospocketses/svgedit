@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return */
 // elix custom-element base classes ship as 'any'; cleanup deferred to #3 (Lit migration)
 // @ts-expect-error: no declaration file for elix/src/plain/PlainAlertDialog.js
 import PlainAlertDialog from 'elix/src/plain/PlainAlertDialog.js'
@@ -8,7 +8,7 @@ import { fragmentFrom } from 'elix/src/core/htmlLiterals.js'
 /**
  * @class SePlainAlertDialog
  */
-// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+ 
 export default class SePlainAlertDialog extends (PlainAlertDialog as unknown as typeof HTMLElement) {
   /**
     * @function get

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument */
+// elix custom-element base classes ship as 'any'; cleanup deferred to #3 (Lit migration)
 import SvgCanvas from '@svgedit/svgcanvas'
 // @ts-expect-error: *.html imported as string via vite-plugin-string; no ambient module declaration
 import imagePropertiesDialogHTML from './imagePropertiesDialog.html'
@@ -7,30 +9,30 @@ declare const svgEditor: SvgEditorGlobal
 const { isValidUnit } = SvgCanvas
 
 const template = document.createElement('template')
-template.innerHTML = imagePropertiesDialogHTML as string // eslint-disable-line @typescript-eslint/no-unsafe-assignment
+template.innerHTML = imagePropertiesDialogHTML as string  
 /**
  * @class SeImgPropDialog
  */
 export class SeImgPropDialog extends HTMLElement {
   declare eventlisten: boolean
   declare _shadowRoot: ShadowRoot
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   declare $saveBtn: any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   declare $cancelBtn: any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   declare $resolution: any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   declare $canvasTitle: any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   declare $canvasWidth: any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   declare $canvasHeight: any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   declare $imageOptEmbed: any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   declare $imageOptRef: any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   declare $dialog: any
 
   /**
@@ -58,7 +60,7 @@ export class SeImgPropDialog extends HTMLElement {
    * @param {any} name
    * @returns {void}
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   init (i18next: any): void {
     this.setAttribute('common-ok', i18next.t('common.ok'))
     this.setAttribute('common-cancel', i18next.t('common.cancel'))
@@ -142,7 +144,7 @@ export class SeImgPropDialog extends HTMLElement {
         if (newValue.includes('one')) {
           const data = newValue.split('|')
           if (data.length > 1 && data[1] !== undefined) {
-            const embedEl = this._shadowRoot.querySelector('#image_opt_embed') as HTMLElement | null
+            const embedEl = this._shadowRoot.querySelector<HTMLElement>('#image_opt_embed')
             if (embedEl) {
               embedEl.setAttribute('title', data[1])
               embedEl.setAttribute('disabled', 'disabled')
@@ -306,7 +308,7 @@ export class SeImgPropDialog extends HTMLElement {
    * @returns {void}
    */
   connectedCallback (): void {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const onChangeHandler = (ev: any): void => {
       if (!ev.target.selectedIndex) {
         if (this.$canvasWidth.value === 'fit') {

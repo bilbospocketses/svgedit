@@ -4,7 +4,6 @@ import ListComboBox from 'elix/define/ListComboBox.js'
 import { defaultState } from 'elix/src/base/internal.js'
 import { templateFrom, fragmentFrom } from 'elix/src/core/htmlLiterals.js'
 import { internal } from 'elix'
-// @ts-expect-error: local elix override; no declaration file exists yet
 import NumberSpinBox from '../dialogs/se-elix/define/NumberSpinBox.js'
 
 /**

@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-this-alias */
+// elix custom-element base classes ship as 'any'; cleanup deferred to #3 (Lit migration)
 // @ts-expect-error: *.html imported as string via vite-plugin-string; no ambient module declaration
 import cMenuLayersDialog from './cmenuLayersDialog.html'
 
 const template = document.createElement('template')
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+ 
 template.innerHTML = cMenuLayersDialog as string
 
 declare const svgEditor: SvgEditorGlobal
@@ -44,7 +46,7 @@ export class SeCMenuLayerDialog extends HTMLElement {
    * @param {any} name
    * @returns {void}
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   init (i18next: any): void {
     this.setAttribute('layers-dupe', i18next.t('layers.dupe'))
     this.setAttribute('layers-del', i18next.t('layers.del'))

@@ -1,36 +1,38 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-this-alias, @typescript-eslint/no-unnecessary-type-assertion */
+// elix custom-element base classes ship as 'any'; cleanup deferred to #3 (Lit migration)
 // @ts-expect-error: *.html imported as string via vite-plugin-string; no ambient module declaration
 import editorPreferencesDialog from './editorPreferencesDialog.html'
 
 declare const svgEditor: SvgEditorGlobal
 
 const template = document.createElement('template')
-template.innerHTML = editorPreferencesDialog as string // eslint-disable-line @typescript-eslint/no-unsafe-assignment
-/* eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- static HTML template */
+template.innerHTML = editorPreferencesDialog as string  
+ 
 /**
  * @class SeEditPrefsDialog
  */
 export class SeEditPrefsDialog extends HTMLElement {
   declare colorBlocks: string[]
   declare _shadowRoot: ShadowRoot
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   declare $dialog: any
   declare $saveBtn: Element | null
   declare $cancelBtn: Element | null
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   declare $langSelect: any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   declare $bgBlocks: any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   declare $bgURL: any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   declare $gridSnappingOn: any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   declare $gridSnappingStep: any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   declare $gridColor: any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   declare $showRulers: any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   declare $baseUnit: any
 
   /**
@@ -60,7 +62,7 @@ export class SeEditPrefsDialog extends HTMLElement {
    * @param {any} name
    * @returns {void}
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   init (i18next: any): void {
     this.setAttribute('common-ok', i18next.t('common.ok'))
     this.setAttribute('common-cancel', i18next.t('common.cancel'))
@@ -83,7 +85,7 @@ export class SeEditPrefsDialog extends HTMLElement {
    * @returns {any} observed
    */
   static get observedAttributes (): string[] {
-    // eslint-disable-next-line max-len
+     
     return ['dialog', 'lang', 'canvasbg', 'bgurl', 'gridsnappingon', 'gridsnappingstep', 'gridcolor', 'showrulers', 'baseunit', 'common-ok', 'common-cancel', 'config-editor_prefs', 'config-language', 'config-background', 'common-url', 'config-editor_bg_note', 'config-grid', 'config-snapping_onoff', 'config-snapping_stepsize', 'config-grid_color', 'config-units_and_rulers', 'config-show_rulers', 'config-base_unit']
   }
 
@@ -96,7 +98,7 @@ export class SeEditPrefsDialog extends HTMLElement {
    */
   attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
     if (oldValue === newValue) return
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const blocks: any = this.$bgBlocks.querySelectorAll('div')
     const curBg = 'cur_background'
     let node: Element | null
@@ -117,7 +119,7 @@ export class SeEditPrefsDialog extends HTMLElement {
             blocks[0].classList.add(curBg)
           }
         } else {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+           
           blocks.forEach(function (blk: any) {
             const isBg = blk.dataset.bgColor === newValue
             if (isBg) {
@@ -406,10 +408,10 @@ export class SeEditPrefsDialog extends HTMLElement {
     })
     const blocks = this.$bgBlocks.querySelectorAll('div')
     const curBg = 'cur_background'
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     blocks.forEach(function (blk: any) {
       svgEditor.$click(blk, function () {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         blocks.forEach((el: any) => el.classList.remove(curBg))
         blk.classList.add(curBg)
       })
@@ -421,5 +423,5 @@ export class SeEditPrefsDialog extends HTMLElement {
 }
 
 // Register
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 customElements.define('se-edit-prefs-dialog', SeEditPrefsDialog as any)

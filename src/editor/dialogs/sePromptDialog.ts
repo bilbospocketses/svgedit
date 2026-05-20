@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unnecessary-type-assertion */
+// elix custom-element base classes ship as 'any'; cleanup deferred to #3 (Lit migration)
 import SePlainAlertDialog from './SePlainAlertDialog.js'
 
 /**
@@ -6,7 +8,7 @@ import SePlainAlertDialog from './SePlainAlertDialog.js'
  */
 export class SePromptDialog extends HTMLElement {
   declare _shadowRoot: ShadowRoot
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   declare dialog: any
 
   /**
@@ -16,7 +18,7 @@ export class SePromptDialog extends HTMLElement {
     super()
     // create the shadowDom and insert the template
     this._shadowRoot = this.attachShadow({ mode: 'open' })
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     this.dialog = new SePlainAlertDialog() as any
   }
 
@@ -101,5 +103,5 @@ export class SePromptDialog extends HTMLElement {
 }
 
 // Register
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 customElements.define('se-prompt-dialog', SePromptDialog as any)

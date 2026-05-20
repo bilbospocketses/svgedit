@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument */
+// elix custom-element base classes ship as 'any'; cleanup deferred to #3 (Lit migration)
 import './se-elix/define/NumberSpinBox.js'
 // @ts-expect-error: *.html imported as string via vite-plugin-string; no ambient module declaration
 import exportDialogHTML from './exportDialog.html'
@@ -5,22 +7,22 @@ import exportDialogHTML from './exportDialog.html'
 declare const svgEditor: SvgEditorGlobal
 
 const template = document.createElement('template')
-template.innerHTML = exportDialogHTML as string // eslint-disable-line @typescript-eslint/no-unsafe-assignment
+template.innerHTML = exportDialogHTML as string  
 
 /**
  * @class SeExportDialog
  */
 export class SeExportDialog extends HTMLElement {
   declare _shadowRoot: ShadowRoot
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   declare $dialog: any
   declare $okBtn: Element | null
   declare $cancelBtn: Element | null
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   declare $exportOption: any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   declare $qualityCont: any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   declare $input: any
   declare value: number
 
@@ -46,7 +48,7 @@ export class SeExportDialog extends HTMLElement {
    * @param {any} name
    * @returns {void}
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   init (i18next: any): void {
     this.setAttribute('common-ok', i18next.t('common.ok'))
     this.setAttribute('common-cancel', i18next.t('common.cancel'))
@@ -116,12 +118,12 @@ export class SeExportDialog extends HTMLElement {
    * @returns {void}
    */
   connectedCallback (): void {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     this.$input.addEventListener('change', (e: any) => {
       e.preventDefault()
       this.value = e.target.value
     })
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     svgEditor.$click(this.$input, (e: any) => {
       e.preventDefault()
       this.value = e.target.value
@@ -141,7 +143,7 @@ export class SeExportDialog extends HTMLElement {
         document.getElementById('se-export-dialog')?.setAttribute('dialog', 'close')
       }
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const onChangeHandler = (e: any): void => {
       if (e.target.value === 'PDF') {
         this.$qualityCont.style.display = 'none'

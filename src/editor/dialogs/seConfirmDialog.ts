@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return */
+// elix custom-element base classes ship as 'any'; cleanup deferred to #3 (Lit migration)
 import SePlainAlertDialog from './SePlainAlertDialog.js'
 
 const seConfirm = async (text: string, choices?: string[]): Promise<string> => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const dialog = new SePlainAlertDialog() as any
   dialog.textContent = text
   dialog.choices = (choices === undefined) ? ['Ok', 'Cancel'] : choices
@@ -10,5 +12,5 @@ const seConfirm = async (text: string, choices?: string[]): Promise<string> => {
   return dialog.keyChoice ?? response.choice
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 ;(window as any).seConfirm = seConfirm

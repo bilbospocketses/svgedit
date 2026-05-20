@@ -1,28 +1,30 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument */
+// elix custom-element base classes ship as 'any'; cleanup deferred to #3 (Lit migration)
 // @ts-expect-error: *.html imported as string via vite-plugin-string; no ambient module declaration
 import svgSourceDialogHTML from './svgSourceDialog.html'
 
 declare const svgEditor: SvgEditorGlobal
 
 const template = document.createElement('template')
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+ 
 template.innerHTML = svgSourceDialogHTML as string
 /**
  * @class SeSvgSourceEditorDialog
  */
 export class SeSvgSourceEditorDialog extends HTMLElement {
   declare _shadowRoot: ShadowRoot
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   declare $dialog: any
   declare $copyBtn: Element | null
   declare $saveBtn: Element | null
   declare $cancelBtn: Element | null
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   declare $sourceTxt: any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   declare $copySec: any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   declare $applySec: any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   declare $toggleDynamic: any
 
   /**
@@ -49,7 +51,7 @@ export class SeSvgSourceEditorDialog extends HTMLElement {
    * @param {any} name
    * @returns {void}
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   init (i18next: any): void {
     this.setAttribute('tools-source_save', i18next.t('tools.source_save'))
     this.setAttribute('common-cancel', i18next.t('common.cancel'))
