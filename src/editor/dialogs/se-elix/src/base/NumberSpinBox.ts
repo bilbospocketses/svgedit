@@ -1,17 +1,19 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */
+// elix custom-element base classes ship as 'any'; cleanup deferred to #3 (Lit migration)
 import {
   defaultState,
   setState,
   state,
   stateEffects
 } from 'elix/src/base/internal.js'
-import {
-  SpinBox
-} from 'elix/src/base/SpinBox.js'
+// @ts-expect-error: no declaration file for elix/src/base/SpinBox.js
+import { SpinBox } from 'elix/src/base/SpinBox.js'
 
 /**
  * @class NumberSpinBox
  */
-class NumberSpinBox extends SpinBox {
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+class NumberSpinBox extends (SpinBox as unknown as typeof HTMLElement) {
   /**
    * @function attributeChangedCallback
    * @param {string} name
@@ -19,7 +21,7 @@ class NumberSpinBox extends SpinBox {
    * @param {string} newValue
    * @returns {void}
    */
-  attributeChangedCallback (name, oldValue, newValue) {
+  attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
     if (name === 'max') {
       this.max = parseFloat(newValue)
     } else if (name === 'min') {
@@ -27,6 +29,7 @@ class NumberSpinBox extends SpinBox {
     } else if (name === 'step') {
       this.step = parseFloat(newValue)
     } else {
+      // @ts-expect-error: elix computed property key not in HTMLElement type
       super.attributeChangedCallback(name, oldValue, newValue)
     }
   }
@@ -35,7 +38,8 @@ class NumberSpinBox extends SpinBox {
    * @function observedAttributes
    * @returns {any} observed
    */
-  get [defaultState] () {
+  get [defaultState] (): any {
+    // @ts-expect-error: elix computed property key not in HTMLElement type
     return Object.assign(super[defaultState], {
       max: null,
       min: null,
@@ -54,7 +58,7 @@ class NumberSpinBox extends SpinBox {
    * @param {number} precision
    * @returns {number}
    */
-  formatValue (value, precision) {
+  formatValue (value: number, precision: number): string {
     return Number(value).toFixed(precision)
   }
 
@@ -64,8 +68,8 @@ class NumberSpinBox extends SpinBox {
    * @type {number|null}
    * @default 1
    */
-  get max () {
-    return this[state].max
+  get max (): number | null {
+    return (this as any)[state].max
   }
 
   /**
@@ -74,8 +78,8 @@ class NumberSpinBox extends SpinBox {
    * @type {number|null}
    * @default 1
    */
-  set max (max) {
-    this[setState]({
+  set max (max: number | null) {
+    (this as any)[setState]({
       max
     })
   }
@@ -86,16 +90,16 @@ class NumberSpinBox extends SpinBox {
    * @type {number|null}
    * @default 1
    */
-  get min () {
-    return this[state].min
+  get min (): number | null {
+    return (this as any)[state].min
   }
 
   /**
    * @function set
    * @returns {void}
    */
-  set min (min) {
-    this[setState]({
+  set min (min: number | null) {
+    (this as any)[setState]({
       min
     })
   }
@@ -106,8 +110,8 @@ class NumberSpinBox extends SpinBox {
    * @param {number} precision
    * @returns {int}
    */
-  parseValue (value, precision) {
-    const parsed = precision === 0 ? parseInt(value) : parseFloat(value)
+  parseValue (value: number | string, precision: number): number {
+    const parsed = precision === 0 ? parseInt(value as string) : parseFloat(value as string)
     return isNaN(parsed) ? 0 : parsed
   }
 
@@ -117,7 +121,8 @@ class NumberSpinBox extends SpinBox {
    * @param {any} changed
    * @returns {any}
    */
-  [stateEffects] (state, changed) {
+  [stateEffects] (state: any, changed: any): any {
+    // @ts-expect-error: elix computed property key not in HTMLElement type
     const effects = super[stateEffects]
     // If step changed, calculate its precision (number of digits after
     // the decimal).
@@ -185,17 +190,17 @@ class NumberSpinBox extends SpinBox {
    * @function get
    * @returns {any}
    */
-  get step () {
-    return this[state].step
+  get step (): number {
+    return (this as any)[state].step
   }
 
   /**
    * @function set
    * @returns {void}
    */
-  set step (step) {
+  set step (step: number) {
     if (!isNaN(step)) {
-      this[setState]({
+      (this as any)[setState]({
         step
       })
     }
@@ -205,22 +210,23 @@ class NumberSpinBox extends SpinBox {
    * @function stepDown
    * @returns {void}
    */
-  stepDown () {
+  stepDown (): void {
+    // @ts-expect-error: elix computed property key not in HTMLElement type
     super.stepDown()
     const {
       max,
       precision,
       value
-    } = this[state]
+    } = (this as any)[state]
     let result = this.parseValue(value, precision) - this.step
     if (max !== null) {
       result = Math.min(result, max)
     }
     const {
       min
-    } = this[state]
+    } = (this as any)[state]
     if (min === null || result >= min) {
-      this.value = this.formatValue(result, precision)
+      (this as any).value = this.formatValue(result, precision)
     }
   }
 
@@ -228,22 +234,23 @@ class NumberSpinBox extends SpinBox {
    * @function stepUp
    * @returns {void}
    */
-  stepUp () {
+  stepUp (): void {
+    // @ts-expect-error: elix computed property key not in HTMLElement type
     super.stepUp()
     const {
       min,
       precision,
       value
-    } = this[state]
+    } = (this as any)[state]
     let result = this.parseValue(value, precision) + this.step
     if (min !== null) {
       result = Math.max(result, min)
     }
     const {
       max
-    } = this[state]
+    } = (this as any)[state]
     if (max === null || result <= max) {
-      this.value = this.formatValue(result, precision)
+      (this as any).value = this.formatValue(result, precision)
     }
   }
 }
