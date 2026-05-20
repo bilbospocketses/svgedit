@@ -151,7 +151,7 @@ class SvgCanvas {
   end: { x: number; y: number }
   bSpline: { x: number; y: number }
   nextPos: { x: number; y: number }
-  idprefix: string
+  idPrefix: string
   encodableImages: Record<string, string | false>
   curConfig: Record<string, any>
   lastGoodImgUrl: string
@@ -328,7 +328,7 @@ class SvgCanvas {
     this.end = { x: 0, y: 0 }
     this.bSpline = { x: 0, y: 0 }
     this.nextPos = { x: 0, y: 0 }
-    this.idprefix = 'svg_'
+    this.idPrefix = 'svg_'
     this.encodableImages = {}
 
     this.curConfig = {
@@ -350,7 +350,7 @@ class SvgCanvas {
     touchInit(this)
     clearInit(this)
     this.clearSvgContentElement()
-    this.current_drawing_ = new draw.Drawing(this.svgContent, this.idprefix)
+    this.current_drawing_ = new draw.Drawing(this.svgContent, this.idPrefix)
     this.zoom = 1
 
     this.currentGroup = null
@@ -496,7 +496,7 @@ class SvgCanvas {
   }
 
   setIdPrefix (p: string): void {
-    this.idprefix = p
+    this.idPrefix = p
   }
 
   getCurrentDrawing (): InstanceType<typeof draw.Drawing> {
@@ -854,7 +854,7 @@ class SvgCanvas {
   }
 
   getIdPrefix (): string {
-    return this.idprefix
+    return this.idPrefix
   }
 
   getDataStorage (): typeof dataStorage {
