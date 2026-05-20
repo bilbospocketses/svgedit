@@ -1,7 +1,9 @@
-/* eslint-disable max-len */
-/* globals seAlert */
+/* eslint-disable max-len, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unused-expressions */
+// editor / panel API surface is loosely typed; full typing deferred to follow-up
+declare function seAlert(message: string): void
 
 import SvgCanvas from '@svgedit/svgcanvas'
+// @ts-expect-error: TopPanel.html imported as string via vite-plugin-string; no ambient module declaration
 import topPanelHTML from './TopPanel.html'
 
 const { $qa, $id, $click, isValidUnit, getTypeMap, convertUnit } = SvgCanvas
@@ -13,26 +15,28 @@ const { $qa, $id, $click, isValidUnit, getTypeMap, convertUnit } = SvgCanvas
  *
  */
 class TopPanel {
+  editor: any
+
   /**
    * @param {PlainObject} editor svgedit handler
    */
-  constructor (editor) {
+  constructor (editor: any) {
     this.editor = editor
   }
 
   /**
    * @type {module}
    */
-  displayTool (className) {
+  displayTool (className: string): void {
     // default display is 'none' so removing the property will make the panel visible
-    $qa(`.${className}`).map(el => el.style.removeProperty('display'))
+    $qa(`.${className}`).map((el: any) => el.style.removeProperty('display'))
   }
 
   /**
    * @type {module}
    */
-  hideTool (className) {
-    $qa(`.${className}`).forEach(el => {
+  hideTool (className: string): void {
+    $qa(`.${className}`).forEach((el: any) => {
       el.style.display = 'none'
     })
   }
@@ -64,13 +68,14 @@ class TopPanel {
    * @param {boolean} changeElem
    * @returns {void}
    */
-  setStrokeOpt (opt, changeElem) {
+  setStrokeOpt (opt: any, changeElem?: any): void {
     const { id } = opt
     const bits = id.split('_')
     const [pre, val] = bits
 
     if (changeElem) {
-      this.svgCanvas.setStrokeAttr('stroke-' + pre, val)
+      // TODO: see todo #10 — likely should be this.editor.svgCanvas (pre-existing bug)
+      ;(this as any).svgCanvas.setStrokeAttr('stroke-' + pre, val)
     }
     opt.classList.add('current')
     const elements = Array.prototype.filter.call(
@@ -94,7 +99,7 @@ class TopPanel {
     let i
     let len
     // set title
-    $qa('#title_panel > p')[0].textContent = this.editor.title
+    ;($qa('#title_panel > p') as any)[0].textContent = this.editor.title
     if (this.selectedElement) {
       switch (this.selectedElement.tagName) {
         case 'use':
@@ -116,31 +121,31 @@ class TopPanel {
             }
           }
 
-          $id('stroke_width').value = gWidth === null ? '' : gWidth
+          ;($id('stroke_width') as any).value = gWidth === null ? '' : gWidth
           this.editor.bottomPanel.updateColorpickers(false)
           break
         }
         default: {
           this.editor.bottomPanel.updateColorpickers(false)
 
-          $id('stroke_width').value =
+          ;($id('stroke_width') as any).value =
             this.selectedElement.getAttribute('stroke-width') || 1
-          $id('stroke_style').value =
+          ;($id('stroke_style') as any).value =
             this.selectedElement.getAttribute('stroke-dasharray') || 'none'
-          $id('stroke_style').setAttribute('value', $id('stroke_style').value)
+          ;($id('stroke_style') as any).setAttribute('value', ($id('stroke_style') as any).value)
 
           let attr =
             this.selectedElement.getAttribute('stroke-linejoin') || 'miter'
 
           if ($id('linejoin_' + attr)) {
             this.setStrokeOpt($id('linejoin_' + attr))
-            $id('stroke_linejoin').setAttribute('value', attr)
+            ;($id('stroke_linejoin') as any).setAttribute('value', attr)
           }
 
           attr = this.selectedElement.getAttribute('stroke-linecap') || 'butt'
           if ($id('linecap_' + attr)) {
             this.setStrokeOpt($id('linecap_' + attr))
-            $id('stroke_linecap').setAttribute('value', attr)
+            ;($id('stroke_linecap') as any).setAttribute('value', attr)
           }
         }
       }
@@ -150,9 +155,9 @@ class TopPanel {
     if (this.selectedElement) {
       const opacPerc =
         (this.selectedElement.getAttribute('opacity') || 1.0) * 100
-      $id('opacity').value = opacPerc
-      $id('elem_id').value = this.selectedElement.id
-      $id('elem_class').value = this.selectedElement.getAttribute('class') ?? ''
+      ;($id('opacity') as any).value = opacPerc
+      ;($id('elem_id') as any).value = this.selectedElement.id
+      ;($id('elem_class') as any).value = this.selectedElement.getAttribute('class') ?? ''
     }
 
     this.editor.bottomPanel.updateToolButtonState()
@@ -166,6 +171,7 @@ class TopPanel {
   promptImgURL ({ cancelDeletes = false } = {}) {
     let curhref = this.editor.svgCanvas.getHref(this.editor.selectedElement)
     curhref = curhref.startsWith('data:') ? '' : curhref
+    // TODO: see todo #10 — native prompt(); replace with custom dialog
     const url = prompt(
       this.editor.i18next.t('notification.enterNewImgURL'),
       curhref
@@ -197,7 +203,7 @@ class TopPanel {
         : null
 
     const isNode = currentMode === 'pathedit'
-    const menuItems = document.getElementById('se-cmenu_canvas')
+    const menuItems = document.getElementById('se-cmenu_canvas') as any
     this.hideTool('selected_panel')
     this.hideTool('multiselected_panel')
     this.hideTool('g_panel')
@@ -215,10 +221,10 @@ class TopPanel {
       const elname = elem.nodeName
 
       const angle = this.editor.svgCanvas.getRotationAngle(elem)
-      $id('angle').value = angle
+      ;($id('angle') as any).value = angle
 
       const blurval = this.editor.svgCanvas.getBlur(elem) * 10
-      $id('blur').value = blurval
+      ;($id('blur') as any).value = blurval
 
       if (
         this.editor.svgCanvas.addedNew &&
@@ -258,13 +264,13 @@ class TopPanel {
            * @param {string} id - The ID of the input element to be updated.
            * @param {number} newValue - The new numeric value to set in the input field.
            */
-          const updateValue = (id, newValue) => {
-            const currentValue = $id(id).value // Get current value from the field
+          const updateValue = (id: any, newValue: any) => {
+            const currentValue = ($id(id) as any).value // Get current value from the field
             // do nothing if nothing changed...
             if (parseFloat(currentValue) === newValue) {
               return
             }
-            $id(id).value = newValue
+            ;($id(id) as any).value = newValue
           }
 
           updateValue('selected_x', x)
@@ -284,25 +290,25 @@ class TopPanel {
         } else {
           this.hideTool('tool_reorient')
         }
-        $id('tool_reorient').disabled = angle === 0
+        ;($id('tool_reorient') as any).disabled = angle === 0
       } else {
         const point = this.path.getNodePoint()
-        $id('tool_add_subpath').pressed = false
+        ;($id('tool_add_subpath') as any).pressed = false
         !this.path.canDeleteNodes
-          ? $id('tool_node_delete').classList.add('disabled')
-          : $id('tool_node_delete').classList.remove('disabled')
+          ? ($id('tool_node_delete') as any).classList.add('disabled')
+          : ($id('tool_node_delete') as any).classList.remove('disabled')
 
         // Show open/close button based on selected point
         // setIcon('#tool_openclose_path', path.closed_subpath ? 'open_path' : 'close_path');
 
         if (point) {
-          const segType = $id('seg_type')
+          const segType = ($id('seg_type') as any)
           if (unit) {
             point.x = convertUnit(point.x)
             point.y = convertUnit(point.y)
           }
-          $id('path_node_x').value = point.x
-          $id('path_node_y').value = point.y
+          ;($id('path_node_x') as any).value = point.x
+          ;($id('path_node_y') as any).value = point.y
           if (point.type) {
             segType.value = point.type
             segType.removeAttribute('disabled')
@@ -315,6 +321,7 @@ class TopPanel {
       }
 
       // update contextual tools here
+      // TODO: see todo #10 — panels missing polyline, polygon, path entries (feature gap)
       const panels = {
         g: [],
         a: [],
@@ -352,54 +359,55 @@ class TopPanel {
       if (linkHref) {
         this.displayTool('tool_make_link')
         this.displayTool('tool_make_link_multi')
-        $id('link_url').value = linkHref
+        ;($id('link_url') as any).value = linkHref
       } else {
         this.hideTool('tool_make_link')
         this.hideTool('tool_make_link_multi')
       }
 
-      if (panels[tagName]) {
-        const curPanel = panels[tagName]
+      if ((panels as any)[tagName]) {
+        const curPanel = (panels as any)[tagName]
         this.displayTool(tagName + '_panel')
 
-        curPanel.forEach(item => {
+        curPanel.forEach((item: any) => {
           let attrVal = elem.getAttribute(item)
           if (this.editor.configObj.curConfig.baseUnit !== 'px' && elem[item]) {
             const bv = elem[item].baseVal.value
             attrVal = convertUnit(bv)
           }
-          $id(`${tagName}_${item}`).value = attrVal || 0
+          ;($id(`${tagName}_${item}`) as any).value = attrVal || 0
         })
 
         if (tagName === 'text') {
           this.displayTool('text_panel')
-          $id('tool_italic').pressed = this.editor.svgCanvas.getItalic()
-          $id('tool_bold').pressed = this.editor.svgCanvas.getBold()
-          $id('tool_text_decoration_underline').pressed =
+          ;($id('tool_italic') as any).pressed = this.editor.svgCanvas.getItalic()
+          ;($id('tool_bold') as any).pressed = this.editor.svgCanvas.getBold()
+          ;($id('tool_text_decoration_underline') as any).pressed =
             this.editor.svgCanvas.hasTextDecoration('underline')
-          $id('tool_text_decoration_linethrough').pressed =
+          ;($id('tool_text_decoration_linethrough') as any).pressed =
             this.editor.svgCanvas.hasTextDecoration('line-through')
-          $id('tool_text_decoration_overline').pressed =
+          ;($id('tool_text_decoration_overline') as any).pressed =
             this.editor.svgCanvas.hasTextDecoration('overline')
-          $id('tool_font_family').value = elem.getAttribute('font-family')
-          $id('tool_text_anchor').setAttribute(
+          ;($id('tool_font_family') as any).value = elem.getAttribute('font-family')
+          ;($id('tool_text_anchor') as any).setAttribute(
             'value',
             elem.getAttribute('text-anchor')
           )
-          $id('font_size').value = elem.getAttribute('font-size')
-          $id('tool_letter_spacing').value =
+          ;($id('font_size') as any).value = elem.getAttribute('font-size')
+          ;($id('tool_letter_spacing') as any).value =
             elem.getAttribute('letter-spacing') ?? 0
-          $id('tool_word_spacing').value =
+          ;($id('tool_word_spacing') as any).value =
             elem.getAttribute('word-spacing') ?? 0
-          $id('tool_text_length').value = elem.getAttribute('textLength') ?? 0
-          $id('tool_length_adjust').value =
+          ;($id('tool_text_length') as any).value = elem.getAttribute('textLength') ?? 0
+          ;($id('tool_length_adjust') as any).value =
             elem.getAttribute('lengthAdjust') ?? 0
-          $id('text').value = elem.textContent
+          ;($id('text') as any).value = elem.textContent
           if (this.editor.svgCanvas.addedNew) {
+            // TODO: see todo #10 — IE9 setTimeout workaround; safe to remove when IE9 support dropped
             // Timeout needed for IE9
             setTimeout(() => {
-              $id('text').focus()
-              $id('text').select()
+              ;($id('text') as any).focus()
+              ;($id('text') as any).select()
             }, 100)
           }
           // text
@@ -412,9 +420,9 @@ class TopPanel {
         } else if (tagName === 'g' || tagName === 'use') {
           this.displayTool('container_panel')
           const title = this.editor.svgCanvas.getTitle()
-          const label = $id('g_title')
+          const label = ($id('g_title') as any)
           label.value = title
-          $id('g_title').disabled = tagName === 'use'
+          ;($id('g_title') as any).disabled = tagName === 'use'
         }
       }
       menuItems.setAttribute(
@@ -431,7 +439,7 @@ class TopPanel {
     } else if (this.multiselected) {
       // Check if all selected elements are 'text' nodes, if yes enable text panel
       const selElems = this.editor.svgCanvas.getSelectedElements()
-      if (selElems.every(elem => elem.tagName === 'text')) {
+      if (selElems.every((elem: any) => elem.tagName === 'text')) {
         this.displayTool('text_panel')
       }
 
@@ -446,27 +454,27 @@ class TopPanel {
     }
 
     // update history buttons
-    $id('tool_undo').disabled =
+    ;($id('tool_undo') as any).disabled =
       this.editor.svgCanvas.undoMgr.getUndoStackSize() === 0
-    $id('tool_redo').disabled =
+    ;($id('tool_redo') as any).disabled =
       this.editor.svgCanvas.undoMgr.getRedoStackSize() === 0
 
     this.editor.svgCanvas.addedNew = false
 
     if ((elem && !isNode) || this.multiselected) {
       // update the selected elements' layer
-      $id('selLayerNames').removeAttribute('disabled')
-      $id('selLayerNames').value = currentLayerName
-      $id('selLayerNames').setAttribute('value', currentLayerName)
+      ;($id('selLayerNames') as any).removeAttribute('disabled')
+      ;($id('selLayerNames') as any).value = currentLayerName
+      ;($id('selLayerNames') as any).setAttribute('value', currentLayerName)
 
       // Enable regular menu options
-      const canCMenu = document.getElementById('se-cmenu_canvas')
+      const canCMenu = document.getElementById('se-cmenu_canvas') as any
       canCMenu.setAttribute(
         'enablemenuitems',
         '#delete,#cut,#copy,#move_front,#move_up,#move_down,#move_back'
       )
     } else {
-      $id('selLayerNames').setAttribute('disabled', 'disabled')
+      ;($id('selLayerNames') as any).setAttribute('disabled', 'disabled')
     }
   }
 
@@ -475,8 +483,8 @@ class TopPanel {
    * @param {boolean} forSaving
    * @returns {void}
    */
-  showSourceEditor (e, forSaving) {
-    const $editorDialog = document.getElementById('se-svg-editor-dialog')
+  showSourceEditor (_e?: any, forSaving?: any): void {
+    const $editorDialog = document.getElementById('se-svg-editor-dialog') as any
     if ($editorDialog.getAttribute('dialog') === 'open') return
     const origSource = this.editor.svgCanvas.getSvgString()
     $editorDialog.setAttribute('dialog', 'open')
@@ -490,14 +498,14 @@ class TopPanel {
    * @returns {void}
    */
   clickWireframe () {
-    $id('tool_wireframe').pressed = !$id('tool_wireframe').pressed
+    ;($id('tool_wireframe') as any).pressed = !($id('tool_wireframe') as any).pressed
     this.editor.workarea.classList.toggle('wireframe')
 
-    const wfRules = $id('wireframe_rules')
+    const wfRules = ($id('wireframe_rules') as any)
     if (!wfRules) {
       const fcRules = document.createElement('style')
       fcRules.setAttribute('id', 'wireframe_rules')
-      document.getElementsByTagName('head')[0].appendChild(fcRules)
+      ;(document.getElementsByTagName('head')[0] as HTMLElement).appendChild(fcRules)
     } else {
       while (wfRules.firstChild) {
         wfRules.removeChild(wfRules.firstChild)
@@ -536,26 +544,26 @@ class TopPanel {
   /**
    * @type {module}
    */
-  changeRectRadius (e) {
+  changeRectRadius (e: any): void {
     this.editor.svgCanvas.setRectRadius(e.target.value)
   }
 
   /**
    * @type {module}
    */
-  changeFontSize (e) {
+  changeFontSize (e: any): void {
     this.editor.svgCanvas.setFontSize(e.target.value)
   }
 
   /**
    * @type {module}
    */
-  changeRotationAngle (e) {
+  changeRotationAngle (e: any): void {
     this.editor.svgCanvas.setRotationAngle(e.target.value)
     if (Number.parseInt(e.target.value) === 0) {
-      $id('tool_reorient').classList.add('disabled')
+      ;($id('tool_reorient') as any).classList.add('disabled')
     } else {
-      $id('tool_reorient').classList.remove('disabled')
+      ;($id('tool_reorient') as any).classList.remove('disabled')
     }
   }
 
@@ -563,7 +571,7 @@ class TopPanel {
    * @param {PlainObject} e
    * @returns {void}
    */
-  changeBlur (e) {
+  changeBlur (e: any): void {
     this.editor.svgCanvas.setBlur(e.target.value / 10, true)
   }
 
@@ -593,7 +601,7 @@ class TopPanel {
    * @param {PlainObject} evt
    * @returns {void}
    */
-  clickAlignEle (evt) {
+  clickAlignEle (evt: any): void {
     this.editor.svgCanvas.alignSelectedElements(evt.detail.value, 'page')
   }
 
@@ -601,8 +609,8 @@ class TopPanel {
    * @param {string} pos indicate the alignment relative to top, bottom, middle etc..
    * @returns {void}
    */
-  clickAlign (pos) {
-    let value = $id('tool_align_relative').value
+  clickAlign (pos: any): void {
+    let value = ($id('tool_align_relative') as any).value
     if (value === '') {
       value = 'selected'
     }
@@ -613,13 +621,14 @@ class TopPanel {
    *
    * @type {module}
    */
-  attrChanger (e) {
+  attrChanger (e: any): boolean | void {
     const attr = e.target.getAttribute('data-attr')
     let val = e.target.value
     const valid = isValidUnit(attr, val, this.selectedElement)
 
     if (!valid) {
       e.target.value = this.selectedElement.getAttribute(attr)
+      // TODO: see todo #10 — native alert(); replace with seAlert
       alert(this.editor.i18next.t('notification.invalidAttrValGiven'))
       return false
     }
@@ -638,7 +647,7 @@ class TopPanel {
           attr === 'x' ||
           attr === 'y'
         ) {
-          val *= unitData[this.editor.configObj.curConfig.baseUnit]
+          val *= (unitData as any)[this.editor.configObj.curConfig.baseUnit]
         }
       }
     }
@@ -691,8 +700,9 @@ class TopPanel {
    *
    * @returns {void} Resolves to `undefined`
    */
-  makeHyperlink () {
+  makeHyperlink (): void {
     if (this.editor.selectedElement || this.multiselected) {
+      // TODO: see todo #10 — native prompt(); replace with custom dialog
       const url = prompt(
         this.editor.i18next.t('notification.enterNewLinkURL'),
         'http://'
@@ -708,8 +718,8 @@ class TopPanel {
    * @returns {void}
    */
   linkControlPoints () {
-    $id('tool_node_link').pressed = !$id('tool_node_link').pressed
-    const linked = !!$id('tool_node_link').pressed
+    ;($id('tool_node_link') as any).pressed = !($id('tool_node_link') as any).pressed
+    const linked = !!($id('tool_node_link') as any).pressed
     this.path.linkControlPoints(linked)
   }
 
@@ -738,7 +748,7 @@ class TopPanel {
    * @returns {void}
    */
   addSubPath () {
-    const button = $id('tool_add_subpath')
+    const button = ($id('tool_add_subpath') as any)
     const sp = !button.classList.contains('pressed')
     button.pressed = sp
     // button.toggleClass('push_button_pressed tool_button');
@@ -790,7 +800,7 @@ class TopPanel {
    */
   get anyTextSelected () {
     const selected = this.editor.svgCanvas.getSelectedElements()
-    return selected.filter(el => el.tagName === 'text').length > 0
+    return selected.filter((el: any) => el.tagName === 'text').length > 0
   }
 
   /**
@@ -823,7 +833,7 @@ class TopPanel {
    * @param value The text decoration value
    * @returns {boolean} false
    */
-  clickTextDecoration (value) {
+  clickTextDecoration (value: any): boolean | void {
     if (this.editor.svgCanvas.hasTextDecoration(value)) {
       this.editor.svgCanvas.removeTextDecoration(value)
     } else {
@@ -838,7 +848,7 @@ class TopPanel {
    *
    * @returns {false}
    */
-  clickTextAnchor (evt) {
+  clickTextAnchor (evt: any): boolean | void {
     this.editor.svgCanvas.setTextAnchor(evt.detail.value)
     return false
   }
@@ -846,28 +856,28 @@ class TopPanel {
   /**
    * @type {module}
    */
-  changeLetterSpacing (e) {
+  changeLetterSpacing (e: any): void {
     this.editor.svgCanvas.setLetterSpacing(e.target.value)
   }
 
   /**
    * @type {module}
    */
-  changeWordSpacing (e) {
+  changeWordSpacing (e: any): void {
     this.editor.svgCanvas.setWordSpacing(e.target.value)
   }
 
   /**
    * @type {module}
    */
-  changeTextLength (e) {
+  changeTextLength (e: any): void {
     this.editor.svgCanvas.setTextLength(e.target.value)
   }
 
   /**
    * @type {module}
    */
-  changeLengthAdjust (evt) {
+  changeLengthAdjust (evt: any): void {
     this.editor.svgCanvas.setLengthAdjust(evt.detail.value)
   }
 
@@ -877,13 +887,13 @@ class TopPanel {
    * @param {string} url
    * @returns {void}
    */
-  setImageURL (url) {
+  setImageURL (url: any): void {
     const { editor } = this
     if (!url) {
       url = editor.defaultImageURL
     }
     editor.svgCanvas.setImageURL(url)
-    $id('image_url').value = url
+    ;($id('image_url') as any).value = url
 
     if (url.startsWith('data:')) {
       // data URI found
@@ -901,7 +911,7 @@ class TopPanel {
               true
             )
           },
-          error => {
+          (error: any) => {
             console.error('error =', error)
             seAlert(editor.i18next.t('tools.no_embed'))
             editor.svgCanvas.deleteSelectedElements()
@@ -914,7 +924,7 @@ class TopPanel {
   /**
    *
    */
-  updateTitle (title) {
+  updateTitle (title?: any): void {
     if (title) this.editor.title = title
     const titleElement = $qa('#title_panel > p')[0]
     if (titleElement) titleElement.textContent = this.editor.title
@@ -925,7 +935,7 @@ class TopPanel {
    * @param {module:svgcanvas.SvgCanvas#event:selected} elems
    * @returns {void}
    */
-  togglePathEditMode (editMode, elems) {
+  togglePathEditMode (editMode: any, elems: any): void {
     if (editMode) {
       this.displayTool('path_node_panel')
     } else {
@@ -933,16 +943,16 @@ class TopPanel {
     }
     if (editMode) {
       // Change select icon
-      $id('tool_path').pressed = false
-      $id('tool_select').pressed = true
-      $id('tool_select').setAttribute('src', 'select_node.svg')
+      ;($id('tool_path') as any).pressed = false
+      ;($id('tool_select') as any).pressed = true
+      ;($id('tool_select') as any).setAttribute('src', 'select_node.svg')
       this.editor.multiselected = false
       if (elems.length) {
         this.editor.selectedElement = elems[0]
       }
     } else {
       setTimeout(() => {
-        $id('tool_select').setAttribute('src', 'select.svg')
+        ;($id('tool_select') as any).setAttribute('src', 'select.svg')
       }, 1000)
     }
   }
@@ -959,86 +969,86 @@ class TopPanel {
     // svg editor source dialoag added to DOM
     const newSeEditorDialog = document.createElement(
       'se-svg-source-editor-dialog'
-    )
+    ) as any
     newSeEditorDialog.setAttribute('id', 'se-svg-editor-dialog')
     this.editor.$container.append(newSeEditorDialog)
     this.updateTitle()
     newSeEditorDialog.init(i18next)
-    $id('tool_link_url').setAttribute('title', i18next.t('tools.set_link_url'))
+    ;($id('tool_link_url') as any).setAttribute('title', i18next.t('tools.set_link_url'))
     // register action to top panel buttons
-    $click($id('tool_source'), this.showSourceEditor.bind(this))
-    $click($id('tool_wireframe'), this.clickWireframe.bind(this))
-    $click($id('tool_undo'), this.clickUndo.bind(this))
-    $click($id('tool_redo'), this.clickRedo.bind(this))
-    $click($id('tool_clone'), this.clickClone.bind(this))
-    $click($id('tool_clone_multi'), this.clickClone.bind(this))
-    $click($id('tool_delete'), this.deleteSelected.bind(this))
-    $click($id('tool_delete_multi'), this.deleteSelected.bind(this))
-    $click($id('tool_move_top'), this.moveToTopSelected.bind(this))
-    $click($id('tool_move_bottom'), this.moveToBottomSelected.bind(this))
-    $click($id('tool_topath'), this.convertToPath.bind(this))
-    $click($id('tool_make_link'), this.makeHyperlink.bind(this))
-    $click($id('tool_make_link_multi'), this.makeHyperlink.bind(this))
-    $click($id('tool_reorient'), this.reorientPath.bind(this))
-    $click($id('tool_flip_h'), this.clickFlipHorizontal.bind(this))
-    $click($id('tool_flip_v'), this.clickFlipVertical.bind(this))
-    $click($id('tool_group_elements'), this.clickGroup.bind(this))
-    $id('tool_position').addEventListener('change', evt =>
+    $click($id('tool_source')!, (e: any) => this.showSourceEditor(e))
+    $click($id('tool_wireframe')!, this.clickWireframe.bind(this))
+    $click($id('tool_undo')!, this.clickUndo.bind(this))
+    $click($id('tool_redo')!, this.clickRedo.bind(this))
+    $click($id('tool_clone')!, this.clickClone.bind(this))
+    $click($id('tool_clone_multi')!, this.clickClone.bind(this))
+    $click($id('tool_delete')!, this.deleteSelected.bind(this))
+    $click($id('tool_delete_multi')!, this.deleteSelected.bind(this))
+    $click($id('tool_move_top')!, this.moveToTopSelected.bind(this))
+    $click($id('tool_move_bottom')!, this.moveToBottomSelected.bind(this))
+    $click($id('tool_topath')!, this.convertToPath.bind(this))
+    $click($id('tool_make_link')!, this.makeHyperlink.bind(this))
+    $click($id('tool_make_link_multi')!, this.makeHyperlink.bind(this))
+    $click($id('tool_reorient')!, this.reorientPath.bind(this))
+    $click($id('tool_flip_h')!, this.clickFlipHorizontal.bind(this))
+    $click($id('tool_flip_v')!, this.clickFlipVertical.bind(this))
+    $click($id('tool_group_elements')!, this.clickGroup.bind(this))
+    $id('tool_position')!.addEventListener('change', evt =>
       this.clickAlignEle.bind(this)(evt)
     )
-    $click($id('tool_align_left'), () => this.clickAlign.bind(this)('left'))
-    $click($id('tool_align_right'), () => this.clickAlign.bind(this)('right'))
-    $click($id('tool_align_center'), () => this.clickAlign.bind(this)('center'))
-    $click($id('tool_align_top'), () => this.clickAlign.bind(this)('top'))
-    $click($id('tool_align_bottom'), () => this.clickAlign.bind(this)('bottom'))
-    $click($id('tool_align_middle'), () => this.clickAlign.bind(this)('middle'))
-    $click($id('tool_align_distrib_horiz'), () =>
+    $click($id('tool_align_left')!, () => this.clickAlign.bind(this)('left'))
+    $click($id('tool_align_right')!, () => this.clickAlign.bind(this)('right'))
+    $click($id('tool_align_center')!, () => this.clickAlign.bind(this)('center'))
+    $click($id('tool_align_top')!, () => this.clickAlign.bind(this)('top'))
+    $click($id('tool_align_bottom')!, () => this.clickAlign.bind(this)('bottom'))
+    $click($id('tool_align_middle')!, () => this.clickAlign.bind(this)('middle'))
+    $click($id('tool_align_distrib_horiz')!, () =>
       this.clickAlign.bind(this)('distrib_horiz')
     )
-    $click($id('tool_align_distrib_verti'), () =>
+    $click($id('tool_align_distrib_verti')!, () =>
       this.clickAlign.bind(this)('distrib_verti')
     )
-    $click($id('tool_node_clone'), this.clonePathNode.bind(this))
-    $click($id('tool_node_delete'), this.deletePathNode.bind(this))
-    $click($id('tool_openclose_path'), this.opencloseSubPath.bind(this))
-    $click($id('tool_add_subpath'), this.addSubPath.bind(this))
-    $click($id('tool_node_link'), this.linkControlPoints.bind(this))
-    $id('angle').addEventListener('change', this.changeRotationAngle.bind(this))
-    $id('blur').addEventListener('change', this.changeBlur.bind(this))
-    $id('rect_rx').addEventListener('change', this.changeRectRadius.bind(this))
-    $id('font_size').addEventListener('change', this.changeFontSize.bind(this))
-    $click($id('tool_ungroup'), this.clickGroup.bind(this))
-    $click($id('tool_bold'), this.clickBold.bind(this))
-    $click($id('tool_italic'), this.clickItalic.bind(this))
-    $click($id('tool_text_decoration_underline'), () =>
+    $click($id('tool_node_clone')!, this.clonePathNode.bind(this))
+    $click($id('tool_node_delete')!, this.deletePathNode.bind(this))
+    $click($id('tool_openclose_path')!, this.opencloseSubPath.bind(this))
+    $click($id('tool_add_subpath')!, this.addSubPath.bind(this))
+    $click($id('tool_node_link')!, this.linkControlPoints.bind(this))
+    $id('angle')!.addEventListener('change', this.changeRotationAngle.bind(this))
+    $id('blur')!.addEventListener('change', this.changeBlur.bind(this))
+    $id('rect_rx')!.addEventListener('change', this.changeRectRadius.bind(this))
+    $id('font_size')!.addEventListener('change', this.changeFontSize.bind(this))
+    $click($id('tool_ungroup')!, this.clickGroup.bind(this))
+    $click($id('tool_bold')!, this.clickBold.bind(this))
+    $click($id('tool_italic')!, this.clickItalic.bind(this))
+    $click($id('tool_text_decoration_underline')!, () =>
       this.clickTextDecoration.bind(this)('underline')
     )
-    $click($id('tool_text_decoration_linethrough'), () =>
+    $click($id('tool_text_decoration_linethrough')!, () =>
       this.clickTextDecoration.bind(this)('line-through')
     )
-    $click($id('tool_text_decoration_overline'), () =>
+    $click($id('tool_text_decoration_overline')!, () =>
       this.clickTextDecoration.bind(this)('overline')
     )
-    $id('tool_text_anchor').addEventListener('change', evt =>
+    $id('tool_text_anchor')!.addEventListener('change', evt =>
       this.clickTextAnchor.bind(this)(evt)
     )
-    $id('tool_letter_spacing').addEventListener(
+    $id('tool_letter_spacing')!.addEventListener(
       'change',
       this.changeLetterSpacing.bind(this)
     )
-    $id('tool_word_spacing').addEventListener(
+    $id('tool_word_spacing')!.addEventListener(
       'change',
       this.changeWordSpacing.bind(this)
     )
-    $id('tool_text_length').addEventListener(
+    $id('tool_text_length')!.addEventListener(
       'change',
       this.changeTextLength.bind(this)
     )
-    $id('tool_length_adjust').addEventListener('change', evt =>
+    $id('tool_length_adjust')!.addEventListener('change', evt =>
       this.changeLengthAdjust.bind(this)(evt)
     )
-    $click($id('tool_unlink_use'), this.clickGroup.bind(this))
-    $id('image_url').addEventListener('change', evt => {
+    $click($id('tool_unlink_use')!, this.clickGroup.bind(this))
+    $id('image_url')!.addEventListener('change', (evt: any) => {
       this.setImageURL(evt.currentTarget.value)
     })
 
@@ -1066,7 +1076,7 @@ class TopPanel {
       'path_node_x',
       'path_node_y'
     ].forEach(attrId =>
-      $id(attrId).addEventListener('change', this.attrChanger.bind(this))
+      $id(attrId)!.addEventListener('change', this.attrChanger.bind(this))
     )
   }
 }
