@@ -17,6 +17,7 @@ export const svgRootElement = (svgdoc: Document, dimensions: [number, number]): 
   const w = String(dimensions[0])
   const h = String(dimensions[1])
 
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- double-cast required: createElementNS returns Element; need SVGSVGElement for downstream typed access
   const root = svgdoc.createElementNS(NS.SVG, 'svg') as unknown as SVGSVGElement
   root.setAttribute('id', 'svgroot')
   root.setAttribute('xlinkns', NS.XLINK)
