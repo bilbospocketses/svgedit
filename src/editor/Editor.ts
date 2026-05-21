@@ -27,6 +27,8 @@ import BottomPanel from './panels/BottomPanel.js'
 import LayersPanel from './panels/LayersPanel.js'
 import MainMenu from './MainMenu.js'
 import { getParentsUntil } from '@svgedit/svgcanvas/common/util.js'
+import { EmbedServer } from '../embed/server.js'
+const SVGEDIT_VERSION = '7.4.1'
 
 /** `seAlert` / `seConfirm` are custom element dialogs registered globally at runtime. */
 declare function seAlert (msg: string): void
@@ -57,6 +59,8 @@ class Editor extends EditorStartup {
   exportWindowName: string | null
   docprops: boolean
   shortcuts: any[]
+  /** Embed-API server instance; accessible to EditorStartup for calling .ready() and wiring canvas events. */
+  public readonly _embedServer!: EmbedServer
 
   /**
    *
@@ -322,6 +326,22 @@ class Editor extends EditorStartup {
     this.mainMenu = new MainMenu(this)
     // makes svgEditor accessible as a global variable
     window.svgEditor = this
+
+    // Embed-API wire-in (Task 11). Activates only when ?embed=1 OR window.parent !== window.
+    // Default dialog handlers wrap existing window.seAlert / window.seConfirm (see ambient declarations above).
+    // svgCanvas event binding is deferred to EditorStartup.init() where svgCanvas is actually created.
+    ;(this as { _embedServer: EmbedServer })._embedServer = new EmbedServer(this, {
+      version: SVGEDIT_VERSION,
+      defaultDialogHandlers: {
+        alert: (msg) => { seAlert(msg); return Promise.resolve() },
+        confirm: async (msg) => Boolean(await seConfirm(msg)),
+        prompt: (_msg, def) => {
+          // V7 lacks a real prompt-with-input (audit input #4 — sePromptDialog is status-display).
+          // Until #13 adds a real prompt, return the default; hosts that need real prompts must register a handler.
+          return Promise.resolve(def ?? null)
+        }
+      }
+    })
   } // end Constructor
 
   /**

@@ -699,6 +699,27 @@ class EditorStartup {
     await this.runCallbacks()
     // Signal readiness to same-document listeners (tests/debugging hooks)
     document.dispatchEvent(new CustomEvent('svgedit:ready', { detail: this }))
+
+    // Embed-API: fire ready() now that svgCanvas exists and all callbacks have run (Task 11).
+    this._embedServer?.ready()
+
+    // Wire svgCanvas events to embed event channel (Task 11).
+    // svgCanvas is available here (created earlier in init()); not available in Editor constructor.
+    const sc = this.svgCanvas as { bind?: (name: string, fn: (...args: unknown[]) => void) => void } | null
+    if (sc != null && typeof sc.bind === 'function') {
+      let changeTimer: ReturnType<typeof setTimeout> | null = null
+      sc.bind('changed', () => {
+        if (changeTimer) clearTimeout(changeTimer)
+        changeTimer = setTimeout(() => { this._embedServer?.emit('change', {}) }, 200)
+      })
+      sc.bind('selected', (selected: unknown) => {
+        const arr = Array.isArray(selected) ? selected as Element[] : []
+        this._embedServer?.emit('selection-changed', {
+          count: arr.length,
+          ids: arr.map(e => e?.id).filter((s): s is string => typeof s === 'string' && s.length > 0)
+        })
+      })
+    }
   }
 
   /**
