@@ -188,9 +188,9 @@ export class SeText extends LitElement {
     }
   `
 
-  @property() text = ''
-  @property() title = ''
-  @property() value = ''
+  @property() accessor text = ''
+  @property() accessor title = ''
+  @property() accessor value = ''
 
   render() {
     return html`
@@ -199,6 +199,8 @@ export class SeText extends LitElement {
   }
 }
 ```
+
+**Note on the `accessor` keyword:** TC39 standard decorators (the mode tsconfig is in: `target: ES2025` + no `experimentalDecorators`) require the `accessor` keyword on `@property()` declarations. Lit 3's `@property()` decorator signature only matches the `ClassAccessorDecorator` overload; using bare class fields (`@property() text = ''`) produces TS1240 + TS1270 errors. This requirement applies to ALL future per-component conversions in PR-2 / PR-3 — the conventions doc (Task 4) lists this as the first bullet.
 
 - [ ] **Step 4: Verify tsc passes**
 
@@ -398,11 +400,11 @@ export class SeInput extends LitElement {
     }
   `
 
-  @property() value = ''
-  @property() label = ''
-  @property() title = ''
-  @property() src = ''
-  @property({ type: Number }) size = 0
+  @property() accessor value = ''
+  @property() accessor label = ''
+  @property() accessor title = ''
+  @property() accessor src = ''
+  @property({ type: Number }) accessor size = 0
 
   render() {
     return html`
@@ -517,7 +519,7 @@ Create file `docs/superpowers/conventions/lit-component-conventions.md` with:
 
 ## The 12-bullet checklist
 
-1. Use `@customElement('se-name')` + `@property()` decorators; never `static properties` map.
+1. Use `@customElement('se-name')` + `@property() accessor name = default` decorators (the `accessor` keyword is REQUIRED — TC39 standard decorators + Lit 3 only match the `ClassAccessorDecorator` overload, bare class fields produce TS1240/TS1270); never `static properties` map.
 2. Open shadow DOM (Lit default); never override `createRenderRoot()`.
 3. `static styles = css\`\`` block; no external CSS files imported into components.
 4. Use existing `--*-color` CSS custom-property names (`--main-bg-color`, `--icon-bg-color`, `--icon-bg-color-hover`, `--input-color`, `--orange-color`, `--global-se-spin-input-width`); do not rename theme variables.

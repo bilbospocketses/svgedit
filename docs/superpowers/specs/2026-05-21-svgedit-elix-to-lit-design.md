@@ -47,7 +47,7 @@ svgedit todo item #3 — the largest remaining architectural item in the persona
 |---|---|---|
 | Lit version | 3.x latest stable | Current stable major; matches scope directive |
 | Decorator style | Standard TC39 (`@customElement`, `@property`) | tsconfig already configured (`target: ES2025`, no `experimentalDecorators` flag) |
-| Property declaration | `@property()` decorators, never `static properties` map | Concise; matches Lit's modern documentation |
+| Property declaration | `@property() accessor name = default` (the `accessor` keyword is REQUIRED with TC39 standard decorators + Lit 3); never `static properties` map | Lit 3's `@property()` decorator signature only matches a `ClassAccessorDecorator` overload — bare class fields produce TS1240/TS1270 errors. Discovered at PR-1 execution. |
 | Shadow DOM scope | Open (Lit default) | Matches current convention in `seText.ts` and all se-* components |
 | Styling | `static styles = css\`\`` | Lit canonical; component-scoped, no external CSS file imports |
 | Theme variables | Preserve existing `--*-color` names | Zero theme-breaking |
@@ -82,9 +82,9 @@ export class SeText extends LitElement {
     }
   `
 
-  @property() text = ''
-  @property() title = ''
-  @property() value = ''  // read by <se-zoom> from child <se-text> options (BottomPanel)
+  @property() accessor text = ''
+  @property() accessor title = ''
+  @property() accessor value = ''  // read by <se-zoom> from child <se-text> options (BottomPanel)
 
   render() {
     return html`
@@ -112,10 +112,11 @@ export class SeInput extends LitElement {
     .wrap { height: 24px; margin: 5px 1px; padding: 3px; }
     input { background: var(--input-color); border-radius: 3px; height: 24px; }
   `
-  @property() value = ''
-  @property() label = ''
-  @property() title = ''
-  @property({ type: Number }) size = 0
+  @property() accessor value = ''
+  @property() accessor label = ''
+  @property() accessor title = ''
+  @property() accessor src = ''
+  @property({ type: Number }) accessor size = 0
 
   render() {
     return html`
@@ -147,7 +148,7 @@ External API contract preserved from current `seInput.ts`: `value` / `label` / `
 
 Captured in `docs/superpowers/conventions/lit-component-conventions.md` (PR-1 creates this). Twelve bullets that every per-component conversion follows:
 
-1. Use `@customElement('se-name')` + `@property()` decorators; never `static properties` map
+1. Use `@customElement('se-name')` + `@property() accessor name = default` decorators (the `accessor` keyword is REQUIRED — TC39 standard decorators + Lit 3 only match the `ClassAccessorDecorator` overload, bare class fields produce TS1240/TS1270); never `static properties` map
 2. Open shadow DOM (Lit default); never override `createRenderRoot()`
 3. `static styles = css\`\`` block; no external CSS files imported into components
 4. Use existing `--*-color` CSS custom-property names; do not rename theme variables
