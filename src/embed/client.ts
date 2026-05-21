@@ -7,6 +7,8 @@ export type SvgEditEmbedOptions = {
 }
 
 type EventHandler = (payload: unknown) => void
+type DialogKind = 'prompt' | 'alert' | 'confirm'
+type DialogHandler = (text: string, defaultValue?: string) => Promise<unknown>
 
 export class SvgEditEmbed {
   protected readonly iframe: HTMLIFrameElement
@@ -20,6 +22,7 @@ export class SvgEditEmbed {
   private readonly callQueue: Array<{ method: string; args: unknown[]; resolve: (v: unknown) => void; reject: (e: Error) => void }> = []
   private isReady = false
   private readonly eventHandlers: Map<EmbedEventName, Set<EventHandler>> = new Map()
+  private readonly dialogHandlers: Map<DialogKind, DialogHandler> = new Map()
 
   constructor (iframe: HTMLIFrameElement, opts: SvgEditEmbedOptions = {}) {
     this.iframe = iframe
@@ -108,6 +111,10 @@ export class SvgEditEmbed {
       }
       return
     }
+    if (env.kind === 'dialog-request') {
+      void this.handleDialogRequest(env)
+      return
+    }
   }
 
   on (name: EmbedEventName, handler: EventHandler): () => void {
@@ -134,6 +141,26 @@ export class SvgEditEmbed {
 
   private dispatchEvent (name: EmbedEventName, payload: unknown): void {
     this.eventHandlers.get(name)?.forEach(h => h(payload))
+  }
+
+  setDialogHandler (kind: DialogKind, handler: DialogHandler): () => void {
+    this.dialogHandlers.set(kind, handler)
+    void this.call('__registerDialogHandler', [kind])
+    return () => {
+      this.dialogHandlers.delete(kind)
+      void this.call('__unregisterDialogHandler', [kind])
+    }
+  }
+
+  private async handleDialogRequest (env: { id: number; dialog: DialogKind; args: unknown[] }): Promise<void> {
+    const handler = this.dialogHandlers.get(env.dialog)
+    if (!handler) return
+    const response = await handler(env.args[0] as string, env.args[1] as string | undefined)
+    const respEnv = { ns: 'svgedit' as const, v: 1 as const, kind: 'dialog-response' as const, id: env.id, response }
+    const cw = this.iframe.contentWindow
+    if (cw) {
+      cw.postMessage(respEnv, new URL(this.iframe.src, window.location.href).origin)
+    }
   }
 
   dispose (): void {

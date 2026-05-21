@@ -219,3 +219,43 @@ describe('SvgEditEmbed — event subscription', () => {
     client.dispose()
   })
 })
+
+describe('SvgEditEmbed — dialog handlers', () => {
+  let iframe
+  beforeEach(() => {
+    iframe = buildIframeWithStubPM()
+  })
+
+  const fireReady = () => window.dispatchEvent(new MessageEvent('message', {
+    data: { ns: 'svgedit', v: 1, kind: 'event', name: 'ready', payload: { version: '7.4.1', protocolVersion: 1, capabilities: [] } },
+    origin: 'https://editor.test', source: iframe.contentWindow
+  }))
+
+  it('setDialogHandler routes dialog-request to handler and posts response', async () => {
+    const client = new SvgEditEmbed(iframe, { allowedOrigins: ['https://editor.test'] })
+    fireReady()
+    await client.ready
+
+    client.setDialogHandler('prompt', async (text, def) => `${text}=${def}`)
+
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { ns: 'svgedit', v: 1, kind: 'dialog-request', id: 99, dialog: 'prompt', args: ['name?', 'anon'] },
+      origin: 'https://editor.test', source: iframe.contentWindow
+    }))
+    await new Promise(r => setTimeout(r, 10))
+
+    const respEnv = iframe.contentWindow.postMessage.mock.calls
+      .map(c => c[0]).find(e => e.kind === 'dialog-response' && e.id === 99)
+    expect(respEnv).toBeDefined()
+    expect(respEnv.response).toBe('name?=anon')
+    client.dispose()
+  })
+
+  it('setDialogHandler returns an unregister function', () => {
+    const client = new SvgEditEmbed(iframe, { allowedOrigins: ['https://editor.test'] })
+    const off = client.setDialogHandler('alert', async () => undefined)
+    expect(typeof off).toBe('function')
+    off()
+    client.dispose()
+  })
+})
