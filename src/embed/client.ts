@@ -1,10 +1,12 @@
 import { PROTOCOL_VERSION, isValidEnvelope } from './protocol.js'
-import type { ReadyPayload } from './protocol.js'
+import type { ReadyPayload, EmbedEventName } from './protocol.js'
 import { isOriginAllowed } from './origin.js'
 
 export type SvgEditEmbedOptions = {
   allowedOrigins?: string[]
 }
+
+type EventHandler = (payload: unknown) => void
 
 export class SvgEditEmbed {
   protected readonly iframe: HTMLIFrameElement
@@ -17,6 +19,7 @@ export class SvgEditEmbed {
   private callIdCounter = 0
   private readonly callQueue: Array<{ method: string; args: unknown[]; resolve: (v: unknown) => void; reject: (e: Error) => void }> = []
   private isReady = false
+  private readonly eventHandlers: Map<EmbedEventName, Set<EventHandler>> = new Map()
 
   constructor (iframe: HTMLIFrameElement, opts: SvgEditEmbedOptions = {}) {
     this.iframe = iframe
@@ -76,10 +79,15 @@ export class SvgEditEmbed {
       }
       this.isReady = true
       this._resolveReady(payload)
+      this.dispatchEvent('ready', payload)
       while (this.callQueue.length > 0) {
         const q = this.callQueue.shift()
         if (q) this.dispatchCall(q.method, q.args, q.resolve, q.reject)
       }
+      return
+    }
+    if (env.kind === 'event') {
+      this.dispatchEvent(env.name, env.payload)
       return
     }
     if (env.kind === 'result') {
@@ -100,6 +108,32 @@ export class SvgEditEmbed {
       }
       return
     }
+  }
+
+  on (name: EmbedEventName, handler: EventHandler): () => void {
+    let set = this.eventHandlers.get(name)
+    if (!set) {
+      set = new Set()
+      this.eventHandlers.set(name, set)
+    }
+    set.add(handler)
+    return () => this.off(name, handler)
+  }
+
+  off (name: EmbedEventName, handler: EventHandler): void {
+    this.eventHandlers.get(name)?.delete(handler)
+  }
+
+  once (name: EmbedEventName, handler: EventHandler): () => void {
+    const wrapped = (payload: unknown) => {
+      this.off(name, wrapped)
+      handler(payload)
+    }
+    return this.on(name, wrapped)
+  }
+
+  private dispatchEvent (name: EmbedEventName, payload: unknown): void {
+    this.eventHandlers.get(name)?.forEach(h => h(payload))
   }
 
   dispose (): void {

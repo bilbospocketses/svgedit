@@ -155,3 +155,67 @@ describe('SvgEditEmbed — Proxy method dispatch', () => {
     client.dispose()
   })
 })
+
+describe('SvgEditEmbed — event subscription', () => {
+  let iframe
+  beforeEach(() => {
+    iframe = buildIframeWithStubPM()
+  })
+
+  it('on(name, handler) receives matching events', async () => {
+    const client = new SvgEditEmbed(iframe, { allowedOrigins: ['https://editor.test'] })
+    const received = []
+    client.on('save', (payload) => received.push(payload))
+
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { ns: 'svgedit', v: 1, kind: 'event', name: 'save', payload: { svgString: '<svg/>' } },
+      origin: 'https://editor.test', source: iframe.contentWindow
+    }))
+    expect(received).toEqual([{ svgString: '<svg/>' }])
+    client.dispose()
+  })
+
+  it('off(name, handler) removes the subscription', async () => {
+    const client = new SvgEditEmbed(iframe, { allowedOrigins: ['https://editor.test'] })
+    const received = []
+    const handler = (payload) => received.push(payload)
+    client.on('change', handler)
+    client.off('change', handler)
+
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { ns: 'svgedit', v: 1, kind: 'event', name: 'change', payload: {} },
+      origin: 'https://editor.test', source: iframe.contentWindow
+    }))
+    expect(received).toEqual([])
+    client.dispose()
+  })
+
+  it('once(name, handler) fires only once', async () => {
+    const client = new SvgEditEmbed(iframe, { allowedOrigins: ['https://editor.test'] })
+    let count = 0
+    client.once('change', () => count += 1)
+
+    const fire = () => window.dispatchEvent(new MessageEvent('message', {
+      data: { ns: 'svgedit', v: 1, kind: 'event', name: 'change', payload: {} },
+      origin: 'https://editor.test', source: iframe.contentWindow
+    }))
+    fire(); fire(); fire()
+    expect(count).toBe(1)
+    client.dispose()
+  })
+
+  it('multiple subscribers all receive the same event', async () => {
+    const client = new SvgEditEmbed(iframe, { allowedOrigins: ['https://editor.test'] })
+    let a = 0, b = 0
+    client.on('change', () => a += 1)
+    client.on('change', () => b += 1)
+
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { ns: 'svgedit', v: 1, kind: 'event', name: 'change', payload: {} },
+      origin: 'https://editor.test', source: iframe.contentWindow
+    }))
+    expect(a).toBe(1)
+    expect(b).toBe(1)
+    client.dispose()
+  })
+})
