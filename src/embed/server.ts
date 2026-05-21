@@ -1,10 +1,10 @@
 // src/embed/server.ts
-import { PROTOCOL_VERSION, isValidEnvelope, isElementHandle, ERROR_CODES } from './protocol.ts'
-import type { EmbedEnvelope, EmbedCall, ElementHandle } from './protocol.ts'
-import { isOriginAllowed } from './origin.ts'
-import { parseEmbedURLParams } from './url-params.ts'
-import { applyChrome, resolveChromePreset } from './chrome.ts'
-import { applyTheme } from './theme.ts'
+import { PROTOCOL_VERSION, isValidEnvelope, isElementHandle, ERROR_CODES } from './protocol.js'
+import type { EmbedEnvelope, EmbedCall, ElementHandle } from './protocol.js'
+import { isOriginAllowed } from './origin.js'
+import { parseEmbedURLParams } from './url-params.js'
+import { applyChrome, resolveChromePreset } from './chrome.js'
+import { applyTheme } from './theme.js'
 
 export type DialogKind = 'prompt' | 'alert' | 'confirm'
 export type DialogHandlers = {
@@ -44,7 +44,7 @@ function serializeForPostMessage (v: unknown): unknown {
   if (v instanceof Element) return allocateHandle(v)
   if (Array.isArray(v)) return v.map(serializeForPostMessage)
   if (v && typeof v === 'object' && !isElementHandle(v)) {
-    const proto = Object.getPrototypeOf(v)
+    const proto: unknown = Object.getPrototypeOf(v)
     if (proto === Object.prototype || proto === null) {
       const out: Record<string, unknown> = {}
       for (const [k, vv] of Object.entries(v as Record<string, unknown>)) {
@@ -66,7 +66,7 @@ function deserializeArg (v: unknown): unknown {
   }
   if (Array.isArray(v)) return v.map(deserializeArg)
   if (v && typeof v === 'object') {
-    const proto = Object.getPrototypeOf(v)
+    const proto: unknown = Object.getPrototypeOf(v)
     if (proto === Object.prototype || proto === null) {
       const out: Record<string, unknown> = {}
       for (const [k, vv] of Object.entries(v as Record<string, unknown>)) {
@@ -99,9 +99,9 @@ export class EmbedServer {
     this.dialogTimeoutMs = opts.dialogTimeoutMs ?? params.dialogTimeoutMs
     this.version = opts.version ?? '0.0.0-unknown'
     this.defaultDialogHandlers = opts.defaultDialogHandlers ?? {
-      alert: async (msg) => { window.alert(msg) },
-      confirm: async (msg) => window.confirm(msg),
-      prompt: async (msg, def) => window.prompt(msg, def)
+      alert: (msg) => { window.alert(msg); return Promise.resolve() },
+      confirm: (msg) => Promise.resolve(window.confirm(msg)),
+      prompt: (msg, def) => Promise.resolve(window.prompt(msg, def))
     }
 
     if (!embedMode) return
@@ -111,7 +111,7 @@ export class EmbedServer {
 
     if (params.theme) applyTheme(document.body, params.theme)
 
-    this.listener = (e: MessageEvent) => this.handleMessage(e)
+    this.listener = (e: MessageEvent) => { void this.handleMessage(e) }
     window.addEventListener('message', this.listener)
   }
 
@@ -142,7 +142,7 @@ export class EmbedServer {
 
   protected async handleCall (env: EmbedCall): Promise<void> {
     try {
-      const target = (this.editor.svgCanvas[env.method] !== undefined ? this.editor.svgCanvas : this.editor) as Record<string, unknown>
+      const target = this.editor.svgCanvas[env.method] !== undefined ? this.editor.svgCanvas : this.editor
       const fn = target[env.method]
       if (typeof fn !== 'function') {
         throw Object.assign(new Error(`method not found: ${env.method}`), { code: ERROR_CODES.METHOD_NOT_FOUND })
@@ -156,8 +156,8 @@ export class EmbedServer {
       this.reply({
         ns: 'svgedit', v: 1, kind: 'error', id: env.id,
         message: error.message ?? String(err),
-        stack: error.stack,
-        code: error.code
+        ...(error.stack !== undefined && { stack: error.stack }),
+        ...(error.code !== undefined && { code: error.code })
       })
     }
   }
@@ -167,7 +167,7 @@ export class EmbedServer {
     window.parent.postMessage(env, targetOrigin)
   }
 
-  emit (name: import('./protocol.ts').EmbedEventName, payload: unknown): void {
+  emit (name: import('./protocol.js').EmbedEventName, payload: unknown): void {
     this.reply({ ns: 'svgedit', v: 1, kind: 'event', name, payload })
   }
 

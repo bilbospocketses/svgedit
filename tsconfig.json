@@ -23,6 +23,6 @@
       "@svgedit/svgcanvas/*": ["./packages/svgcanvas/*"]
     }
   },
-  "include": ["src/editor/**/*.ts", "scripts/**/*.ts", "*.config.ts"],
+  "include": ["src/editor/**/*.ts", "src/embed/**/*.ts", "scripts/**/*.ts", "*.config.ts"],
   "references": [{ "path": "./packages/svgcanvas" }]
 }

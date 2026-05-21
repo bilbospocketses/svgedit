@@ -1,4 +1,4 @@
-import type { ChromePreset, ChromeState } from './protocol.ts'
+import type { ChromePreset, ChromeState } from './protocol.js'
 
 const CHROME_ELEMENTS = ['menu', 'toolbox', 'layers', 'palette', 'statusbar', 'header'] as const
 

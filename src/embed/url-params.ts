@@ -1,5 +1,5 @@
-import { parseAllowedOrigins } from './origin.ts'
-import type { ChromePreset } from './protocol.ts'
+import { parseAllowedOrigins } from './origin.js'
+import type { ChromePreset } from './protocol.js'
 
 export type EmbedURLParams = {
   embedMode: boolean
