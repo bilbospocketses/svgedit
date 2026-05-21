@@ -1,5 +1,5 @@
 import { PROTOCOL_VERSION, isValidEnvelope } from './protocol.js'
-import type { ReadyPayload, EmbedEventName } from './protocol.js'
+import type { ReadyPayload, EmbedEventName, ChromeState, ChromePreset } from './protocol.js'
 import { isOriginAllowed } from './origin.js'
 
 export type SvgEditEmbedOptions = {
@@ -161,6 +161,18 @@ export class SvgEditEmbed {
     if (cw) {
       cw.postMessage(respEnv, new URL(this.iframe.src, window.location.href).origin)
     }
+  }
+
+  setTheme (theme: string): Promise<unknown> {
+    return this.call('__setTheme', [theme])
+  }
+
+  setChrome (state: ChromeState | ChromePreset): Promise<unknown> {
+    return this.call('__setChrome', [state])
+  }
+
+  setDialogTimeout (ms: number): Promise<unknown> {
+    return this.call('__setDialogTimeout', [ms])
   }
 
   dispose (): void {

@@ -259,3 +259,48 @@ describe('SvgEditEmbed — dialog handlers', () => {
     client.dispose()
   })
 })
+
+describe('SvgEditEmbed — convenience methods', () => {
+  let iframe
+  beforeEach(() => {
+    iframe = buildIframeWithStubPM()
+  })
+
+  const fireReady = () => window.dispatchEvent(new MessageEvent('message', {
+    data: { ns: 'svgedit', v: 1, kind: 'event', name: 'ready', payload: { version: '7.4.1', protocolVersion: 1, capabilities: ['chrome', 'theme'] } },
+    origin: 'https://editor.test', source: iframe.contentWindow
+  }))
+
+  it('setTheme posts a __setTheme call', async () => {
+    const client = new SvgEditEmbed(iframe, { allowedOrigins: ['https://editor.test'] })
+    fireReady()
+    await client.ready
+
+    void client.setTheme('dark')
+    const sent = iframe.contentWindow.postMessage.mock.calls.map(c => c[0])
+    expect(sent.some(e => e.kind === 'call' && e.method === '__setTheme' && e.args[0] === 'dark')).toBe(true)
+    client.dispose()
+  })
+
+  it('setChrome posts a __setChrome call with preset', async () => {
+    const client = new SvgEditEmbed(iframe, { allowedOrigins: ['https://editor.test'] })
+    fireReady()
+    await client.ready
+
+    void client.setChrome('minimal')
+    const sent = iframe.contentWindow.postMessage.mock.calls.map(c => c[0])
+    expect(sent.some(e => e.kind === 'call' && e.method === '__setChrome' && e.args[0] === 'minimal')).toBe(true)
+    client.dispose()
+  })
+
+  it('setDialogTimeout posts a __setDialogTimeout call', async () => {
+    const client = new SvgEditEmbed(iframe, { allowedOrigins: ['https://editor.test'] })
+    fireReady()
+    await client.ready
+
+    void client.setDialogTimeout(15000)
+    const sent = iframe.contentWindow.postMessage.mock.calls.map(c => c[0])
+    expect(sent.some(e => e.kind === 'call' && e.method === '__setDialogTimeout' && e.args[0] === 15000)).toBe(true)
+    client.dispose()
+  })
+})
