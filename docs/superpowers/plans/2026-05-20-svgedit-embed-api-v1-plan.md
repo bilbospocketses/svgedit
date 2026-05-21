@@ -111,13 +111,21 @@ Expected: branch = `feat/embed-api-v1`. Only `tsconfig.tsbuildinfo` remains untr
 **Files:**
 - Create: `src/embed/protocol.ts`
 - Test: `tests/unit/embed-protocol.test.js`
+- Modify: `tsconfig.json` (add `src/embed/**/*.ts` to `include` so ESLint's type-aware lint covers the new module)
 
-- [ ] **Step 1: Write the failing test**
+- [ ] **Step 1: Update tsconfig.json `include` array**
+
+Add `"src/embed/**/*.ts"` to the `include` array in `tsconfig.json`. Without this, ESLint's type-checked rules fail with "Parsing error: file not found by the project service" for every src/embed file. Bundle the edit with the Step 6 commit.
+
+OLD: `"include": ["src/editor/**/*.ts", "scripts/**/*.ts", "*.config.ts"],`
+NEW: `"include": ["src/editor/**/*.ts", "src/embed/**/*.ts", "scripts/**/*.ts", "*.config.ts"],`
+
+- [ ] **Step 2: Write the failing test**
 
 ```js
 // tests/unit/embed-protocol.test.js
 import { describe, expect, it } from 'vitest'
-import { isValidEnvelope, PROTOCOL_VERSION } from '../../src/embed/protocol.ts'
+import { isValidEnvelope, PROTOCOL_VERSION } from '../../src/embed/protocol.js'
 
 describe('embed protocol', () => {
   it('PROTOCOL_VERSION is 1', () => {
@@ -150,15 +158,15 @@ describe('embed protocol', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [ ] **Step 3: Run test to verify it fails**
 
 ```bash
 npx vitest run tests/unit/embed-protocol.test.js
 ```
 
-Expected: FAIL — `Cannot find module '../../src/embed/protocol.ts'`
+Expected: FAIL — `Cannot find module '../../src/embed/protocol.js'`
 
-- [ ] **Step 3: Implement `src/embed/protocol.ts`**
+- [ ] **Step 4: Implement `src/embed/protocol.ts`**
 
 ```ts
 // src/embed/protocol.ts
@@ -241,7 +249,7 @@ export function isValidEnvelope (env: unknown): env is EmbedEnvelope {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [ ] **Step 5: Run test to verify it passes**
 
 ```bash
 npx vitest run tests/unit/embed-protocol.test.js
@@ -249,11 +257,11 @@ npx vitest run tests/unit/embed-protocol.test.js
 
 Expected: PASS — 5 tests
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit (include tsconfig change from Step 1)**
 
 ```bash
-git -C "C:/Users/jscha/source/repos/svgedit" add src/embed/protocol.ts tests/unit/embed-protocol.test.js
-git -C "C:/Users/jscha/source/repos/svgedit" commit -m "feat(embed): protocol envelope types + validator (Task 1)"
+git -C "C:/Users/jscha/source/repos/svgedit" add tsconfig.json src/embed/protocol.ts tests/unit/embed-protocol.test.js
+git -C "C:/Users/jscha/source/repos/svgedit" commit -m "feat(embed): protocol envelope types + validator + tsconfig include (Task 1)"
 ```
 
 ---
@@ -269,7 +277,7 @@ git -C "C:/Users/jscha/source/repos/svgedit" commit -m "feat(embed): protocol en
 ```js
 // tests/unit/embed-origin.test.js
 import { describe, expect, it } from 'vitest'
-import { isOriginAllowed, parseAllowedOrigins } from '../../src/embed/origin.ts'
+import { isOriginAllowed, parseAllowedOrigins } from '../../src/embed/origin.js'
 
 describe('embed origin validator', () => {
   it('allows exact-match origin', () => {
@@ -358,7 +366,7 @@ git -C "C:/Users/jscha/source/repos/svgedit" commit -m "feat(embed): origin vali
 ```js
 // tests/unit/embed-url-params.test.js
 import { describe, expect, it } from 'vitest'
-import { parseEmbedURLParams } from '../../src/embed/url-params.ts'
+import { parseEmbedURLParams } from '../../src/embed/url-params.js'
 
 describe('embed URL param parser', () => {
   it('returns defaults for empty URL', () => {
@@ -420,8 +428,8 @@ Expected: FAIL
 
 ```ts
 // src/embed/url-params.ts
-import { parseAllowedOrigins } from './origin.ts'
-import type { ChromePreset } from './protocol.ts'
+import { parseAllowedOrigins } from './origin.js'
+import type { ChromePreset } from './protocol.js'
 
 export type EmbedURLParams = {
   embedMode: boolean
@@ -487,7 +495,7 @@ git -C "C:/Users/jscha/source/repos/svgedit" commit -m "feat(embed): URL param p
 // tests/unit/embed-chrome.test.js
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from 'vitest'
-import { applyChrome, resolveChromePreset } from '../../src/embed/chrome.ts'
+import { applyChrome, resolveChromePreset } from '../../src/embed/chrome.js'
 
 describe('embed chrome control', () => {
   beforeEach(() => {
@@ -553,7 +561,7 @@ Expected: FAIL
 
 ```ts
 // src/embed/chrome.ts
-import type { ChromePreset, ChromeState } from './protocol.ts'
+import type { ChromePreset, ChromeState } from './protocol.js'
 
 const CHROME_ELEMENTS = ['menu', 'toolbox', 'layers', 'palette', 'statusbar', 'header'] as const
 
@@ -610,7 +618,7 @@ git -C "C:/Users/jscha/source/repos/svgedit" commit -m "feat(embed): chrome CSS-
 // tests/unit/embed-theme.test.js
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from 'vitest'
-import { applyTheme, getCurrentTheme } from '../../src/embed/theme.ts'
+import { applyTheme, getCurrentTheme } from '../../src/embed/theme.js'
 
 describe('embed theme', () => {
   beforeEach(() => {
@@ -709,7 +717,7 @@ git -C "C:/Users/jscha/source/repos/svgedit" commit -m "feat(embed): theme CSS-c
 // tests/unit/embed-server.test.js
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { EmbedServer } from '../../src/embed/server.ts'
+import { EmbedServer } from '../../src/embed/server.js'
 
 const makeFakeEditor = () => ({
   svgCanvas: { getZoom: () => 1.5, clearSelection: vi.fn() }
@@ -724,7 +732,7 @@ describe('EmbedServer — constructor + listener setup', () => {
   it('does not attach when embedMode is false', () => {
     const editor = makeFakeEditor()
     const spy = vi.spyOn(window, 'addEventListener')
-    const _server = new EmbedServer(editor, { detectEmbedMode: () => false })
+    new EmbedServer(editor, { detectEmbedMode: () => false })
     expect(spy).not.toHaveBeenCalledWith('message', expect.anything())
     spy.mockRestore()
   })
@@ -732,7 +740,7 @@ describe('EmbedServer — constructor + listener setup', () => {
   it('attaches message listener when embedMode is true', () => {
     const editor = makeFakeEditor()
     const spy = vi.spyOn(window, 'addEventListener')
-    const _server = new EmbedServer(editor, { detectEmbedMode: () => true, allowedOrigins: ['https://host.test'] })
+    new EmbedServer(editor, { detectEmbedMode: () => true, allowedOrigins: ['https://host.test'] })
     expect(spy).toHaveBeenCalledWith('message', expect.any(Function))
     spy.mockRestore()
   })
@@ -740,7 +748,7 @@ describe('EmbedServer — constructor + listener setup', () => {
   it('applies URL-param chrome state on init', () => {
     window.history.replaceState({}, '', '/?embed=1&chrome=minimal')
     const editor = makeFakeEditor()
-    const _server = new EmbedServer(editor)
+    new EmbedServer(editor)
     expect(document.body.classList.contains('embed')).toBe(true)
     expect(document.body.classList.contains('no-menu')).toBe(true)
     expect(document.body.classList.contains('no-toolbox')).toBe(false)
@@ -749,7 +757,7 @@ describe('EmbedServer — constructor + listener setup', () => {
   it('applies URL-param theme on init', () => {
     window.history.replaceState({}, '', '/?embed=1&theme=dark')
     const editor = makeFakeEditor()
-    const _server = new EmbedServer(editor)
+    new EmbedServer(editor)
     expect(document.body.classList.contains('theme-dark')).toBe(true)
   })
 })
@@ -767,10 +775,10 @@ Expected: FAIL
 
 ```ts
 // src/embed/server.ts
-import { PROTOCOL_VERSION } from './protocol.ts'
-import { parseEmbedURLParams } from './url-params.ts'
-import { applyChrome, resolveChromePreset } from './chrome.ts'
-import { applyTheme } from './theme.ts'
+import { PROTOCOL_VERSION } from './protocol.js'
+import { parseEmbedURLParams } from './url-params.js'
+import { applyChrome, resolveChromePreset } from './chrome.js'
+import { applyTheme } from './theme.js'
 
 export type EmbedServerOptions = {
   detectEmbedMode?: (params: { embedMode: boolean }) => boolean
@@ -800,7 +808,7 @@ export class EmbedServer {
 
     if (params.theme) applyTheme(document.body, params.theme)
 
-    this.listener = (e: MessageEvent) => this.handleMessage(e)
+    this.listener = (e: MessageEvent) => { void this.handleMessage(e) }
     window.addEventListener('message', this.listener)
   }
 
@@ -819,7 +827,7 @@ export class EmbedServer {
 }
 
 export const _protocolVersion = PROTOCOL_VERSION
-export type { ReadyPayload } from './protocol.ts'
+export type { ReadyPayload } from './protocol.js'
 ```
 
 - [ ] **Step 4: Run test to verify it passes**
@@ -975,12 +983,12 @@ Expected: FAIL — 5 new tests fail (handleMessage is still empty)
 
 ```ts
 // src/embed/server.ts
-import { PROTOCOL_VERSION, isValidEnvelope, isElementHandle, ERROR_CODES } from './protocol.ts'
-import type { EmbedEnvelope, EmbedCall, ElementHandle } from './protocol.ts'
-import { isOriginAllowed } from './origin.ts'
-import { parseEmbedURLParams } from './url-params.ts'
-import { applyChrome, resolveChromePreset } from './chrome.ts'
-import { applyTheme } from './theme.ts'
+import { PROTOCOL_VERSION, isValidEnvelope, isElementHandle, ERROR_CODES } from './protocol.js'
+import type { EmbedEnvelope, EmbedCall, ElementHandle } from './protocol.js'
+import { isOriginAllowed } from './origin.js'
+import { parseEmbedURLParams } from './url-params.js'
+import { applyChrome, resolveChromePreset } from './chrome.js'
+import { applyTheme } from './theme.js'
 
 export type EmbedServerOptions = {
   detectEmbedMode?: (params: { embedMode: boolean }) => boolean
@@ -1011,7 +1019,7 @@ function serializeForPostMessage (v: unknown): unknown {
   if (v instanceof Element) return allocateHandle(v)
   if (Array.isArray(v)) return v.map(serializeForPostMessage)
   if (v && typeof v === 'object' && !isElementHandle(v)) {
-    const proto = Object.getPrototypeOf(v)
+    const proto: unknown = Object.getPrototypeOf(v)
     if (proto === Object.prototype || proto === null) {
       const out: Record<string, unknown> = {}
       for (const [k, vv] of Object.entries(v as Record<string, unknown>)) {
@@ -1033,7 +1041,7 @@ function deserializeArg (v: unknown): unknown {
   }
   if (Array.isArray(v)) return v.map(deserializeArg)
   if (v && typeof v === 'object') {
-    const proto = Object.getPrototypeOf(v)
+    const proto: unknown = Object.getPrototypeOf(v)
     if (proto === Object.prototype || proto === null) {
       const out: Record<string, unknown> = {}
       for (const [k, vv] of Object.entries(v as Record<string, unknown>)) {
@@ -1067,7 +1075,7 @@ export class EmbedServer {
 
     if (params.theme) applyTheme(document.body, params.theme)
 
-    this.listener = (e: MessageEvent) => this.handleMessage(e)
+    this.listener = (e: MessageEvent) => { void this.handleMessage(e) }
     window.addEventListener('message', this.listener)
   }
 
@@ -1104,8 +1112,8 @@ export class EmbedServer {
       this.reply({
         ns: 'svgedit', v: 1, kind: 'error', id: env.id,
         message: error.message ?? String(err),
-        stack: error.stack,
-        code: error.code
+        ...(error.stack !== undefined && { stack: error.stack }),
+        ...(error.code !== undefined && { code: error.code })
       })
     }
   }
@@ -1224,7 +1232,7 @@ this.version = opts.version ?? '0.0.0-unknown'
 Add methods:
 
 ```ts
-emit (name: import('./protocol.ts').EmbedEventName, payload: unknown): void {
+emit (name: import('./protocol.js').EmbedEventName, payload: unknown): void {
   this.reply({ ns: 'svgedit', v: 1, kind: 'event', name, payload })
 }
 
@@ -1373,9 +1381,9 @@ In constructor:
 
 ```ts
 this.defaultDialogHandlers = opts.defaultDialogHandlers ?? {
-  alert: async (msg) => { window.alert(msg) },
-  confirm: async (msg) => window.confirm(msg),
-  prompt: async (msg, def) => window.prompt(msg, def)
+  alert: (msg) => { window.alert(msg); return Promise.resolve() },
+  confirm: (msg) => Promise.resolve(window.confirm(msg)),
+  prompt: (msg, def) => Promise.resolve(window.prompt(msg, def))
 }
 ```
 
@@ -1568,7 +1576,7 @@ Expected: FAIL — 6 new tests fail
 At the TOP of `handleCall` (before the existing method-lookup block), add:
 
 ```ts
-import type { ChromeState, ChromePreset } from './protocol.ts'
+import type { ChromeState, ChromePreset } from './protocol.js'
 
 // ... inside handleCall, before the target = ... line:
 
@@ -1644,7 +1652,7 @@ Read lines 318-330 of `src/editor/Editor.ts` to confirm the wire-in point.
 Add ONE import at the top (alongside existing imports):
 
 ```ts
-import { EmbedServer } from '../embed/server.ts'
+import { EmbedServer } from '../embed/server.js'
 const SVGEDIT_VERSION = '7.4.1'
 ```
 
@@ -1682,15 +1690,12 @@ NEW:
     this._embedServer = new EmbedServer(this as unknown as { svgCanvas: Record<string, unknown> }, {
       version: SVGEDIT_VERSION,
       defaultDialogHandlers: {
-        alert: async (msg) => { seAlert(msg) },
-        confirm: async (msg) => {
-          const result = await seConfirm(msg)
-          return Boolean(result)
-        },
-        prompt: async (_msg, def) => {
+        alert: (msg) => { seAlert(msg); return Promise.resolve() },
+        confirm: async (msg) => Boolean(await seConfirm(msg)),
+        prompt: (_msg, def) => {
           // V7 lacks a real prompt-with-input (audit input #4 — sePromptDialog is status-display).
           // Until #13 adds a real prompt, return the default; hosts that need real prompts must register a handler.
-          return def ?? null
+          return Promise.resolve(def ?? null)
         }
       }
     })
@@ -1767,7 +1772,7 @@ git -C "C:/Users/jscha/source/repos/svgedit" commit -m "feat(embed): wire EmbedS
 // tests/unit/embed-client.test.js
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { SvgEditEmbed } from '../../src/embed/client.ts'
+import { SvgEditEmbed } from '../../src/embed/client.js'
 
 const buildIframe = (src = 'https://editor.test/') => {
   document.body.replaceChildren()
@@ -1852,9 +1857,9 @@ Expected: FAIL
 
 ```ts
 // src/embed/client.ts
-import { PROTOCOL_VERSION, isValidEnvelope } from './protocol.ts'
-import type { EmbedEnvelope, ReadyPayload } from './protocol.ts'
-import { isOriginAllowed } from './origin.ts'
+import { PROTOCOL_VERSION, isValidEnvelope } from './protocol.js'
+import type { EmbedEnvelope, ReadyPayload } from './protocol.js'
+import { isOriginAllowed } from './origin.js'
 
 export type SvgEditEmbedOptions = {
   allowedOrigins?: string[]
@@ -1877,7 +1882,7 @@ export class SvgEditEmbed {
       this._rejectReady = reject
     })
 
-    this.listener = (e: MessageEvent) => this.handleMessage(e)
+    this.listener = (e: MessageEvent) => { void this.handleMessage(e) }
     window.addEventListener('message', this.listener)
   }
 
@@ -2211,7 +2216,7 @@ Expected: FAIL — 4 new tests fail
 Add fields + methods:
 
 ```ts
-import type { EmbedEventName } from './protocol.ts'
+import type { EmbedEventName } from './protocol.js'
 
 type EventHandler = (payload: unknown) => void
 
@@ -2460,7 +2465,7 @@ Expected: FAIL — 3 new tests fail
 - [ ] **Step 3: Add convenience methods to `src/embed/client.ts`**
 
 ```ts
-import type { ChromeState, ChromePreset } from './protocol.ts'
+import type { ChromeState, ChromePreset } from './protocol.js'
 
 setTheme (theme: string): Promise<unknown> {
   return this.call('__setTheme', [theme])
@@ -2505,12 +2510,12 @@ git -C "C:/Users/jscha/source/repos/svgedit" commit -m "feat(embed): SvgEditEmbe
 
 ```ts
 // src/embed/index.ts
-export { SvgEditEmbed } from './client.ts'
-export type { SvgEditEmbedOptions } from './client.ts'
-export { PROTOCOL_VERSION, ERROR_CODES } from './protocol.ts'
+export { SvgEditEmbed } from './client.js'
+export type { SvgEditEmbedOptions } from './client.js'
+export { PROTOCOL_VERSION, ERROR_CODES } from './protocol.js'
 export type {
   EmbedEnvelope, EmbedEventName, ReadyPayload, ChromeState, ChromePreset, ElementHandle
-} from './protocol.ts'
+} from './protocol.js'
 ```
 
 - [ ] **Step 2: Create `tsconfig.embed.json`**
