@@ -708,10 +708,14 @@ class EditorStartup {
     const sc = this.svgCanvas as { bind?: (name: string, fn: (...args: unknown[]) => void) => void } | null
     if (sc != null && typeof sc.bind === 'function') {
       let changeTimer: ReturnType<typeof setTimeout> | null = null
-      sc.bind('changed', () => {
+      const scheduleChange = () => {
         if (changeTimer) clearTimeout(changeTimer)
         changeTimer = setTimeout(() => { this._embedServer?.emit('change', {}) }, 200)
-      })
+      }
+      sc.bind('changed', scheduleChange)
+      // 'sourcechanged' fires when loadFromString/loadFromURL replaces the whole document;
+      // the 'changed' event is NOT fired in that path, so we must bind both.
+      sc.bind('sourcechanged', scheduleChange)
       sc.bind('selected', (selected: unknown) => {
         const arr = Array.isArray(selected) ? selected as Element[] : []
         this._embedServer?.emit('selection-changed', {
