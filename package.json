@@ -18,7 +18,8 @@
     "lint": "eslint .",
     "pretest": "npm run lint",
     "test": "vitest run --coverage && tsx scripts/run-e2e.ts",
-    "build": "vite build packages/svgcanvas && vite build",
+    "build:embed": "tsc --project tsconfig.embed.json",
+    "build": "vite build packages/svgcanvas && vite build && npm run build:embed",
     "postbuild": "tsx scripts/copy-static.ts && tsx scripts/build-extensions.ts",
     "start": "vite dev --host --port 8000 --strictPort",
     "prestart": "echo svgedit is available at http://localhost:8000/src/editor/index.html",
@@ -46,6 +47,13 @@
     "not IE 11",
     "not OperaMini all"
   ],
+  "exports": {
+    ".": "./dist/editor/Editor.js",
+    "./embed": {
+      "import": "./dist/embed/index.js",
+      "types": "./dist/embed/index.d.ts"
+    }
+  },
   "dependencies": {
     "@svgedit/svgcanvas": "7.4.1",
     "browser-fs-access": "0.38.0",
