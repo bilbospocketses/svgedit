@@ -8,10 +8,6 @@
 # All actions are pinned to commit SHAs per the repo-level
 # `sha_pinning_required` enforcement. Trailing `# v...` comments preserve
 # human-readable version context.
-#
-# NOTE: master is currently pre-TypeScript-migration. `feat/ts-migration`
-# carries a richer version of this workflow that adds `npx tsc --build`. When
-# that branch merges, the more elaborate workflow file supersedes this one.
 
 name: CI
 
@@ -41,6 +37,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Type check
+        run: npx tsc --build
+
       - name: Build
         run: npm run build
 
@@ -51,4 +50,4 @@ jobs:
         run: npx playwright install --with-deps chromium firefox
 
       - name: E2e tests
-        run: node scripts/run-e2e.mjs
+        run: npx tsx scripts/run-e2e.ts

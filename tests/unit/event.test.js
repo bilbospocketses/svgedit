@@ -89,7 +89,7 @@ describe('event', () => {
       setRootSctm (m) {
         this.rootSctm = m
       },
-      getrootSctm () {
+      getRootSctm () {
         return this.rootSctm
       },
       getStarted () {

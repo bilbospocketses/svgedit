@@ -4,6 +4,7 @@
   "description": "Powerful SVG-Editor for your browser ",
   "main": "dist/editor/Editor.js",
   "module": "dist/editor/Editor.js",
+  "type": "module",
   "directories": {
     "test": "test"
   },
@@ -14,11 +15,11 @@
     "packages/svgcanvas"
   ],
   "scripts": {
-    "lint": "standard .",
+    "lint": "eslint .",
     "pretest": "npm run lint",
-    "test": "vitest run --coverage && node scripts/run-e2e.mjs",
+    "test": "vitest run --coverage && tsx scripts/run-e2e.ts",
     "build": "vite build packages/svgcanvas && vite build",
-    "postbuild": "node scripts/copy-static.mjs && node scripts/build-extensions.mjs",
+    "postbuild": "tsx scripts/copy-static.ts && tsx scripts/build-extensions.ts",
     "start": "vite dev --host --port 8000 --strictPort",
     "prestart": "echo svgedit is available at http://localhost:8000/src/editor/index.html",
     "start:iife": "npm run build && vite preview --host --port 8000 --strictPort --outDir dist/editor --open /iife-index.html",
@@ -45,19 +46,6 @@
     "not IE 11",
     "not OperaMini all"
   ],
-  "standard": {
-    "ignore": [
-      "_reference/"
-    ],
-    "globals": [
-      "assert",
-      "expect"
-    ],
-    "env": [
-      "mocha",
-      "browser"
-    ]
-  },
   "dependencies": {
     "@svgedit/svgcanvas": "7.4.1",
     "browser-fs-access": "0.38.0",
@@ -69,12 +57,18 @@
   "devDependencies": {
     "@playwright/test": "^1.57.0",
     "@rollup/plugin-dynamic-import-vars": "2.1.5",
+    "@types/node": "^22.19.19",
+    "@typescript-eslint/eslint-plugin": "^8.59.3",
+    "@typescript-eslint/parser": "^8.59.3",
     "@vitest/coverage-v8": "^4.0.16",
+    "eslint": "^9.39.4",
+    "globals": "^15.15.0",
     "jamilih": "0.63.1",
     "jsdom": "^27.4.0",
-    "standard": "17.1.2",
+    "tsx": "^4.22.3",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.59.3",
     "vite": "^7.3.2",
-    "vite-plugin-istanbul": "^7.2.1",
     "vite-plugin-string": "^1.2.3",
     "vitest": "^4.0.16"
   },

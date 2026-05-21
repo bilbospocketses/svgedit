@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2025",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noEmit": true,
+    "lib": ["ES2025", "DOM", "DOM.Iterable"],
+    "types": ["vite/client", "vitest", "node"],
+    "paths": {
+      "@svgedit/svgcanvas": ["./packages/svgcanvas/svgcanvas.ts"],
+      "@svgedit/svgcanvas/*": ["./packages/svgcanvas/*"]
+    }
+  },
+  "include": ["src/editor/**/*.ts", "scripts/**/*.ts", "*.config.ts"],
+  "references": [{ "path": "./packages/svgcanvas" }]
+}

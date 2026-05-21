@@ -70,7 +70,7 @@ describe('TextActions', () => {
       getSelectedElements: () => [textElement],
       getCurrentMode: () => 'select',
       selectorManager: mockSelectorManager,
-      getrootSctm: () => svgRoot.getScreenCTM?.() || { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 },
+      getRootSctm: () => svgRoot.getScreenCTM?.() || { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 },
       $click: vi.fn(),
       contentW: 640,
       textActions: textActionsMethod
