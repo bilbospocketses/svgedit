@@ -267,3 +267,102 @@ describe('EmbedServer — dialog hook', () => {
     server.dispose()
   })
 })
+
+describe('EmbedServer — control messages', () => {
+  beforeEach(() => {
+    document.body.className = ''
+    window.history.replaceState({}, '', '/?embed=1&allowedOrigins=https://host.test')
+  })
+
+  it('__registerDialogHandler marks handler registered', async () => {
+    const editor = { svgCanvas: {} }
+    const server = new EmbedServer(editor)
+    vi.spyOn(window.parent, 'postMessage').mockImplementation(() => {})
+
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { ns: 'svgedit', v: 1, kind: 'call', id: 100, method: '__registerDialogHandler', args: ['prompt'] },
+      origin: 'https://host.test', source: window
+    }))
+    await new Promise(r => setTimeout(r, 0))
+
+    expect(server._isHostHandlerRegistered('prompt')).toBe(true)
+    server.dispose()
+  })
+
+  it('__unregisterDialogHandler unmarks it', async () => {
+    const editor = { svgCanvas: {} }
+    const server = new EmbedServer(editor)
+    vi.spyOn(window.parent, 'postMessage').mockImplementation(() => {})
+    server.markHostHandlerRegistered('alert')
+
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { ns: 'svgedit', v: 1, kind: 'call', id: 101, method: '__unregisterDialogHandler', args: ['alert'] },
+      origin: 'https://host.test', source: window
+    }))
+    await new Promise(r => setTimeout(r, 0))
+
+    expect(server._isHostHandlerRegistered('alert')).toBe(false)
+    server.dispose()
+  })
+
+  it('__setTheme applies theme via theme module', async () => {
+    const editor = { svgCanvas: {} }
+    const server = new EmbedServer(editor)
+    vi.spyOn(window.parent, 'postMessage').mockImplementation(() => {})
+
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { ns: 'svgedit', v: 1, kind: 'call', id: 102, method: '__setTheme', args: ['dark'] },
+      origin: 'https://host.test', source: window
+    }))
+    await new Promise(r => setTimeout(r, 0))
+
+    expect(document.body.classList.contains('theme-dark')).toBe(true)
+    server.dispose()
+  })
+
+  it('__setChrome with preset string applies preset', async () => {
+    const editor = { svgCanvas: {} }
+    const server = new EmbedServer(editor)
+    vi.spyOn(window.parent, 'postMessage').mockImplementation(() => {})
+
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { ns: 'svgedit', v: 1, kind: 'call', id: 103, method: '__setChrome', args: ['minimal'] },
+      origin: 'https://host.test', source: window
+    }))
+    await new Promise(r => setTimeout(r, 0))
+
+    expect(document.body.classList.contains('no-menu')).toBe(true)
+    expect(document.body.classList.contains('no-toolbox')).toBe(false)
+    server.dispose()
+  })
+
+  it('__setChrome with object applies per-element state', async () => {
+    const editor = { svgCanvas: {} }
+    const server = new EmbedServer(editor)
+    vi.spyOn(window.parent, 'postMessage').mockImplementation(() => {})
+
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { ns: 'svgedit', v: 1, kind: 'call', id: 104, method: '__setChrome', args: [{ menu: true }] },
+      origin: 'https://host.test', source: window
+    }))
+    await new Promise(r => setTimeout(r, 0))
+
+    expect(document.body.classList.contains('no-menu')).toBe(false)
+    server.dispose()
+  })
+
+  it('__setDialogTimeout updates timeout (positive integer only)', async () => {
+    const editor = { svgCanvas: {} }
+    const server = new EmbedServer(editor)
+    vi.spyOn(window.parent, 'postMessage').mockImplementation(() => {})
+
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { ns: 'svgedit', v: 1, kind: 'call', id: 105, method: '__setDialogTimeout', args: [5000] },
+      origin: 'https://host.test', source: window
+    }))
+    await new Promise(r => setTimeout(r, 0))
+
+    expect(server._dialogTimeoutForTest()).toBe(5000)
+    server.dispose()
+  })
+})

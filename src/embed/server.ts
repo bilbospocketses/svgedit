@@ -1,6 +1,6 @@
 // src/embed/server.ts
 import { PROTOCOL_VERSION, isValidEnvelope, isElementHandle, ERROR_CODES } from './protocol.js'
-import type { EmbedEnvelope, EmbedCall, ElementHandle } from './protocol.js'
+import type { EmbedEnvelope, EmbedCall, ElementHandle, ChromeState, ChromePreset } from './protocol.js'
 import { isOriginAllowed } from './origin.js'
 import { parseEmbedURLParams } from './url-params.js'
 import { applyChrome, resolveChromePreset } from './chrome.js'
@@ -141,6 +141,38 @@ export class EmbedServer {
   }
 
   protected async handleCall (env: EmbedCall): Promise<void> {
+    if (env.method === '__registerDialogHandler') {
+      this.markHostHandlerRegistered(env.args[0] as DialogKind)
+      this.reply({ ns: 'svgedit', v: 1, kind: 'result', id: env.id, result: null })
+      return
+    }
+    if (env.method === '__unregisterDialogHandler') {
+      this.unmarkHostHandlerRegistered(env.args[0] as DialogKind)
+      this.reply({ ns: 'svgedit', v: 1, kind: 'result', id: env.id, result: null })
+      return
+    }
+    if (env.method === '__setTheme') {
+      applyTheme(document.body, env.args[0] as string)
+      this.reply({ ns: 'svgedit', v: 1, kind: 'result', id: env.id, result: null })
+      return
+    }
+    if (env.method === '__setChrome') {
+      const arg = env.args[0]
+      const state: ChromeState = typeof arg === 'string'
+        ? resolveChromePreset(arg as ChromePreset)
+        : arg as ChromeState
+      applyChrome(document.body, state)
+      this.reply({ ns: 'svgedit', v: 1, kind: 'result', id: env.id, result: null })
+      return
+    }
+    if (env.method === '__setDialogTimeout') {
+      const ms = env.args[0]
+      if (typeof ms === 'number' && Number.isInteger(ms) && ms > 0) {
+        this.dialogTimeoutMs = ms
+      }
+      this.reply({ ns: 'svgedit', v: 1, kind: 'result', id: env.id, result: null })
+      return
+    }
     try {
       const target = this.editor.svgCanvas[env.method] !== undefined ? this.editor.svgCanvas : this.editor
       const fn = target[env.method]
@@ -177,6 +209,8 @@ export class EmbedServer {
 
   markHostHandlerRegistered (kind: DialogKind): void { this.hostHandlersRegistered.add(kind) }
   unmarkHostHandlerRegistered (kind: DialogKind): void { this.hostHandlersRegistered.delete(kind) }
+  _isHostHandlerRegistered (kind: DialogKind): boolean { return this.hostHandlersRegistered.has(kind) }
+  _dialogTimeoutForTest (): number { return this.dialogTimeoutMs }
 
   async requestDialog (kind: DialogKind, args: unknown[]): Promise<unknown> {
     if (!this.hostHandlersRegistered.has(kind)) {
