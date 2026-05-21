@@ -16,7 +16,7 @@
   import { SvgEditEmbed } from '/dist/embed/index.js'
 
   const url = new URL(window.location.href)
-  const editorSrc = url.searchParams.get('editorSrc') ?? '/src/editor/index.html?embed=1'
+  const editorSrc = url.searchParams.get('editorSrc') ?? '/index.html?embed=1'
   const allowedOriginsParam = url.searchParams.get('allowedOrigins') ?? ''
   const allowedOrigins = allowedOriginsParam ? allowedOriginsParam.split(',') : [window.location.origin]
 

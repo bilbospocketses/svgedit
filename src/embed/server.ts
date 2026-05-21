@@ -95,7 +95,8 @@ export class EmbedServer {
     const embedMode = opts.detectEmbedMode
       ? opts.detectEmbedMode(params)
       : params.embedMode || window.parent !== window
-    this.allowedOrigins = opts.allowedOrigins ?? params.allowedOrigins
+    const resolvedOrigins = opts.allowedOrigins ?? params.allowedOrigins
+    this.allowedOrigins = resolvedOrigins.length > 0 ? resolvedOrigins : [window.location.origin]
     this.dialogTimeoutMs = opts.dialogTimeoutMs ?? params.dialogTimeoutMs
     this.version = opts.version ?? '0.0.0-unknown'
     this.defaultDialogHandlers = opts.defaultDialogHandlers ?? {
