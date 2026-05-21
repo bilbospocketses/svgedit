@@ -426,7 +426,10 @@ export class SeInput extends LitElement {
     `
   }
 
-  private _onChange(e: Event) {
+  // Class-field arrow auto-binds `this` and sidesteps the
+  // @typescript-eslint/unbound-method false-positive on Lit's
+  // `@event=${this._handler}` reference pattern (Lit binds it itself).
+  private _onChange = (e: Event) => {
     this.value = (e.target as HTMLInputElement).value
     this.dispatchEvent(new Event('change', { bubbles: true, composed: true }))
   }
@@ -526,7 +529,7 @@ Create file `docs/superpowers/conventions/lit-component-conventions.md` with:
 5. i18n via `t()` at render time, never in setter; import from `../locale.js`.
 6. `::part` for styling hooks ONLY; semantic names (`label`, `input`, `icon`, `button`).
 7. `<slot>` for content composition (named slots when 2+; default slot when 1).
-8. Events: `bubbles: true, composed: true` for events that need to escape shadow DOM (so panels listening at editor root receive them).
+8. Events: `bubbles: true, composed: true` for events that need to escape shadow DOM (so panels listening at editor root receive them). Event handlers passed in templates MUST be declared as class-field arrows (`private _handler = (e: Event) => {...}`), NOT method form — `@typescript-eslint/unbound-method` flags the `@event=${this._handler}` method-reference pattern as a false positive even though Lit auto-binds `this` for it.
 9. Drop `jamilih` import; use Lit's `html\`\`` template literal.
 10. Name: keep `se-*` prefix verbatim (zero consumer churn outside the component file).
 11. File per component in `src/editor/components/` (or `src/editor/dialogs/` for the 5 dialog components); no barrel files; export class + run `@customElement` decorator side-effect.
