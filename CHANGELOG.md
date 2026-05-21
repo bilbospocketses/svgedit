@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (audit-input cleanup sweep — 2026-05-21)
+
+Bundles audit inputs #2, #4, #6, #7, #12 — 5 of the 6 follow-ups left after #4 embed API v1 shipped earlier today. Closes 11 of 12 audit-input items total; only #1 (ext-connector monkey-patching refactor + events allowlist 8→12) remains, queued as PR-B.
+
+- **Audit input #6 (`Editor.ts:945-949` silent missing-icon warn):** `setIcon` now emits an `error` event with `source: 'missing-icon'` via `this._embedServer?.emit(...)` alongside the standalone-mode `console.warn`. Hosts can subscribe + show a localized error UI; standalone callers see no behavior change.
+- **Audit input #2 (`selection.ts:178-181` `runExtensions` @todos):** Refactored to typed options object — formerly `runExtensions(action: string, vars?: unknown, returnArray?: boolean)` returning either `false`, the last-extension result, or an aggregated array; now `runExtensions({action: string, vars?: unknown}): unknown[]` that always aggregates. `runExtensionsMethod` impl simplified; `RunExtensionsOpts` interface exported; `svgcanvas.augment.d.ts` typed to the new shape (was `(...args: unknown[]) => unknown`).
+- **All 20 `runExtensions` callsites migrated to the new shape:**
+  - `packages/svgcanvas/core/event.ts` × 3 (`mouseMove`, `mouseUp`, `mouseDown` — dropped `true` 3rd-arg at the 2 result-capturing sites)
+  - `packages/svgcanvas/core/elem-get-set.ts` × 1 (`zoomChanged`)
+  - `packages/svgcanvas/core/paste-elem.ts` × 1 (`IDsUpdated` — dropped `true` 3rd-arg, kept `.forEach` chain)
+  - `packages/svgcanvas/core/selected-elem.ts` × 1 (`canvasUpdated`)
+  - `src/editor/panels/LayersPanel.ts` × 3 (`layersChanged` × 2, `layerVisChanged`)
+  - `src/editor/panels/BottomPanel.ts` × 1 (`toolButtonStateUpdate`)
+  - `src/editor/extensions/ext-opensave/ext-opensave.ts` × 2 (`onOpenedDocument`, `onSavedDocument`)
+  - `src/editor/Editor.ts` × 8 (`selectedChanged`, `elementTransition`, `elementChanged`, `elementRenamed`, `afterClear`, `beforeClear`, `zoomChanged`, `langChanged`)
+  - Test mocks at `tests/unit/event.test.js:143-145` already returned `[]` so no test changes needed; `tests/unit/elem-get-set.test.js:37` mock returns `undefined` (caller doesn't capture).
+- **Audit input #4 (`sePromptDialog` misnamed):** Closes during svgedit todo #3 (elix → Lit migration) — the rename ships as part of the Lit conversion of dialog components, not a separate follow-up. Spec doc updated to reflect.
+- **Audit inputs #7 + #12 (multi-iframe tab-sync):** Re-classified from "follow-up" to **non-goal** in the spec doc. Multi-tab works today via `window.storage`; multi-iframe isn't on the project roadmap. If a real multi-iframe host emerges later, reopen as a new design item — not as a residual audit follow-up.
+- **Spec doc `docs/superpowers/specs/2026-05-20-svgedit-embed-api-design.md` updated:** Status block adds 2026-05-21 v1 ship + v1.1 sweep notes; Non-goals section absorbs #7/#12 with rationale; Follow-up items section updated with ✓ / ✓-doc / ▢ status legend; Audit input traceability table shows 11 of 12 closed.
+- **Verification:** `npx tsc --build --force` clean (0 errors); `npm run lint` 0 errors / 145 warnings (baseline maintained, JSDoc-may-be-converted hints only); `npx vitest run` 634/634 passing.
+
 ### Added (#4 embed API v1 — 2026-05-21)
 
 - New `src/embed/` module — editor-side `EmbedServer` + host-side `SvgEditEmbed` proxy library + shared protocol/origin/url-params/chrome/theme helpers (8 TypeScript modules).
@@ -20,7 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `package.json` `exports` field maps `svgedit/embed` to `dist/embed/index.js`.
 - `tsconfig.json` `include` array extended with `src/embed/**/*.ts` so ESLint's type-aware lint covers the new module.
 - `scripts/copy-static.ts` — copies the e2e fixture + dist/embed/ artifacts into vite-preview's served root so e2e suites can load the embed library + parent-page fixture.
-- Closes svgedit todo item #4. Closes 5 of 12 audit-input items (#3 dialog hooks, #5 extension-error event, #8 ready wire-up, #9 load-API doc, #10 read-API doc, #11 extension-injection doc); 6 remaining items tracked as follow-ups in the spec doc.
+- Closes svgedit todo item #4. Closes 6 of 12 audit-input items (#3 dialog hooks, #5 extension-error event, #8 ready wire-up, #9 load-API doc, #10 read-API doc, #11 extension-injection doc); 6 remaining items tracked as follow-ups in the spec doc.
 
 ### Changed (fork-network detach — 2026-05-20)
 - Detached `bilbospocketses/svgedit` from the `SVG-Edit/svgedit` fork network (GitHub Settings → Danger Zone → Leave fork network). `gh repo view` confirms post-detach state: `isFork: false`, `parent: null`. The "forked from SVG-Edit/svgedit" badge on GitHub no longer shows; the repo is now standalone in GitHub's repository graph.

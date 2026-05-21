@@ -3,8 +3,9 @@
 ## Status
 
 - **2026-05-20:** Designed via brainstorming session.
+- **2026-05-21:** v1 SHIPPED (PR #14 → master `e35a407c`).
+- **2026-05-21:** v1.1 audit-cleanup sweep (this update) — closes traceability for audit inputs #2 (runExtensions API tightening, in code), #6 (missing-icon → `error` event, in code), #4 (deferred to #3 Lit conversion of `sePromptDialog`), #7 + #12 (reclassified as non-goal). Audit input #1 remains the only outstanding follow-up; tracked as PR-B (events allowlist 8→12 + ext-connector refactor).
 - v1 scope locked.
-- Implementation pending — next step: implementation plan via `superpowers:writing-plans`.
 
 ## Context
 
@@ -38,7 +39,7 @@ svgedit is a personal hard fork of [SVG-Edit/svgedit](https://github.com/SVG-Edi
 
 - Web component wrapper (`<svg-edit-canvas>`, Approach C from Q7) — deferred until a concrete declarative-host need surfaces.
 - Sandboxed iframe permissions (CSP, `sandbox=`, `allow=` attrs) — host's responsibility. `EMBED_API.md` will include a "recommended sandbox attributes" reference section but won't enforce.
-- Multi-iframe clipboard tab-sync (audit input #7, #12) — niche; defer.
+- **Multi-iframe clipboard tab-sync** (audit input #7, #12) — reclassified from "follow-up" to **non-goal** in the 2026-05-21 v1.1 sweep. No multi-iframe scenario is on the project roadmap; the existing `window.storage` clipboard works for the multi-TAB case already, which is the only use that exists. If a real multi-iframe host emerges later, reopen this as a new design item — don't reopen as an audit follow-up.
 - Native dialog → Lit modal IMPLEMENTATION — that's todo #13. This design specifies the embed-side hook CONTRACT; the Lit modals built for #13 will be the default behavior when no host handler is registered.
 - Auto-revoking dead Element handles — handles are valid until the editor removes the element. If a host caches a handle past element deletion, next use returns `ELEMENT_NOT_FOUND`. Documented; no GC magic.
 - Translation across `protocolVersion` bumps — when we bump to v2, host's v1 proxy library doesn't auto-translate; host upgrades its proxy library to match. Documented.
@@ -274,12 +275,15 @@ Defense-in-depth: both sides validate independently — a bug on one side doesn'
 
 ## Follow-up items (out of v1 scope; tracked)
 
-1. **`ext-connector.js` monkey-patching cleanup** (audit input #1). Fix shape: add `before-group` / `after-group` / `before-move` / `after-move` events to the allowlist (events count → ~12), refactor `ext-connector` to subscribe via the embed event channel instead of patching `svgCanvas` methods at runtime. Separate PR after v1 ships.
-2. **`runExtensions` API tightening** (audit input #2). `selection.js:215-216` `@todo` items — return-array default + args-as-object for typing. Separate PR; the embed API doesn't expose `runExtensions` to hosts directly so this is internal scope.
-3. **Multi-iframe clipboard tab-sync consideration** (audit input #7, #12). `svgcanvas.js:storageChange` + `flashStorage` works fine for multi-tab; multi-iframe might want explicit handling. Defer until a real multi-iframe scenario exists.
-4. **`_reference/embed-api-v6/` cleanup** — defer to post-v1-ship; tied to CodeQL dismissal rewiring.
-5. **`<svg-edit-canvas>` web component wrapper** (Approach C from Q7). Defer until a declarative-host need surfaces.
-6. **Missing-icon `console.warn` surfacing** (audit input #6 — `Editor.js:905`). Could plug into the `error` event with `source: 'missing-icon'`. Trivial; can include in v1 if scope allows, otherwise a follow-up.
+Status legend: ✓ closed in code, ✓-doc closed in this doc (re-classified), ▢ outstanding.
+
+1. ▢ **`ext-connector.ts` monkey-patching cleanup** (audit input #1). Fix shape: add `before-group` / `after-group` / `before-move` / `after-move` events to the allowlist (events count → 12), refactor `ext-connector` to subscribe via the svgCanvas event bus instead of patching `svgCanvas` methods at runtime. **Tracked as PR-B.**
+2. ✓ **`runExtensions` API tightening** (audit input #2). `selection.ts:178-181` `@todo`s closed in 2026-05-21 v1.1 sweep — `runExtensions` now always returns an array (formerly opt-in via 3rd boolean param) and takes a typed options object `{action, vars?}` (formerly positional). All ~20 callsites migrated. Type tightened in `svgcanvas.augment.d.ts`.
+3. ✓-doc **Multi-iframe clipboard tab-sync** (audit input #7, #12). Re-classified to non-goal in the 2026-05-21 v1.1 sweep — see "Non-goals (v1)" section. Multi-tab works today via `window.storage`; multi-iframe isn't on the project roadmap.
+4. ▢ **`_reference/embed-api-v6/` cleanup** — defer to post-v1-ship; tied to CodeQL dismissal rewiring.
+5. ▢ **`<svg-edit-canvas>` web component wrapper** (Approach C from Q7). Defer until a declarative-host need surfaces.
+6. ✓ **Missing-icon `console.warn` surfacing** (audit input #6 — `Editor.ts:945-949`). Closed in 2026-05-21 v1.1 sweep — `setIcon` now emits an `error` event with `source: 'missing-icon'` via `_embedServer?.emit('error', ...)` alongside the standalone-mode `console.warn`. Hosts can subscribe + show a localized error UI; standalone callers see no behavior change.
+7. ✓-doc **`sePromptDialog` rename** (audit input #4). Closes during svgedit todo #3 (elix → Lit migration) — the rename ships as part of the Lit conversion of dialog components. No separate follow-up needed.
 
 ## Decisions log
 
@@ -295,20 +299,22 @@ Defense-in-depth: both sides validate independently — a bug on one side doesn'
 
 ## Audit input traceability
 
-| Audit # | Source | Addressed by (in v1 unless flagged as follow-up) |
+11 of 12 closed as of the 2026-05-21 v1.1 sweep. Only #1 remains, tracked as PR-B.
+
+| Audit # | Source | Status |
 |---|---|---|
-| 1 | `ext-connector.js:46-70` monkey-patching | Follow-up item 1 (events allowlist extension + ext-connector refactor) |
-| 2 | `selection.js:215-216` `runExtensions` `@todo` | Follow-up item 2 (internal API; not embed-surface) |
-| 3 | Native `prompt`/`alert` (9 sites) | Dialog hook system (Section "Dialog hook system") |
-| 4 | `sePromptDialog.js` misnamed | Tracked in todo #13; this design uses the renamed component as the default modal |
-| 5 | `EditorStartup.js:683/706/742` silent extension errors | `extension-error` event (Section "Events allowlist") |
-| 6 | `Editor.js:905` silent missing-icon warn | Follow-up item 6 (optionally fold into v1 via `error` event) |
-| 7 | Tab-sync clipboard multi-iframe | Follow-up item 3 (defer) |
-| 8 | `window.svgEditor` + `svgEditor:ready` event | Initialization & handshake (Section "Initialization & handshake") — preserved as the existing ready hook the embed `ready` event piggybacks on |
-| 9 | `loadFromString` / `loadFromURL` / `loadFromDataURI` | API surface (Section "API surface") — typed-pick from `Editor` |
-| 10 | `getSvgString()` | API surface — covered by the `svgCanvas` forwarder |
-| 11 | `addExtension(name, initfn, initArgs)` | API surface — covered by the `svgCanvas` forwarder |
-| 12 | Tab-sync via `window.storage` | Follow-up item 3 (defer) |
+| 1 | `ext-connector.ts:46-70` monkey-patching | ▢ Follow-up item 1 (PR-B — events allowlist 8→12 + ext-connector refactor) |
+| 2 | `selection.ts:178-181` `runExtensions` `@todo`s | ✓ v1.1 (2026-05-21) — return-array default + args-as-object refactor; ~20 callsites migrated |
+| 3 | Native `prompt`/`alert` (9 sites) | ✓ v1 — Dialog hook system |
+| 4 | `sePromptDialog.ts` misnamed | ✓-doc v1.1 (2026-05-21) — closes during svgedit todo #3 (Lit conversion); rename ships with the Lit migration |
+| 5 | `EditorStartup.ts` silent extension errors | ✓ v1 — `extension-error` event |
+| 6 | `Editor.ts:945-949` silent missing-icon warn | ✓ v1.1 (2026-05-21) — folded into `error` event via `source: 'missing-icon'` |
+| 7 | Tab-sync clipboard multi-iframe | ✓-doc v1.1 (2026-05-21) — re-classified as non-goal (no multi-iframe scenario on roadmap) |
+| 8 | `window.svgEditor` + `svgEditor:ready` event | ✓ v1 — Initialization & handshake |
+| 9 | `loadFromString` / `loadFromURL` / `loadFromDataURI` | ✓ v1 — API surface (typed-pick from `Editor`) |
+| 10 | `getSvgString()` | ✓ v1 — API surface (`svgCanvas` forwarder) |
+| 11 | `addExtension(name, initfn, initArgs)` | ✓ v1 — API surface (`svgCanvas` forwarder) |
+| 12 | Tab-sync via `window.storage` | ✓-doc v1.1 (2026-05-21) — re-classified as non-goal (multi-tab works today; multi-iframe off-roadmap) |
 
 ## Open questions
 

@@ -118,7 +118,7 @@ declare module './svgcanvas' {
     getMouseTarget: (...args: unknown[]) => unknown
     addToSelection: (elemsToAdd: Element[], showGrips?: boolean) => void
     getIntersectionList: (...args: unknown[]) => unknown
-    runExtensions: (...args: unknown[]) => unknown
+    runExtensions: (opts: { action: string; vars?: unknown }) => unknown[]
     groupSvgElem: (...args: unknown[]) => unknown
     prepareSvg: (...args: unknown[]) => unknown
     recalculateAllSelectedDimensions: (...args: unknown[]) => unknown

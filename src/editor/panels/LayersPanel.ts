@@ -298,9 +298,7 @@ class LayersPanel {
         ;(evt.currentTarget as any).parentNode.classList.add('layersel')
         self.editor.svgCanvas.setCurrentLayer((evt.currentTarget as any).textContent)
         // run extension when different layer is selected from listener
-        self.editor.svgCanvas.runExtensions(
-          'layersChanged'
-        )
+        self.editor.svgCanvas.runExtensions({ action: 'layersChanged' })
         evt.preventDefault()
       })
       // TODO: see todo #10 — duplicate 'mouseup' listener; second should be 'mouseover'
@@ -320,9 +318,7 @@ class LayersPanel {
         self.editor.svgCanvas.setLayerVisibility(name, vis)
         evt.currentTarget.classList.toggle('layerinvis')
         // run extension if layer visibility is changed from listener
-        self.editor.svgCanvas.runExtensions(
-          'layerVisChanged'
-        )
+        self.editor.svgCanvas.runExtensions({ action: 'layerVisChanged' })
       })
     })
 
@@ -335,9 +331,7 @@ class LayersPanel {
       layerlist.append(tlayer)
     }
     // run extension when layer panel is populated
-    self.editor.svgCanvas.runExtensions(
-      'layersChanged'
-    )
+    self.editor.svgCanvas.runExtensions({ action: 'layersChanged' })
   }
 }
 

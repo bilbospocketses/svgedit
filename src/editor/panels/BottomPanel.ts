@@ -130,13 +130,10 @@ class BottomPanel {
         ;($id(btn) as any).disabled = false
       })
     }
-    this.editor.svgCanvas.runExtensions(
-      'toolButtonStateUpdate',
-      /** @type {module:svgcanvas.SvgCanvas#event:ext_toolButtonStateUpdate} */ {
-        nofill: bNoFill,
-        nostroke: bNoStroke
-      }
-    )
+    this.editor.svgCanvas.runExtensions({
+      action: 'toolButtonStateUpdate',
+      vars: { nofill: bNoFill, nostroke: bNoStroke }
+    })
   }
 
   /**

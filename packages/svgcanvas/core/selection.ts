@@ -176,34 +176,38 @@ const getMouseTargetMethod = (evt: MouseEvent | null): Element | null => {
 }
 
 /**
- * @todo Consider: Should this return an array by default, so extension results aren't overwritten?
- * @todo Would be easier to document if passing in object with key of action and vars as value; could then define an interface which tied both together
+ * Options for {@link RunExtensions}.
+ *
+ * `vars` may be a resolver function — if supplied as a function it is invoked once
+ * (with the first extension's name) and the resolved value is reused for the
+ * remaining extensions in iteration order. This mirrors the historical behavior.
  */
-// @preserve audit-flagged:215-216 — runExtensions @todo for embed-API design (preserved for Task 10 embed-API design input)
-const runExtensionsMethod = (
-  action: string,
-  vars?: unknown,
-  returnArray?: boolean
-): unknown => {
-  let result: unknown = returnArray ? [] : false
+export interface RunExtensionsOpts {
+  action: string
+  vars?: unknown
+}
+
+/**
+ * Invoke every registered extension's `action` handler. Always returns an array
+ * of each extension's return value (or no entry for extensions that don't define
+ * the action). Event-based extensions receive a `svgedit` CustomEvent instead.
+ *
+ * Closes audit input #2 (svgedit todo #4 / embed-API spec): the historical opt-in
+ * `returnArray` boolean and positional `(action, vars)` shape are gone; the API
+ * now always aggregates results and takes a typed options object.
+ */
+const runExtensionsMethod = (opts: RunExtensionsOpts): unknown[] => {
+  const result: unknown[] = []
+  let { vars } = opts
   for (const [name, ext] of Object.entries(svgCanvas.getExtensions() as Record<string, Record<string, unknown>>)) {
     if (typeof vars === 'function') {
       vars = (vars as (n: string) => unknown)(name)
     }
     if ((ext as { eventBased?: boolean }).eventBased) {
-      const event = new CustomEvent('svgedit', {
-        detail: {
-          action,
-          vars
-        }
-      })
+      const event = new CustomEvent('svgedit', { detail: { action: opts.action, vars } })
       document.dispatchEvent(event)
-    } else if (ext[action]) {
-      if (returnArray) {
-        (result as unknown[]).push((ext[action] as (v: unknown) => unknown)(vars))
-      } else {
-        result = (ext[action] as (v: unknown) => unknown)(vars)
-      }
+    } else if (ext[opts.action]) {
+      result.push((ext[opts.action] as (v: unknown) => unknown)(vars))
     }
   }
   return result

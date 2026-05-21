@@ -379,7 +379,7 @@ const setZoomMethod = (zoomLevel: number): void => {
     if (selector) { selector.resize() }
   })
   svgCanvas.pathActions.zoomChange()
-  svgCanvas.runExtensions('zoomChanged', zoomLevel)
+  svgCanvas.runExtensions({ action: 'zoomChanged', vars: zoomLevel })
 }
 
 /**

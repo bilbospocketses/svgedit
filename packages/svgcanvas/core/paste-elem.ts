@@ -92,11 +92,10 @@ export const pasteElementsMethod = (type?: 'in_place' | 'point', x?: number, y?:
   clipb.forEach((elem) => remapReferences(elem))
 
   // Give extensions like the connector extension a chance to reflect new IDs and remove invalid elements
-  svgCanvas.runExtensions(
-    'IDsUpdated',
-    { elems: clipb, changes: changedIDs },
-    true
-  ).forEach(function (extChanges: { remove?: string[] } | null) {
+  svgCanvas.runExtensions({
+    action: 'IDsUpdated',
+    vars: { elems: clipb, changes: changedIDs }
+  }).forEach(function (extChanges: { remove?: string[] } | null) {
     if (!extChanges || !('remove' in extChanges)) return
 
     extChanges.remove?.forEach(function (removeID: string) {

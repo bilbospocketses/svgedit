@@ -692,14 +692,14 @@ class Editor extends EditorStartup {
     // Deal with pathedit mode
     this.topPanel.togglePathEditMode(isNode, elems)
     this.topPanel.updateContextPanel()
-    this.svgCanvas.runExtensions(
-      'selectedChanged',
-      /** @type {module:svgcanvas.SvgCanvas#event:ext_selectedChanged} */ {
+    this.svgCanvas.runExtensions({
+      action: 'selectedChanged',
+      vars: {
         elems,
         selectedElement: this.selectedElement,
         multiselected: this.multiselected
       }
-    )
+    })
   }
 
   // Call when part of element is in process of changing, generally
@@ -735,12 +735,10 @@ class Editor extends EditorStartup {
         }
       }
     }
-    this.svgCanvas.runExtensions(
-      'elementTransition',
-      /** @type {module:svgcanvas.SvgCanvas#event:ext_elementTransition} */ {
-        elems
-      }
-    )
+    this.svgCanvas.runExtensions({
+      action: 'elementTransition',
+      vars: { elems }
+    })
   }
 
   // called when any element has changed
@@ -788,38 +786,34 @@ class Editor extends EditorStartup {
       this.bottomPanel.updateColorpickers()
     }
 
-    this.svgCanvas.runExtensions(
-      'elementChanged',
-      /** @type {module:svgcanvas.SvgCanvas#event:ext_elementChanged} */ {
-        elems
-      }
-    )
+    this.svgCanvas.runExtensions({
+      action: 'elementChanged',
+      vars: { elems }
+    })
   }
 
   /**
    * @returns {void}
    */
   elementRenamed (_win: any, renameObj: any): void {
-    this.svgCanvas.runExtensions(
-      'elementRenamed',
-      /** @type {module:svgcanvas.SvgCanvas#event:ext_elementRenamed} */ {
-        renameObj
-      }
-    )
+    this.svgCanvas.runExtensions({
+      action: 'elementRenamed',
+      vars: { renameObj }
+    })
   }
 
   /**
    * @returns {void}
    */
   afterClear (_win: any): void {
-    this.svgCanvas.runExtensions('afterClear')
+    this.svgCanvas.runExtensions({ action: 'afterClear' })
   }
 
   /**
    * @returns {void}
    */
   beforeClear (_win: any): void {
-    this.svgCanvas.runExtensions('beforeClear')
+    this.svgCanvas.runExtensions({ action: 'beforeClear' })
   }
 
   /**
@@ -892,10 +886,10 @@ class Editor extends EditorStartup {
 
     this.zoomDone()
 
-    this.svgCanvas.runExtensions(
-      'zoomChanged',
-      /** @type {module:svgcanvas.SvgCanvas#event:ext_zoomChanged} */ this.svgCanvas.getZoom()
-    )
+    this.svgCanvas.runExtensions({
+      action: 'zoomChanged',
+      vars: this.svgCanvas.getZoom()
+    })
   }
 
   /**
@@ -943,8 +937,9 @@ class Editor extends EditorStartup {
     // TODO: see todo #10 — setIcon investigation at :905; preserved verbatim
     const icon = typeof iconId === 'string' ? img : (iconId as any).cloneNode(true)
     if (!icon) {
-      // Todo: Investigate why this still occurs in some cases
       console.warn('NOTE: Icon image missing: ' + iconId)
+      // Audit input #6 — surface missing-icon to embed host so hosts can act on the gap; standalone callers still see the console.warn.
+      this._embedServer?.emit('error', { message: `Icon image missing: ${iconId}`, source: 'missing-icon' })
       return
     }
     // empty()
@@ -1268,10 +1263,10 @@ class Editor extends EditorStartup {
       this.layersPanel.populateLayers()
     }
 
-    this.svgCanvas.runExtensions(
-      'langChanged',
-      /** @type {module:svgcanvas.SvgCanvas#event:ext_langChanged} */ lang
-    )
+    this.svgCanvas.runExtensions({
+      action: 'langChanged',
+      vars: lang
+    })
   }
 
   /**
