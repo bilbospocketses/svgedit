@@ -6,11 +6,19 @@ import { parseEmbedURLParams } from './url-params.ts'
 import { applyChrome, resolveChromePreset } from './chrome.ts'
 import { applyTheme } from './theme.ts'
 
+export type DialogKind = 'prompt' | 'alert' | 'confirm'
+export type DialogHandlers = {
+  prompt: (text: string, defaultValue: string) => Promise<string | null>
+  alert: (text: string) => Promise<void>
+  confirm: (text: string) => Promise<boolean>
+}
+
 export type EmbedServerOptions = {
   detectEmbedMode?: (params: { embedMode: boolean }) => boolean
   allowedOrigins?: string[]
   dialogTimeoutMs?: number
   version?: string
+  defaultDialogHandlers?: DialogHandlers
 }
 
 let handleCounter = 0
@@ -76,6 +84,10 @@ export class EmbedServer {
   protected dialogTimeoutMs: number
   protected readonly version: string
   private listener: ((e: MessageEvent) => void) | null = null
+  private readonly defaultDialogHandlers: DialogHandlers
+  private readonly hostHandlersRegistered: Set<DialogKind> = new Set()
+  private readonly pendingDialogReplies: Map<number, (response: unknown) => void> = new Map()
+  private dialogIdCounter = 0
 
   constructor (editor: { svgCanvas: Record<string, unknown> } & Record<string, unknown>, opts: EmbedServerOptions = {}) {
     this.editor = editor
@@ -86,6 +98,11 @@ export class EmbedServer {
     this.allowedOrigins = opts.allowedOrigins ?? params.allowedOrigins
     this.dialogTimeoutMs = opts.dialogTimeoutMs ?? params.dialogTimeoutMs
     this.version = opts.version ?? '0.0.0-unknown'
+    this.defaultDialogHandlers = opts.defaultDialogHandlers ?? {
+      alert: async (msg) => { window.alert(msg) },
+      confirm: async (msg) => window.confirm(msg),
+      prompt: async (msg, def) => window.prompt(msg, def)
+    }
 
     if (!embedMode) return
 
@@ -110,6 +127,14 @@ export class EmbedServer {
       case 'call':
         await this.handleCall(env)
         return
+      case 'dialog-response': {
+        const resolve = this.pendingDialogReplies.get(env.id)
+        if (resolve) {
+          this.pendingDialogReplies.delete(env.id)
+          resolve(env.response)
+        }
+        return
+      }
       default:
         return
     }
@@ -148,6 +173,39 @@ export class EmbedServer {
 
   ready (capabilities: string[] = ['chrome', 'theme', 'dialog-hooks']): void {
     this.emit('ready', { version: this.version, protocolVersion: PROTOCOL_VERSION, capabilities })
+  }
+
+  markHostHandlerRegistered (kind: DialogKind): void { this.hostHandlersRegistered.add(kind) }
+  unmarkHostHandlerRegistered (kind: DialogKind): void { this.hostHandlersRegistered.delete(kind) }
+
+  async requestDialog (kind: DialogKind, args: unknown[]): Promise<unknown> {
+    if (!this.hostHandlersRegistered.has(kind)) {
+      return this.invokeDefaultDialog(kind, args)
+    }
+    this.dialogIdCounter += 1
+    const id = this.dialogIdCounter
+    const responsePromise = new Promise<unknown>((resolve) => {
+      this.pendingDialogReplies.set(id, resolve)
+    })
+    this.reply({ ns: 'svgedit', v: 1, kind: 'dialog-request', id, dialog: kind, args })
+    const timeoutPromise = new Promise<{ timeout: true }>((resolve) =>
+      setTimeout(() => resolve({ timeout: true }), this.dialogTimeoutMs)
+    )
+    const winner = await Promise.race([responsePromise, timeoutPromise])
+    if (typeof winner === 'object' && winner !== null && 'timeout' in winner) {
+      this.pendingDialogReplies.delete(id)
+      this.emit('error', { message: 'dialog handler timed out', source: 'dialog-handler-timeout' })
+      return this.invokeDefaultDialog(kind, args)
+    }
+    return winner
+  }
+
+  private async invokeDefaultDialog (kind: DialogKind, args: unknown[]): Promise<unknown> {
+    switch (kind) {
+      case 'alert':   return this.defaultDialogHandlers.alert(args[0] as string)
+      case 'confirm': return this.defaultDialogHandlers.confirm(args[0] as string)
+      case 'prompt':  return this.defaultDialogHandlers.prompt(args[0] as string, (args[1] ?? '') as string)
+    }
   }
 
   dispose (): void {

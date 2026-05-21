@@ -196,3 +196,74 @@ describe('EmbedServer — event emission', () => {
     server.dispose()
   })
 })
+
+describe('EmbedServer — dialog hook', () => {
+  beforeEach(() => {
+    document.body.className = ''
+    window.history.replaceState({}, '', '/?embed=1&allowedOrigins=https://host.test')
+  })
+
+  it('falls back to default alert handler when no host-registered handler', async () => {
+    let internalCalled = false
+    const editor = { svgCanvas: {} }
+    const server = new EmbedServer(editor, {
+      defaultDialogHandlers: {
+        alert: async () => { internalCalled = true; return undefined },
+        confirm: async () => true,
+        prompt: async () => 'default-input'
+      }
+    })
+    const result = await server.requestDialog('alert', ['hello'])
+    expect(internalCalled).toBe(true)
+    expect(result).toBeUndefined()
+    server.dispose()
+  })
+
+  it('uses registered host handler via postMessage round-trip', async () => {
+    const editor = { svgCanvas: {} }
+    const server = new EmbedServer(editor, {
+      defaultDialogHandlers: {
+        alert: async () => undefined,
+        confirm: async () => true,
+        prompt: async () => 'default'
+      }
+    })
+    server.markHostHandlerRegistered('prompt')
+
+    const sent = []
+    vi.spyOn(window.parent, 'postMessage').mockImplementation((env) => sent.push(env))
+
+    const p = server.requestDialog('prompt', ['enter name', ''])
+
+    const reqEnv = sent.find(s => s.kind === 'dialog-request' && s.dialog === 'prompt')
+    expect(reqEnv).toBeDefined()
+
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { ns: 'svgedit', v: 1, kind: 'dialog-response', id: reqEnv.id, response: 'jamie' },
+      origin: 'https://host.test',
+      source: window
+    }))
+
+    const result = await p
+    expect(result).toBe('jamie')
+    server.dispose()
+  })
+
+  it('falls back to default if host handler times out', async () => {
+    const editor = { svgCanvas: {} }
+    const server = new EmbedServer(editor, {
+      dialogTimeoutMs: 50,
+      defaultDialogHandlers: {
+        alert: async () => undefined,
+        confirm: async () => true,
+        prompt: async () => 'TIMED-OUT-FALLBACK'
+      }
+    })
+    server.markHostHandlerRegistered('prompt')
+
+    vi.spyOn(window.parent, 'postMessage').mockImplementation(() => {})
+    const result = await server.requestDialog('prompt', ['enter name', ''])
+    expect(result).toBe('TIMED-OUT-FALLBACK')
+    server.dispose()
+  })
+})
