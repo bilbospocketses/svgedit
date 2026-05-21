@@ -821,8 +821,23 @@ class SvgCanvas {
     this.lastClickPoint = value
   }
 
-  getId (): string {
+  getId (elem?: Element): string {
+    if (elem) {
+      // Check if the element is still in the document
+      if (!document.contains(elem)) {
+        throw Object.assign(new Error(`element no longer in document`), { code: 'ELEMENT_NOT_FOUND' })
+      }
+      const id = (elem as SVGElement).id
+      if (!id) {
+        throw Object.assign(new Error('element has no id attribute'), { code: 'NO_ID' })
+      }
+      return id
+    }
     return this.getCurrentDrawing().getId()
+  }
+
+  getElem (id: string): Element | null {
+    return getElement(id)
   }
 
   getUIStrings (): Record<string, string> {

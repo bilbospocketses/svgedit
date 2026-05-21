@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>svgedit embed host fixture</title>
+<style>
+  body { margin: 0; font-family: sans-serif; }
+  #log { position: fixed; top: 0; right: 0; width: 320px; height: 100vh; overflow: auto; background: #f6f6f6; font: 11px monospace; padding: 6px; border-left: 1px solid #ccc; }
+  iframe { width: calc(100% - 320px); height: 100vh; border: 0; }
+</style>
+</head>
+<body>
+<iframe id="svge"></iframe>
+<pre id="log"></pre>
+<script type="module">
+  import { SvgEditEmbed } from '/dist/embed/index.js'
+
+  const url = new URL(window.location.href)
+  const editorSrc = url.searchParams.get('editorSrc') ?? '/index.html?embed=1'
+  const allowedOriginsParam = url.searchParams.get('allowedOrigins') ?? ''
+  const allowedOrigins = allowedOriginsParam ? allowedOriginsParam.split(',') : [window.location.origin]
+
+  const iframe = document.getElementById('svge')
+  iframe.src = editorSrc
+
+  const log = document.getElementById('log')
+  const append = (s) => { log.textContent += s + '\n' }
+
+  window.__svgeditEmbed = new SvgEditEmbed(iframe, { allowedOrigins })
+  window.__svgeditEmbed.on('ready', (payload) => append(`READY ${JSON.stringify(payload)}`))
+  window.__svgeditEmbed.on('change', () => append('CHANGE'))
+  window.__svgeditEmbed.on('save', (p) => append(`SAVE bytes=${(p.svgString ?? '').length}`))
+  window.__svgeditEmbed.on('selection-changed', (p) => append(`SELECTION ${JSON.stringify(p)}`))
+  window.__svgeditEmbed.on('theme-changed', (p) => append(`THEME ${p.theme}`))
+  window.__svgeditEmbed.on('extension-error', (p) => append(`EXT-ERR ${p.name}: ${p.message}`))
+  window.__svgeditEmbed.on('error', (p) => append(`ERR ${p.source}: ${p.message}`))
+  window.__svgeditEmbed.on('destroy', () => append('DESTROY'))
+
+  window.__getLog = () => log.textContent
+  window.__clearLog = () => { log.textContent = '' }
+</script>
+</body>
+</html>

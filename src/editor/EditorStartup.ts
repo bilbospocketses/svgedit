@@ -699,6 +699,42 @@ class EditorStartup {
     await this.runCallbacks()
     // Signal readiness to same-document listeners (tests/debugging hooks)
     document.dispatchEvent(new CustomEvent('svgedit:ready', { detail: this }))
+
+    // Embed-API: fire ready() now that svgCanvas exists and all callbacks have run (Task 11).
+    this._embedServer?.ready()
+
+    // Wire svgCanvas events to embed event channel (Task 11).
+    // svgCanvas.bind() REPLACES the existing handler (returns the previous one). The editor binds
+    // its own selectedChanged + elementChanged earlier in init() — we must chain to them, not clobber.
+    type ScHandler = (...args: unknown[]) => unknown
+    const sc = this.svgCanvas as { bind?: (name: string, fn: ScHandler) => ScHandler | undefined } | null
+    if (sc != null && typeof sc.bind === 'function') {
+      let changeTimer: ReturnType<typeof setTimeout> | null = null
+      const scheduleChange = (): void => {
+        if (changeTimer) clearTimeout(changeTimer)
+        changeTimer = setTimeout(() => { this._embedServer?.emit('change', {}) }, 200)
+      }
+      const prevChanged = sc.bind('changed', (...args: unknown[]) => {
+        if (prevChanged) prevChanged(...args)
+        scheduleChange()
+      })
+      // 'sourcechanged' fires when loadFromString/loadFromURL replaces the whole document;
+      // the 'changed' event is NOT fired in that path, so we must bind both.
+      const prevSourceChanged = sc.bind('sourcechanged', (...args: unknown[]) => {
+        if (prevSourceChanged) prevSourceChanged(...args)
+        scheduleChange()
+      })
+      const prevSelected = sc.bind('selected', (...args: unknown[]) => {
+        if (prevSelected) prevSelected(...args)
+        // svgCanvas.call invokes handlers with (window, arg) — selection array is args[1].
+        const selected = args[1]
+        const arr = Array.isArray(selected) ? selected as Element[] : []
+        this._embedServer?.emit('selection-changed', {
+          count: arr.length,
+          ids: arr.map(e => e?.id).filter((s): s is string => typeof s === 'string' && s.length > 0)
+        })
+      })
+    }
   }
 
   /**
