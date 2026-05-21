@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (#4 embed API v1 — 2026-05-21)
+
+- New `src/embed/` module — editor-side `EmbedServer` + host-side `SvgEditEmbed` proxy library + shared protocol/origin/url-params/chrome/theme helpers (8 TypeScript modules).
+- New `EMBED_API.md` (472 lines) — canonical host-facing contract documenting URL params, postMessage envelope shape, 8-event allowlist, dialog hooks, chrome control, theme sync, security model, versioning, error codes, raw-protocol reference for non-JS hosts, recommended iframe sandbox attributes.
+- `src/editor/Editor.ts` wire-in at line ~333 (after `window.svgEditor = this`) — instantiates `EmbedServer` with version + default dialog handlers wrapping existing `window.seAlert` / `window.seConfirm`; prompt returns default until #13 lands a real prompt-with-input component.
+- `src/editor/EditorStartup.ts` — fires `_embedServer.ready()` immediately after the `svgedit:ready` DOM event; bridges svgCanvas events `changed` + `sourcechanged` (debounced 200ms) → embed `change`, and `selected` → embed `selection-changed`.
+- `packages/svgcanvas/svgcanvas.ts` — added `getElem(id)` + extended `getId([elem])` to support host-side element-handle round-trip (Task 22 element-handles e2e suite requirement).
+- 7 unit-test suites (vitest + jsdom): protocol (5), origin (8), url-params (9), chrome (7), theme (5), server (20), client (16). Total 70 new unit tests.
+- 9 e2e suites (Playwright × 2 browsers): init handshake (6), methods round-trip (8), events (10), element-handles (4), chrome control (8), theme sync (6), dialog hooks (4), security (4), versioning (2). Total 52 new e2e tests.
+- `tsconfig.embed.json` + `npm run build:embed` step — emits `dist/embed/{client,protocol,origin,url-params,chrome,theme,server,index}.{js,d.ts}` for host consumption.
+- `package.json` `exports` field maps `svgedit/embed` to `dist/embed/index.js`.
+- `tsconfig.json` `include` array extended with `src/embed/**/*.ts` so ESLint's type-aware lint covers the new module.
+- `scripts/copy-static.ts` — copies the e2e fixture + dist/embed/ artifacts into vite-preview's served root so e2e suites can load the embed library + parent-page fixture.
+- Closes svgedit todo item #4. Closes 5 of 12 audit-input items (#3 dialog hooks, #5 extension-error event, #8 ready wire-up, #9 load-API doc, #10 read-API doc, #11 extension-injection doc); 6 remaining items tracked as follow-ups in the spec doc.
+
 ### Changed (fork-network detach — 2026-05-20)
 - Detached `bilbospocketses/svgedit` from the `SVG-Edit/svgedit` fork network (GitHub Settings → Danger Zone → Leave fork network). `gh repo view` confirms post-detach state: `isFork: false`, `parent: null`. The "forked from SVG-Edit/svgedit" badge on GitHub no longer shows; the repo is now standalone in GitHub's repository graph.
 - **Why:** Reflects the locked scope directive ("no upstream tracking, no PRs upstream", `project_svgedit.md`) at the repo-metadata level. Fork-network membership was vestigial signal — search-result inclusion in the 1,733-repo network, child-fork-aware rule logic, organisational-affinity behaviour — none of which applied to a repository whose declared lineage is one-way + one-time.
