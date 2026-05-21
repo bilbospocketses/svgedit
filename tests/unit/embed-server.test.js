@@ -15,7 +15,7 @@ describe('EmbedServer — constructor + listener setup', () => {
   it('does not attach when embedMode is false', () => {
     const editor = makeFakeEditor()
     const spy = vi.spyOn(window, 'addEventListener')
-    const _server = new EmbedServer(editor, { detectEmbedMode: () => false })
+    new EmbedServer(editor, { detectEmbedMode: () => false })
     expect(spy).not.toHaveBeenCalledWith('message', expect.anything())
     spy.mockRestore()
   })
@@ -23,7 +23,7 @@ describe('EmbedServer — constructor + listener setup', () => {
   it('attaches message listener when embedMode is true', () => {
     const editor = makeFakeEditor()
     const spy = vi.spyOn(window, 'addEventListener')
-    const _server = new EmbedServer(editor, { detectEmbedMode: () => true, allowedOrigins: ['https://host.test'] })
+    new EmbedServer(editor, { detectEmbedMode: () => true, allowedOrigins: ['https://host.test'] })
     expect(spy).toHaveBeenCalledWith('message', expect.any(Function))
     spy.mockRestore()
   })
@@ -31,7 +31,7 @@ describe('EmbedServer — constructor + listener setup', () => {
   it('applies URL-param chrome state on init', () => {
     window.history.replaceState({}, '', '/?embed=1&chrome=minimal')
     const editor = makeFakeEditor()
-    const _server = new EmbedServer(editor)
+    new EmbedServer(editor)
     expect(document.body.classList.contains('embed')).toBe(true)
     expect(document.body.classList.contains('no-menu')).toBe(true)
     expect(document.body.classList.contains('no-toolbox')).toBe(false)
@@ -40,7 +40,7 @@ describe('EmbedServer — constructor + listener setup', () => {
   it('applies URL-param theme on init', () => {
     window.history.replaceState({}, '', '/?embed=1&theme=dark')
     const editor = makeFakeEditor()
-    const _server = new EmbedServer(editor)
+    new EmbedServer(editor)
     expect(document.body.classList.contains('theme-dark')).toBe(true)
   })
 })
