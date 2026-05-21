@@ -7,6 +7,72 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (Step 3 — JS → TS migration COMPLETE — 2026-05-19 → 2026-05-20)
+
+The bulk of the codebase converted from JavaScript to TypeScript under day-one strict mode (`strict: true`). 113 commits on `feat/ts-migration`, squash-merged into one master commit at PR #1.
+
+**Conversion totals (~115 production files):**
+- `packages/svgcanvas/common/` — 3 files (Task 5)
+- `packages/svgcanvas/core/` — 24 files in 4 sub-tasks (Tasks 6/7/8/9)
+- `packages/svgcanvas/svgcanvas.ts` barrel — 1 file (Task 10)
+- `src/editor/` top-level + locale — 9 files (Task 11)
+- `src/editor/components/` (including jgraduate/) — 23 files (Task 12)
+- `src/editor/dialogs/` (including vendored se-elix/) — 15 files (Task 13)
+- `src/editor/extensions/` (11 extensions × main+locale + 2 helpers) — 23 files (Task 14)
+- `src/editor/panels/` — 4 files (Task 15)
+- `scripts/` (build-extensions, copy-static, run-e2e) — 3 files via `tsx` (Task 16)
+- `src/editor/typedefs.js` — DELETED (pure JSDoc, no runtime exports)
+- **Total: ~115 production files converted, ~5,000 type annotations added, 0 behavior changes.**
+
+**Day-one strict mode flags:**
+- `strict: true` (all sub-flags including `strictNullChecks`, `noImplicitAny`, `useUnknownInCatchVariables`)
+- `noUnusedLocals`, `noUnusedParameters`, `noFallthroughCasesInSwitch`
+- `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`
+- `verbatimModuleSyntax`, `isolatedModules`
+
+**New tooling and infrastructure:**
+- TypeScript 6.x + ESLint v9 (flat config) + `@typescript-eslint/parser` v8 + `@typescript-eslint/eslint-plugin` v8
+- Vite 7 handles `.ts` natively via esbuild (no Babel)
+- Vitest 4 + Playwright 1.57 (unchanged frameworks; test files stayed JS for this PR)
+- `tsx@^4.22` + `@types/node@^22.19` devDeps added (Task 16)
+- `"type": "module"` added to `package.json` (Task 16, required for `tsx` ESM script execution)
+- New TS infrastructure files: `tsconfig.json` (root) + `packages/svgcanvas/tsconfig.json` (workspace project reference) + `packages/svgcanvas/svgcanvas.augment.d.ts` (wired-on `SvgCanvas` method declarations) + `src/editor/elix.d.ts` (narrow ambient declarations for the `svgEditor` global + minimal elix module shapes)
+
+**Naming-consistency renames** (Task 17 — TS-aware identifier renames, 9 commits):
+- `controllPoint1/2` (+ `getControllPoint1/2` + `setControllPoint1/2`) → `controlPoint1/2`
+- `getrootSctm` → `getRootSctm`
+- `getrefAttrs` → `getRefAttrs`
+- `gettingSelectorManager` → `getSelectorManager`
+- `idprefix` → `idPrefix`
+- `getbSpline` / `setbSpline` → `getBSpline` / `setBSpline`
+- `current_drawing_` → `currentDrawing`
+- `handler_` → `_handler`
+
+**Deferred to follow-up PRs (NOT in this migration's scope):**
+- File splits (`EditorStartup.init()` 590-line, `Editor.ts` 1393-line, `TopPanel.ts` per-element-type, `recalculate.ts` per-element helpers)
+- Mutable-export refactor (`path.ts:77` `export let path = null`)
+- `SelectModule` + wire-methods-onto-svgCanvas singleton refactor (proper class methods OR per-module interface augmentation)
+- Other trailing-underscore pseudo-privates → `#` true private fields (`historyrecording.ts`, `layer.ts`, `recalculate.ts`)
+- Test file conversion to TS (vitest unit tests + Playwright e2e tests stay JS for this PR)
+- Audit-flagged correctness bugs (LayersPanel `_eye.style.width` duplicate, contextmenu `appendChild` bug, etc.) — all preserved verbatim with `// TODO: see todo #10` comments
+- elix → Lit migration (#3 in todo) — file-level `eslint-disable` blocks on 11 elix-extending components flagged with cleanup-deferred-to-#3 comments
+- Native dialog → modal replacement (#13 in todo)
+
+**Verification at branch HEAD (post-rebase onto master `715e7fc9`, 113 commits squashed at merge):**
+- `npx tsc --build --force`: 0 errors (workspace + root, day-one strict)
+- `npm run lint`: 0 errors + 145 informational warnings (mostly JSDoc-may-be-converted-to-TS-types hints, deferred to a doc-pass follow-up)
+- `npm run build`: success + `Bundled 11 extensions`
+- `npx vitest run`: 564/564 passed
+- `npx tsx scripts/run-e2e.ts`: 192/192 passed (Chromium + Firefox, 1 known firefox layers-panel flake passes 3/3 in isolation)
+
+**Lessons captured during migration (in svgedit's session memories — see todo #2 for full list):**
+- Subagent gate-claim verification: implementer subagents reporting "gate clean" or "lint unchanged" must be RE-VERIFIED by running the gate command directly. Multiple incidents during Tasks 11/12/14/15 where subagent reports diverged from actual state.
+- `tsc --build` exits 0 from cached `tsbuildinfo` even when errors print — always use `--force` for verification.
+- IDE diagnostics are stale during long-running edit sessions — verify only via direct command output, never the IDE pane.
+- `npm run build` can exit 0 with empty extension subscript output ("No extension entries found") if a build-script globs for `.js` after files convert to `.ts`. Watch for the `Bundled N extensions` line specifically.
+- `tsx` ESM script execution requires `"type": "module"` in `package.json` when scripts are `.ts` (not `.mts`).
+- `as unknown as Foo` double-casts are sometimes necessary (e.g., `createElementNS(...)` → `SVGSVGElement`) — suppress the `no-unnecessary-type-assertion` rule with a per-line comment explaining why.
+
 ### Added (OpenSSF Scorecard supply-chain visibility — 2026-05-19)
 - Closes audit finding: `svgedit missing scorecard.yml — supply-chain visibility gap`. Cross-repo parity with control-menu (which shipped Scorecard in CM PR #14 + the SHA-pin hot-fix in #15).
 - **New `.github/workflows/scorecard.yml`** — weekly cron `0 13 * * 1` (Mon 13:00 UTC) + `push: master` + `pull_request: master` + `branch_protection_rule` triggers. Runs the OSSF Scorecard check suite (Branch-Protection, Pinned-Dependencies, Dangerous-Workflow, Token-Permissions, SAST, Signed-Releases, etc.), uploads SARIF to the Security tab alongside CodeQL alerts, and publishes the public score to `api.securityscorecards.dev` (badge URL `https://scorecard.dev/viewer/?uri=github.com/bilbospocketses/svgedit`). `publish_results` gated to `github.event_name == 'push'` so PR runs skip publishing (a PR-HEAD SHA isn't on master yet — OpenSSF webapp's commit-graph verifier rejects with "imposter commit" 400, same failure mode as the annotated-tag-object SHA we documented in `feedback_action_sha_pin_commit_not_tag_object.md`).
