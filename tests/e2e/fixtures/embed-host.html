@@ -35,6 +35,10 @@
   window.__svgeditEmbed.on('extension-error', (p) => append(`EXT-ERR ${p.name}: ${p.message}`))
   window.__svgeditEmbed.on('error', (p) => append(`ERR ${p.source}: ${p.message}`))
   window.__svgeditEmbed.on('destroy', () => append('DESTROY'))
+  window.__svgeditEmbed.on('before-group', () => append('BEFORE-GROUP'))
+  window.__svgeditEmbed.on('after-group', () => append('AFTER-GROUP'))
+  window.__svgeditEmbed.on('before-move', () => append('BEFORE-MOVE'))
+  window.__svgeditEmbed.on('after-move', () => append('AFTER-MOVE'))
 
   window.__getLog = () => log.textContent
   window.__clearLog = () => { log.textContent = '' }

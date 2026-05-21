@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (audit input #1 closure — ext-connector refactor + embed events 8→12 — 2026-05-21)
+
+Closes the last remaining audit-input traceability item from the embed-API design (#1 ext-connector monkey-patching). With this PR landed, **12 of 12 audit inputs closed**. PR-B per the 2026-05-21 audit-cleanup sweep.
+
+- **`packages/svgcanvas/core/selected-elem.ts` — fires 4 new svgCanvas bus events:** `before-group` + `after-group` at the entry/exit of `groupSelectedElements`; `before-move` + `after-move` at the entry/exit of `moveSelectedElements`. `after-move` fires in both the command-produced and empty-result paths so subscribers always get the signal.
+- **`src/editor/extensions/ext-connector/ext-connector.ts` — dropped the monkey-patches** of `svgCanvas.groupSelectedElements` and `svgCanvas.moveSelectedElements` (`:47-73` previously). Behavior preserved via `svgCanvas.bind('before-group', ...)` to remove connectors from selection pre-group, and `svgCanvas.bind('after-move', ...)` to refresh connector geometry post-move. Chain-to-previous pattern applied so future binders can stack.
+- **`src/embed/protocol.ts` — `EmbedEventName` extended 8 → 12** with `before-group` / `after-group` / `before-move` / `after-move`. Allowlist serves both internal extension subscriptions (via `svgCanvas.bind`) and external host subscriptions (via `embed.on`).
+- **`src/editor/EditorStartup.ts` — bridges the 4 new bus events to the embed channel.** Each new bind uses the chain-to-previous pattern so ext-connector's `before-group` + `after-move` handlers still fire alongside the embed emit.
+- **`EMBED_API.md` — events table updated** to 12 rows with documentation for the 4 new events; added a paragraph noting that the group/move events are dual-channel (svgCanvas bus + embed channel).
+- **`tests/e2e/fixtures/embed-host.html` — fixture forwards the 4 new events** to the test log.
+- **`tests/e2e/embed-events.spec.js` — 3 new tests added** (6 across chromium + firefox): `before-group` + `after-group` fire around `groupSelectedElements`; `before-move` + `after-move` fire around `moveSelectedElements` (call's return-value Promise is `.catch()`-swallowed because `BatchCommand` instances can't structured-clone across `postMessage` — pre-existing serializer gap flagged as a separate follow-up; the bus events still fire); `after-move` fires even when selection produces no command.
+- **`tests/unit/selected-elem.test.js` — 3 new unit tests added** verifying firing order at the svgCanvas-bus level: `groupSelectedElements` fires `before-group` then `after-group`; `moveSelectedElements` fires `before-move` then `after-move` with a selection AND with empty selection.
+- **`docs/superpowers/specs/2026-05-20-svgedit-embed-api-design.md` — Audit input traceability table marks #1 closed** (12 of 12); Events allowlist table extended to 12 rows; Follow-up items list updated.
+- **No host-side breaking changes.** `EmbedEventName` union grows in v1.x; existing host code unaffected. Method-shape contracts unchanged.
+- **Verification:** `npx tsc --build --force` 0 errors; `npm run lint` 0 errors / 145 warnings (baseline maintained); `npx vitest run` 637/637 (was 634, +3 new); `npx tsx scripts/run-e2e.ts` 250/250 across chromium + firefox (was 244, +6 new).
+
 ### Changed (audit-input cleanup sweep — 2026-05-21)
 
 Bundles audit inputs #2, #4, #6, #7, #12 — 5 of the 6 follow-ups left after #4 embed API v1 shipped earlier today. Closes 11 of 12 audit-input items total; only #1 (ext-connector monkey-patching refactor + events allowlist 8→12) remains, queued as PR-B.

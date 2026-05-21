@@ -173,4 +173,54 @@ describe('selected-elem', () => {
     }
     expect(svgCanvas.getSvgContent().querySelector('#use-no-href')).toBeTruthy()
   })
+
+  // v1.2 (PR-B audit #1): group/move bus events. Direct unit-level proof that the new
+  // svgCanvas event-bus events fire in the right order around groupSelectedElements +
+  // moveSelectedElements. The embed e2e suite covers the embed-channel mirror; these tests
+  // cover the internal bus contract that ext-connector subscribes to.
+
+  it('groupSelectedElements fires before-group then after-group on the bus', () => {
+    const fired = []
+    svgCanvas.bind('before-group', () => { fired.push('before-group') })
+    svgCanvas.bind('after-group', () => { fired.push('after-group') })
+
+    const rect1 = svgCanvas.addSVGElementsFromJson({
+      element: 'rect',
+      attr: { id: 'group-bus-r1', x: 0, y: 0, width: 10, height: 10 }
+    })
+    const rect2 = svgCanvas.addSVGElementsFromJson({
+      element: 'rect',
+      attr: { id: 'group-bus-r2', x: 20, y: 0, width: 10, height: 10 }
+    })
+    svgCanvas.selectOnly([rect1, rect2], true)
+
+    svgCanvas.groupSelectedElements()
+    expect(fired).toEqual(['before-group', 'after-group'])
+  })
+
+  it('moveSelectedElements fires before-move then after-move on the bus (with selection)', () => {
+    const fired = []
+    svgCanvas.bind('before-move', () => { fired.push('before-move') })
+    svgCanvas.bind('after-move', () => { fired.push('after-move') })
+
+    const rect = svgCanvas.addSVGElementsFromJson({
+      element: 'rect',
+      attr: { id: 'move-bus-rect', x: 0, y: 0, width: 10, height: 10 }
+    })
+    svgCanvas.selectOnly([rect], true)
+
+    svgCanvas.moveSelectedElements(5, 5, false)
+    expect(fired).toEqual(['before-move', 'after-move'])
+  })
+
+  it('moveSelectedElements fires after-move even with empty selection', () => {
+    const fired = []
+    svgCanvas.bind('before-move', () => { fired.push('before-move') })
+    svgCanvas.bind('after-move', () => { fired.push('after-move') })
+
+    svgCanvas.clearSelection()
+    svgCanvas.moveSelectedElements(1, 1, false)
+
+    expect(fired).toEqual(['before-move', 'after-move'])
+  })
 })

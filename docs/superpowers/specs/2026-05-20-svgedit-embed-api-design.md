@@ -4,7 +4,8 @@
 
 - **2026-05-20:** Designed via brainstorming session.
 - **2026-05-21:** v1 SHIPPED (PR #14 → master `e35a407c`).
-- **2026-05-21:** v1.1 audit-cleanup sweep (this update) — closes traceability for audit inputs #2 (runExtensions API tightening, in code), #6 (missing-icon → `error` event, in code), #4 (deferred to #3 Lit conversion of `sePromptDialog`), #7 + #12 (reclassified as non-goal). Audit input #1 remains the only outstanding follow-up; tracked as PR-B (events allowlist 8→12 + ext-connector refactor).
+- **2026-05-21:** v1.1 audit-cleanup sweep — closes traceability for audit inputs #2 (runExtensions API tightening, in code), #6 (missing-icon → `error` event, in code), #4 (deferred to #3 Lit conversion of `sePromptDialog`), #7 + #12 (reclassified as non-goal).
+- **2026-05-21:** v1.2 audit input #1 closure (PR-B) — ext-connector monkey-patching replaced with `svgCanvas.bind()` subscriptions; `EmbedEventName` allowlist extended 8 → 12 with `before-group` / `after-group` / `before-move` / `after-move`. **All 12 audit-input items now closed.**
 - v1 scope locked.
 
 ## Context
@@ -43,7 +44,7 @@ svgedit is a personal hard fork of [SVG-Edit/svgedit](https://github.com/SVG-Edi
 - Native dialog → Lit modal IMPLEMENTATION — that's todo #13. This design specifies the embed-side hook CONTRACT; the Lit modals built for #13 will be the default behavior when no host handler is registered.
 - Auto-revoking dead Element handles — handles are valid until the editor removes the element. If a host caches a handle past element deletion, next use returns `ELEMENT_NOT_FOUND`. Documented; no GC magic.
 - Translation across `protocolVersion` bumps — when we bump to v2, host's v1 proxy library doesn't auto-translate; host upgrades its proxy library to match. Documented.
-- Reverting `ext-connector.js` monkey-patching (audit input #1) — out of scope for v1; tracked as separate post-v1 follow-up (see "Follow-up items" below).
+- ~~Reverting `ext-connector.js` monkey-patching (audit input #1)~~ — closed 2026-05-21 in v1.2 (PR-B). `EmbedEventName` allowlist extended 8 → 12 with `before-group` / `after-group` / `before-move` / `after-move`; ext-connector subscribes via `svgCanvas.bind()` instead of replacing methods.
 
 ## Architecture
 
@@ -137,7 +138,7 @@ function handleCall(env: { method: string; args: unknown[] }): unknown {
   where `Promisified<T>` is the standard `{ [K in keyof T]: T[K] extends (...args: infer A) => infer R ? (...args: A) => Promise<Awaited<R>> : never }` shape.
 - `MethodNotFoundError` is returned as `{kind: 'error', code: 'METHOD_NOT_FOUND'}` so hosts can feature-detect without try/catch on the call site if they prefer.
 
-## Events allowlist (8 events)
+## Events allowlist (12 events)
 
 | Event | Payload | When |
 |---|---|---|
@@ -149,6 +150,10 @@ function handleCall(env: { method: string; args: unknown[] }): unknown {
 | `extension-error` | `{name: string, message: string, stack?: string}` | Closes audit input #5 (silent `console.error` → surfaceable to host) |
 | `error` | `{message: string, source: string, stack?: string}` | Generic editor-runtime error the editor decides is host-worth-knowing |
 | `destroy` | `{}` | Editor shutting down (pagehide / unload). Host can clean up its proxy. |
+| `before-group` *(v1.2)* | `{}` | Fires immediately before `groupSelectedElements` runs. Dual-channel: also surfaced on the svgCanvas event bus so editor extensions (ext-connector) can subscribe. Closes audit input #1. |
+| `after-group` *(v1.2)* | `{}` | Fires immediately after `groupSelectedElements` completes. Dual-channel. |
+| `before-move` *(v1.2)* | `{}` | Fires immediately before `moveSelectedElements` runs. Dual-channel. |
+| `after-move` *(v1.2)* | `{}` | Fires immediately after `moveSelectedElements` completes (in both command-produced and no-command paths). Dual-channel. |
 
 **Deliberately skipped:**
 
@@ -261,7 +266,7 @@ Defense-in-depth: both sides validate independently — a bug on one side doesn'
 
 - `embed-init.spec.ts` — handshake, `ready` payload, URL-param chrome state, queued-calls flush.
 - `embed-methods.spec.ts` — round-trip on representative methods (`clearSelection`, `loadFromString`, `getSvgString`, `embedImage`, `addExtension`).
-- `embed-events.spec.ts` — all 8 events fire with correct payloads; subscribe / unsubscribe / once.
+- `embed-events.spec.ts` — all 12 events fire with correct payloads; subscribe / unsubscribe / once.
 - `embed-element-handles.spec.ts` — Element-ref serialization round-trip semantics (the trickiest part of the API).
 - `embed-chrome.spec.ts` — URL-param presets + runtime `setChrome` toggle.
 - `embed-theme.spec.ts` — two-way theme sync; editor-toggled → event fires; host-toggled → editor applies.
@@ -277,7 +282,7 @@ Defense-in-depth: both sides validate independently — a bug on one side doesn'
 
 Status legend: ✓ closed in code, ✓-doc closed in this doc (re-classified), ▢ outstanding.
 
-1. ▢ **`ext-connector.ts` monkey-patching cleanup** (audit input #1). Fix shape: add `before-group` / `after-group` / `before-move` / `after-move` events to the allowlist (events count → 12), refactor `ext-connector` to subscribe via the svgCanvas event bus instead of patching `svgCanvas` methods at runtime. **Tracked as PR-B.**
+1. ✓ **`ext-connector.ts` monkey-patching cleanup** (audit input #1). Closed in 2026-05-21 v1.2 (PR-B) — svgCanvas bus extended with 4 new events (`before-group` / `after-group` / `before-move` / `after-move`); ext-connector subscribes via `svgCanvas.bind()` instead of replacing `groupSelectedElements` + `moveSelectedElements` at runtime. `EmbedEventName` allowlist extended 8 → 12; EditorStartup bridges the new bus events to the embed channel with chain-to-previous handler stacking. 4 new e2e tests cover firing order, command-empty path, and ext-connector behavior preservation.
 2. ✓ **`runExtensions` API tightening** (audit input #2). `selection.ts:178-181` `@todo`s closed in 2026-05-21 v1.1 sweep — `runExtensions` now always returns an array (formerly opt-in via 3rd boolean param) and takes a typed options object `{action, vars?}` (formerly positional). All ~20 callsites migrated. Type tightened in `svgcanvas.augment.d.ts`.
 3. ✓-doc **Multi-iframe clipboard tab-sync** (audit input #7, #12). Re-classified to non-goal in the 2026-05-21 v1.1 sweep — see "Non-goals (v1)" section. Multi-tab works today via `window.storage`; multi-iframe isn't on the project roadmap.
 4. ▢ **`_reference/embed-api-v6/` cleanup** — defer to post-v1-ship; tied to CodeQL dismissal rewiring.
@@ -299,11 +304,11 @@ Status legend: ✓ closed in code, ✓-doc closed in this doc (re-classified), �
 
 ## Audit input traceability
 
-11 of 12 closed as of the 2026-05-21 v1.1 sweep. Only #1 remains, tracked as PR-B.
+**All 12 of 12 closed** as of 2026-05-21 (v1 + v1.1 sweep + v1.2 ext-connector closure).
 
 | Audit # | Source | Status |
 |---|---|---|
-| 1 | `ext-connector.ts:46-70` monkey-patching | ▢ Follow-up item 1 (PR-B — events allowlist 8→12 + ext-connector refactor) |
+| 1 | `ext-connector.ts:46-70` monkey-patching | ✓ v1.2 (2026-05-21, PR-B) — bus events `before-group` / `after-group` / `before-move` / `after-move` added; ext-connector subscribes via `svgCanvas.bind()`; `EmbedEventName` allowlist 8 → 12 |
 | 2 | `selection.ts:178-181` `runExtensions` `@todo`s | ✓ v1.1 (2026-05-21) — return-array default + args-as-object refactor; ~20 callsites migrated |
 | 3 | Native `prompt`/`alert` (9 sites) | ✓ v1 — Dialog hook system |
 | 4 | `sePromptDialog.ts` misnamed | ✓-doc v1.1 (2026-05-21) — closes during svgedit todo #3 (Lit conversion); rename ships with the Lit migration |

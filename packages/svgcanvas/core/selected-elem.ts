@@ -179,6 +179,7 @@ const moveUpDownSelected = (dir: 'Up' | 'Down'): void => {
  * Moves selected elements on the X/Y axis.
  */
 const moveSelectedElements = (dx: number | number[], dy: number | number[], undoable = true): unknown => {
+  svgCanvas.call('before-move')
   const selectedElements: (Element | null)[] = svgCanvas.getSelectedElements()
   const zoom: number = svgCanvas.getZoom()
   if (!Array.isArray(dx)) {
@@ -228,8 +229,10 @@ const moveSelectedElements = (dx: number | number[], dy: number | number[], undo
       svgCanvas.addCommandToHistory(batchCmd)
     }
     svgCanvas.call('changed', selectedElements)
+    svgCanvas.call('after-move')
     return batchCmd
   }
+  svgCanvas.call('after-move')
   return undefined
 }
 
@@ -665,6 +668,7 @@ const copySelectedElements = (): void => {
  * Wraps all the selected elements in a group (`g`) element.
  */
 const groupSelectedElements = (type?: string, urlArg?: string): void => {
+  svgCanvas.call('before-group')
   const selectedElements: (Element | null)[] = svgCanvas.getSelectedElements()
   if (!type) {
     type = 'g'
@@ -724,6 +728,7 @@ const groupSelectedElements = (type?: string, urlArg?: string): void => {
   }
 
   svgCanvas.selectOnly([g], true)
+  svgCanvas.call('after-group')
 }
 
 /**
