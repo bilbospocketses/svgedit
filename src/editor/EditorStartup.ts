@@ -734,6 +734,25 @@ class EditorStartup {
           ids: arr.map(e => e?.id).filter((s): s is string => typeof s === 'string' && s.length > 0)
         })
       })
+      // v1.1 (PR-B audit #1) — bridge the 4 new group/move bus events to the embed channel.
+      // Payloads are empty: hosts can call getSelectedElements / etc. if details are needed.
+      // Chain-to-previous keeps ext-connector's bindings working (it binds before-group + after-move).
+      const prevBeforeGroup = sc.bind('before-group', (...args: unknown[]) => {
+        if (prevBeforeGroup) prevBeforeGroup(...args)
+        this._embedServer?.emit('before-group', {})
+      })
+      const prevAfterGroup = sc.bind('after-group', (...args: unknown[]) => {
+        if (prevAfterGroup) prevAfterGroup(...args)
+        this._embedServer?.emit('after-group', {})
+      })
+      const prevBeforeMove = sc.bind('before-move', (...args: unknown[]) => {
+        if (prevBeforeMove) prevBeforeMove(...args)
+        this._embedServer?.emit('before-move', {})
+      })
+      const prevAfterMove = sc.bind('after-move', (...args: unknown[]) => {
+        if (prevAfterMove) prevAfterMove(...args)
+        this._embedServer?.emit('after-move', {})
+      })
     }
   }
 

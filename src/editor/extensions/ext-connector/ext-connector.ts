@@ -44,33 +44,22 @@ export default {
     let started = false
     let connections: any[] = []
 
-    // TODO: see todo #10 — monkey-patches groupSelectedElements + moveSelectedElements; defer to #4 embed-API design
-    // Save the original groupSelectedElements method
-    const originalGroupSelectedElements = svgCanvas.groupSelectedElements
-
-    // Override the original groupSelectedElements to exclude connectors
-    svgCanvas.groupSelectedElements = function (...args: any[]) {
-      // Remove connectors from selection
+    // svgCanvas event-bus subscription replaces the historical monkey-patching of
+    // svgCanvas.groupSelectedElements + svgCanvas.moveSelectedElements (audit input #1,
+    // closed 2026-05-21 via PR-B). chain-to-previous pattern matches the existing
+    // svgCanvas.bind() replace-semantics — if another extension binds the same event later
+    // it can chain to ours via the same idiom.
+    type BusHandler = (...args: any[]) => any
+    const prevBeforeGroup: BusHandler | undefined = svgCanvas.bind('before-group', (...args: any[]) => {
+      if (prevBeforeGroup) prevBeforeGroup(...args)
+      // Remove connectors from selection so they're not pulled into the group
       svgCanvas.removeFromSelection(document.querySelectorAll('[id^="conn_"]'))
-
-      // Call the original method
-      return originalGroupSelectedElements.apply(this, args)
-    }
-
-    // Save the original moveSelectedElements method
-    const originalMoveSelectedElements = svgCanvas.moveSelectedElements
-
-    // Override the original moveSelectedElements to handle connectors
-    svgCanvas.moveSelectedElements = function (...args: any[]) {
-      // Call the original method and store its result
-      const cmd = originalMoveSelectedElements.apply(this, args)
-
-      // Update connectors
+    })
+    const prevAfterMove: BusHandler | undefined = svgCanvas.bind('after-move', (...args: any[]) => {
+      if (prevAfterMove) prevAfterMove(...args)
+      // Update connector geometry now that selected elements have settled at new positions
       updateConnectors(svgCanvas.getSelectedElements())
-
-      // Return the result of the original method
-      return cmd
-    }
+    })
 
     /**
      * getBBintersect

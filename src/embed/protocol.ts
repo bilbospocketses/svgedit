@@ -3,6 +3,10 @@ export const PROTOCOL_VERSION = 1
 export type EmbedEventName =
   | 'ready' | 'change' | 'save' | 'selection-changed'
   | 'theme-changed' | 'extension-error' | 'error' | 'destroy'
+  // v1.1 (2026-05-21, PR-B audit #1): hooks around group / move so hosts can react
+  // and extensions (ext-connector) can subscribe via the svgCanvas event-bus instead
+  // of monkey-patching svgCanvas methods at runtime.
+  | 'before-group' | 'after-group' | 'before-move' | 'after-move'
 
 export type ChromePreset = 'full' | 'minimal' | 'none'
 

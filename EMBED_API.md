@@ -207,7 +207,7 @@ postMessage uses the structured-clone algorithm (superset of JSON). Three things
 
 ### Event allowlist
 
-The embed API fires eight typed events. Internal editor events are not forwarded to avoid leaking implementation detail.
+The embed API fires twelve typed events. Internal editor events are not forwarded to avoid leaking implementation detail.
 
 | Event | When | Payload |
 |---|---|---|
@@ -219,6 +219,12 @@ The embed API fires eight typed events. Internal editor events are not forwarded
 | `extension-error` | An extension threw on load or execution | `{ name: string, message: string, stack?: string }` |
 | `error` | Generic editor runtime error worth surfacing | `{ message: string, source: string, stack?: string }` |
 | `destroy` | Editor is shutting down (pagehide / unload) | `{}` |
+| `before-group` | Fires immediately before `groupSelectedElements` runs (v1.1) | `{}` — call `getSelectedElements()` if details needed |
+| `after-group` | Fires immediately after `groupSelectedElements` completes (v1.1) | `{}` |
+| `before-move` | Fires immediately before `moveSelectedElements` runs (v1.1) | `{}` |
+| `after-move` | Fires immediately after `moveSelectedElements` completes (v1.1) | `{}` |
+
+The four `before-*` / `after-*` group/move events are also exposed on svgCanvas's internal event bus (`svgCanvas.bind('before-group', fn)`), which extensions like `ext-connector` subscribe to in order to react to group/move lifecycle without monkey-patching svgCanvas methods. The embed channel mirrors those events so external hosts get the same signal.
 
 `change` is intentionally payload-free — sending the full SVG string on every stroke would be expensive. Pull with `getSvgString()` when you actually need it (e.g. on an autosave timer).
 
