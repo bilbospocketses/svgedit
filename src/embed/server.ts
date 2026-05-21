@@ -10,6 +10,7 @@ export type EmbedServerOptions = {
   detectEmbedMode?: (params: { embedMode: boolean }) => boolean
   allowedOrigins?: string[]
   dialogTimeoutMs?: number
+  version?: string
 }
 
 let handleCounter = 0
@@ -73,6 +74,7 @@ export class EmbedServer {
   protected readonly editor: { svgCanvas: Record<string, unknown> } & Record<string, unknown>
   protected readonly allowedOrigins: readonly string[]
   protected dialogTimeoutMs: number
+  protected readonly version: string
   private listener: ((e: MessageEvent) => void) | null = null
 
   constructor (editor: { svgCanvas: Record<string, unknown> } & Record<string, unknown>, opts: EmbedServerOptions = {}) {
@@ -83,6 +85,7 @@ export class EmbedServer {
       : params.embedMode || window.parent !== window
     this.allowedOrigins = opts.allowedOrigins ?? params.allowedOrigins
     this.dialogTimeoutMs = opts.dialogTimeoutMs ?? params.dialogTimeoutMs
+    this.version = opts.version ?? '0.0.0-unknown'
 
     if (!embedMode) return
 
@@ -137,6 +140,14 @@ export class EmbedServer {
   protected reply (env: EmbedEnvelope): void {
     const targetOrigin = this.allowedOrigins[0] === '*' ? '*' : (this.allowedOrigins[0] ?? window.location.origin)
     window.parent.postMessage(env, targetOrigin)
+  }
+
+  emit (name: import('./protocol.ts').EmbedEventName, payload: unknown): void {
+    this.reply({ ns: 'svgedit', v: 1, kind: 'event', name, payload })
+  }
+
+  ready (capabilities: string[] = ['chrome', 'theme', 'dialog-hooks']): void {
+    this.emit('ready', { version: this.version, protocolVersion: PROTOCOL_VERSION, capabilities })
   }
 
   dispose (): void {

@@ -163,3 +163,36 @@ describe('EmbedServer — call dispatch', () => {
     server.dispose()
   })
 })
+
+describe('EmbedServer — event emission', () => {
+  beforeEach(() => {
+    document.body.className = ''
+    window.history.replaceState({}, '', '/?embed=1&allowedOrigins=https://host.test')
+  })
+
+  it('emit() posts envelope to window.parent', () => {
+    const editor = { svgCanvas: {} }
+    const server = new EmbedServer(editor)
+    const sent = []
+    vi.spyOn(window.parent, 'postMessage').mockImplementation((env) => sent.push(env))
+    server.emit('ready', { version: '7.4.1', protocolVersion: 1, capabilities: ['chrome'] })
+    expect(sent).toContainEqual({
+      ns: 'svgedit', v: 1, kind: 'event', name: 'ready',
+      payload: { version: '7.4.1', protocolVersion: 1, capabilities: ['chrome'] }
+    })
+    server.dispose()
+  })
+
+  it('ready() helper emits ready event with declared capabilities', () => {
+    const editor = { svgCanvas: {} }
+    const server = new EmbedServer(editor, { version: '7.4.1' })
+    const sent = []
+    vi.spyOn(window.parent, 'postMessage').mockImplementation((env) => sent.push(env))
+    server.ready()
+    const readyEvent = sent.find(s => s.kind === 'event' && s.name === 'ready')
+    expect(readyEvent).toBeDefined()
+    expect(readyEvent.payload.protocolVersion).toBe(1)
+    expect(readyEvent.payload.capabilities).toEqual(expect.arrayContaining(['chrome', 'theme', 'dialog-hooks']))
+    server.dispose()
+  })
+})
