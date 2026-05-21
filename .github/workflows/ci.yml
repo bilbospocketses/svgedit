@@ -50,4 +50,4 @@ jobs:
         run: npx playwright install --with-deps chromium firefox
 
       - name: E2e tests
-        run: node scripts/run-e2e.mjs
+        run: npx tsx scripts/run-e2e.ts
