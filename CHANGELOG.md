@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (fork-network detach — 2026-05-20)
+- Detached `bilbospocketses/svgedit` from the `SVG-Edit/svgedit` fork network (GitHub Settings → Danger Zone → Leave fork network). `gh repo view` confirms post-detach state: `isFork: false`, `parent: null`. The "forked from SVG-Edit/svgedit" badge on GitHub no longer shows; the repo is now standalone in GitHub's repository graph.
+- **Why:** Reflects the locked scope directive ("no upstream tracking, no PRs upstream", `project_svgedit.md`) at the repo-metadata level. Fork-network membership was vestigial signal — search-result inclusion in the 1,733-repo network, child-fork-aware rule logic, organisational-affinity behaviour — none of which applied to a repository whose declared lineage is one-way + one-time.
+- **Eligibility verified pre-detach:** size 113 MB (< 1 GB GitHub cap), public, 0 child forks, 0 stars, 0 watchers, 0 open issues, 0 open PRs (PR #1 — the TS migration — was the original blocker; it merged earlier today as `1fdceac8` and consumed the wait condition).
+- **No runtime / source-code changes.** Pure GitHub-metadata operation. `README.md` / `CONTRIBUTING.md` / `SECURITY.md` framing intact — the code lineage is still factually a fork from `SVG-Edit/svgedit v7.4.1` (forked 2026-04-23 per `## Fork point` below); only the GitHub-managed fork-network membership was severed.
+- Closes `todo_svgedit.md` item #16 (surfaced 2026-05-19, sequenced after PR #1 land per the original spec).
+
 ### Changed (Step 3 — JS → TS migration COMPLETE — 2026-05-19 → 2026-05-20)
 
 The bulk of the codebase converted from JavaScript to TypeScript under day-one strict mode (`strict: true`). 113 commits on `feat/ts-migration`, squash-merged into one master commit at PR #1.
