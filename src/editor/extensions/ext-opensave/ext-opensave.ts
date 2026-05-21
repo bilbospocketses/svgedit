@@ -175,11 +175,14 @@ export default {
         svgEditor.updateCanvas()
         handle = blob.handle
         svgEditor.topPanel.updateTitle(blob.name)
-        svgEditor.svgCanvas.runExtensions('onOpenedDocument', {
-          name: blob.name,
-          lastModified: blob.lastModified,
-          size: blob.size,
-          type: blob.type
+        svgEditor.svgCanvas.runExtensions({
+          action: 'onOpenedDocument',
+          vars: {
+            name: blob.name,
+            lastModified: blob.lastModified,
+            size: blob.size,
+            type: blob.type
+          }
         })
         svgEditor.layersPanel.populateLayers()
       } catch (err) {
@@ -254,9 +257,9 @@ export default {
           svgEditor.markSaved()
           if (handle) {
             svgEditor.topPanel.updateTitle(handle.name)
-            svgCanvas.runExtensions('onSavedDocument', {
-              name: handle.name,
-              kind: handle.kind
+            svgCanvas.runExtensions({
+              action: 'onSavedDocument',
+              vars: { name: handle.name, kind: handle.kind }
             })
           }
         } catch (err) {

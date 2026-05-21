@@ -577,11 +577,9 @@ const mouseMoveEvent = (evt: MouseEvent): void => {
   * @property {Float} mouse_y y coordinate on canvas
   * @property {Element} selected Refers to the first selected element
   */
-  svgCanvas.runExtensions('mouseMove', /** @type {module:svgcanvas.SvgCanvas#event:ext_mouseMove} */ {
-    event: evt,
-    mouse_x: mouseX,
-    mouse_y: mouseY,
-    selected
+  svgCanvas.runExtensions({
+    action: 'mouseMove',
+    vars: { event: evt, mouse_x: mouseX, mouse_y: mouseY, selected }
   })
 } // mouseMove()
 
@@ -945,11 +943,10 @@ const mouseUpEvent = (evt: MouseEvent): void => {
 * @property {Float} mouse_x x coordinate on canvas
 * @property {Float} mouse_y y coordinate on canvas
 */
-  const extResult = svgCanvas.runExtensions('mouseUp', {
-    event: evt,
-    mouse_x: mouseX,
-    mouse_y: mouseY
-  }, true)
+  const extResult = svgCanvas.runExtensions({
+    action: 'mouseUp',
+    vars: { event: evt, mouse_x: mouseX, mouse_y: mouseY }
+  })
 
   extResult.forEach((r: { keep?: boolean; element?: Element; started?: boolean } | null) => {
     if (r) {
@@ -1445,12 +1442,15 @@ const mouseDownEvent = (evt: MouseEvent): void => {
 * @property {Float} start_y y coordinate on canvas
 * @property {Element[]} selectedElements An array of the selected Elements
 */
-  const extResult = svgCanvas.runExtensions('mouseDown', {
-    event: evt,
-    start_x: svgCanvas.getStartX(),
-    start_y: svgCanvas.getStartY(),
-    selectedElements
-  }, true)
+  const extResult = svgCanvas.runExtensions({
+    action: 'mouseDown',
+    vars: {
+      event: evt,
+      start_x: svgCanvas.getStartX(),
+      start_y: svgCanvas.getStartY(),
+      selectedElements
+    }
+  })
 
   extResult.forEach((r: { started?: boolean } | null) => {
     if (r?.started) {

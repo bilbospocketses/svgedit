@@ -1193,9 +1193,9 @@ const updateCanvas = (w: number, h: number): { x: number; y: number; old_x: numb
     `translate(${x},${y})`
   )
 
-  svgCanvas.runExtensions(
-    'canvasUpdated',
-    {
+  svgCanvas.runExtensions({
+    action: 'canvasUpdated',
+    vars: {
       new_x: x,
       new_y: y,
       old_x: oldX,
@@ -1203,7 +1203,7 @@ const updateCanvas = (w: number, h: number): { x: number; y: number; old_x: numb
       d_x: x - oldX,
       d_y: y - oldY
     }
-  )
+  })
   return { x, y, old_x: oldX, old_y: oldY, d_x: x - oldX, d_y: y - oldY }
 }
 

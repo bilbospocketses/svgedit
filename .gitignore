@@ -1,6 +1,9 @@
 node_modules
 dist
 
+# TypeScript incremental-build state file (emitted by `tsc --build`)
+*.tsbuildinfo
+
 # Coverage — keep summary for CI comparison, ignore the rest
 !coverage/
 coverage/*
