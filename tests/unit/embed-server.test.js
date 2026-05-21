@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { EmbedServer } from '../../src/embed/server.ts'
 
 const makeFakeEditor = () => ({
@@ -7,9 +7,14 @@ const makeFakeEditor = () => ({
 })
 
 describe('EmbedServer — constructor + listener setup', () => {
+  let activeServer = null
   beforeEach(() => {
     document.body.className = ''
     window.history.replaceState({}, '', '/')
+    activeServer = null
+  })
+  afterEach(() => {
+    if (activeServer) { activeServer.dispose(); activeServer = null }
   })
 
   it('does not attach when embedMode is false', () => {
@@ -23,7 +28,7 @@ describe('EmbedServer — constructor + listener setup', () => {
   it('attaches message listener when embedMode is true', () => {
     const editor = makeFakeEditor()
     const spy = vi.spyOn(window, 'addEventListener')
-    new EmbedServer(editor, { detectEmbedMode: () => true, allowedOrigins: ['https://host.test'] })
+    activeServer = new EmbedServer(editor, { detectEmbedMode: () => true, allowedOrigins: ['https://host.test'] })
     expect(spy).toHaveBeenCalledWith('message', expect.any(Function))
     spy.mockRestore()
   })
@@ -31,7 +36,7 @@ describe('EmbedServer — constructor + listener setup', () => {
   it('applies URL-param chrome state on init', () => {
     window.history.replaceState({}, '', '/?embed=1&chrome=minimal')
     const editor = makeFakeEditor()
-    new EmbedServer(editor)
+    activeServer = new EmbedServer(editor)
     expect(document.body.classList.contains('embed')).toBe(true)
     expect(document.body.classList.contains('no-menu')).toBe(true)
     expect(document.body.classList.contains('no-toolbox')).toBe(false)
@@ -40,7 +45,121 @@ describe('EmbedServer — constructor + listener setup', () => {
   it('applies URL-param theme on init', () => {
     window.history.replaceState({}, '', '/?embed=1&theme=dark')
     const editor = makeFakeEditor()
-    new EmbedServer(editor)
+    activeServer = new EmbedServer(editor)
     expect(document.body.classList.contains('theme-dark')).toBe(true)
+  })
+})
+
+describe('EmbedServer — call dispatch', () => {
+  beforeEach(() => {
+    document.body.className = ''
+    window.history.replaceState({}, '', '/?embed=1&allowedOrigins=https://host.test')
+  })
+
+  it('dispatches call to svgCanvas method and replies with result', async () => {
+    const editor = { svgCanvas: { getZoom: () => 1.5 } }
+    const server = new EmbedServer(editor)
+    const replies = []
+    vi.spyOn(window.parent, 'postMessage').mockImplementation((env) => replies.push(env))
+
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { ns: 'svgedit', v: 1, kind: 'call', id: 1, method: 'getZoom', args: [] },
+      origin: 'https://host.test',
+      source: window
+    }))
+    await new Promise(r => setTimeout(r, 0))
+
+    expect(replies).toContainEqual({ ns: 'svgedit', v: 1, kind: 'result', id: 1, result: 1.5 })
+    server.dispose()
+  })
+
+  it('replies with METHOD_NOT_FOUND error for unknown method', async () => {
+    const editor = { svgCanvas: {} }
+    const server = new EmbedServer(editor)
+    const replies = []
+    vi.spyOn(window.parent, 'postMessage').mockImplementation((env) => replies.push(env))
+
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { ns: 'svgedit', v: 1, kind: 'call', id: 2, method: 'doesNotExist', args: [] },
+      origin: 'https://host.test',
+      source: window
+    }))
+    await new Promise(r => setTimeout(r, 0))
+
+    expect(replies.some(r => r.kind === 'error' && r.id === 2 && r.code === 'METHOD_NOT_FOUND')).toBe(true)
+    server.dispose()
+  })
+
+  it('drops messages from unauthorized origin (no reply)', async () => {
+    const editor = { svgCanvas: { getZoom: () => 1.5 } }
+    const server = new EmbedServer(editor)
+    const replies = []
+    vi.spyOn(window.parent, 'postMessage').mockImplementation((env) => replies.push(env))
+
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { ns: 'svgedit', v: 1, kind: 'call', id: 3, method: 'getZoom', args: [] },
+      origin: 'https://evil.com',
+      source: window
+    }))
+    await new Promise(r => setTimeout(r, 0))
+
+    expect(replies).toEqual([])
+    server.dispose()
+  })
+
+  it('serializes Element return value to handle object', async () => {
+    const el = document.createElement('div')
+    el.id = 'test-element'
+    document.body.appendChild(el)
+    const editor = { svgCanvas: { getElem: (id) => document.getElementById(id) } }
+    const server = new EmbedServer(editor)
+    const replies = []
+    vi.spyOn(window.parent, 'postMessage').mockImplementation((env) => replies.push(env))
+
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { ns: 'svgedit', v: 1, kind: 'call', id: 4, method: 'getElem', args: ['test-element'] },
+      origin: 'https://host.test',
+      source: window
+    }))
+    await new Promise(r => setTimeout(r, 0))
+
+    const result = replies.find(r => r.kind === 'result' && r.id === 4)
+    expect(result).toBeDefined()
+    expect(result.result).toMatchObject({ __svgeditHandle: expect.any(String) })
+    server.dispose()
+  })
+
+  it('deserializes inbound handle object into Element argument', async () => {
+    const el = document.createElement('div')
+    el.id = 'handle-test'
+    document.body.appendChild(el)
+    let captured = null
+    const editor = {
+      svgCanvas: {
+        takesElement: (arg) => { captured = arg; return 'ok' },
+        getElem: (id) => document.getElementById(id)
+      }
+    }
+    const server = new EmbedServer(editor)
+    const replies = []
+    vi.spyOn(window.parent, 'postMessage').mockImplementation((env) => replies.push(env))
+
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { ns: 'svgedit', v: 1, kind: 'call', id: 5, method: 'getElem', args: ['handle-test'] },
+      origin: 'https://host.test',
+      source: window
+    }))
+    await new Promise(r => setTimeout(r, 0))
+    const handle = replies.find(r => r.id === 5).result
+
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { ns: 'svgedit', v: 1, kind: 'call', id: 6, method: 'takesElement', args: [handle] },
+      origin: 'https://host.test',
+      source: window
+    }))
+    await new Promise(r => setTimeout(r, 0))
+
+    expect(captured).toBe(el)
+    server.dispose()
   })
 })

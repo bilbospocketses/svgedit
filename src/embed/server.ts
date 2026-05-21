@@ -1,4 +1,7 @@
-import { PROTOCOL_VERSION } from './protocol.ts'
+// src/embed/server.ts
+import { PROTOCOL_VERSION, isValidEnvelope, isElementHandle, ERROR_CODES } from './protocol.ts'
+import type { EmbedEnvelope, EmbedCall, ElementHandle } from './protocol.ts'
+import { isOriginAllowed } from './origin.ts'
 import { parseEmbedURLParams } from './url-params.ts'
 import { applyChrome, resolveChromePreset } from './chrome.ts'
 import { applyTheme } from './theme.ts'
@@ -7,6 +10,63 @@ export type EmbedServerOptions = {
   detectEmbedMode?: (params: { embedMode: boolean }) => boolean
   allowedOrigins?: string[]
   dialogTimeoutMs?: number
+}
+
+let handleCounter = 0
+const handleMap = new WeakMap<Element, string>()
+const reverseHandleMap = new Map<string, Element>()
+
+function allocateHandle (el: Element): ElementHandle {
+  let key = handleMap.get(el)
+  if (!key) {
+    handleCounter += 1
+    key = `el-${handleCounter}`
+    handleMap.set(el, key)
+    reverseHandleMap.set(key, el)
+  }
+  return { __svgeditHandle: key }
+}
+
+function resolveHandle (h: ElementHandle): Element | undefined {
+  return reverseHandleMap.get(h.__svgeditHandle)
+}
+
+function serializeForPostMessage (v: unknown): unknown {
+  if (v instanceof Element) return allocateHandle(v)
+  if (Array.isArray(v)) return v.map(serializeForPostMessage)
+  if (v && typeof v === 'object' && !isElementHandle(v)) {
+    const proto = Object.getPrototypeOf(v)
+    if (proto === Object.prototype || proto === null) {
+      const out: Record<string, unknown> = {}
+      for (const [k, vv] of Object.entries(v as Record<string, unknown>)) {
+        out[k] = serializeForPostMessage(vv)
+      }
+      return out
+    }
+  }
+  return v
+}
+
+function deserializeArg (v: unknown): unknown {
+  if (isElementHandle(v)) {
+    const el = resolveHandle(v)
+    if (!el) {
+      throw Object.assign(new Error(`element handle not found: ${v.__svgeditHandle}`), { code: ERROR_CODES.ELEMENT_NOT_FOUND })
+    }
+    return el
+  }
+  if (Array.isArray(v)) return v.map(deserializeArg)
+  if (v && typeof v === 'object') {
+    const proto = Object.getPrototypeOf(v)
+    if (proto === Object.prototype || proto === null) {
+      const out: Record<string, unknown> = {}
+      for (const [k, vv] of Object.entries(v as Record<string, unknown>)) {
+        out[k] = deserializeArg(vv)
+      }
+      return out
+    }
+  }
+  return v
 }
 
 export class EmbedServer {
@@ -35,8 +95,48 @@ export class EmbedServer {
     window.addEventListener('message', this.listener)
   }
 
-  protected handleMessage (_e: MessageEvent): void {
-    // Filled in by Task 7
+  protected async handleMessage (e: MessageEvent): Promise<void> {
+    if (!isOriginAllowed(e.origin, this.allowedOrigins)) {
+      console.warn(`EmbedServer: rejected message from unauthorized origin: ${e.origin}`)
+      return
+    }
+    if (!isValidEnvelope(e.data)) return
+
+    const env = e.data
+    switch (env.kind) {
+      case 'call':
+        await this.handleCall(env)
+        return
+      default:
+        return
+    }
+  }
+
+  protected async handleCall (env: EmbedCall): Promise<void> {
+    try {
+      const target = (this.editor.svgCanvas[env.method] !== undefined ? this.editor.svgCanvas : this.editor) as Record<string, unknown>
+      const fn = target[env.method]
+      if (typeof fn !== 'function') {
+        throw Object.assign(new Error(`method not found: ${env.method}`), { code: ERROR_CODES.METHOD_NOT_FOUND })
+      }
+      const deserializedArgs = env.args.map(deserializeArg)
+      const raw = await (fn as (...args: unknown[]) => unknown).apply(target, deserializedArgs)
+      const result = serializeForPostMessage(raw)
+      this.reply({ ns: 'svgedit', v: 1, kind: 'result', id: env.id, result })
+    } catch (err: unknown) {
+      const error = err as Error & { code?: string }
+      this.reply({
+        ns: 'svgedit', v: 1, kind: 'error', id: env.id,
+        message: error.message ?? String(err),
+        stack: error.stack,
+        code: error.code
+      })
+    }
+  }
+
+  protected reply (env: EmbedEnvelope): void {
+    const targetOrigin = this.allowedOrigins[0] === '*' ? '*' : (this.allowedOrigins[0] ?? window.location.origin)
+    window.parent.postMessage(env, targetOrigin)
   }
 
   dispose (): void {
@@ -50,4 +150,3 @@ export class EmbedServer {
 }
 
 export const _protocolVersion = PROTOCOL_VERSION
-export type { ReadyPayload } from './protocol.ts'
