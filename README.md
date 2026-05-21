@@ -49,9 +49,22 @@ npm test           # lint + vitest unit suite + Playwright e2e
 - Double-click — completes the path open
 - Click on first point — close the path
 
-## Embedding (planned)
+## Embedding
 
-The editor will be embeddable as an iframe with a documented `EMBED_API.md` surface — URL params for chrome control, a `window.svgedit.*` programmatic API, and a postMessage protocol that includes two-way theme sync between host and editor. Design is in flight; see `_reference/embed-api-v6/` for the V6-era prototype that informs the new design.
+svgedit can be embedded in any host application via an iframe. See [EMBED_API.md](EMBED_API.md) for the full contract.
+
+Quickstart:
+
+```html
+<iframe id="svge" src="https://your-svgedit-host/index.html?embed=1&chrome=minimal&theme=dark"></iframe>
+<script type="module">
+  import { SvgEditEmbed } from 'svgedit/embed'
+  const editor = new SvgEditEmbed(document.getElementById('svge'), { allowedOrigins: ['https://your-svgedit-host'] })
+  await editor.ready
+  await editor.editor.loadFromString('<svg xmlns="http://www.w3.org/2000/svg"><rect/></svg>')
+  editor.on('save', ({ svgString }) => console.log('saved:', svgString))
+</script>
+```
 
 ## Credits
 
