@@ -6,6 +6,7 @@
 - v1 scope locked: 5-PR phased migration, agent-team parallelization for PR-2 only.
 - jGraduate disposition LOCKED: Lit-rewrite both jGraduate + jPicker.
 - Implementation pending — next step: implementation plan via `superpowers:writing-plans` (PR-1 first; subsequent PRs get their own plans at execution time).
+- **2026-05-21 (PR-1 execution):** Consumer audit surfaced two regressions in the original Reference shape A — `<se-zoom>` (BottomPanel) reads child `<se-text>` `value` attribute for zoom-option values, and `LayersPanel.html:5` `<se-text id="layersLabel">` depends on the current code's host-id-to-inner-div propagation for the bold-sizing CSS rule to match. Reference shape A corrected to add `@property() value` + scope the CSS via `:host([id="layersLabel"])`. Reference shape B (`seInput`) unchanged structurally; the `change` event-type shift (`CustomEvent('change')` → `Event('change', {bubbles, composed})`) was consumer-verified equivalent.
 
 ## Context
 
@@ -59,7 +60,7 @@ svgedit todo item #3 — the largest remaining architectural item in the persona
 | Component naming | Keep `se-*` prefix verbatim | Zero consumer churn outside the component file |
 | Registration | `@customElement('se-name')` decorator side-effect at module load | Lit canonical |
 
-### Reference component shape A — `seText.ts` (simple, ~30 LOC target)
+### Reference component shape A — `seText.ts` (simple, ~25 LOC target)
 
 Pattern for the 14 attribute-only components dispatched in PR-2.
 
@@ -70,19 +71,30 @@ import { t } from '../locale.js'
 
 @customElement('se-text')
 export class SeText extends LitElement {
+  // Host-id-scoped: the rule only applies to <se-text id="layersLabel">
+  // (LayersPanel.html:5). Other instances (BottomPanel zoom options)
+  // keep their default font.
   static styles = css`
-    #label { font: 700 13px/normal sans-serif; }
+    :host([id="layersLabel"]) div {
+      font-size: 13px;
+      line-height: normal;
+      font-weight: 700;
+    }
   `
+
   @property() text = ''
   @property() title = ''
+  @property() value = ''  // read by <se-zoom> from child <se-text> options (BottomPanel)
 
   render() {
     return html`
-      <div id="label" part="label" title=${t(this.title)}>${t(this.text)}</div>
+      <div title=${t(this.title)}>${t(this.text)}</div>
     `
   }
 }
 ```
+
+External API contract preserved from current `seText.ts`: `text` / `title` / `value` attributes; host's `id` attribute drives the optional `#layersLabel` bold-sizing via the `:host()` selector instead of the current pattern of propagating id onto the inner div. Dropped: `style` attribute observation (no consumer found) and the buggy `this.$div.value = newValue` (`@ts-expect-error: pre-existing null-misuse`) line. The two consumer surfaces this shape protects: BottomPanel's `<se-zoom>` reading `child.value` from its `<se-text>` children for zoom-option values; LayersPanel's `<se-text id="layersLabel">` triggering the bold-sizing CSS.
 
 ### Reference component shape B — `seInput.ts` (complex form-control, ~50 LOC target)
 
@@ -129,7 +141,7 @@ export class SeInput extends LitElement {
 }
 ```
 
-External API contract preserved from current `seInput.ts`: `value` / `label` / `title` / `size` attributes; `change` event on user input or keyup. Internal `<elix-input>` is replaced with a direct `<input>` — `elix/define/Input.js` import dropped as a side-effect (killing 1 of the 12 elix-bound deps upfront; PR-3 becomes 11 elix-bound).
+External API contract preserved from current `seInput.ts`: `value` / `label` / `title` / `src` / `size` attributes; `change` event fires on the host on user input or keyup. Internal `<elix-input>` is replaced with a direct `<input>` — `elix/define/Input.js` import dropped as a side-effect (killing 1 of the 12 elix-bound deps upfront; PR-3 becomes 11 elix-bound). The Lit version dispatches `new Event('change', {bubbles: true, composed: true})` where current code uses `new CustomEvent('change')` (non-bubbling, no detail). Verified consumer-equivalent at PR-1 execution: `TopPanel.ts`'s `attrChanger` attaches `addEventListener('change')` directly on the host and reads `e.target.value` / `e.target.getAttribute('data-attr')` — both work with both event shapes. No external consumer pierces `<elix-input>` from `<se-input>`'s shadowRoot (verified via grep at PR-1 execution).
 
 ### Lit conventions checklist
 

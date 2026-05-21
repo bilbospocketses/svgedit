@@ -138,13 +138,18 @@ Expected: 132 LOC file. Key observable behaviors to preserve:
 - Attributes observed today: `text`, `value`, `style`, `title`, `id` (note: only `text` and `title` go through `t()`; `value`/`style`/`id` are direct mirrors with no i18n).
 - Shadow DOM: open
 - Renders a single `<div>` element
-- Inline `<style>` rule targeting id `layersLabel` (note: this id does NOT appear on the rendered `<div>` — see Step 2)
+- Inline `<style>` rule targeting id `layersLabel`. Current code's `attributeChangedCallback` `case 'id'` propagates the host's `id` attribute onto the inner `<div>`, so when `<se-text id="layersLabel">` is used (LayersPanel.html:5), the inner div has `id="layersLabel"` and the CSS rule matches. **The rule is NOT dead** — it's active for the LayersPanel header.
 
 If the file shape diverges from this description, halt and surface — the plan may be out of date.
 
-- [ ] **Step 2: Note the pre-existing dead-CSS rule**
+- [ ] **Step 2: Preserve LayersPanel's bold-sizing via :host()-scoped CSS**
 
-Inside the inline `<style>` of the current file, there is a rule `#layersLabel { font-size: 13px; line-height: normal; font-weight: 700; }`. The `<div>` rendered in the template has NO id, so this rule has been dangling (matches nothing) since the original upstream implementation. Per CLAUDE.md "Don't add features, refactor, or introduce abstractions beyond what the task requires" AND the spec's external-API-preservation contract, **preserve the dead rule as-is** in the Lit version. It doesn't affect rendering. Cleanup is out of scope for PR-1; logged in `todo_svgedit.md` item #10 for future code-quality work.
+The current code's `attributeChangedCallback` `case 'id'` propagates the host's `id` to the inner `<div>`. The Lit version preserves the same visual outcome using a `:host()`-scoped selector — the CSS rule only applies when the host element has `id="layersLabel"`. This is cleaner than mirroring `id` to the inner div (Lit can't easily reflect HTMLElement.id without conflicts), and it scopes the styling correctly: only the one consumer in `LayersPanel.html:5` gets bold-sizing; BottomPanel's `<se-text>` zoom options keep their default font.
+
+Consumer audit (verified at PR-1 execution via grep on `se-text`):
+- `LayersPanel.html:2` — `<se-text id="sidepanel_handle" title="ui.panel_action" text="ui.panel">` (id has no matching CSS, no behavior change)
+- `LayersPanel.html:5` — `<se-text id="layersLabel" text="layers.layers">` (id triggers bold CSS — preserved via `:host()` selector)
+- `BottomPanel.html:4-13` — 10 `<se-text value="X" text="Y%">` instances inside `<se-zoom>` (`value` is read by `<se-zoom>` from child elements — preserved via `@property() value`)
 
 - [ ] **Step 3: Write the new seText.ts (Lit version)**
 
@@ -159,15 +164,24 @@ import { t } from '../locale.js'
  * SeText — simple text-display custom element.
  * Reference component A for the elix → Lit migration (PR-1 / spec § "Reference component shape A").
  *
- * External API preserved:
+ * External API preserved (verified via consumer grep at PR-1 execution):
  *   - Custom element name: `se-text`
  *   - Attributes: `text`, `title` (rendered via t() at render time)
- *   - Pre-existing dead CSS rule `#layersLabel` preserved as-is per PR-1 scope
+ *   - Attribute: `value` (exposed via @property; read by `<se-zoom>` from child
+ *     `<se-text>` options in BottomPanel for zoom-option values)
+ *   - Host's `id` attribute: drives the optional `#layersLabel` bold-sizing
+ *     via the `:host()` selector (preserves LayersPanel.html:5 behavior;
+ *     no other consumer affected)
+ *
+ * Dropped:
+ *   - `style` attribute observation (no consumer found in src/ or tests/)
+ *   - Buggy `this.$div.value = newValue` (`@ts-expect-error: pre-existing
+ *     null-misuse`) line — HTMLDivElement has no `.value` property
  */
 @customElement('se-text')
 export class SeText extends LitElement {
   static styles = css`
-    #layersLabel {
+    :host([id="layersLabel"]) div {
       font-size: 13px;
       line-height: normal;
       font-weight: 700;
@@ -176,6 +190,7 @@ export class SeText extends LitElement {
 
   @property() text = ''
   @property() title = ''
+  @property() value = ''
 
   render() {
     return html`
@@ -418,6 +433,8 @@ export class SeInput extends LitElement {
 
 **Note on the `img` vs `label` conditional:** the current `seInput.ts` has a quirk where setting `src` causes `.remove()` of the label, and setting `label` causes `.remove()` of the img. The Lit version achieves the same mutual-exclusion via conditional rendering: if `label` is set, render `<span>`; else if `src` is set, render `<img>`; else render neither.
 
+**Note on the `change` event-type shift:** current `seInput.ts` dispatches `new CustomEvent('change')` (non-bubbling, no `detail`); the Lit version dispatches `new Event('change', {bubbles: true, composed: true})`. Verified consumer-equivalent at PR-1 execution: the sole consumer pattern is `TopPanel.ts`'s `attrChanger` (TopPanel.ts:624) which attaches `addEventListener('change')` directly on the host element (`$id(attrId)!.addEventListener('change', this.attrChanger.bind(this))` at line 1079) and reads `e.target.value` + `e.target.getAttribute('data-attr')`. Both event shapes route correctly to this handler with the same `e.target` (the host element). No consumer reads `e.detail.*` on `<se-input>` change events. No consumer relies on the event NOT bubbling.
+
 - [ ] **Step 6: Verify tsc passes**
 
 Run:
@@ -613,7 +630,7 @@ Edit `CHANGELOG.md`. Under the `## [Unreleased]` heading, add a new entry at the
 PR-1 of the 5-PR elix → Lit migration (spec at `docs/superpowers/specs/2026-05-21-svgedit-elix-to-lit-design.md`). Lit-conventions lock gate. Substrate-compat verified (Vite HMR + ESLint v9 / TC39 decorators).
 
 - Added `lit@^3` to `dependencies`.
-- Converted `src/editor/components/seText.ts` → LitElement (simple reference component; 132 LOC → ~25 LOC). External API preserved verbatim: `<se-text text="..." title="...">`. Pre-existing dead `#layersLabel` CSS rule retained as-is per PR-1 scope.
+- Converted `src/editor/components/seText.ts` → LitElement (simple reference component; 132 LOC → ~25 LOC). External API preserved verbatim per consumer audit: `<se-text text="..." title="..." value="...">`. The current code's id-propagation-to-inner-div behavior (which made `#layersLabel { font-weight: 700 }` match for `<se-text id="layersLabel">` in LayersPanel.html:5) is preserved via a `:host([id="layersLabel"]) div` selector in the new component. `<se-zoom>`'s child-`value` read for BottomPanel zoom options is preserved via `@property() value`. Dropped: `style` attribute observation (no consumer) and the `@ts-expect-error: pre-existing null-misuse` line.
 - Converted `src/editor/components/seInput.ts` → LitElement (complex reference component; 209 LOC → ~60 LOC). External API preserved verbatim: `<se-input value="..." label="..." src="..." size="..." title="...">` + `change` event semantics. Drops `import 'elix/define/Input.js'` — 1 of the 12 elix-bound deps killed upfront (PR-3 will close the remaining 11). Adds `::part('input')`, `::part('label')`, `::part('icon')` styling hooks for downstream callers.
 - Added `tests/unit/seInput.test.js` — 3 form-control contract tests (value reflection, label rendering, programmatic value setter). Lean coverage per spec § "Non-goals" (no `@open-wc/testing-helpers`).
 - Added `docs/superpowers/conventions/lit-component-conventions.md` — the 12-bullet conventions checklist that PR-2 / PR-3 dispatch packets paste verbatim.
