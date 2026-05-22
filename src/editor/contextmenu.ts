@@ -19,8 +19,7 @@ interface MenuItem {
 let contextMenuExtensions: Record<string, MenuItem> = {}
 
 /**
-* @param {MenuItem} menuItem
-* @returns {boolean}
+* @param menuItem
 */
 const menuItemIsValid = function (menuItem: MenuItem): boolean {
   return Boolean(menuItem && menuItem.id && menuItem.label && menuItem.action && typeof menuItem.action === 'function')
@@ -28,9 +27,8 @@ const menuItemIsValid = function (menuItem: MenuItem): boolean {
 
 /**
 * @function module:contextmenu.add
-* @param {MenuItem} menuItem
+* @param menuItem
 * @throws {Error|TypeError}
-* @returns {void}
 */
 export const add = function (menuItem: MenuItem): void {
   // menuItem: {id, label, shortcut, action}
@@ -50,8 +48,7 @@ export const add = function (menuItem: MenuItem): void {
 
 /**
 * @function module:contextmenu.hasCustomHandler
-* @param {string} handlerKey
-* @returns {boolean}
+* @param handlerKey
 */
 export const hasCustomHandler = function (handlerKey: string): boolean {
   return Boolean(contextMenuExtensions[handlerKey])
@@ -59,8 +56,7 @@ export const hasCustomHandler = function (handlerKey: string): boolean {
 
 /**
 * @function module:contextmenu.getCustomHandler
-* @param {string} handlerKey
-* @returns {MenuItemAction}
+* @param handlerKey
 */
 export const getCustomHandler = function (handlerKey: string): MenuItemAction {
   // Non-null assertion: callers check hasCustomHandler first
@@ -69,8 +65,7 @@ export const getCustomHandler = function (handlerKey: string): MenuItemAction {
 }
 
 /**
-* @param {MenuItem} menuItem
-* @returns {void}
+* @param menuItem
 */
 const injectExtendedContextMenuItemIntoDom = function (menuItem: MenuItem): void {
   if (!Object.keys(contextMenuExtensions).length) {
@@ -89,7 +84,6 @@ const injectExtendedContextMenuItemIntoDom = function (menuItem: MenuItem): void
 
 /**
 * @function module:contextmenu.injectExtendedContextMenuItemsIntoDom
-* @returns {void}
 */
 export const injectExtendedContextMenuItemsIntoDom = function (): void {
   Object.values(contextMenuExtensions).forEach((menuItem) => {
@@ -98,6 +92,5 @@ export const injectExtendedContextMenuItemsIntoDom = function (): void {
 }
 /**
 * @function module:contextmenu.resetCustomMenus
-* @returns {void}
 */
 export const resetCustomMenus = function (): void { contextMenuExtensions = {} }

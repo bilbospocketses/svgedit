@@ -62,11 +62,10 @@ export default {
 
     /**
      * getBBintersect
-     * @param {Float} x
-     * @param {Float} y
-     * @param {module:utilities.BBoxObject} bb
-     * @param {Float} offset
-     * @returns {module:math.XYObject}
+     * @param x
+     * @param y
+     * @param bb
+     * @param offset
      */
     const getBBintersect = (x: number, y: number, bb: any, offset?: number) => {
       // Adjust bounding box if offset is provided
@@ -106,9 +105,9 @@ export default {
 
     /**
      * getOffset
-     * @param {"start"|"end"} side - The side of the line ("start" or "end") where the marker may be present.
-     * @param {Element} line - The line element to check for a marker.
-     * @returns {Float} - Returns the calculated offset if a marker is present, otherwise returns 0.
+     * @param side - The side of the line ("start" or "end") where the marker may be present.
+     * @param line - The line element to check for a marker.
+     * @returns - Returns the calculated offset if a marker is present, otherwise returns 0.
      */
     const getOffset = (side: string, line: any) => {
       // Check for marker attribute on the given side ("marker-start" or "marker-end")
@@ -124,8 +123,7 @@ export default {
 
     /**
      * showPanel
-     * @param {boolean} on - Determines whether to show or hide the elements.
-     * @returns {void}
+     * @param on - Determines whether to show or hide the elements.
      */
     const showPanel = (on: boolean) => {
       // Find the 'connector_rules' or create it if it doesn't exist.
@@ -149,12 +147,11 @@ export default {
 
     /**
      * setPoint
-     * @param {Element} elem - The SVG element.
-     * @param {Integer|"end"} pos - The position index or "end".
-     * @param {Float} x - The x-coordinate.
-     * @param {Float} y - The y-coordinate.
-     * @param {boolean} [setMid] - Whether to set the midpoint.
-     * @returns {void}
+     * @param elem - The SVG element.
+     * @param pos - The position index or "end".
+     * @param x - The x-coordinate.
+     * @param y - The y-coordinate.
+     * @param [setMid] - Whether to set the midpoint.
      */
     const setPoint = (elem: any, pos: number | 'end', x: number, y: number, setMid?: boolean) => {
       // Create a new SVG point
@@ -180,9 +177,8 @@ export default {
     }
 
     /**
-     * @param {Float} diffX
-     * @param {Float} diffY
-     * @returns {void}
+     * @param diffX
+     * @param diffY
      */
     const updatePoints = (line: any, conn: any, bb: any, altBB: any, pre: string, altPre: string) => {
       const srcX = altBB.x + altBB.width / 2
@@ -301,8 +297,7 @@ export default {
 
     /**
      * Updates the connectors based on selected elements.
-     * @param {Element[]} [elems] - Optional array of selected elements.
-     * @returns {void}
+     * @param [elems] - Optional array of selected elements.
      */
     const updateConnectors = (elems?: any[]) => {
       const dataStorage = svgCanvas.getDataStorage()
@@ -358,7 +353,6 @@ export default {
 
     /**
      * Do on reset.
-     * @returns {void}
      */
     const reset = () => {
       const dataStorage = svgCanvas.getDataStorage()

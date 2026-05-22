@@ -37,8 +37,7 @@ export class SeStorageDialog extends HTMLElement {
 
   /**
    * @function init
-   * @param {any} name
-   * @returns {void}
+   * @param name
    */
   init (i18next: any) {
     this.setAttribute('common-ok', i18next.t('common.ok'))
@@ -53,7 +52,7 @@ export class SeStorageDialog extends HTMLElement {
 
   /**
    * @function observedAttributes
-   * @returns {any} observed
+   * @returns observed
    */
   static get observedAttributes () {
     return ['dialog', 'storage', 'common-ok', 'common-cancel', 'notify-editor_pref_msg', 'properties-prefs_and_content', 'tools-remember_this_choice', 'tools-remember_this_choice_title', 'properties-prefs_only', 'properties-no_prefs_or_content']
@@ -61,10 +60,9 @@ export class SeStorageDialog extends HTMLElement {
 
   /**
    * @function attributeChangedCallback
-   * @param {string} name
-   * @param {string} oldValue
-   * @param {string} newValue
-   * @returns {void}
+   * @param name
+   * @param oldValue
+   * @param newValue
    */
   attributeChangedCallback (name: string, _oldValue: string | null, newValue: string | null) {
     let node: any
@@ -121,7 +119,6 @@ export class SeStorageDialog extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get dialog () {
     return this.getAttribute('dialog')
@@ -129,7 +126,6 @@ export class SeStorageDialog extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set dialog (value: string | null) {
     this.setAttribute('dialog', value ?? '')
@@ -137,7 +133,6 @@ export class SeStorageDialog extends HTMLElement {
 
   /**
    * @function connectedCallback
-   * @returns {void}
    */
   connectedCallback () {
     const onSubmitHandler = (_e: Event, action: string) => {

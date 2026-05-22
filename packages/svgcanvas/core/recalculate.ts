@@ -33,8 +33,7 @@ let svgCanvas: any
 /**
  * Initialize the recalculate module with the SVG canvas.
  * @function module:recalculate.init
- * @param {unknown} canvas - The SVG canvas object
- * @returns {void}
+ * @param canvas - The SVG canvas object
  */
 export const init = (canvas: unknown): void => {
   svgCanvas = canvas
@@ -43,11 +42,11 @@ export const init = (canvas: unknown): void => {
 /**
  * Updates a `<clipPath>` element's values based on the given translation.
  * @function module:recalculate.updateClipPath
- * @param {string} attr - The clip-path attribute value containing the clipPath's ID
- * @param {number} tx - The translation's x value
- * @param {number} ty - The translation's y value
- * @param {Element} [elem] - The element referencing the clipPath
- * @returns {string|undefined} The clip-path attribute used after updates.
+ * @param attr - The clip-path attribute value containing the clipPath's ID
+ * @param tx - The translation's x value
+ * @param ty - The translation's y value
+ * @param [elem] - The element referencing the clipPath
+ * @returns The clip-path attribute used after updates.
  */
 export const updateClipPath = (attr: string, tx: number, ty: number, elem?: Element): string | undefined => {
   const clipPath = getRefElem(attr)
@@ -139,8 +138,8 @@ export const updateClipPath = (attr: string, tx: number, ty: number, elem?: Elem
 /**
  * Recalculates the dimensions and transformations of a selected element.
  * @function module:recalculate.recalculateDimensions
- * @param {Element} selected - The DOM element to recalculate
- * @returns {BatchCommand | null} Undo command object with the resulting change, or null if no change
+ * @param selected - The DOM element to recalculate
+ * @returns Undo command object with the resulting change, or null if no change
  */
 export const recalculateDimensions = (selected: Element): InstanceType<typeof BatchCommand> | null => {
   if (!selected) return null

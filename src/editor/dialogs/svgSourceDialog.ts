@@ -48,8 +48,7 @@ export class SeSvgSourceEditorDialog extends HTMLElement {
 
   /**
    * @function init
-   * @param {any} name
-   * @returns {void}
+   * @param name
    */
    
   init (i18next: any): void {
@@ -61,7 +60,7 @@ export class SeSvgSourceEditorDialog extends HTMLElement {
 
   /**
    * @function observedAttributes
-   * @returns {any} observed
+   * @returns observed
    */
   static get observedAttributes (): string[] {
     return ['dialog', 'value', 'applysec', 'copysec', 'tools-source_save', 'common-cancel', 'notification-source_dialog_note', 'config-done']
@@ -69,10 +68,9 @@ export class SeSvgSourceEditorDialog extends HTMLElement {
 
   /**
    * @function attributeChangedCallback
-   * @param {string} name
-   * @param {string} oldValue
-   * @param {string} newValue
-   * @returns {void}
+   * @param name
+   * @param oldValue
+   * @param newValue
    */
   attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
     if (oldValue === newValue) return
@@ -127,7 +125,6 @@ export class SeSvgSourceEditorDialog extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get dialog (): string | null {
     return this.getAttribute('dialog')
@@ -135,7 +132,6 @@ export class SeSvgSourceEditorDialog extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set dialog (value: string) {
     this.setAttribute('dialog', value)
@@ -143,7 +139,6 @@ export class SeSvgSourceEditorDialog extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get value (): string | null {
     return this.getAttribute('value')
@@ -151,7 +146,6 @@ export class SeSvgSourceEditorDialog extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set value (value: string) {
     this.setAttribute('value', value)
@@ -159,7 +153,6 @@ export class SeSvgSourceEditorDialog extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get applysec (): string | null {
     return this.getAttribute('applysec')
@@ -167,7 +160,6 @@ export class SeSvgSourceEditorDialog extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set applysec (value: string) {
     this.setAttribute('applysec', value)
@@ -175,7 +167,6 @@ export class SeSvgSourceEditorDialog extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get copysec (): string | null {
     return this.getAttribute('copysec')
@@ -183,7 +174,6 @@ export class SeSvgSourceEditorDialog extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set copysec (value: string) {
     this.setAttribute('copysec', value)
@@ -191,7 +181,6 @@ export class SeSvgSourceEditorDialog extends HTMLElement {
 
   /**
    * @function connectedCallback
-   * @returns {void}
    */
   connectedCallback (): void {
     const onCancelHandler = () => {

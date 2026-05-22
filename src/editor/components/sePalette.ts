@@ -196,8 +196,7 @@ export class SEPalette extends HTMLElement {
 
   /**
    * @function init
-   * @param {any} name
-   * @returns {void}
+   * @param name
    */
   init (i18next: any) {
     this.setAttribute('ui-palette_info', i18next.t('ui.palette_info'))
@@ -205,7 +204,7 @@ export class SEPalette extends HTMLElement {
 
   /**
    * @function observedAttributes
-   * @returns {any} observed
+   * @returns observed
    */
   static get observedAttributes () {
     return ['ui-palette_info']
@@ -213,10 +212,9 @@ export class SEPalette extends HTMLElement {
 
   /**
    * @function attributeChangedCallback
-   * @param {string} name
-   * @param {string} oldValue
-   * @param {string} newValue
-   * @returns {void}
+   * @param name
+   * @param oldValue
+   * @param newValue
    */
   attributeChangedCallback (name: string, _oldValue: string, newValue: string): void {
     if (name === 'ui-palette_info') {
@@ -227,7 +225,6 @@ export class SEPalette extends HTMLElement {
 
   /**
    * @function connectedCallback
-   * @returns {void}
    */
   connectedCallback () {}
 

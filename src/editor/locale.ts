@@ -35,9 +35,8 @@ const interpolate = (str: unknown, vars?: Record<string, unknown>): string => {
  * `'namespace:key.path'` against extension-registered bundles. Optional
  * `vars` object replaces `{{name}}` placeholders.
  *
- * @param {string|string[]} key
- * @param {object} [vars]
- * @returns {string}
+ * @param key
+ * @param [vars]
  */
 export const t = (keyArg: string | string[], vars?: Record<string, unknown>): string => {
   const key: string = Array.isArray(keyArg) ? (keyArg[0] ?? '') : keyArg
@@ -102,7 +101,6 @@ const i18nextFacade = {
  * No-op stand-in for the old i18next-based loader. Kept on the same
  * signature so `EditorStartup.js` and friends don't need to change.
  *
- * @returns {Promise<{langParam: string, i18next: object}>}
  */
 export const putLocale = function (
   _lang?: unknown,

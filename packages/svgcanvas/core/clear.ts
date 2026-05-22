@@ -13,8 +13,7 @@ let svgCanvas: any = null
 
 /**
 * @function module:clear.init
-* @param {unknown} canvas
-* @returns {void}
+* @param canvas
 */
 export const init = (canvas: unknown): void => {
   svgCanvas = canvas

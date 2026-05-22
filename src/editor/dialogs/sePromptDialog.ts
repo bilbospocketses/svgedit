@@ -24,7 +24,7 @@ export class SePromptDialog extends HTMLElement {
 
   /**
    * @function observedAttributes
-   * @returns {any} observed
+   * @returns observed
    */
   static get observedAttributes (): string[] {
     return ['title', 'close']
@@ -32,10 +32,9 @@ export class SePromptDialog extends HTMLElement {
 
   /**
    * @function attributeChangedCallback
-   * @param {string} name
-   * @param {string} oldValue
-   * @param {string} newValue
-   * @returns {void}
+   * @param name
+   * @param oldValue
+   * @param newValue
    */
   attributeChangedCallback (name: string, _oldValue: string, newValue: string): void {
     switch (name) {
@@ -62,7 +61,6 @@ export class SePromptDialog extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get title (): string {
     return this.getAttribute('title') ?? ''
@@ -70,7 +68,6 @@ export class SePromptDialog extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set title (value: string) {
     if (value) {
@@ -82,7 +79,6 @@ export class SePromptDialog extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get close (): string | null {
     return this.getAttribute('close')
@@ -90,7 +86,6 @@ export class SePromptDialog extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set close (value: string | null) {
     // boolean value => existence = true

@@ -14,7 +14,7 @@ class LayersPanel {
   editor: any
 
   /**
-   * @param {PlainObject} editor
+   * @param editor
    */
   constructor (editor: any) {
     this.updateContextPanel = editor.topPanel.updateContextPanel.bind(editor.topPanel)
@@ -22,8 +22,7 @@ class LayersPanel {
   }
 
   /**
-   * @param {PlainObject} e event
-   * @returns {void}
+   * @param e event
    */
   lmenuFunc (e: any): void {
     const action = e?.detail?.trigger
@@ -46,7 +45,6 @@ class LayersPanel {
   }
 
   /**
-   * @returns {void}
    */
   init () {
     const template = document.createElement('template')
@@ -89,7 +87,6 @@ class LayersPanel {
   }
 
   /**
-   * @returns {void}
    */
   newLayer (): void {
     let uniqName
@@ -118,7 +115,6 @@ class LayersPanel {
 
   /**
    *
-   * @returns {void}
    */
   deleteLayer () {
     if (this.editor.svgCanvas.deleteCurrentLayer()) {
@@ -137,7 +133,6 @@ class LayersPanel {
 
   /**
    *
-   * @returns {void}
    */
   cloneLayer (): void {
     const name =
@@ -168,7 +163,6 @@ class LayersPanel {
 
   /**
    *
-   * @returns {void}
    */
   mergeLayer (): void {
     if (
@@ -183,8 +177,7 @@ class LayersPanel {
   }
 
   /**
-   * @param {Integer} pos
-   * @returns {void}
+   * @param pos
    */
   moveLayer (pos: number): void {
     const curPos = this.editor.svgCanvas.indexCurrentLayer()
@@ -195,7 +188,6 @@ class LayersPanel {
   }
 
   /**
-   * @returns {void}
    */
   layerRename (): void {
     const ele = document.querySelector('#layerlist tr.layersel td.layername')
@@ -220,8 +212,7 @@ class LayersPanel {
   /**
    * This function highlights the layer passed in (by fading out the other layers).
    * If no layer is passed in, this function restores the other layers.
-   * @param {string} [layerNameToHighlight]
-   * @returns {void}
+   * @param [layerNameToHighlight]
    */
   toggleHighlightLayer (layerNameToHighlight?: any): void {
     let i
@@ -247,7 +238,6 @@ class LayersPanel {
   }
 
   /**
-   * @returns {void}
    */
   populateLayers (): void {
     this.editor.svgCanvas.clearSelection()

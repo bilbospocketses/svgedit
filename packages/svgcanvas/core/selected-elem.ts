@@ -54,7 +54,6 @@ let svgCanvas: any = null
 
 /**
  * @function module:selected-elem.init
- * @returns {void}
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const init = (canvas: any): void => {
@@ -733,8 +732,8 @@ const groupSelectedElements = (type?: string, urlArg?: string): void => {
 
 /**
  * Pushes all appropriate parent group properties down to its children.
- * @param {SVGAElement|SVGGElement} g
- * @param {boolean} undoable
+ * @param g
+ * @param undoable
  */
 // @preserve audit-flagged:823 — fill/stroke ungroup pushdown preserved as-is
 const pushGroupProperty = (g: Element, undoable: boolean): hstry.BatchCommand | undefined => {

@@ -22,8 +22,8 @@ export const BBOX_AFFECTING_ATTRS: Set<string> = new Set([
 * Relocate rotation center after a bbox-affecting attribute change.
 * Uses the transform list API to update only the rotation entry,
 * preserving compound transforms (translate, scale, etc.).
-* @param {Element} elem - SVG element
-* @param {string[]} changedAttrs - attribute names that were changed
+* @param elem - SVG element
+* @param changedAttrs - attribute names that were changed
 */
 function relocateRotationCenter (elem: Element, changedAttrs: string[]): void {
   const hasBboxChange = changedAttrs.some(attr => BBOX_AFFECTING_ATTRS.has(attr))
@@ -95,18 +95,16 @@ export class Command {
   elem: Element = null as unknown as Element
 
   /**
-  * @returns {string}
   */
   getText (): string {
     return this.text
   }
 
   /**
-   * @param {HistoryEventHandler | null} handler
-   * @param {Function} [applyFunction] - Subclass-supplied continuation that performs the actual apply.
+   * @param handler
+   * @param [applyFunction] - Subclass-supplied continuation that performs the actual apply.
    *   The base no-op apply on the abstract Command class is unused at runtime; subclasses
    *   override apply(handler) and call super.apply(handler, () => { ... }).
-   * @returns {void}
   */
   apply (handler: HistoryEventHandler | null, applyFunction?: (handler: HistoryEventHandler | null) => void): void {
     if (handler) handler.handleHistoryEvent(HistoryEventTypes.BEFORE_APPLY, this)
@@ -115,9 +113,8 @@ export class Command {
   }
 
   /**
-   * @param {HistoryEventHandler | null} handler
-   * @param {Function} [unapplyFunction]
-   * @returns {void}
+   * @param handler
+   * @param [unapplyFunction]
   */
   unapply (handler: HistoryEventHandler | null, unapplyFunction?: () => void): void {
     if (handler) handler.handleHistoryEvent(HistoryEventTypes.BEFORE_UNAPPLY, this)
@@ -126,7 +123,7 @@ export class Command {
   }
 
   /**
-   * @returns {Element[]} Array with element associated with this command
+   * @returns Array with element associated with this command
    * This function needs to be surcharged if multiple elements are returned.
   */
   elements (): Element[] {
@@ -134,7 +131,7 @@ export class Command {
   }
 
   /**
-    * @returns {string} String with element associated with this command
+    * @returns String with element associated with this command
   */
   type (): string {
     return this.constructor.name
@@ -151,10 +148,10 @@ export class MoveElementCommand extends Command {
   newParent: Node | null
 
   /**
-  * @param {Element} elem - The DOM element that was moved
-  * @param {Node | null} oldNextSibling - The element's next sibling before it was moved
-  * @param {Node} oldParent - The element's parent before it was moved
-  * @param {string} [text] - An optional string visible to user related to this change
+  * @param elem - The DOM element that was moved
+  * @param oldNextSibling - The element's next sibling before it was moved
+  * @param oldParent - The element's parent before it was moved
+  * @param [text] - An optional string visible to user related to this change
   */
   constructor (elem: Element, oldNextSibling: Node | null, oldParent: Node, text?: string) {
     super()
@@ -168,8 +165,7 @@ export class MoveElementCommand extends Command {
 
   /**
    * Re-positions the element.
-   * @param {HistoryEventHandler | null} handler
-   * @returns {void}
+   * @param handler
   */
   apply (handler: HistoryEventHandler | null): void {
     super.apply(handler, () => {
@@ -185,8 +181,7 @@ export class MoveElementCommand extends Command {
 
   /**
    * Positions the element back to its original location.
-   * @param {HistoryEventHandler | null} handler
-   * @returns {void}
+   * @param handler
   */
   unapply (handler: HistoryEventHandler | null): void {
     super.unapply(handler, () => {
@@ -207,8 +202,8 @@ export class InsertElementCommand extends Command {
   nextSibling: Node | null
 
   /**
-   * @param {Element} elem - The newly added DOM element
-   * @param {string} [text] - An optional string visible to user related to this change
+   * @param elem - The newly added DOM element
+   * @param [text] - An optional string visible to user related to this change
   */
   constructor (elem: Element, text?: string) {
     super()
@@ -220,8 +215,7 @@ export class InsertElementCommand extends Command {
 
   /**
   * Re-inserts the new element.
-  * @param {HistoryEventHandler | null} handler
-  * @returns {void}
+  * @param handler
   */
   apply (handler: HistoryEventHandler | null): void {
     super.apply(handler, () => {
@@ -237,8 +231,7 @@ export class InsertElementCommand extends Command {
 
   /**
   * Removes the element.
-  * @param {HistoryEventHandler | null} handler
-  * @returns {void}
+  * @param handler
   */
   unapply (handler: HistoryEventHandler | null): void {
     super.unapply(handler, () => {
@@ -256,10 +249,10 @@ export class RemoveElementCommand extends Command {
   parent: Node
 
   /**
-  * @param {Element} elem - The removed DOM element
-  * @param {Node | null} oldNextSibling - The DOM element's nextSibling when it was in the DOM
-  * @param {Node} oldParent - The DOM element's parent
-  * @param {string} [text] - An optional string visible to user related to this change
+  * @param elem - The removed DOM element
+  * @param oldNextSibling - The DOM element's nextSibling when it was in the DOM
+  * @param oldParent - The DOM element's parent
+  * @param [text] - An optional string visible to user related to this change
   */
   constructor (elem: Element, oldNextSibling: Node | null, oldParent: Node, text?: string) {
     super()
@@ -271,8 +264,7 @@ export class RemoveElementCommand extends Command {
 
   /**
   * Re-removes the new element.
-  * @param {HistoryEventHandler | null} handler
-  * @returns {void}
+  * @param handler
   */
   apply (handler: HistoryEventHandler | null): void {
     super.apply(handler, () => {
@@ -283,8 +275,7 @@ export class RemoveElementCommand extends Command {
 
   /**
   * Re-adds the new element.
-  * @param {HistoryEventHandler | null} handler
-  * @returns {void}
+  * @param handler
   */
   unapply (handler: HistoryEventHandler | null): void {
     super.unapply(handler, () => {
@@ -309,9 +300,9 @@ export class ChangeElementCommand extends Command {
   oldValues: CommandAttributes
 
   /**
-  * @param {Element} elem - The DOM element that was changed
-  * @param {CommandAttributes} attrs - Attributes to be changed with the values they had *before* the change
-  * @param {string} [text] - An optional string visible to user related to this change
+  * @param elem - The DOM element that was changed
+  * @param attrs - Attributes to be changed with the values they had *before* the change
+  * @param [text] - An optional string visible to user related to this change
    */
   constructor (elem: Element, attrs: CommandAttributes, text?: string) {
     super()
@@ -332,8 +323,7 @@ export class ChangeElementCommand extends Command {
 
   /**
   * Performs the stored change action.
-  * @param {HistoryEventHandler | null} handler
-  * @returns {void}
+  * @param handler
   */
   apply (handler: HistoryEventHandler | null): void {
     super.apply(handler, () => {
@@ -368,8 +358,7 @@ export class ChangeElementCommand extends Command {
 
   /**
   * Reverses the stored change action.
-  * @param {HistoryEventHandler | null} handler
-  * @returns {void}
+  * @param handler
   */
   unapply (handler: HistoryEventHandler | null): void {
     super.unapply(handler, () => {
@@ -411,7 +400,7 @@ export class BatchCommand extends Command {
   stack: Command[]
 
   /**
-  * @param {string} [text] - An optional string visible to user related to this change
+  * @param [text] - An optional string visible to user related to this change
   */
   constructor (text?: string) {
     super()
@@ -421,8 +410,7 @@ export class BatchCommand extends Command {
 
   /**
   * Runs "apply" on all subcommands.
-  * @param {HistoryEventHandler | null} handler
-  * @returns {void}
+  * @param handler
   */
   apply (handler: HistoryEventHandler | null): void {
     super.apply(handler, () => {
@@ -435,8 +423,7 @@ export class BatchCommand extends Command {
 
   /**
   * Runs "unapply" on all subcommands.
-  * @param {HistoryEventHandler | null} handler
-  * @returns {void}
+  * @param handler
   */
   unapply (handler: HistoryEventHandler | null): void {
     super.unapply(handler, () => {
@@ -449,7 +436,7 @@ export class BatchCommand extends Command {
 
   /**
   * Iterate through all our subcommands.
-  * @returns {Element[]} All the elements we are changing
+  * @returns All the elements we are changing
   */
   elements (): Element[] {
     const elems: Element[] = []
@@ -469,8 +456,7 @@ export class BatchCommand extends Command {
 
   /**
   * Adds a given command to the history stack.
-  * @param {Command} cmd - The undo command object to add
-  * @returns {void}
+  * @param cmd - The undo command object to add
   */
   addSubCommand (cmd: Command): void {
     console.assert(cmd !== null, 'cmd should not be null')
@@ -478,7 +464,7 @@ export class BatchCommand extends Command {
   }
 
   /**
-  * @returns {boolean} Indicates whether or not the batch command is empty
+  * @returns Indicates whether or not the batch command is empty
   */
   isEmpty (): boolean {
     return !this.stack.length
@@ -505,7 +491,7 @@ export class UndoManager {
   undoableChangeStack: (UndoableChangeEntry | null)[]
 
   /**
-  * @param {HistoryEventHandler | null} historyEventHandler
+  * @param historyEventHandler
   */
   constructor (historyEventHandler: HistoryEventHandler | null) {
     this._handler = historyEventHandler || null
@@ -520,7 +506,6 @@ export class UndoManager {
 
   /**
   * Resets the undo stack, effectively clearing the undo/redo history.
-  * @returns {void}
   */
   resetUndoStack (): void {
     this.undoStack = []
@@ -528,28 +513,28 @@ export class UndoManager {
   }
 
   /**
-  * @returns {number} Current size of the undo history stack
+  * @returns Current size of the undo history stack
   */
   getUndoStackSize (): number {
     return this.undoStackPointer
   }
 
   /**
-  * @returns {number} Current size of the redo history stack
+  * @returns Current size of the redo history stack
   */
   getRedoStackSize (): number {
     return this.undoStack.length - this.undoStackPointer
   }
 
   /**
-  * @returns {string} String associated with the next undo command
+  * @returns String associated with the next undo command
   */
   getNextUndoCommandText (): string {
     return this.undoStackPointer > 0 ? (this.undoStack[this.undoStackPointer - 1]?.getText() ?? '') : ''
   }
 
   /**
-  * @returns {string} String associated with the next redo command
+  * @returns String associated with the next redo command
   */
   getNextRedoCommandText (): string {
     return this.undoStackPointer < this.undoStack.length ? (this.undoStack[this.undoStackPointer]?.getText() ?? '') : ''
@@ -557,7 +542,6 @@ export class UndoManager {
 
   /**
   * Performs an undo step.
-  * @returns {void}
   */
   undo (): void {
     if (this.undoStackPointer > 0) {
@@ -568,7 +552,6 @@ export class UndoManager {
 
   /**
   * Performs a redo step.
-  * @returns {void}
   */
   redo (): void {
     if (this.undoStackPointer < this.undoStack.length && this.undoStack.length > 0) {
@@ -579,8 +562,7 @@ export class UndoManager {
 
   /**
   * Adds a command object to the undo history stack.
-  * @param {Command} cmd - The command object to add
-  * @returns {void}
+  * @param cmd - The command object to add
   */
   addCommandToHistory (cmd: Command): void {
     // TODO: we MUST compress consecutive text changes to the same element
@@ -604,9 +586,8 @@ export class UndoManager {
   * are stored on a stack, so the next call to `finishUndoableChange()` will
   * pop the elements and old values off the stack, gets the current values
   * from the DOM and uses all of these to construct the undo-able command.
-  * @param {string} attrName - The name of the attribute being changed
-  * @param {(Element | null)[]} elems - Array of DOM elements being changed
-  * @returns {void}
+  * @param attrName - The name of the attribute being changed
+  * @param elems - Array of DOM elements being changed
   */
   beginUndoableChange (attrName: string, elems: (Element | null)[]): void {
     const p = ++this.undoChangeStackPointer
@@ -630,7 +611,7 @@ export class UndoManager {
   * This function returns a `BatchCommand` object which summarizes the
   * change since `beginUndoableChange` was called.  The command can then
   * be added to the command history.
-  * @returns {BatchCommand} Batch command object with resulting changes
+  * @returns Batch command object with resulting changes
   */
   finishUndoableChange (): BatchCommand {
     const p = this.undoChangeStackPointer--

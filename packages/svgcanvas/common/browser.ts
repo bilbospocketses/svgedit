@@ -18,7 +18,6 @@ export class BrowserDetector {
 
   /**
    * Detects if the browser is Gecko-based
-   * @returns {boolean}
    */
   get isGecko (): boolean {
     if (!this.#cachedResults.has('isGecko')) {
@@ -29,7 +28,6 @@ export class BrowserDetector {
 
   /**
    * Detects if the browser is Chrome
-   * @returns {boolean}
    */
   get isChrome (): boolean {
     if (!this.#cachedResults.has('isChrome')) {
@@ -40,7 +38,6 @@ export class BrowserDetector {
 
   /**
    * Detects if the platform is macOS
-   * @returns {boolean}
    */
   get isMac (): boolean {
     if (!this.#cachedResults.has('isMac')) {
@@ -51,7 +48,6 @@ export class BrowserDetector {
 
   /**
    * Tests if the browser supports accurate text character positioning
-   * @returns {boolean}
    */
   get supportsGoodTextCharPos (): boolean {
     if (!this.#cachedResults.has('supportsGoodTextCharPos')) {
@@ -62,7 +58,6 @@ export class BrowserDetector {
 
   /**
    * Private method to test text character positioning support
-   * @returns {boolean}
    */
   #testTextCharPos (): boolean {
     const svgroot = document.createElementNS(NSSVG, 'svg')
@@ -91,25 +86,21 @@ const browser: BrowserDetector = new BrowserDetector()
 // Export as functions for backward compatibility
 /**
  * @function module:browser.isGecko
- * @returns {boolean}
  */
 export const isGecko = (): boolean => browser.isGecko
 
 /**
  * @function module:browser.isChrome
- * @returns {boolean}
  */
 export const isChrome = (): boolean => browser.isChrome
 
 /**
  * @function module:browser.isMac
- * @returns {boolean}
  */
 export const isMac = (): boolean => browser.isMac
 
 /**
  * @function module:browser.supportsGoodTextCharPos
- * @returns {boolean}
  */
 export const supportsGoodTextCharPos = (): boolean => browser.supportsGoodTextCharPos
 

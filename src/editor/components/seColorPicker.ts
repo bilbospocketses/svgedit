@@ -681,8 +681,7 @@ export class SeColorPicker extends HTMLElement {
 
   /**
    * @function init
-   * @param {any} name
-   * @returns {void}
+   * @param name
    */
   init (i18next: any) {
     this.i18next = i18next
@@ -691,7 +690,7 @@ export class SeColorPicker extends HTMLElement {
 
   /**
    * @function observedAttributes
-   * @returns {any} observed
+   * @returns observed
    */
   static get observedAttributes () {
     return ['label', 'src', 'type', 'config-change_xxx_color']
@@ -699,10 +698,9 @@ export class SeColorPicker extends HTMLElement {
 
   /**
    * @function attributeChangedCallback
-   * @param {string} name
-   * @param {string} oldValue
-   * @param {string} newValue
-   * @returns {void}
+   * @param name
+   * @param oldValue
+   * @param newValue
    */
   attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
     if (oldValue === newValue) return
@@ -727,7 +725,6 @@ export class SeColorPicker extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get label () {
     return this.$label.getAttribute('title')
@@ -735,7 +732,6 @@ export class SeColorPicker extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set label (value: string | null) {
     this.setAttribute('label', value ?? '')
@@ -743,7 +739,6 @@ export class SeColorPicker extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get type () {
     return this.getAttribute('type')
@@ -751,7 +746,6 @@ export class SeColorPicker extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set type (value: string | null) {
     this.setAttribute('type', value ?? '')
@@ -759,7 +753,6 @@ export class SeColorPicker extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get src () {
     return this.getAttribute('src')
@@ -767,7 +760,6 @@ export class SeColorPicker extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set src (value: string | null) {
     this.setAttribute('src', value ?? '')
@@ -805,10 +797,9 @@ export class SeColorPicker extends HTMLElement {
   }
 
   /**
-   * @param {PlainObject} svgCanvas
-   * @param {PlainObject} selectedElement
-   * @param {bool} apply
-   * @returns {void}
+   * @param svgCanvas
+   * @param selectedElement
+   * @param apply
    */
   update (svgCanvas: any, selectedElement: any, apply: boolean): void {
     const paint = this.paintBox?.update(svgCanvas, selectedElement)
@@ -831,8 +822,7 @@ export class SeColorPicker extends HTMLElement {
   }
 
   /**
-   * @param {PlainObject} paint
-   * @returns {void}
+   * @param paint
    */
   setPaint (paint: any): void {
     this.paintBox?.setPaint(paint)
@@ -840,7 +830,6 @@ export class SeColorPicker extends HTMLElement {
 
   /**
    * @function connectedCallback
-   * @returns {void}
    */
   connectedCallback () {
     this.paintBox = new PaintBox(this.$block, this.type ?? '')

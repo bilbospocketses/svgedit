@@ -46,8 +46,8 @@ export class FlyingButton extends HTMLElement {
 
   /**
    * @function createTemplate
-   * @param {string} imgPath
-   * @returns {any} template
+   * @param imgPath
+   * @returns template
    */
 
   createTemplate (imgPath: string): HTMLTemplateElement {
@@ -141,7 +141,7 @@ export class FlyingButton extends HTMLElement {
 
   /**
    * @function observedAttributes
-   * @returns {any} observed
+   * @returns observed
    */
   static get observedAttributes () {
     return ['title', 'pressed', 'disabled', 'opened']
@@ -149,10 +149,9 @@ export class FlyingButton extends HTMLElement {
 
   /**
    * @function attributeChangedCallback
-   * @param {string} name
-   * @param {string} oldValue
-   * @param {string} newValue
-   * @returns {void}
+   * @param name
+   * @param oldValue
+   * @param newValue
    */
   attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
     if (oldValue === newValue) return
@@ -192,7 +191,6 @@ export class FlyingButton extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get title (): string {
     return this.getAttribute('title') ?? ''
@@ -200,7 +198,6 @@ export class FlyingButton extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set title (value: string) {
     this.setAttribute('title', value)
@@ -208,7 +205,6 @@ export class FlyingButton extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get pressed () {
     return this.hasAttribute('pressed')
@@ -216,7 +212,6 @@ export class FlyingButton extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set pressed (value: boolean) {
     // boolean value => existence = true
@@ -231,7 +226,6 @@ export class FlyingButton extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get opened () {
     return this.hasAttribute('opened')
@@ -239,7 +233,6 @@ export class FlyingButton extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set opened (value: boolean) {
     // boolean value => existence = true
@@ -252,7 +245,6 @@ export class FlyingButton extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get disabled () {
     return this.hasAttribute('disabled')
@@ -260,7 +252,6 @@ export class FlyingButton extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set disabled (value: boolean) {
     // boolean value => existence = true
@@ -273,7 +264,6 @@ export class FlyingButton extends HTMLElement {
 
   /**
    * @function connectedCallback
-   * @returns {void}
    */
   connectedCallback () {
     const slot = this.shadowRoot?.querySelector('slot') as HTMLSlotElement

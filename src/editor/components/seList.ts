@@ -110,7 +110,7 @@ export class SeList extends HTMLElement {
 
   /**
    * @function observedAttributes
-   * @returns {any} observed
+   * @returns observed
    */
   static get observedAttributes () {
     return ['label', 'width', 'height', 'title', 'value']
@@ -118,10 +118,9 @@ export class SeList extends HTMLElement {
 
   /**
    * @function attributeChangedCallback
-   * @param {string} name
-   * @param {string} oldValue
-   * @param {string} newValue
-   * @returns {void}
+   * @param name
+   * @param oldValue
+   * @param newValue
    */
   attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
     if (oldValue === newValue) return
@@ -149,7 +148,6 @@ export class SeList extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get title (): string {
     return this.getAttribute('title') ?? ''
@@ -157,7 +155,6 @@ export class SeList extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set title (value: string) {
     this.setAttribute('title', value)
@@ -165,7 +162,6 @@ export class SeList extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get label () {
     return this.getAttribute('label')
@@ -173,7 +169,6 @@ export class SeList extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set label (value: string | null) {
     this.setAttribute('label', value ?? '')
@@ -181,7 +176,6 @@ export class SeList extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get width () {
     return this.getAttribute('width')
@@ -189,7 +183,6 @@ export class SeList extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set width (value: string | null) {
     this.setAttribute('width', value ?? '')
@@ -197,7 +190,6 @@ export class SeList extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get height () {
     return this.getAttribute('height')
@@ -205,7 +197,6 @@ export class SeList extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set height (value: string | null) {
     this.setAttribute('height', value ?? '')
@@ -237,7 +228,6 @@ export class SeList extends HTMLElement {
 
   /**
    * @function connectedCallback
-   * @returns {void}
    */
   connectedCallback () {
     // eslint-disable-next-line @typescript-eslint/no-this-alias

@@ -38,9 +38,8 @@ export default {
     await loadExtensionTranslation(svgEditor)
 
     /**
-     * @param {boolean} on true=display
-     * @param {string} tool "star" or "polygone"
-     * @returns {void}
+     * @param on true=display
+     * @param tool "star" or "polygone"
      */
     const showPanel = (on: boolean, tool: string) => {
       if (on) {
@@ -52,9 +51,8 @@ export default {
 
     /**
      *
-     * @param {string} attr attribute to change
-     * @param {string|Float} val new value
-     * @returns {void}
+     * @param attr attribute to change
+     * @param val new value
      */
     const setAttr = (attr: string, val: any) => {
       svgCanvas.changeSelectedAttribute(attr, val)
@@ -62,14 +60,14 @@ export default {
     }
 
     /**
-     * @param {Float} n angle
+     * @param n angle
      * @return {Float} cotangeante
      */
     const cot = (n: number): number => 1 / Math.tan(n)
 
     /**
-     * @param {Float} n angle
-     * @returns {Float} sec
+     * @param n angle
+     * @returns sec
      */
     const sec = (n: number): number => 1 / Math.cos(n)
 

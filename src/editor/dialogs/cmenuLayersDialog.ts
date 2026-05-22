@@ -43,8 +43,7 @@ export class SeCMenuLayerDialog extends HTMLElement {
 
   /**
    * @function init
-   * @param {any} name
-   * @returns {void}
+   * @param name
    */
    
   init (i18next: any): void {
@@ -56,7 +55,7 @@ export class SeCMenuLayerDialog extends HTMLElement {
 
   /**
    * @function observedAttributes
-   * @returns {any} observed
+   * @returns observed
    */
   static get observedAttributes (): string[] {
     return ['value', 'leftclick', 'layers-dupe', 'layers-del', 'layers-merge_down', 'layers-merge_all']
@@ -64,10 +63,9 @@ export class SeCMenuLayerDialog extends HTMLElement {
 
   /**
    * @function attributeChangedCallback
-   * @param {string} name
-   * @param {string} oldValue
-   * @param {string} newValue
-   * @returns {void}
+   * @param name
+   * @param oldValue
+   * @param newValue
    */
   attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
     if (oldValue === newValue) return
@@ -98,7 +96,6 @@ export class SeCMenuLayerDialog extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get value (): string | null {
     return this.getAttribute('value')
@@ -106,7 +103,6 @@ export class SeCMenuLayerDialog extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set value (value: string) {
     this.setAttribute('value', value)
@@ -114,7 +110,6 @@ export class SeCMenuLayerDialog extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get leftclick (): string | null {
     return this.getAttribute('leftclick')
@@ -122,7 +117,6 @@ export class SeCMenuLayerDialog extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set leftclick (value: string) {
     this.setAttribute('leftclick', value)
@@ -130,7 +124,6 @@ export class SeCMenuLayerDialog extends HTMLElement {
 
   /**
    * @function connectedCallback
-   * @returns {void}
    */
   connectedCallback (): void {
     const current = this

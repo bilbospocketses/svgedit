@@ -10,13 +10,12 @@ const { $id, $qa, $click } = SvgCanvas
  * register actions for left panel
  */
 /**
- * @type {module}
  */
 class LeftPanel {
   editor: any
 
   /**
-   * @param {PlainObject} editor svgedit handler
+   * @param editor svgedit handler
    */
   constructor (editor: any) {
     this.editor = editor
@@ -28,8 +27,8 @@ class LeftPanel {
    * - Removes the pressed button from whatever tool currently has it.
    * - Adds the the pressed button  to the button passed in.
    * @function this.updateLeftPanel
-   * @param {string|Element} button The DOM element or string selector representing the toolbar button
-   * @returns {boolean} Whether the button was disabled or not
+   * @param button The DOM element or string selector representing the toolbar button
+   * @returns Whether the button was disabled or not
    */
   updateLeftPanel (button: any): boolean {
     if (button.disabled) return false
@@ -46,7 +45,6 @@ class LeftPanel {
    * Unless the select toolbar button is disabled, sets the button
    * and sets the select mode and cursor styles.
    * @function module:SVGEditor.clickSelect
-   * @returns {void}
    */
   clickSelect () {
     if (this.updateLeftPanel('tool_select')) {
@@ -57,7 +55,6 @@ class LeftPanel {
 
   /**
    *
-   * @returns {void}
    */
   clickFHPath () {
     if (this.updateLeftPanel('tool_fhpath')) {
@@ -67,7 +64,6 @@ class LeftPanel {
 
   /**
    *
-   * @returns {void}
    */
   clickLine () {
     if (this.updateLeftPanel('tool_line')) {
@@ -77,7 +73,6 @@ class LeftPanel {
 
   /**
    *
-   * @returns {void}
    */
   clickSquare () {
     if (this.updateLeftPanel('tool_square')) {
@@ -87,7 +82,6 @@ class LeftPanel {
 
   /**
    *
-   * @returns {void}
    */
   clickRect () {
     if (this.updateLeftPanel('tool_rect')) {
@@ -97,7 +91,6 @@ class LeftPanel {
 
   /**
    *
-   * @returns {void}
    */
   clickFHRect () {
     if (this.updateLeftPanel('tool_fhrect')) {
@@ -107,7 +100,6 @@ class LeftPanel {
 
   /**
    *
-   * @returns {void}
    */
   clickCircle () {
     if (this.updateLeftPanel('tool_circle')) {
@@ -117,7 +109,6 @@ class LeftPanel {
 
   /**
    *
-   * @returns {void}
    */
   clickEllipse () {
     if (this.updateLeftPanel('tool_ellipse')) {
@@ -127,7 +118,6 @@ class LeftPanel {
 
   /**
    *
-   * @returns {void}
    */
   clickFHEllipse () {
     if (this.updateLeftPanel('tool_fhellipse')) {
@@ -137,7 +127,6 @@ class LeftPanel {
 
   /**
    *
-   * @returns {void}
    */
   clickImage () {
     if (this.updateLeftPanel('tool_image')) {
@@ -147,7 +136,6 @@ class LeftPanel {
 
   /**
    *
-   * @returns {void}
    */
   clickZoom () {
     if (this.updateLeftPanel('tool_zoom')) {
@@ -158,7 +146,6 @@ class LeftPanel {
 
   /**
    *
-   * @returns {void}
    */
   dblclickZoom () {
     if (this.updateLeftPanel('tool_zoom')) {
@@ -169,7 +156,6 @@ class LeftPanel {
 
   /**
    *
-   * @returns {void}
    */
   clickText () {
     if (this.updateLeftPanel('tool_text')) {
@@ -179,7 +165,6 @@ class LeftPanel {
 
   /**
    *
-   * @returns {void}
    */
   clickPath () {
     if (this.updateLeftPanel('tool_path')) {
@@ -188,7 +173,6 @@ class LeftPanel {
   }
 
   /**
-   * @type {module}
    */
   add (id: any, handler: any): void {
     $click($id(id)!, () => {
@@ -199,7 +183,6 @@ class LeftPanel {
   }
 
   /**
-   * @type {module}
    */
   init (): void {
     // add Left panel

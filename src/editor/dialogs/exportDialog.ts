@@ -45,8 +45,7 @@ export class SeExportDialog extends HTMLElement {
 
   /**
    * @function init
-   * @param {any} name
-   * @returns {void}
+   * @param name
    */
    
   init (i18next: any): void {
@@ -58,7 +57,7 @@ export class SeExportDialog extends HTMLElement {
 
   /**
    * @function observedAttributes
-   * @returns {any} observed
+   * @returns observed
    */
   static get observedAttributes (): string[] {
     return ['dialog', 'common-ok', 'common-cancel', 'ui-export_type_label']
@@ -66,10 +65,9 @@ export class SeExportDialog extends HTMLElement {
 
   /**
    * @function attributeChangedCallback
-   * @param {string} name
-   * @param {string} oldValue
-   * @param {string} newValue
-   * @returns {void}
+   * @param name
+   * @param oldValue
+   * @param newValue
    */
   attributeChangedCallback (name: string, _oldValue: string, newValue: string): void {
     let node: Element | null
@@ -99,7 +97,6 @@ export class SeExportDialog extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get dialog (): string | null {
     return this.getAttribute('dialog')
@@ -107,7 +104,6 @@ export class SeExportDialog extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set dialog (value: string) {
     this.setAttribute('dialog', value)
@@ -115,7 +111,6 @@ export class SeExportDialog extends HTMLElement {
 
   /**
    * @function connectedCallback
-   * @returns {void}
    */
   connectedCallback (): void {
      

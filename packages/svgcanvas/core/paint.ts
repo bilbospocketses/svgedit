@@ -12,7 +12,6 @@ interface PaintOptions {
  */
 export default class Paint {
   /**
-   * @type {"none"|"solidColor"|"linearGradient"|"radialGradient"}
    */
   type: 'none' | 'solidColor' | 'linearGradient' | 'radialGradient'
   /**
@@ -24,11 +23,9 @@ export default class Paint {
    */
   solidColor: string | null
   /**
-   * @type {SVGLinearGradientElement | null}
    */
   linearGradient: SVGLinearGradientElement | null
   /**
-   * @type {SVGRadialGradientElement | null}
    */
   radialGradient: SVGRadialGradientElement | null
 
@@ -117,7 +114,7 @@ export default class Paint {
   }
 
   /**
-   * @param {PaintOptions} [opt]
+   * @param [opt]
    */
   constructor (opt?: PaintOptions) {
     const options = opt ?? {}

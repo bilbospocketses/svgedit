@@ -18,19 +18,17 @@ class MainMenu {
   editor: EditorInstance
 
   /**
-   * @param {PlainObject} editor svgedit handler
+   * @param editor svgedit handler
    */
   constructor (editor: EditorInstance) {
     this.editor = editor
     /**
-     * @type {Integer}
      */
     this.editor.exportWindowCt = 0
   }
 
   /**
    *
-   * @returns {void}
    */
   hideDocProperties (): void {
     const $imgDialog = $id('se-img-prop')
@@ -42,7 +40,6 @@ class MainMenu {
 
   /**
    *
-   * @returns {void}
    */
   hidePreferences (): void {
     const $editDialog = $id('se-edit-prefs')
@@ -52,8 +49,8 @@ class MainMenu {
   }
 
   /**
-   * @param {Event} e
-   * @returns {boolean} Whether there were problems saving the document properties
+   * @param e
+   * @returns Whether there were problems saving the document properties
    */
   saveDocProperties (e: any): boolean {
     // set title
@@ -84,9 +81,8 @@ class MainMenu {
 
   /**
    * Save user preferences based on current values in the UI.
-   * @param {Event} e
+   * @param e
    * @function module:SVGthis.savePreferences
-   * @returns {Promise<void>}
    */
   // eslint-disable-next-line @typescript-eslint/require-await
   async savePreferences (e: any): Promise<void> {
@@ -126,7 +122,7 @@ class MainMenu {
   /**
    *
    * @param e
-   * @returns {Promise<void>} Resolves to `undefined`
+   * @returns Resolves to `undefined`
    */
   async clickExport (e: any): Promise<void> {
     if (e?.detail?.trigger !== 'ok' || e?.detail?.imgType === undefined) {
@@ -139,7 +135,6 @@ class MainMenu {
 
     /**
      *
-     * @returns {void}
      */
     const openExportWindow = () => {
       if (this.editor.configObj.curConfig.exportWindowType === 'new') {
@@ -168,7 +163,6 @@ class MainMenu {
 
   /**
    *
-   * @returns {void}
    */
   showDocProperties (): void {
     if (this.editor.docprops) {
@@ -195,7 +189,6 @@ class MainMenu {
 
   /**
    *
-   * @returns {void}
    */
   showPreferences (): void {
     if (this.editor.configObj.preferences) {
@@ -228,14 +221,12 @@ class MainMenu {
 
   /**
    *
-   * @returns {void}
    */
   openHomePage (): void {
     window.open(homePage, '_blank')
   }
 
   /**
-   * @type {module}
    */
   init (): void {
     // add Top panel

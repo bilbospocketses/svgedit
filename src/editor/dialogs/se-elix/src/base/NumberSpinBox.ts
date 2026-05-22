@@ -15,10 +15,9 @@ import { SpinBox } from 'elix/src/base/SpinBox.js'
 class NumberSpinBox extends (SpinBox as unknown as typeof HTMLElement) {
   /**
    * @function attributeChangedCallback
-   * @param {string} name
-   * @param {string} oldValue
-   * @param {string} newValue
-   * @returns {void}
+   * @param name
+   * @param oldValue
+   * @param newValue
    */
   attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
     if (name === 'max') {
@@ -35,7 +34,7 @@ class NumberSpinBox extends (SpinBox as unknown as typeof HTMLElement) {
 
   /**
    * @function observedAttributes
-   * @returns {any} observed
+   * @returns observed
    */
   get [defaultState] (): any {
     // @ts-expect-error: elix computed property key not in HTMLElement type
@@ -53,9 +52,8 @@ class NumberSpinBox extends (SpinBox as unknown as typeof HTMLElement) {
    * This is used after incrementing/decrementing the value to reformat the
    * value as a string.
    *
-   * @param {number} value
-   * @param {number} precision
-   * @returns {number}
+   * @param value
+   * @param precision
    */
   formatValue (value: number, precision: number): string {
     return Number(value).toFixed(precision)
@@ -64,7 +62,6 @@ class NumberSpinBox extends (SpinBox as unknown as typeof HTMLElement) {
   /**
    * The maximum allowable value of the `value` property.
    *
-   * @type {number|null}
    * @default 1
    */
   get max (): number | null {
@@ -74,7 +71,6 @@ class NumberSpinBox extends (SpinBox as unknown as typeof HTMLElement) {
   /**
    * The maximum allowable value of the `value` property.
    *
-   * @type {number|null}
    * @default 1
    */
   set max (max: number | null) {
@@ -86,7 +82,6 @@ class NumberSpinBox extends (SpinBox as unknown as typeof HTMLElement) {
   /**
    * The minimum allowable value of the `value` property.
    *
-   * @type {number|null}
    * @default 1
    */
   get min (): number | null {
@@ -95,7 +90,6 @@ class NumberSpinBox extends (SpinBox as unknown as typeof HTMLElement) {
 
   /**
    * @function set
-   * @returns {void}
    */
   set min (min: number | null) {
     (this as any)[setState]({
@@ -105,9 +99,8 @@ class NumberSpinBox extends (SpinBox as unknown as typeof HTMLElement) {
 
   /**
    * @function parseValue
-   * @param {number} value
-   * @param {number} precision
-   * @returns {int}
+   * @param value
+   * @param precision
    */
   parseValue (value: number | string, precision: number): number {
     const parsed = precision === 0 ? parseInt(value as string) : parseFloat(value as string)
@@ -116,9 +109,8 @@ class NumberSpinBox extends (SpinBox as unknown as typeof HTMLElement) {
 
   /**
    * @function stateEffects
-   * @param {any} state
-   * @param {any} changed
-   * @returns {any}
+   * @param state
+   * @param changed
    */
   [stateEffects] (state: any, changed: any): any {
     // @ts-expect-error: elix computed property key not in HTMLElement type
@@ -187,7 +179,6 @@ class NumberSpinBox extends (SpinBox as unknown as typeof HTMLElement) {
 
   /**
    * @function get
-   * @returns {any}
    */
   get step (): number {
     return (this as any)[state].step
@@ -195,7 +186,6 @@ class NumberSpinBox extends (SpinBox as unknown as typeof HTMLElement) {
 
   /**
    * @function set
-   * @returns {void}
    */
   set step (step: number) {
     if (!isNaN(step)) {
@@ -207,7 +197,6 @@ class NumberSpinBox extends (SpinBox as unknown as typeof HTMLElement) {
 
   /**
    * @function stepDown
-   * @returns {void}
    */
   stepDown (): void {
     // @ts-expect-error: elix computed property key not in HTMLElement type
@@ -231,7 +220,6 @@ class NumberSpinBox extends (SpinBox as unknown as typeof HTMLElement) {
 
   /**
    * @function stepUp
-   * @returns {void}
    */
   stepUp (): void {
     // @ts-expect-error: elix computed property key not in HTMLElement type

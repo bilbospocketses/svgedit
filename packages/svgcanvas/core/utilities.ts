@@ -204,14 +204,6 @@ export const text2xml = (sXML: string): XMLDocument => {
   }
 }
 
-/**
- * @typedef {PlainObject} module:utilities.BBoxObject (like `DOMRect`)
- * @property {Float} x
- * @property {Float} y
- * @property {Float} width
- * @property {Float} height
- */
-
 /** Converts a SVGRect-like object into a plain BBoxObject. */
 export const bboxToObj = ({ x, y, width, height }: { x: number; y: number; width: number; height: number }): BBoxObject => {
   return { x, y, width, height }
@@ -502,13 +494,6 @@ export const getBBox = (elem: Element): BBoxObject | null => {
   return ret
 }
 
-/**
- * @typedef {GenericArray} module:utilities.PathSegmentArray
- * @property {Integer} length 2
- * @property {"M"|"L"|"C"|"Z"} 0
- * @property {Float[]} 1
- */
-
 /** A path segment: [command, [x,y, x,y, ...]]. */
 export type PathSegment = [string, number[]]
 
@@ -637,10 +622,10 @@ export const getExtraAttributesForConvertToPath = (elem: Element): Record<string
 /**
  * Get the BBox of an element-as-path.
  * @function module:utilities.getBBoxOfElementAsPath
- * @param {Element} elem - The DOM element to be probed
- * @param {module:utilities.EditorContext#addSVGElementsFromJson} addSVGElementsFromJson - Function to add the path element to the current layer. See canvas.addSVGElementsFromJson
- * @param {module:path.pathActions} pathActions - If a transform exists, `pathActions.resetOrientation()` is used. See: canvas.pathActions.
- * @returns {DOMRect|false} The resulting path's bounding box object.
+ * @param elem - The DOM element to be probed
+ * @param addSVGElementsFromJson - Function to add the path element to the current layer. See canvas.addSVGElementsFromJson
+ * @param pathActions - If a transform exists, `pathActions.resetOrientation()` is used. See: canvas.pathActions.
+ * @returns The resulting path's bounding box object.
  */
 /** Shape of pathActions object needed by getBBoxOfElementAsPath / convertToPath. */
 interface PathActions {
@@ -711,15 +696,15 @@ export const getBBoxOfElementAsPath = (
 /**
  * Convert selected element to a path.
  * @function module:utilities.convertToPath
- * @param {Element} elem - The DOM element to be converted
- * @param {module:utilities.SVGElementJSON} attrs - Apply attributes to new path. see canvas.convertToPath
- * @param {module:utilities.EditorContext#addSVGElementsFromJson} addSVGElementsFromJson - Function to add the path element to the current layer. See canvas.addSVGElementsFromJson
- * @param {module:path.pathActions} pathActions - If a transform exists, pathActions.resetOrientation() is used. See: canvas.pathActions.
- * @param {module:draw.DrawCanvasInit#clearSelection|module:path.EditorContext#clearSelection} clearSelection - see [canvas.clearSelection]{@link module:svgcanvas.SvgCanvas#clearSelection}
- * @param {module:path.EditorContext#addToSelection} addToSelection - see [canvas.addToSelection]{@link module:svgcanvas.SvgCanvas#addToSelection}
- * @param {module:history} hstry - see history module
- * @param {module:path.EditorContext#addCommandToHistory|module:draw.DrawCanvasInit#addCommandToHistory} addCommandToHistory - see [canvas.addCommandToHistory]{@link module:svgcanvas~addCommandToHistory}
- * @returns {SVGPathElement|null} The converted path element or null if the DOM element was not recognized.
+ * @param elem - The DOM element to be converted
+ * @param attrs - Apply attributes to new path. see canvas.convertToPath
+ * @param addSVGElementsFromJson - Function to add the path element to the current layer. See canvas.addSVGElementsFromJson
+ * @param pathActions - If a transform exists, pathActions.resetOrientation() is used. See: canvas.pathActions.
+ * @param clearSelection - see [canvas.clearSelection]{@link module:svgcanvas.SvgCanvas#clearSelection}
+ * @param addToSelection - see [canvas.addToSelection]{@link module:svgcanvas.SvgCanvas#addToSelection}
+ * @param hstry - see history module
+ * @param addCommandToHistory - see [canvas.addCommandToHistory]{@link module:svgcanvas~addCommandToHistory}
+ * @returns The converted path element or null if the DOM element was not recognized.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const convertToPath = (elem: Element, attrs: Record<string, unknown>, svgCanvas: any): SVGPathElement | null => {
@@ -801,9 +786,9 @@ export const convertToPath = (elem: Element, attrs: Record<string, unknown>, svg
  * The optimization is not needed if the rotation is a multiple 90 degrees. The default technique is to call
  * getBBox then apply the angle and any transforms.
  *
- * @param {Float} angle - The rotation angle in degrees
- * @param {boolean} hasAMatrixTransform - True if there is a matrix transform
- * @returns {boolean} True if the bbox can be optimized.
+ * @param angle - The rotation angle in degrees
+ * @param hasAMatrixTransform - True if there is a matrix transform
+ * @returns True if the bbox can be optimized.
  */
 const bBoxCanBeOptimizedOverNativeGetBBox = (angle: number, hasAMatrixTransform: boolean): boolean => {
   const angleModulo90 = angle % 90
@@ -815,10 +800,10 @@ const bBoxCanBeOptimizedOverNativeGetBBox = (angle: number, hasAMatrixTransform:
 /**
  * Get bounding box that includes any transforms.
  * @function module:utilities.getBBoxWithTransform
- * @param {Element} elem - The DOM element to be converted
- * @param {module:utilities.EditorContext#addSVGElementsFromJson} addSVGElementsFromJson - Function to add the path element to the current layer. See canvas.addSVGElementsFromJson
- * @param {module:path.pathActions} pathActions - If a transform exists, pathActions.resetOrientation() is used. See: canvas.pathActions.
- * @returns {module:utilities.BBoxObject|module:math.TransformedBox|DOMRect|null} A single bounding box object
+ * @param elem - The DOM element to be converted
+ * @param addSVGElementsFromJson - Function to add the path element to the current layer. See canvas.addSVGElementsFromJson
+ * @param pathActions - If a transform exists, pathActions.resetOrientation() is used. See: canvas.pathActions.
+ * @returns A single bounding box object
  */
 /** Get bounding box that includes any transforms. */
 export const getBBoxWithTransform = (
@@ -949,20 +934,12 @@ const getStrokeOffsetForBBox = (elem: Element): number => {
 }
 
 /**
- * @typedef {PlainObject} BBox
- * @property {Integer} x The x value
- * @property {Integer} y The y value
- * @property {Float} width
- * @property {Float} height
- */
-
-/**
  * Get the bounding box for one or more stroked and/or transformed elements.
  * @function module:utilities.getStrokedBBox
- * @param {Element[]} elems - Array with DOM elements to check
- * @param {module:utilities.EditorContext#addSVGElementsFromJson} addSVGElementsFromJson - Function to add the path element to the current layer. See canvas.addSVGElementsFromJson
- * @param {module:path.pathActions} pathActions - If a transform exists, pathActions.resetOrientation() is used. See: canvas.pathActions.
- * @returns {module:utilities.BBoxObject|module:math.TransformedBox|DOMRect} A single bounding box object
+ * @param elems - Array with DOM elements to check
+ * @param addSVGElementsFromJson - Function to add the path element to the current layer. See canvas.addSVGElementsFromJson
+ * @param pathActions - If a transform exists, pathActions.resetOrientation() is used. See: canvas.pathActions.
+ * @returns A single bounding box object
  */
 // audit-flagged at :1126-1129: min/max asymmetry in getStrokedBBox — preserved as-is (todo #10)
 export const getStrokedBBox = (
@@ -1039,8 +1016,8 @@ export const getStrokedBBox = (
  * Note that 0-opacity, off-screen etc elements are still considered "visible"
  * for this function.
  * @function module:utilities.getVisibleElements
- * @param {Element} parentElement - The parent DOM element to search within
- * @returns {Element[]} All "visible" elements.
+ * @param parentElement - The parent DOM element to search within
+ * @returns All "visible" elements.
  */
 export const getVisibleElements = (parentElement?: Element | null): Element[] => {
   if (!parentElement) {
@@ -1077,8 +1054,8 @@ export const getVisibleElements = (parentElement?: Element | null): Element[] =>
 /**
  * Get the bounding box for one or more stroked and/or transformed elements.
  * @function module:utilities.getStrokedBBoxDefaultVisible
- * @param {Element[]} elems - Array with DOM elements to check
- * @returns {module:utilities.BBoxObject} A single bounding box object
+ * @param elems - Array with DOM elements to check
+ * @returns A single bounding box object
  */
 export const getStrokedBBoxDefaultVisible = (elems?: Element[] | null): BBoxObject | false | null => {
   const resolvedElems = elems ?? getVisibleElements()
@@ -1092,9 +1069,9 @@ export const getStrokedBBoxDefaultVisible = (elems?: Element[] | null): BBoxObje
 /**
  * Get the rotation angle of the given transform list.
  * @function module:utilities.getRotationAngleFromTransformList
- * @param {SVGTransformList} tlist - List of transforms
- * @param {boolean} toRad - When true returns the value in radians rather than degrees
- * @returns {Float} The angle in degrees or radians
+ * @param tlist - List of transforms
+ * @param toRad - When true returns the value in radians rather than degrees
+ * @returns The angle in degrees or radians
  */
 /** Get the rotation angle from a transform list. Returns degrees unless toRad=true. */
 export const getRotationAngleFromTransformList = (tlist: SVGTransformList | undefined | null, toRad?: boolean): number => {
@@ -1150,11 +1127,10 @@ export const getElement = (id: string): Element | null => {
 /**
  * Assigns multiple attributes to an element.
  * @function module:utilities.assignAttributes
- * @param {Element} elem - DOM element to apply new attribute values to
- * @param {PlainObject<string, string>} attrs - Object with attribute keys/values
- * @param {Integer} [suspendLength] - Milliseconds to suspend redraw
- * @param {boolean} [unitCheck=false] - Boolean to indicate the need to use units.setUnitAttr
- * @returns {void}
+ * @param elem - DOM element to apply new attribute values to
+ * @param attrs - Object with attribute keys/values
+ * @param [suspendLength] - Milliseconds to suspend redraw
+ * @param [unitCheck=false] - Boolean to indicate the need to use units.setUnitAttr
  */
 export const assignAttributes = (
   elem: Element,
@@ -1192,8 +1168,7 @@ export const assignAttributes = (
 /**
  * Remove unneeded (default) attributes, making resulting SVG smaller.
  * @function module:utilities.cleanupElement
- * @param {Element} element - DOM element to clean up
- * @returns {void}
+ * @param element - DOM element to clean up
  */
 export const cleanupElement = (element: Element): void => {
   const defaults: Record<string, string | number | undefined> = {
@@ -1226,8 +1201,7 @@ export const cleanupElement = (element: Element): void => {
 /**
  * Round value to for snapping.
  * @function module:utilities.snapToGrid
- * @param {Float} value
- * @returns {Integer}
+ * @param value
  */
 export const snapToGrid = (value: number): number => {
   const unit: string = svgCanvas.getBaseUnit()
@@ -1247,13 +1221,12 @@ export const preventClickDefault = (img: Element): void => {
 
 /**
  * @callback module:utilities.GetNextID
- * @returns {string} The ID
+ * @returns The ID
  */
 
 /**
  * Whether a value is `null` or `undefined`.
- * @param {any} val
- * @returns {boolean}
+ * @param val
  */
 /** Whether a value is `null` or `undefined`. */
 export const isNullish = (val: unknown): val is null | undefined => {
