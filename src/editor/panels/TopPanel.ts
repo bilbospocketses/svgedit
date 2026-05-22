@@ -62,7 +62,7 @@ class TopPanel {
    * @param opt
    * @param changeElem
    */
-  setStrokeOpt (opt: any, changeElem?: any): void {
+  setStrokeOpt (opt: any, changeElem?: boolean): void {
     const { id } = opt
     const bits = id.split('_')
     const [pre, val] = bits
@@ -256,7 +256,7 @@ class TopPanel {
            * @param id - The ID of the input element to be updated.
            * @param newValue - The new numeric value to set in the input field.
            */
-          const updateValue = (id: any, newValue: any) => {
+          const updateValue = (id: string, newValue: number) => {
             const currentValue = ($id(id) as any).value // Get current value from the field
             // do nothing if nothing changed...
             if (parseFloat(currentValue) === newValue) {
@@ -474,7 +474,7 @@ class TopPanel {
    * @param [e] Not used.
    * @param forSaving
    */
-  showSourceEditor (_e?: any, forSaving?: any): void {
+  showSourceEditor (_e?: any, forSaving?: boolean): void {
     const $editorDialog = document.getElementById('se-svg-editor-dialog') as any
     if ($editorDialog.getAttribute('dialog') === 'open') return
     const origSource = this.editor.svgCanvas.getSvgString()
@@ -589,7 +589,7 @@ class TopPanel {
   /**
    * @param pos indicate the alignment relative to top, bottom, middle etc..
    */
-  clickAlign (pos: any): void {
+  clickAlign (pos: string): void {
     let value = ($id('tool_align_relative') as any).value
     if (value === '') {
       value = 'selected'
@@ -845,7 +845,7 @@ class TopPanel {
    * @function module:SVGthis.setImageURL
    * @param url
    */
-  setImageURL (url: any): void {
+  setImageURL (url: string): void {
     const { editor } = this
     if (!url) {
       url = editor.defaultImageURL

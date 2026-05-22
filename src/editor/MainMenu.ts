@@ -52,7 +52,7 @@ class MainMenu {
    * @param e
    * @returns Whether there were problems saving the document properties
    */
-  saveDocProperties (e: any): boolean {
+  saveDocProperties (e: CustomEvent): boolean {
     // set title
     const { title, w, h, save } = e.detail
     // set document title
@@ -85,7 +85,7 @@ class MainMenu {
    * @function module:SVGthis.savePreferences
    */
   // eslint-disable-next-line @typescript-eslint/require-await
-  async savePreferences (e: any): Promise<void> {
+  async savePreferences (e: CustomEvent): Promise<void> {
     const {
       lang,
       bgcolor,

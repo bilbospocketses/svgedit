@@ -54,7 +54,7 @@ export default {
      * @param attr attribute to change
      * @param val new value
      */
-    const setAttr = (attr: string, val: any) => {
+    const setAttr = (attr: string, val: string | number) => {
       svgCanvas.changeSelectedAttribute(attr, val)
       svgCanvas.call('changed', selElems)
     }

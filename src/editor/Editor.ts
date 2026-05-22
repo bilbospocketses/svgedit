@@ -1060,7 +1060,7 @@ class Editor extends EditorStartup {
    * @param e
    * @returns Resolves to `undefined`
    */
-  async saveSourceEditor (e: any): Promise<void> {
+  async saveSourceEditor (e: CustomEvent): Promise<void> {
     const $editorDialog = $id('se-svg-editor-dialog')
     if ($editorDialog?.getAttribute('dialog') !== 'open') return
     const saveChanges = () => {
@@ -1088,7 +1088,7 @@ class Editor extends EditorStartup {
    * @param e
    * @returns Resolves to `undefined`
    */
-  cancelOverlays (e: any): void {
+  cancelOverlays (e: CustomEvent): void {
     if ($id('dialog_box') != null) $id('dialog_box')!.style.display = 'none'
     const $editorDialog = $id('se-svg-editor-dialog')
     const editingsource = $editorDialog?.getAttribute('dialog') === 'open'
