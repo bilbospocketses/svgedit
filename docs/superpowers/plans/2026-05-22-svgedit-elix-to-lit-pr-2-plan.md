@@ -198,7 +198,7 @@ export class SeInput extends LitElement {
 
 **Critical:** PR-1's audit caught `<se-text id="sidepanel_handle">` Playwright selector at `layers-panel.spec.js:20,46` that was missed by CSS-only consumer audit. The fix was `ifDefined`-guarded id mirror onto the inner shadow div. **Test files MUST be in scope for the consumer grep.** See memory `feedback_consumer_audit_grep_test_files.md`.
 
-### Section 5 — Conventions checklist (12 bullets — inlined verbatim, NEVER cited by path)
+### Section 5 — Conventions checklist (14 bullets — inlined verbatim, NEVER cited by path)
 
 1. Use `@customElement('se-name')` + `@property() accessor name = default` decorators (the `accessor` keyword is REQUIRED — TC39 standard decorators + Lit 3 only match the `ClassAccessorDecorator` overload, bare class fields produce TS1240/TS1270); never `static properties` map.
 2. Open shadow DOM (Lit default); never override `createRenderRoot()`.
@@ -212,6 +212,8 @@ export class SeInput extends LitElement {
 10. Name: keep `se-*` prefix verbatim (zero consumer churn outside the component file).
 11. File per component in `src/editor/components/` (or `src/editor/dialogs/` for dialog components); no barrel files; export class + run `@customElement` decorator side-effect.
 12. Test: trust existing e2e; add a focused unit-test contract only for components with non-trivial form-control or stateful semantics.
+13. **`ifDefined` for optional attributes with empty-string defaults.** When an `@property() accessor` has an empty-string default (`= ''`) AND the corresponding HTML attribute is OPTIONAL on consumers (i.e., consumers may omit it), wrap the binding with `ifDefined(this.X || undefined)` in `render()` to avoid rendering `attr=""` on the DOM. Reference: `seInput.ts`'s `size=${ifDefined(this.size || undefined)}`. Without this, Lit emits `attr=""` as a literal DOM attribute, which browsers may interpret as 0 (for numeric attrs) or trigger CSS attribute-selector mismatches. Added 2026-05-22 from PR-2 pilot calibration (`seListItem.ts` `img-height` attribute).
+14. **Kebab-case HTML attributes map via the `attribute:` option.** For HTML attributes with kebab-case names (e.g., `img-height`), declare as `@property({ attribute: 'img-height' }) accessor imgHeight = ''`. The `attribute:` option maps the kebab-case attribute to the camelCase property. Required whenever the HTML attribute name doesn't match the JS property name verbatim. Added 2026-05-22 from PR-2 pilot calibration.
 
 ### Section 6 — Audit notes (preserve as-is)
 
@@ -227,6 +229,8 @@ export class SeInput extends LitElement {
 
 - **JSDoc-as-types is no longer the style.** After #17 Tier B (PR #23), the codebase has zero `@param {Type}` / `@returns {Type}` / `@type {Type}` tokens. Use TS annotations on the function signature; JSDoc is `@param name - description` form (no `{Type}` brackets).
 - **`@typedef` is no longer the style.** TS `type` / `interface` declarations are the source of truth. If a new component needs a shape definition, declare a TS `interface`.
+- **Constructor-time global access moves to `render()`.** Patterns like `this.imgPath = svgEditor.configObj.curConfig.imgPath` in `constructor()` must move to `render()` (or `connectedCallback()`) — Lit's `constructor()` runs at element creation, which may be BEFORE `window.svgEditor` is set up by `Editor.ts`. Reading globals at render-time is safe and re-evaluates per-render, which is the right Lit pattern. Added 2026-05-22 from PR-2 pilot calibration (`seListItem.ts`).
+- **Match the reference shape's method-name spacing exactly.** `render()` (no space before paren) — not `render ()`. The reference components `seText.ts` + `seInput.ts` use no space; matching them avoids cosmetic drift across 13 conversions. Added 2026-05-22 from PR-2 pilot calibration.
 - **Don't add features or refactor beyond what Lit conversion requires.** CLAUDE.md "don't add features beyond what task requires" applies.
 - **Don't fix audit-flagged bugs.** Section 6 preservation list is the contract.
 - **Commit message style:** `feat(components): #3 PR-2 — convert <name>.ts to LitElement` for `src/editor/components/` files; `feat(dialogs): #3 PR-2 — convert <name>.ts to LitElement` for `src/editor/dialogs/` files.
@@ -257,6 +261,17 @@ Manual smoke: `npm start` → open editor → exercise the converted component/d
 ### Section 10 — Worktree isolation
 
 The Agent dispatch uses `isolation: "worktree"` parameter. The harness creates a temporary worktree; the agent writes only to its worktree. The merge-back path is handled by the main session after gate re-verification.
+
+**Known harness quirks (from PR-2 pilot, 2026-05-22):**
+
+- **`path-data-polyfill` may be missing from the worktree's `node_modules`.** If `npm install` in your worktree leaves `node_modules/path-data-polyfill` absent or empty, copy it from the main repo's `node_modules`:
+  ```bash
+  # If gate fails with "Cannot find module 'path-data-polyfill'" or build-time MODULE_NOT_FOUND:
+  cp -r C:/Users/jscha/source/repos/svgedit/node_modules/path-data-polyfill <worktree-path>/node_modules/
+  ```
+  This is a known harness-side `npm install` quirk in shallow worktrees — NOT a code fix; never modify `package.json` or `package-lock.json` for this.
+- **Worktree force-remove after merge.** Main session should run `git worktree remove -f -f <worktree-path>` after merging. The harness sometimes leaves a stale lock on completed worktrees that blocks the un-flagged `worktree remove` command.
+- **Don't lint with a stale worktree still present.** ESLint's flat config `ignores` includes `.claude/**` (added 2026-05-22) so any worktree residue stays out of lint scope. Without that ignore, ESLint walked the worktree's `dist/`, `_reference/`, and `node_modules/` copies during a main-session post-merge gate re-verification, producing a fake 218-error / 6198-warning explosion. If you see that pattern, the fix is to remove the worktree, not to debug the lint output.
 
 ---
 
