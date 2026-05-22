@@ -2,6 +2,7 @@ import { resolve } from 'node:path'
 import { defineConfig } from 'vite'
 import dynamicImportVars from '@rollup/plugin-dynamic-import-vars'
 import string from 'vite-plugin-string'
+import swc from 'unplugin-swc'
 
 const editorEntries = [
   resolve(__dirname, 'src/editor/index.html'),
@@ -34,6 +35,16 @@ export default defineConfig({
     strictPort: true
   },
   plugins: [
+    swc.vite({
+      tsconfigFile: false,
+      jsc: {
+        parser: { syntax: 'typescript', decorators: true },
+        transform: { decoratorVersion: '2022-03' },
+        target: 'es2022',
+        keepClassNames: true
+      },
+      sourceMaps: true
+    }),
     {
       name: 'svgedit-skip-vite-build-html',
       apply: 'build',
