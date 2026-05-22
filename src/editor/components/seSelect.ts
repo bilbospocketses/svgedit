@@ -1,197 +1,93 @@
+import { LitElement, html, css, nothing } from 'lit'
+import { customElement, property } from 'lit/decorators.js'
+import { ifDefined } from 'lit/directives/if-defined.js'
 import { t } from '../locale.js'
-const template = document.createElement('template')
-template.innerHTML = `
-<style>
-select {
-  margin-top: 8px;
-  background-color: var(--input-color);
-  appearance: none;
-  outline: none;
-  padding: 3px;
-}
-label {
-  margin-left: 2px;
-}
-::slotted(*) {
-  padding:0;
-  width:100%;
-}
-</style>
-  <label></label>
-  <select>
-  </select>
 
-`
 /**
- * @class SeList
+ * SeSelect — attribute-driven `<select>` form-control custom element.
+ *
+ * External API preserved (verified via consumer grep before conversion):
+ *   - Custom element name: `se-select`
+ *   - Attributes: `label`, `width`, `height`, `options`, `values`, `title`, `disabled`
+ *   - `options` splits on `,`; `values` splits on `::` and zips as `value=` on each option.
+ *   - `value` property read/write forwarded to the inner `<select>` via `.value` binding.
+ *   - Dispatches `change` CustomEvent (bubbles + composed) with `detail: { value }` on host.
+ *   - `<slot>` preserved for consumers that supply inline `<option>` children (BottomPanel,
+ *     TopPanel stroke_style / tool_align_relative).
+ *
+ * No host-id mirror needed: grep of tests/ found only `#export_box select` (Playwright CSS
+ * selector pierces shadow DOM by tag; no explicit `select#<id>` selectors anywhere).
+ *
+ * Dropped:
+ *   - Imperative DOM mutation (`$select`, `$label` instance fields, `connectedCallback`)
+ *   - `@class` / `@function` JSDoc tags (Tier B style; reference components don't use them)
  */
-export class SeSelect extends HTMLElement {
-  _shadowRoot: ShadowRoot
-  $select: HTMLSelectElement
-  $label: HTMLLabelElement
-
-  /**
-    * @function constructor
-    */
-  constructor () {
-    super()
-    // create the shadowDom and insert the template
-    this._shadowRoot = this.attachShadow({ mode: 'open' })
-    this._shadowRoot.append(template.content.cloneNode(true))
-    this.$select = this._shadowRoot.querySelector('select') as HTMLSelectElement
-    this.$label = this._shadowRoot.querySelector('label') as HTMLLabelElement
-  }
-
-  /**
-   * @function observedAttributes
-   * @returns observed
-   */
-  static get observedAttributes () {
-    return ['label', 'width', 'height', 'options', 'values', 'title', 'disabled']
-  }
-
-  /**
-   * @function attributeChangedCallback
-   * @param name
-   * @param oldValue
-   * @param newValue
-   */
-  attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
-    let options: string[]
-    if (oldValue === newValue) return
-    switch (name) {
-      case 'label':
-        this.$label.textContent = t(newValue)
-        break
-      case 'title':
-        this.$select.setAttribute('title', t(newValue))
-        break
-      case 'disabled':
-        if (newValue === null) {
-          this.$select.removeAttribute('disabled')
-        } else {
-          this.$select.setAttribute('disabled', newValue)
-        }
-        break
-      case 'height':
-        this.$select.style.height = newValue
-        break
-      case 'width':
-        this.$select.style.width = newValue
-        break
-      case 'options':
-        if (newValue === '') {
-          while (this.$select.firstChild) { this.$select.removeChild(this.$select.firstChild) }
-        } else {
-          options = newValue.split(',')
-          options.forEach((option) => {
-            const optionNode = document.createElement('OPTION')
-            const text = document.createTextNode(t(option))
-            optionNode.appendChild(text)
-            this.$select.appendChild(optionNode)
-          })
-        }
-        break
-      case 'values':
-        if (newValue === '') {
-          while (this.$select.firstChild) { this.$select.removeChild(this.$select.firstChild) }
-        } else {
-          options = newValue.split('::')
-          options.forEach((option, index) => {
-            this.$select.children[index]?.setAttribute('value', option)
-          })
-        }
-        break
-      default:
-        console.error(`unknown attribute: ${name}`)
-        break
+@customElement('se-select')
+export class SeSelect extends LitElement {
+  static styles = css`
+    select {
+      margin-top: 8px;
+      background-color: var(--input-color);
+      appearance: none;
+      outline: none;
+      padding: 3px;
     }
+    label {
+      margin-left: 2px;
+    }
+    ::slotted(*) {
+      padding: 0;
+      width: 100%;
+    }
+  `
+
+  @property() accessor label = ''
+  @property() accessor title = ''
+  @property() accessor width = ''
+  @property() accessor height = ''
+  @property() accessor options = ''
+  @property() accessor values = ''
+  @property() accessor value = ''
+  @property({ type: Boolean }) accessor disabled = false
+
+  render() {
+    // Zip options + values into <option value="...">label</option> pairs.
+    // When options is non-empty, build option elements; otherwise fall through to <slot>.
+    const optionList = this.options
+      ? this.options.split(',').map((opt, i) => {
+          const vals = this.values ? this.values.split('::') : []
+          const val = vals[i] ?? opt
+          return html`<option value=${val}>${t(opt)}</option>`
+        })
+      : nothing
+
+    return html`
+      ${this.label ? html`<label>${t(this.label)}</label>` : nothing}
+      <select
+        title=${ifDefined(this.title ? t(this.title) : undefined)}
+        ?disabled=${this.disabled}
+        style=${ifDefined(
+          this.width || this.height
+            ? `${this.width ? `width:${this.width};` : ''}${this.height ? `height:${this.height};` : ''}`
+            : undefined
+        )}
+        .value=${this.value}
+        @change=${this._onChange}
+      >
+        ${optionList}
+        <slot></slot>
+      </select>
+    `
   }
 
-  /**
-   * @function get
-   */
-  get label () {
-    return this.getAttribute('label')
-  }
-
-  /**
-   * @function set
-   */
-  set label (value: string | null) {
-    this.setAttribute('label', value ?? '')
-  }
-
-  /**
-   * @function get
-   */
-  get width () {
-    return this.getAttribute('width')
-  }
-
-  /**
-   * @function set
-   */
-  set width (value: string | null) {
-    this.setAttribute('width', value ?? '')
-  }
-
-  /**
-   * @function get
-   */
-  get height () {
-    return this.getAttribute('height')
-  }
-
-  /**
-   * @function set
-   */
-  set height (value: string | null) {
-    this.setAttribute('height', value ?? '')
-  }
-
-  /**
-   * @function get
-   */
-  get value () {
-    return this.$select.value
-  }
-
-  /**
-   * @function set
-   */
-  set value (value: string) {
-    this.$select.value = value
-  }
-
-  /**
-   * @function get
-   */
-  get disabled () {
-    return this.$select.getAttribute('disabled')
-  }
-
-  /**
-   * @function set
-   */
-  set disabled (value: string | null) {
-    this.$select.setAttribute('disabled', value ?? '')
-  }
-
-  /**
-   * @function connectedCallback
-   */
-  connectedCallback () {
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
-    const currentObj = this
-    this.$select.addEventListener('change', () => {
-      const value = this.$select.value
-      const closeEvent = new CustomEvent('change', { detail: { value } })
-      currentObj.dispatchEvent(closeEvent)
-      currentObj.value = value
-    })
+  // Class-field arrow auto-binds `this` (avoids @typescript-eslint/unbound-method
+  // false-positive on Lit's `@event=${this._handler}` pattern, which Lit binds itself).
+  private _onChange = (e: Event) => {
+    this.value = (e.target as HTMLSelectElement).value
+    this.dispatchEvent(new CustomEvent('change', {
+      bubbles: true,
+      composed: true,
+      detail: { value: this.value }
+    }))
   }
 }
-
-// Register
-customElements.define('se-select', SeSelect)
