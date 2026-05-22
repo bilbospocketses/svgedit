@@ -1,158 +1,71 @@
+import { LitElement, html, css, nothing } from 'lit'
+import { customElement, property } from 'lit/decorators.js'
 import { t } from '../locale.js'
 
-const template = document.createElement('template')
-template.innerHTML = `
-  <style>
-  [aria-label="option"]{
-    padding:0.25rem 0.125rem !important;
-    background-color: var(--icon-bg-color);
-  }
-  [aria-label="option"]:hover{
-    background-color: var(--icon-bg-color-hover);
-  }
-
-  .selected {
-    background-color: var(--icon-bg-color-hover);
-  }
-
-  </style>
-  <div aria-label="option">
-    <img alt="icon" />
-    <slot></slot>
-  </div>
-`
 /**
- * @class SeMenu
+ * SeListItem — option item inside a `<se-list>` dropdown.
+ *
+ * External API preserved (verified via consumer grep before conversion):
+ *   - Custom element name: `se-list-item`
+ *   - Attributes: `option`, `src`, `title`, `img-height`, `selected`
+ *   - Attribute: `value` (read from host by the `selectedindexchange` event detail)
+ *   - Dispatches `selectedindexchange` CustomEvent (bubbles + composed) on mousedown;
+ *     detail: `{ selectedItem: <host's 'value' attribute> }`
+ *   - `selected` is a string attribute (`'true'` / `'false'`), not a boolean attribute;
+ *     toggled by seList.ts via `setAttribute('selected', 'true'/'false')`.
+ *
+ * No host-id mirror needed: grep of all CSS + test files found no `#linejoin_*`,
+ * `#linecap_*`, or `#tool_posleft` selectors targeting inner elements.
+ *
+ * Dropped:
+ *   - Imperative DOM mutation (`$menuitem`, `$img` instance fields)
+ *   - Constructor-time `svgEditor.configObj.curConfig.imgPath` access (moved to
+ *     render() so it evaluates after svgEditor is set up on window)
+ *   - `@function` / `@class` JSDoc tags (Tier B style; reference components don't use them)
  */
-export class SeListItem extends HTMLElement {
-  _shadowRoot: ShadowRoot
-  $menuitem: Element
-  $img: HTMLImageElement
-  imgPath: string
-
-  /**
-    * @function constructor
-    */
-  constructor () {
-    super()
-    // create the shadowDom and insert the template
-    this._shadowRoot = this.attachShadow({ mode: 'open' })
-    this._shadowRoot.append(template.content.cloneNode(true))
-    this.$menuitem = this._shadowRoot.querySelector('[aria-label=option]') as Element
-    // this.$svg = this.$menuitem.shadowRoot.querySelector('#checkmark')
-    // this.$svg.setAttribute('style', 'display: none;')
-    this.$img = this._shadowRoot.querySelector('img') as HTMLImageElement
-    this.$img.setAttribute('style', 'display: none;')
-    this.imgPath = svgEditor.configObj.curConfig.imgPath
-    this.$menuitem.addEventListener('mousedown', (_e) => {
-      this.$menuitem.dispatchEvent(new CustomEvent('selectedindexchange', {
-        bubbles: true,
-        composed: true,
-        detail: { selectedItem: this.getAttribute('value') }
-      }))
-    })
-  }
-
-  /**
-   * @function observedAttributes
-   * @returns observed
-   */
-  static get observedAttributes () {
-    return ['option', 'src', 'title', 'img-height', 'selected']
-  }
-
-  /**
-   * @function attributeChangedCallback
-   * @param name
-   * @param oldValue
-   * @param newValue
-   */
-  attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
-    if (oldValue === newValue) return
-    switch (name) {
-      case 'option':
-        this.$menuitem.setAttribute('option', newValue)
-        this.$menuitem.textContent = t(newValue)
-        break
-      case 'src':
-        this.$img.setAttribute('style', 'display: block;')
-        this.$img.setAttribute('src', this.imgPath + '/' + newValue)
-        break
-      case 'title':
-        this.$img.setAttribute('title', t(newValue))
-        break
-      case 'img-height':
-        this.$img.setAttribute('height', newValue)
-        break
-      case 'selected':
-        if (newValue === 'true') {
-          this.$menuitem.classList.add('selected')
-        } else {
-          this.$menuitem.classList.remove('selected')
-        }
-        break
-      default:
-        console.error(`unknown attribute: ${name}`)
-        break
+@customElement('se-list-item')
+export class SeListItem extends LitElement {
+  static styles = css`
+    [aria-label="option"] {
+      padding: 0.25rem 0.125rem !important;
+      background-color: var(--icon-bg-color);
     }
+    [aria-label="option"]:hover {
+      background-color: var(--icon-bg-color-hover);
+    }
+    .selected {
+      background-color: var(--icon-bg-color-hover);
+    }
+  `
+
+  @property() accessor option = ''
+  @property() accessor src = ''
+  @property() accessor title = ''
+  @property({ attribute: 'img-height' }) accessor imgHeight = ''
+  @property() accessor selected = ''
+
+  render () {
+    const imgPath = svgEditor.configObj.curConfig.imgPath
+    return html`
+      <div
+        aria-label="option"
+        class=${this.selected === 'true' ? 'selected' : ''}
+        @mousedown=${this._onMousedown}
+      >
+        ${this.src
+          ? html`<img alt="icon" src=${imgPath + '/' + this.src} title=${t(this.title)} height=${this.imgHeight} />`
+          : nothing}
+        ${this.option ? t(this.option) : nothing}
+        <slot></slot>
+      </div>
+    `
   }
 
-  /**
-   * @function get
-   */
-  get option () {
-    return this.getAttribute('option')
-  }
-
-  /**
-   * @function set
-   */
-  set option (value: string | null) {
-    this.setAttribute('option', value ?? '')
-  }
-
-  /**
-   * @function get
-   */
-  get title (): string {
-    return this.getAttribute('title') ?? ''
-  }
-
-  /**
-   * @function set
-   */
-  set title (value: string) {
-    this.setAttribute('title', value)
-  }
-
-  /**
-   * @function get
-   */
-  get imgHeight () {
-    return this.getAttribute('img-height')
-  }
-
-  /**
-   * @function set
-   */
-  set imgHeight (value: string | null) {
-    this.setAttribute('img-height', value ?? '')
-  }
-
-  /**
-   * @function get
-   */
-  get src () {
-    return this.getAttribute('src')
-  }
-
-  /**
-   * @function set
-   */
-  set src (value: string | null) {
-    this.setAttribute('src', value ?? '')
+  private _onMousedown = (_e: Event) => {
+    this.dispatchEvent(new CustomEvent('selectedindexchange', {
+      bubbles: true,
+      composed: true,
+      detail: { selectedItem: this.getAttribute('value') }
+    }))
   }
 }
-
-// Register
-customElements.define('se-list-item', SeListItem)
