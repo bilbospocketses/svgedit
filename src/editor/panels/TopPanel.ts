@@ -62,7 +62,7 @@ class TopPanel {
    * @param opt
    * @param changeElem
    */
-  setStrokeOpt (opt: any, changeElem?: boolean): void {
+  setStrokeOpt (opt: HTMLElement, changeElem?: boolean): void {
     const { id } = opt
     const bits = id.split('_')
     const [pre, val] = bits
@@ -72,8 +72,10 @@ class TopPanel {
       ;(this as any).svgCanvas.setStrokeAttr('stroke-' + pre, val)
     }
     opt.classList.add('current')
+    const parent = opt.parentElement
+    if (!parent) return
     const elements = Array.prototype.filter.call(
-      opt.parentNode.children,
+      parent.children,
       function (child) {
         return child !== opt
       }
@@ -130,14 +132,16 @@ class TopPanel {
           let attr =
             this.selectedElement.getAttribute('stroke-linejoin') || 'miter'
 
-          if ($id('linejoin_' + attr)) {
-            this.setStrokeOpt($id('linejoin_' + attr))
+          const linejoinEl = $id('linejoin_' + attr)
+          if (linejoinEl) {
+            this.setStrokeOpt(linejoinEl)
             ;($id('stroke_linejoin') as any).setAttribute('value', attr)
           }
 
           attr = this.selectedElement.getAttribute('stroke-linecap') || 'butt'
-          if ($id('linecap_' + attr)) {
-            this.setStrokeOpt($id('linecap_' + attr))
+          const linecapEl = $id('linecap_' + attr)
+          if (linecapEl) {
+            this.setStrokeOpt(linecapEl)
             ;($id('stroke_linecap') as any).setAttribute('value', attr)
           }
         }

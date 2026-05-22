@@ -30,14 +30,15 @@ class LeftPanel {
    * @param button The DOM element or string selector representing the toolbar button
    * @returns Whether the button was disabled or not
    */
-  updateLeftPanel (button: any): boolean {
-    if (button.disabled) return false
+  updateLeftPanel (button: string): boolean {
+    const btnEl = $id(button) as HTMLButtonElement | null
+    if (btnEl?.disabled) return false
     // remove the pressed state on other(s) button(s)
     $qa('#tools_left *[pressed]').forEach((b) => {
       ;(b as any).pressed = false
     })
     // pressed state for the clicked button
-    ;($id(button) as any).pressed = true
+    ;(btnEl as any).pressed = true
     return true
   }
 

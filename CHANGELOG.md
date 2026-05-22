@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (#18 — pre-existing semantic issues surfaced by #17 audit — 2026-05-22)
+
+Cleanup of the 6 items the PR #24 audit revealed as pre-existing semantic issues hidden by `any` typing. **One runtime bug** + **5 type-precision improvements**.
+
+- **`src/editor/extensions/ext-connector/ext-connector.ts:118` — runtime bug FIXED.** `getOffset` was computing connector-marker offsets via `line.getAttribute('stroke-width') * 5` — arithmetic on the raw string value of `stroke-width`. Browsers commonly return `"2px"` etc., producing `NaN`-ish marker offsets. Replaced with `parseFloat(line.getAttribute('stroke-width') ?? '0') * 5`, which correctly parses numeric prefixes from both `"2"` and `"2px"`. Also tightened `line: any` → `line: Element`.
+- **`src/editor/ConfigObj.ts` `pref()` return type — INVESTIGATED, NO CHANGE.** The current `unknown` annotation is correct: `Prefs` has an index signature `[key: string]: unknown`, so `pref()`'s getter path returns `unknown`. The JSDoc claim of `string | void` (which PR #24 tried to apply) was incomplete. Marked closed by analysis.
+- **`src/editor/extensions/ext-connector/ext-connector.ts:156` — `setPoint elem: any` → `elem: SVGPolylineElement`.** The function calls `elem.points`, `pts.replaceItem`, `pts.numberOfItems`, `pts.getItem` — all SVGPolylineElement-specific. Verified callsites pass connector polylines.
+- **`src/editor/extensions/ext-opensave/ext-opensave.ts:45` — `importImage e: any` → `e: Event` with narrowing.** Multi-source handler (file-input `change` + drop-zone `drop`). Used targeted casts: `e.target as HTMLInputElement | null` for the input-element path; `e as DragEvent` for `dataTransfer` access.
+- **`src/editor/panels/LeftPanel.ts:33` — `updateLeftPanel button: any` → `button: string`.** All 19 callsites pass string ids (`'tool_select'`, `'tool_fhpath'`, etc.). The prior `if (button.disabled) return false` was dead — `.disabled` on a string is always `undefined`. Fixed by looking up the actual DOM button: `const btnEl = $id(button) as HTMLButtonElement | null; if (btnEl?.disabled) return false`. Preserves the intent (skip when the toolbar button is disabled).
+- **`src/editor/panels/TopPanel.ts:65` — `setStrokeOpt opt: any` → `opt: HTMLElement` with null guard.** Prior code did `opt.parentNode.children` unguarded; `parentNode` is `Node | null` and `Node` lacks `.children` (it's on `ParentNode`). Switched to `opt.parentElement` (returns `HTMLElement | null`, has `.children`) with explicit `if (!parent) return` guard. Two callsites at TopPanel.ts:135 + :141 updated to capture `$id()` result in a local before the null-check (TS doesn't narrow across two separate invocations).
+- **Net diff:** 4 files changed, +29 / -16 lines (net +13 lines).
+- **Verification:** `npx tsc --build --force` 0 errors; `npm run lint` 0 errors / 23 warnings (jgraduate-deferred unchanged); `npx vitest run` 640/640 unchanged; `npx tsx scripts/run-e2e.ts` 250/250 chromium + firefox unchanged; `npm run build` success (11 extensions bundled).
+
 ### Changed (#17 Tier B follow-up — signature tightening from sample audit — 2026-05-22)
 
 Follow-up to the Tier B sweep. A 200-sample audit of the 1,513 stripped JSDoc `{Type}` tokens flagged 5 cases (~2.5% rate; ~38 extrapolated across the project) where the TS signature was `any`/`unknown` and the JSDoc had concrete type info — meaning the strip lost the only type information for those params/returns. This PR tightens 15 of those signatures using the JSDoc-suggested type as the new TS annotation, restoring (and now compiler-enforcing) the lost type info.
