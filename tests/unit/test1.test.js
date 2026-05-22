@@ -1,4 +1,3 @@
-/* eslint-disable max-len, no-console */
 import SvgCanvas from '../../packages/svgcanvas/svgcanvas.js'
 
 describe('Basic Module', function () {

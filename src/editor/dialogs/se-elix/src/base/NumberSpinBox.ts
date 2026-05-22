@@ -12,7 +12,6 @@ import { SpinBox } from 'elix/src/base/SpinBox.js'
 /**
  * @class NumberSpinBox
  */
-// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 class NumberSpinBox extends (SpinBox as unknown as typeof HTMLElement) {
   /**
    * @function attributeChangedCallback

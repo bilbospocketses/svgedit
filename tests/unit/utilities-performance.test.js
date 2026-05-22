@@ -1,4 +1,3 @@
-/* eslint-disable max-len, no-console */
 import 'path-data-polyfill'
 
 import { NS } from '../../packages/svgcanvas/core/namespaces.js'

@@ -9,7 +9,6 @@ import NumberSpinBox from '../dialogs/se-elix/define/NumberSpinBox.js'
 /**
  * @class Dropdown
  */
-// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 class Dropdown extends (ListComboBox as any) {
   $img!: HTMLImageElement
   $input!: HTMLElement

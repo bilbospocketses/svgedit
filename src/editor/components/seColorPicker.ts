@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument */
 // jGraduate (legacy jQuery plugin) ships as 'any'; cleanup deferred to #3 (Lit migration)
 import { jGraduate, jGraduateMethod } from './jgraduate/jQuery.jGraduate.js'
 import PaintBox from './PaintBox.js'
@@ -656,7 +656,6 @@ export class SeColorPicker extends HTMLElement {
   $label: HTMLElement
   $block: HTMLElement
   paintBox: PaintBox | null
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   i18next: any
   $picker: HTMLElement
   $color_picker: HTMLElement
@@ -685,7 +684,6 @@ export class SeColorPicker extends HTMLElement {
    * @param {any} name
    * @returns {void}
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   init (i18next: any) {
     this.i18next = i18next
     this.setAttribute('config-change_xxx_color', t('config.change_xxx_color'))
@@ -776,9 +774,7 @@ export class SeColorPicker extends HTMLElement {
   }
 
   // Wrap jGraduateMethod in a Promise
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   jGraduateMethodAsync (): Promise<any> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return new Promise((resolve, reject) => {
       jGraduateMethod(
         this.$color_picker,
@@ -788,7 +784,6 @@ export class SeColorPicker extends HTMLElement {
           window: { pickerTitle: this.label ?? '' },
           newstop: 'inverse'
         },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (p: any) => resolve(p),
         () => reject(new Error('jGraduate cancelled')),
         this.i18next
@@ -799,9 +794,7 @@ export class SeColorPicker extends HTMLElement {
   async setJGraduateMethod (): Promise<void> {
     try {
       const p = await this.jGraduateMethodAsync()
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
       const paint = new (jGraduate.Paint as any)(p)
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       this.setPaint(paint)
       this.dispatchEvent(new CustomEvent('change', { detail: { paint } }))
     } catch {
@@ -817,9 +810,7 @@ export class SeColorPicker extends HTMLElement {
    * @param {bool} apply
    * @returns {void}
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   update (svgCanvas: any, selectedElement: any, apply: boolean): void {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const paint = this.paintBox?.update(svgCanvas, selectedElement)
 
     // We check if the color picker popup is already open
@@ -843,9 +834,7 @@ export class SeColorPicker extends HTMLElement {
    * @param {PlainObject} paint
    * @returns {void}
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setPaint (paint: any): void {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     this.paintBox?.setPaint(paint)
   }
 

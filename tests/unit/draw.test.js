@@ -163,7 +163,7 @@ describe('draw.Drawing', function () {
     try {
       doc = new draw.Drawing()
       assert.ok(false, 'Created drawing without a valid <svg> element')
-    } catch (e) {
+    } catch {
       assert.ok(true)
     }
 

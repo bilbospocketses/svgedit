@@ -18,7 +18,6 @@ const loadExtensionTranslation = async function (svgEditor: any): Promise<void> 
   try {
     translationModule = await import(`./locale/${lang}.js`)
   } catch (_error) {
-    // eslint-disable-next-line no-console
     console.warn(`Missing translation (${lang}) for ${name} - using 'en'`)
     translationModule = await import('./locale/en.js')
   }

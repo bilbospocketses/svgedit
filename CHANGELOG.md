@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (#17 Tier A — ESLint warning sweep — 2026-05-22)
+
+Cleared 117 of 140 ESLint warnings on master (the 23 remaining are all in `src/editor/components/jgraduate/`, deferred to #3 PR-4's full jGraduate + jPicker Lit-rewrite). Tier A of the rescoped item #17 (originally drafted as "JSDoc → TS types doc-pass" but the actual lint composition turned out to be code-quality directives, NOT JSDoc-as-types — the TS80004/TS80009/TS8024 hints I'd seen are IDE-only and don't appear in `npm run lint`; those are Tier B's scope).
+
+- **105 unused `eslint-disable` directives deleted or trimmed.** Stale `// eslint-disable-next-line @typescript-eslint/no-unsafe-*` / `no-explicit-any` line-level comments and file-level `/* eslint-disable */` block directives whose underlying rules no longer trigger (most accumulated during the JS → TS migration as strict-mode type narrowing changed what flagged). For file-level blocks with mixed used+unused rules, the directive is trimmed to keep only the still-used rules; for line-level directives covered by a file-level block, the line is deleted entirely.
+- **34 `@typescript-eslint/no-unused-vars` fixes.** 31 of the 34 were `catch (e)` in test files where `e` is unused — replaced with bindingless `catch { ... }` (ES2019+ syntax, supported by the project's ES2025 target). The other 3 were unused callback parameters in `coords.test.js` (`(elem, key)` → `(_elem, _key)` matching the `/^_/u` exemption).
+- **1 `@typescript-eslint/no-unused-expressions` fix** at `tests/unit/elem-get-set.test.js:174` — `this.onerror && this.onerror(new Error('load failed'))` short-circuit → optional-call `this.onerror?.(new Error('load failed'))`.
+- 28 files changed, +53 / -97 lines net.
+- Verification: `npx tsc --build --force` 0 errors; `npm run lint` 0 errors / **23 warnings** (all `src/editor/components/jgraduate/` — deferred); `npx vitest run` 640/640 unchanged; `npx tsx scripts/run-e2e.ts` 250/250 unchanged across chromium + firefox; `npm run build` success.
+
 ### Added (#3 elix → Lit migration — PR-1: Lit infrastructure + 2 reference components — 2026-05-21)
 
 PR-1 of the 5-PR elix → Lit migration (spec at `docs/superpowers/specs/2026-05-21-svgedit-elix-to-lit-design.md`). Lit-conventions lock gate — once this lands, PR-2's agent-team dispatch has a concrete pattern to point at. Substrate-compat verified (Vite HMR + ESLint v9 / TC39 decorators).

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return */
 // elix custom-element base classes ship as 'any'; cleanup deferred to #3 (Lit migration)
 import { template } from 'elix/src/base/internal.js'
 import { fragmentFrom } from 'elix/src/core/htmlLiterals.js'
@@ -10,13 +10,11 @@ import PlainButton from 'elix/src/plain/PlainButton.js'
  * Button with a border in the Plain reference design system
  *
  */
-// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 class SePlainBorderButton extends (PlainButton as unknown as typeof HTMLElement) {
   /**
     * @function get
     * @returns {PlainObject}
   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   get [template] (): any {
     // @ts-expect-error: elix computed property key not in HTMLElement type
     const result = super[template]
