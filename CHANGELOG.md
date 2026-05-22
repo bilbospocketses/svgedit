@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (#3 elix → Lit migration — PR-1: Lit infrastructure + 2 reference components — 2026-05-21)
+
+PR-1 of the 5-PR elix → Lit migration (spec at `docs/superpowers/specs/2026-05-21-svgedit-elix-to-lit-design.md`). Lit-conventions lock gate — once this lands, PR-2's agent-team dispatch has a concrete pattern to point at. Substrate-compat verified (Vite HMR + ESLint v9 / TC39 decorators).
+
+- Added `lit@^3` to `dependencies`.
+- Converted `src/editor/components/seText.ts` → LitElement (simple reference component; 132 LOC → ~30 LOC). External API preserved per consumer audit: `<se-text text="..." title="..." value="...">`. Host's `id` mirrored onto inner shadow `<div>` via `ifDefined(this.id || undefined)` — preserves both the `#layersLabel` CSS rule for LayersPanel.html:5 AND the `div#sidepanel_handle` selector in layers-panel.spec.js:20,46 (caught at gate-verification; original audit grepped CSS + HTML but not test files — see commit `c3a7cc67` for the diagnostic). `<se-zoom>`'s child-`value` read is preserved via `@property() accessor value`. Dropped: `style` attribute observation (no consumer) and the `@ts-expect-error: pre-existing null-misuse` line that wrote `.value` to a div.
+- Converted `src/editor/components/seInput.ts` → LitElement (complex reference component; 209 LOC → ~60 LOC). External API preserved: `<se-input value="..." label="..." src="..." size="..." title="...">` + `change` event semantics (`new Event('change', {bubbles, composed})` — consumer-verified equivalent for TopPanel.ts's `attrChanger` at TopPanel.ts:624). Drops `import 'elix/define/Input.js'` — 1 of the 12 elix-bound deps killed upfront (later #3 PRs close the remaining 11). Adds `::part('input')`, `::part('label')`, `::part('icon')` styling hooks for downstream callers.
+- Added `tests/unit/seInput.test.js` — 3 form-control contract tests (value reflection, label rendering, programmatic value setter). Lean coverage per spec § "Non-goals" (no `@open-wc/testing-helpers`).
+- Added `docs/superpowers/conventions/lit-component-conventions.md` — 12-bullet conventions checklist that PR-2 / PR-3 dispatch packets paste verbatim.
+- Substrate verifications passed: ESLint v9 + standard TC39 decorators (lint stays under baseline); Vite HMR + Lit decorators via the SWC pipeline (manual smoke: seText edit-reload through the dev server confirmed — `[HMR] Panel` marker appeared and reverted cleanly).
+- Verification: `tsc --build --force` 0 errors; `npm run lint` 0 errors / 140 warnings (5 BELOW the 145 baseline — Lit-native TS components dropped JSDoc-as-types warnings); `npx vitest run` 640/640 (was 637 post-substrate, +3 new from seInput contract); `npx tsx scripts/run-e2e.ts` 250/250 across chromium + firefox (external APIs preserved → no regression).
+
 ### Substrate (SWC for TS transform — 2026-05-21)
 
 Switch the TS-transform layer of Vite's pipeline from esbuild to SWC via `unplugin-swc`. Required to support TC39 standard decorators + the `accessor` keyword for the upcoming elix → Lit migration (todo #3, PR-1 onwards). esbuild's TC39 decorator support is incomplete — it passes the raw syntax through, leaving the browser to parse it. Rollup's parser hard-rejects the `accessor` keyword. SWC compiles stage-3 decorators to ES2022 helper-function calls that every modern browser parses cleanly.

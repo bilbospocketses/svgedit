@@ -1,131 +1,50 @@
+import { LitElement, html, css } from 'lit'
+import { customElement, property } from 'lit/decorators.js'
+import { ifDefined } from 'lit/directives/if-defined.js'
 import { t } from '../locale.js'
-const template = document.createElement('template')
-template.innerHTML = `
-  <style>
-  #layersLabel {
-    font-size: 13px;
-    line-height: normal;
-    font-weight: 700;
-  }
-  </style>
-  <div></div>
-`
+
 /**
- * @class SeText
+ * SeText — simple text-display custom element.
+ * Reference component A for the elix → Lit migration (PR-1 / spec § "Reference component shape A").
+ *
+ * External API preserved (verified via consumer grep at PR-1 execution):
+ *   - Custom element name: `se-text`
+ *   - Attributes: `text`, `title` (rendered via t() at render time)
+ *   - Attribute: `value` (exposed via @property; read by `<se-zoom>` from child
+ *     `<se-text>` options in BottomPanel for zoom-option values)
+ *   - Host's `id` attribute is mirrored onto the inner `<div>` to preserve two
+ *     consumer behaviors carried over from the original seText: (a) CSS
+ *     `#layersLabel` bold-sizing for `<se-text id="layersLabel">` at
+ *     LayersPanel.html:5 (also re-anchored via the `:host([id="layersLabel"])`
+ *     selector below as a belt-and-braces guard); (b) Playwright selector
+ *     `div#sidepanel_handle` for `<se-text id="sidepanel_handle">` at
+ *     LayersPanel.html:2 (used by layers-panel.spec.js:20 and :46). The
+ *     original seText's `attributeChangedCallback` `case 'id'` did the same
+ *     mirroring imperatively; Lit's `ifDefined` keeps the inner `id` attribute
+ *     out of the DOM when the host has no `id`.
+ *
+ * Dropped:
+ *   - `style` attribute observation (no consumer found in src/ or tests/)
+ *   - Buggy `this.$div.value = newValue` (`@ts-expect-error: pre-existing
+ *     null-misuse`) line — HTMLDivElement has no `.value` property
  */
-export class SeText extends HTMLElement {
-  _shadowRoot: ShadowRoot
-  $div: HTMLDivElement
-
-  /**
-    * @function constructor
-    */
-  constructor () {
-    super()
-    // create the shadowDom and insert the template
-    this._shadowRoot = this.attachShadow({ mode: 'open' })
-    this._shadowRoot.append(template.content.cloneNode(true))
-    // locate the component
-    this.$div = this._shadowRoot.querySelector('div') as HTMLDivElement
-  }
-
-  /**
-   * @function observedAttributes
-   * @returns {any} observed
-   */
-  static get observedAttributes () {
-    return ['text', 'value', 'style', 'title', 'id']
-  }
-
-  /**
-   * @function attributeChangedCallback
-   * @param {string} name
-   * @param {string} oldValue
-   * @param {string} newValue
-   * @returns {void}
-   */
-  attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
-    if (oldValue === newValue) return
-    switch (name) {
-      case 'text':
-        this.$div.textContent = t(newValue)
-        break
-      case 'title':
-        this.$div.setAttribute('title', t(newValue))
-        break
-      case 'style':
-        this.$div.setAttribute('style', newValue)
-        break
-      case 'id':
-        this.$div.id = newValue
-        break
-      case 'value':
-        // @ts-expect-error: pre-existing null-misuse, see todo #10
-        this.$div.value = newValue
-        // this.$div.setAttribute("value", newValue);
-        break
-      default:
-        console.error(`unknown attribute: ${name}`)
-        break
+@customElement('se-text')
+export class SeText extends LitElement {
+  static styles = css`
+    :host([id="layersLabel"]) div {
+      font-size: 13px;
+      line-height: normal;
+      font-weight: 700;
     }
-  }
+  `
 
-  /**
-   * @function get
-   * @returns {any}
-   */
-  get text () {
-    return this.$div.textContent
-  }
+  @property() accessor text = ''
+  @property() accessor title = ''
+  @property() accessor value = ''
 
-  /**
-   * @function set
-   * @returns {void}
-   */
-  set text (value: string | null) {
-    this.$div.setAttribute('title', t(value ?? ''))
-  }
-
-  /**
-   * @function get
-   * @returns {any}
-   */
-  get value (): string {
-    return this.getAttribute('value') ?? ''
-  }
-
-  /**
-   * @function set
-   * @returns {void}
-   */
-  set value (value: string) {
-    this.setAttribute('value', value)
-  }
-
-  /**
-   * @function get
-   * @returns {any}
-   */
-  get title (): string {
-    return this.getAttribute('title') ?? ''
-  }
-
-  /**
-   * @function set
-   * @returns {void}
-   */
-  set title (value: string) {
-    this.setAttribute('title', value)
-  }
-
-  /**
-   * @function connectedCallback
-   * @returns {void}
-   */
-  connectedCallback () {
-    // capture shortcuts
+  render() {
+    return html`
+      <div id=${ifDefined(this.id || undefined)} title=${t(this.title)}>${t(this.text)}</div>
+    `
   }
 }
-
-// Register
-customElements.define('se-text', SeText)
