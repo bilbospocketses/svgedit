@@ -11,34 +11,30 @@ const { $id } = SvgCanvas
  * register actions for left panel
  */
 /**
- * @type {module}
  */
 class BottomPanel {
   editor: any
 
   /**
-   * @param {PlainObject} editor svgedit handler
+   * @param editor svgedit handler
    */
   constructor (editor: any) {
     this.editor = editor
   }
 
   /**
-   * @type {module}
    */
   get selectedElement () {
     return this.editor.selectedElement
   }
 
   /**
-   * @type {module}
    */
   get multiselected () {
     return this.editor.multiselected
   }
 
   /**
-   * @type {module}
    */
   changeStrokeWidth (e: any): void {
     let val = e.target.value
@@ -53,7 +49,6 @@ class BottomPanel {
   }
 
   /**
-   * @type {module}
    */
   changeZoom (value: any): void {
     switch (value) {
@@ -91,7 +86,6 @@ class BottomPanel {
 
   /**
    * @fires module:svgcanvas.SvgCanvas#event:ext_toolButtonStateUpdate
-   * @returns {void}
    */
   updateToolButtonState (): void {
     const bNoFill = this.editor.svgCanvas.getColor('fill') === 'none'
@@ -137,7 +131,6 @@ class BottomPanel {
   }
 
   /**
-   * @type {module}
    */
   handleColorPicker (type: any, evt: any): void {
     const { paint } = evt.detail
@@ -146,14 +139,12 @@ class BottomPanel {
   }
 
   /**
-   * @type {module}
    */
   handleStrokeAttr (type: any, evt: any): void {
     this.editor.svgCanvas.setStrokeAttr(type, evt.detail.value)
   }
 
   /**
-   * @type {module}
    */
   handleOpacity (evt: any): void {
     const val = Number.parseInt(evt.currentTarget.value.split('%')[0])
@@ -161,7 +152,6 @@ class BottomPanel {
   }
 
   /**
-   * @type {module}
    */
   handlePalette (e: any): void {
     e.preventDefault()
@@ -188,7 +178,6 @@ class BottomPanel {
   }
 
   /**
-   * @type {module}
    */
   init (): void {
     // register actions for Bottom panel
@@ -237,7 +226,6 @@ class BottomPanel {
   }
 
   /**
-   * @type {module}
    */
   updateColorpickers (apply: any): void {
     ;($id('fill_color') as any).update(

@@ -55,9 +55,9 @@ export class Selector {
   gripCoords: Record<string, [number, number] | null>
 
   /**
-  * @param {Integer} id - Internally identify the selector
-  * @param {Element} elem - DOM element associated with this selector
-  * @param {module:utilities.BBoxObject} [bbox] - Optional bbox to use for initialization
+  * @param id - Internally identify the selector
+  * @param elem - DOM element associated with this selector
+  * @param [bbox] - Optional bbox to use for initialization
   */
   constructor (id: number, elem: Element, bbox?: { x: number; y: number; width: number; height: number }) {
     this.id = id
@@ -471,7 +471,7 @@ export class SelectorManager {
   }
 
   /**
-  * @returns {SVGRectElement} The rubberBandBox DOM element.
+  * @returns The rubberBandBox DOM element.
   */
   getRubberBandBox (): SVGRectElement | null {
     if (!this.rubberBandBox) {
@@ -502,7 +502,6 @@ const selectModule = new SelectModule()
 /**
  * Initializes this module.
  * @function module:select.init
- * @returns {void}
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const init = (canvas: any): void => {
@@ -511,6 +510,6 @@ export const init = (canvas: any): void => {
 
 /**
  * @function module:select.getSelectorManager
- * @returns {module:select.SelectorManager} The SelectorManager instance.
+ * @returns The SelectorManager instance.
  */
 export const getSelectorManager = (): SelectorManager => selectModule.getSelectorManager()

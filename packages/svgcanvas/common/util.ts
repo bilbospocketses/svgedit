@@ -1,7 +1,6 @@
 /**
  * Returns the cumulative offsetLeft/offsetTop of an element.
- * @param {HTMLElement | null} obj
- * @returns {{ left: number; top: number }}
+ * @param obj
  */
 export const findPos = (obj: HTMLElement | null): { left: number; top: number } => {
   let left = 0
@@ -50,8 +49,8 @@ type ElementMatcher = (el: Element, sel: string) => boolean | undefined
 /**
  * Get the closest matching element up the DOM tree.
  * Uses native Element.closest() when possible for better performance.
- * @param  {Element | null} elem     Starting element
- * @param  {string}  selector Selector to match against (class, ID, data attribute, or tag)
+ * @param elem     Starting element
+ * @param selector Selector to match against (class, ID, data attribute, or tag)
  * @return {Element|null}     Returns null if no match found
  */
 export const getClosest = (elem: Element | null, selector: string): Element | null => {
@@ -93,8 +92,8 @@ export const getClosest = (elem: Element | null, selector: string): Element | nu
 
 /**
  * Get all DOM elements up the tree that match a selector
- * @param  {Node | null} elem The base element
- * @param  {string} [selector] The class, id, data attribute, or tag to look for
+ * @param elem The base element
+ * @param [selector] The class, id, data attribute, or tag to look for
  * @return {Node[] | null} Array of matching nodes or null if no match
  */
 export const getParents = (elem: Node | null, selector?: string): Node[] | null => {

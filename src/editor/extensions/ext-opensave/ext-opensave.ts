@@ -11,11 +11,9 @@ declare function seConfirm(message: string): Promise<string>
  */
 
 /**
-   * @type {module:svgcanvas.EventHandler}
-   * @param {external:Window} wind
-   * @param {module:svgcanvas.SvgCanvas#event:saved} svg The SVG source
+   * @param wind
+   * @param svg The SVG source
    * @listens module:svgcanvas.SvgCanvas#event:saved
-   * @returns {void}
    */
 import { fileOpen, fileSave } from 'browser-fs-access'
 
@@ -42,8 +40,7 @@ export default {
     const { $id, $click } = svgCanvas
     await loadExtensionTranslation(svgEditor)
     /**
-    * @param {Event} e
-    * @returns {void}
+    * @param e
     */
     const importImage = (e: any) => {
       const fileInput = (e.target && e.target.type === 'file') ? e.target : null
@@ -93,9 +90,8 @@ export default {
           const result = ev2.target.result
           /**
               * Insert the new image until we know its dimensions.
-              * @param {Float} imageWidth
-              * @param {Float} imageHeight
-              * @returns {void}
+              * @param imageWidth
+              * @param imageHeight
               */
           const insertNewImage = (imageWidth: number, imageHeight: number) => {
             const newImage = this.svgCanvas.addSVGElementsFromJson({
@@ -159,7 +155,6 @@ export default {
      * By default,  this.editor.svgCanvas.open() is a no-op. It is up to an extension
      *  mechanism (opera widget, etc.) to call `setCustomHandlers()` which
      *  will make it do something.
-     * @returns {void}
      */
     const clickOpen = async function () {
       // ask user before clearing an unsaved SVG
@@ -209,7 +204,6 @@ export default {
 
     /**
      *
-     * @returns {void}
      */
     const clickSave = async function (type: string) {
       const $editorDialog = $id('se-svg-editor-dialog')

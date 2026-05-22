@@ -13,7 +13,6 @@ import PlainButton from 'elix/src/plain/PlainButton.js'
 class SePlainBorderButton extends (PlainButton as unknown as typeof HTMLElement) {
   /**
     * @function get
-    * @returns {PlainObject}
   */
   get [template] (): any {
     // @ts-expect-error: elix computed property key not in HTMLElement type

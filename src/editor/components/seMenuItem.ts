@@ -46,7 +46,7 @@ export class SeMenuItem extends HTMLElement {
 
   /**
    * @function observedAttributes
-   * @returns {any} observed
+   * @returns observed
    */
   static get observedAttributes () {
     return ['label', 'src']
@@ -54,10 +54,9 @@ export class SeMenuItem extends HTMLElement {
 
   /**
    * @function attributeChangedCallback
-   * @param {string} name
-   * @param {string} oldValue
-   * @param {string} newValue
-   * @returns {void}
+   * @param name
+   * @param oldValue
+   * @param newValue
    */
   attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
     let shortcut = ''
@@ -79,7 +78,6 @@ export class SeMenuItem extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get label () {
     return this.getAttribute('label')
@@ -87,7 +85,6 @@ export class SeMenuItem extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set label (value: string | null) {
     this.setAttribute('label', value ?? '')
@@ -95,7 +92,6 @@ export class SeMenuItem extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get src () {
     return this.getAttribute('src')
@@ -103,7 +99,6 @@ export class SeMenuItem extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set src (value: string | null) {
     this.setAttribute('src', value ?? '')
@@ -111,7 +106,6 @@ export class SeMenuItem extends HTMLElement {
 
   /**
    * @function connectedCallback
-   * @returns {void}
    */
   connectedCallback () {
     // capture shortcuts

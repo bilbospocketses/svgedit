@@ -34,8 +34,7 @@ let moveSelectionThresholdReached = false
 
 /**
 * @function module:undo.init
-* @param {module:undo.eventContext} eventContext
-* @returns {void}
+* @param eventContext
 */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const init = (canvas: any): void => {
@@ -113,10 +112,9 @@ const updateTransformList = (svgRoot: SVGSVGElement, element: Element, dx: numbe
 
 /**
  *
- * @param {MouseEvent} evt
+ * @param evt
  * @fires module:svgcanvas.SvgCanvas#event:transition
  * @fires module:svgcanvas.SvgCanvas#event:ext_mouseMove
- * @returns {void}
  */
 const mouseMoveEvent = (evt: MouseEvent): void => {
   // if the mouse is move without dragging an element, just return.
@@ -571,7 +569,6 @@ const mouseMoveEvent = (evt: MouseEvent): void => {
   /**
   * The mouse has moved on the canvas area.
   * @event module:svgcanvas.SvgCanvas#event:ext_mouseMove
-  * @type {PlainObject}
   * @property {MouseEvent} event The event object
   * @property {Float} mouse_x x coordinate on canvas
   * @property {Float} mouse_y y coordinate on canvas
@@ -585,7 +582,6 @@ const mouseMoveEvent = (evt: MouseEvent): void => {
 
 /**
 *
-* @returns {void}
 */
 const mouseOutEvent = (evt: MouseEvent): void => {
   const { $id } = svgCanvas
@@ -613,11 +609,10 @@ const mouseOutEvent = (evt: MouseEvent): void => {
 // this is done in when we recalculate the selected dimensions()
 /**
 *
-* @param {MouseEvent} evt
+* @param evt
 * @fires module:svgcanvas.SvgCanvas#event:zoomed
 * @fires module:svgcanvas.SvgCanvas#event:changed
 * @fires module:svgcanvas.SvgCanvas#event:ext_mouseUp
-* @returns {void}
 */
 const mouseUpEvent = (evt: MouseEvent): void => {
   evt.preventDefault()
@@ -938,7 +933,6 @@ const mouseUpEvent = (evt: MouseEvent): void => {
   /**
 * The main (left) mouse button is released (anywhere).
 * @event module:svgcanvas.SvgCanvas#event:ext_mouseUp
-* @type {PlainObject}
 * @property {MouseEvent} event The event object
 * @property {Float} mouse_x x coordinate on canvas
 * @property {Float} mouse_y y coordinate on canvas
@@ -984,7 +978,6 @@ const mouseUpEvent = (evt: MouseEvent): void => {
   } else if (element) {
     /**
 * @name module:svgcanvas.SvgCanvas#addedNew
-* @type {boolean}
 */
     svgCanvas.addedNew = true
 
@@ -1081,9 +1074,8 @@ const dblClickEvent = (evt: MouseEvent): void => {
  *   action is not recorded until mousing up.
  * - When we are in select mode, select the element, remember the position
  *   and do nothing else.
- * @param {MouseEvent} evt
+ * @param evt
  * @fires module:svgcanvas.SvgCanvas#event:ext_mouseDown
- * @returns {void}
  */
 const mouseDownEvent = (evt: MouseEvent): void => {
   const dataStorage = svgCanvas.getDataStorage()
@@ -1436,7 +1428,6 @@ const mouseDownEvent = (evt: MouseEvent): void => {
   /**
 * The main (left) mouse button is held down on the canvas area.
 * @event module:svgcanvas.SvgCanvas#event:ext_mouseDown
-* @type {PlainObject}
 * @property {MouseEvent} event The event object
 * @property {Float} start_x x coordinate on canvas
 * @property {Float} start_y y coordinate on canvas
@@ -1459,10 +1450,9 @@ const mouseDownEvent = (evt: MouseEvent): void => {
   })
 }
 /**
- * @param {WheelEvent} e
+ * @param e
  * @fires module:event.SvgCanvas#event:updateCanvas
  * @fires module:event.SvgCanvas#event:zoomDone
- * @returns {void}
  */
 const DOMMouseScrollEvent = (e: WheelEvent): void => {
   const zoom = svgCanvas.getZoom()

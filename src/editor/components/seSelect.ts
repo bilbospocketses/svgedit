@@ -44,7 +44,7 @@ export class SeSelect extends HTMLElement {
 
   /**
    * @function observedAttributes
-   * @returns {any} observed
+   * @returns observed
    */
   static get observedAttributes () {
     return ['label', 'width', 'height', 'options', 'values', 'title', 'disabled']
@@ -52,10 +52,9 @@ export class SeSelect extends HTMLElement {
 
   /**
    * @function attributeChangedCallback
-   * @param {string} name
-   * @param {string} oldValue
-   * @param {string} newValue
-   * @returns {void}
+   * @param name
+   * @param oldValue
+   * @param newValue
    */
   attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
     let options: string[]
@@ -111,7 +110,6 @@ export class SeSelect extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get label () {
     return this.getAttribute('label')
@@ -119,7 +117,6 @@ export class SeSelect extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set label (value: string | null) {
     this.setAttribute('label', value ?? '')
@@ -127,7 +124,6 @@ export class SeSelect extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get width () {
     return this.getAttribute('width')
@@ -135,7 +131,6 @@ export class SeSelect extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set width (value: string | null) {
     this.setAttribute('width', value ?? '')
@@ -143,7 +138,6 @@ export class SeSelect extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get height () {
     return this.getAttribute('height')
@@ -151,7 +145,6 @@ export class SeSelect extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set height (value: string | null) {
     this.setAttribute('height', value ?? '')
@@ -159,7 +152,6 @@ export class SeSelect extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get value () {
     return this.$select.value
@@ -167,7 +159,6 @@ export class SeSelect extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set value (value: string) {
     this.$select.value = value
@@ -175,7 +166,6 @@ export class SeSelect extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get disabled () {
     return this.$select.getAttribute('disabled')
@@ -183,7 +173,6 @@ export class SeSelect extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set disabled (value: string | null) {
     this.$select.setAttribute('disabled', value ?? '')
@@ -191,7 +180,6 @@ export class SeSelect extends HTMLElement {
 
   /**
    * @function connectedCallback
-   * @returns {void}
    */
   connectedCallback () {
     // eslint-disable-next-line @typescript-eslint/no-this-alias

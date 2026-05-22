@@ -49,7 +49,7 @@ class HistoryRecordingService {
   batchCommandStack_: BatchCommand[]
 
   /**
-  * @param {UndoManager | null} undoManager - The undo manager.
+  * @param undoManager - The undo manager.
   *     A value of `null` is valid for cases where no history recording is required.
   *     See singleton: {@link HistoryRecordingService.NO_HISTORY}
   */
@@ -63,8 +63,7 @@ class HistoryRecordingService {
    * Start a batch command so multiple commands can recorded as a single history command.
    * Requires a corresponding call to endBatchCommand. Start and end commands can be nested.
    *
-   * @param {string} text - Optional string describing the batch command.
-   * @returns {HistoryRecordingService}
+   * @param text - Optional string describing the batch command.
    */
   startBatchCommand (text?: string): this {
     if (!this.undoManager_) { return this }
@@ -75,7 +74,6 @@ class HistoryRecordingService {
 
   /**
    * End a batch command and add it to the history or a parent batch command.
-   * @returns {HistoryRecordingService}
    */
   endBatchCommand (): this {
     if (!this.undoManager_) { return this }
@@ -93,11 +91,10 @@ class HistoryRecordingService {
 
   /**
    * Add a `MoveElementCommand` to the history or current batch command.
-   * @param {Element} elem - The DOM element that was moved
-   * @param {Node | null} oldNextSibling - The element's next sibling before it was moved
-   * @param {Node} oldParent - The element's parent before it was moved
-   * @param {string} [text] - An optional string visible to user related to this change
-   * @returns {HistoryRecordingService}
+   * @param elem - The DOM element that was moved
+   * @param oldNextSibling - The element's next sibling before it was moved
+   * @param oldParent - The element's parent before it was moved
+   * @param [text] - An optional string visible to user related to this change
    */
   moveElement (elem: Element, oldNextSibling: Node | null, oldParent: Node, text?: string): this {
     if (!this.undoManager_) { return this }
@@ -107,9 +104,8 @@ class HistoryRecordingService {
 
   /**
    * Add an `InsertElementCommand` to the history or current batch command.
-   * @param {Element} elem - The DOM element that was added
-   * @param {string} [text] - An optional string visible to user related to this change
-   * @returns {HistoryRecordingService}
+   * @param elem - The DOM element that was added
+   * @param [text] - An optional string visible to user related to this change
    */
   insertElement (elem: Element, text?: string): this {
     if (!this.undoManager_) { return this }
@@ -119,11 +115,10 @@ class HistoryRecordingService {
 
   /**
    * Add a `RemoveElementCommand` to the history or current batch command.
-   * @param {Element} elem - The DOM element that was removed
-   * @param {Node | null} oldNextSibling - The element's next sibling before it was removed
-   * @param {Node} oldParent - The element's parent before it was removed
-   * @param {string} [text] - An optional string visible to user related to this change
-   * @returns {HistoryRecordingService}
+   * @param elem - The DOM element that was removed
+   * @param oldNextSibling - The element's next sibling before it was removed
+   * @param oldParent - The element's parent before it was removed
+   * @param [text] - An optional string visible to user related to this change
    */
   removeElement (elem: Element, oldNextSibling: Node | null, oldParent: Node, text?: string): this {
     if (!this.undoManager_) { return this }
@@ -133,10 +128,9 @@ class HistoryRecordingService {
 
   /**
    * Add a `ChangeElementCommand` to the history or current batch command.
-   * @param {Element} elem - The DOM element that was changed
-   * @param {CommandAttributes} attrs - An object with the attributes to be changed and the values they had *before* the change
-   * @param {string} [text] - An optional string visible to user related to this change
-   * @returns {HistoryRecordingService}
+   * @param elem - The DOM element that was changed
+   * @param attrs - An object with the attributes to be changed and the values they had *before* the change
+   * @param [text] - An optional string visible to user related to this change
    */
   changeElement (elem: Element, attrs: CommandAttributes, text?: string): this {
     if (!this.undoManager_) { return this }
@@ -147,8 +141,7 @@ class HistoryRecordingService {
   /**
    * Private function to add a command to the history or current batch command.
    * @private
-   * @param {BatchCommand | MoveElementCommand | InsertElementCommand | RemoveElementCommand | ChangeElementCommand} cmd
-   * @returns {undefined}
+   * @param cmd
    */
   private addCommand_ (cmd: BatchCommand | MoveElementCommand | InsertElementCommand | RemoveElementCommand | ChangeElementCommand): undefined {
     if (!this.undoManager_) { return undefined }

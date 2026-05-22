@@ -14,7 +14,6 @@ class Dropdown extends (ListComboBox as any) {
   $input!: HTMLElement
   /**
     * @function get
-    * @returns {PlainObject}
     */
   get [defaultState] () {
     return Object.assign(super[defaultState], {
@@ -26,7 +25,6 @@ class Dropdown extends (ListComboBox as any) {
 
   /**
     * @function get
-    * @returns {PlainObject}
   */
   get [internal.template] () {
     const result = super[internal.template]
@@ -59,7 +57,7 @@ class Dropdown extends (ListComboBox as any) {
 
   /**
    * @function observedAttributes
-   * @returns {any} observed
+   * @returns observed
    */
   static get observedAttributes () {
     return ['title', 'src', 'inputsize', 'value']
@@ -67,10 +65,9 @@ class Dropdown extends (ListComboBox as any) {
 
   /**
    * @function attributeChangedCallback
-   * @param {string} name
-   * @param {string} oldValue
-   * @param {string} newValue
-   * @returns {void}
+   * @param name
+   * @param oldValue
+   * @param newValue
    */
   attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
     if (oldValue === newValue) return
@@ -92,8 +89,7 @@ class Dropdown extends (ListComboBox as any) {
 
   /**
     * @function [internal.render]
-    * @param {PlainObject} changed
-    * @returns {void}
+    * @param changed
     */
   [internal.render] (changed: Record<string, boolean>) {
     super[internal.render](changed)
@@ -122,7 +118,7 @@ class Dropdown extends (ListComboBox as any) {
 
   /**
    * @function src
-   * @returns {string} src
+   * @returns src
    */
   get src () {
     return this[internal.state].src
@@ -130,7 +126,6 @@ class Dropdown extends (ListComboBox as any) {
 
   /**
    * @function src
-   * @returns {void}
    */
   set src (src: string) {
     this[internal.setState]({ src })
@@ -138,7 +133,7 @@ class Dropdown extends (ListComboBox as any) {
 
   /**
    * @function inputsize
-   * @returns {string} src
+   * @returns src
    */
   get inputsize () {
     return this[internal.state].inputsize
@@ -146,7 +141,6 @@ class Dropdown extends (ListComboBox as any) {
 
   /**
    * @function src
-   * @returns {void}
    */
   set inputsize (inputsize: string) {
     this[internal.setState]({ inputsize })
@@ -154,7 +148,7 @@ class Dropdown extends (ListComboBox as any) {
 
   /**
    * @function value
-   * @returns {string} src
+   * @returns src
    */
   get value () {
     return this[internal.state].value
@@ -162,7 +156,6 @@ class Dropdown extends (ListComboBox as any) {
 
   /**
    * @function value
-   * @returns {void}
    */
   set value (value: string) {
     this[internal.setState]({ value })

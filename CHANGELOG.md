@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (#17 Tier B — JSDoc-as-types strip — 2026-05-22)
+
+Stripped 1,513 `@param {Type}` / `@returns {Type}` / `@type {Type}` JSDoc type annotations from non-jgraduate `.ts` files; deleted 9 `@typedef` blocks that were documentation-only (not referenced as TS types). The TypeScript signature annotations on each function/variable are now the single source of truth; JSDoc retains the param-name + description form for documentation richness.
+
+- **TS80004 sweep (1,513 patterns).** `@param {Type} name - description` → `@param name - description` (831 lines preserved with description); `@type {Type}` lines and orphan `@param {Type}` (no name) lines dropped entirely (682 lines removed). Mechanical script (`%TEMP%/svgedit-strip-jsdoc-types.js`) does brace-balanced scan to handle nested types like `{Array<{x:number,y:number}>}` correctly.
+- **TS80009 sweep (9 typedef blocks deleted).** All 9 were JSDoc-only doc constructs not referenced as TS types:
+  - `src/editor/Editor.ts` — `module:SVGthis.BBoxObjectWithFactor`
+  - `src/editor/EditorStartup.ts` — `module:SVGthis.ExtensionObject` (x2; both occurrences in standard + user extension loaders)
+  - `packages/svgcanvas/core/path.ts` — `module:path.uiStrings`, `module:path.SVGElementJSON`, `Point` (redundant with the adjacent `interface XYPoint`)
+  - `packages/svgcanvas/core/utilities.ts` — `module:utilities.BBoxObject`, `module:utilities.PathSegmentArray` (redundant with the adjacent `type PathSegment`), `BBox`
+  - Deleting them removes IDE TS80009 noise without affecting any TS code path. If consumers need richer typing, the TS type system is the place for that.
+- **Net diff:** 72 files changed, +831 / -1585 lines (net **-754 lines**). Pure documentation cleanup; no runtime behavior change.
+- **Verification:** `npx tsc --build --force` 0 errors; `npm run lint` 0 errors / 23 warnings (still all jgraduate-deferred); `npx vitest run` 640/640 unchanged; `npx tsx scripts/run-e2e.ts` 250/250 chromium + firefox unchanged; `npm run build` success (11 extensions bundled).
+- **Out of scope:** TS6385/TS6387 deprecation hints noticed during this sweep (`EditorStartup.ts:666` `event.returnValue` deprecated; `utilities.ts:113,116` global `escape`/`unescape` deprecated). These are TypeScript-deprecation warnings, not JSDoc-style — separate follow-up if desired.
+
 ### Changed (#17 Tier A — ESLint warning sweep — 2026-05-22)
 
 Cleared 117 of 140 ESLint warnings on master (the 23 remaining are all in `src/editor/components/jgraduate/`, deferred to #3 PR-4's full jGraduate + jPicker Lit-rewrite). Tier A of the rescoped item #17 (originally drafted as "JSDoc → TS types doc-pass" but the actual lint composition turned out to be code-quality directives, NOT JSDoc-as-types — the TS80004/TS80009/TS8024 hints I'd seen are IDE-only and don't appear in `npm run lint`; those are Tier B's scope).

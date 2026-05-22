@@ -53,8 +53,7 @@ export class SeCMenuDialog extends HTMLElement {
 
   /**
    * @function init
-   * @param {any} name
-   * @returns {void}
+   * @param name
    */
    
   init (i18next: any): void {
@@ -73,7 +72,7 @@ export class SeCMenuDialog extends HTMLElement {
 
   /**
    * @function observedAttributes
-   * @returns {any} observed
+   * @returns observed
    */
   static get observedAttributes (): string[] {
     return ['disableallmenu', 'enablemenuitems', 'disablemenuitems', 'tools-cut',
@@ -84,10 +83,9 @@ export class SeCMenuDialog extends HTMLElement {
 
   /**
    * @function attributeChangedCallback
-   * @param {string} name
-   * @param {string} oldValue
-   * @param {string} newValue
-   * @returns {void}
+   * @param name
+   * @param oldValue
+   * @param newValue
    */
   attributeChangedCallback (name: string, _oldValue: string, newValue: string): void {
     let eles: string[] = []
@@ -166,7 +164,6 @@ export class SeCMenuDialog extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get disableallmenu (): string | null {
     return this.getAttribute('disableallmenu')
@@ -174,7 +171,6 @@ export class SeCMenuDialog extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set disableallmenu (value: string) {
     this.setAttribute('disableallmenu', value)
@@ -182,7 +178,6 @@ export class SeCMenuDialog extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get enablemenuitems (): string | null {
     return this.getAttribute('enablemenuitems')
@@ -190,7 +185,6 @@ export class SeCMenuDialog extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set enablemenuitems (value: string) {
     this.setAttribute('enablemenuitems', value)
@@ -198,7 +192,6 @@ export class SeCMenuDialog extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get disablemenuitems (): string | null {
     return this.getAttribute('disablemenuitems')
@@ -206,7 +199,6 @@ export class SeCMenuDialog extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set disablemenuitems (value: string) {
     this.setAttribute('disablemenuitems', value)
@@ -214,7 +206,6 @@ export class SeCMenuDialog extends HTMLElement {
 
   /**
    * @function connectedCallback
-   * @returns {void}
    */
   connectedCallback (): void {
     const current = this

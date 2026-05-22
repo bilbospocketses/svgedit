@@ -57,8 +57,7 @@ export class SeImgPropDialog extends HTMLElement {
 
   /**
    * @function init
-   * @param {any} name
-   * @returns {void}
+   * @param name
    */
    
   init (i18next: any): void {
@@ -78,7 +77,7 @@ export class SeImgPropDialog extends HTMLElement {
 
   /**
    * @function observedAttributes
-   * @returns {any} observed
+   * @returns observed
    */
   static get observedAttributes (): string[] {
     return ['title', 'width', 'height', 'save', 'dialog', 'embed', 'common-ok',
@@ -90,10 +89,9 @@ export class SeImgPropDialog extends HTMLElement {
 
   /**
    * @function attributeChangedCallback
-   * @param {string} name
-   * @param {string} oldValue
-   * @param {string} newValue
-   * @returns {void}
+   * @param name
+   * @param oldValue
+   * @param newValue
    */
   attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
     if (oldValue === newValue) return
@@ -209,7 +207,6 @@ export class SeImgPropDialog extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get title (): string {
     return this.getAttribute('title') ?? ''
@@ -217,7 +214,6 @@ export class SeImgPropDialog extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set title (value: string) {
     this.setAttribute('title', value)
@@ -225,7 +221,6 @@ export class SeImgPropDialog extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get width (): string | null {
     return this.getAttribute('width')
@@ -233,7 +228,6 @@ export class SeImgPropDialog extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set width (value: string) {
     this.setAttribute('width', value)
@@ -241,7 +235,6 @@ export class SeImgPropDialog extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get height (): string | null {
     return this.getAttribute('height')
@@ -249,7 +242,6 @@ export class SeImgPropDialog extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set height (value: string) {
     this.setAttribute('height', value)
@@ -257,7 +249,6 @@ export class SeImgPropDialog extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get save (): string | null {
     return this.getAttribute('save')
@@ -265,7 +256,6 @@ export class SeImgPropDialog extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set save (value: string) {
     this.setAttribute('save', value)
@@ -273,7 +263,6 @@ export class SeImgPropDialog extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get dialog (): string | null {
     return this.getAttribute('dialog')
@@ -281,7 +270,6 @@ export class SeImgPropDialog extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set dialog (value: string) {
     this.setAttribute('dialog', value)
@@ -289,7 +277,6 @@ export class SeImgPropDialog extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get embed (): string | null {
     return this.getAttribute('embed')
@@ -297,7 +284,6 @@ export class SeImgPropDialog extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set embed (value: string) {
     this.setAttribute('embed', value)
@@ -305,7 +291,6 @@ export class SeImgPropDialog extends HTMLElement {
 
   /**
    * @function connectedCallback
-   * @returns {void}
    */
   connectedCallback (): void {
      

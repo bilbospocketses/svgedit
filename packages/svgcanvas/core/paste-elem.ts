@@ -15,8 +15,7 @@ let svgCanvas: any = null
 
 /**
 * @function module:paste-elem.init
-* @param {unknown} canvas
-* @returns {void}
+* @param canvas
 */
 export const init = (canvas: unknown): void => {
   svgCanvas = canvas
@@ -31,12 +30,11 @@ interface SVGAsJSON {
 
 /**
 * @function module:svgcanvas.SvgCanvas#pasteElements
-* @param {"in_place"|"point"|undefined} type
-* @param {number|undefined} x Expected if type is "point"
-* @param {number|undefined} y Expected if type is "point"
+* @param type
+* @param x Expected if type is "point"
+* @param y Expected if type is "point"
 * @fires module:svgcanvas.SvgCanvas#event:changed
 * @fires module:svgcanvas.SvgCanvas#event:ext_IDsUpdated
-* @returns {void}
 */
 export const pasteElementsMethod = (type?: 'in_place' | 'point', x?: number, y?: number): void => {
   const rawClipboard = sessionStorage.getItem(svgCanvas.getClipboardID())

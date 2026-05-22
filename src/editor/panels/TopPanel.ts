@@ -18,14 +18,13 @@ class TopPanel {
   editor: any
 
   /**
-   * @param {PlainObject} editor svgedit handler
+   * @param editor svgedit handler
    */
   constructor (editor: any) {
     this.editor = editor
   }
 
   /**
-   * @type {module}
    */
   displayTool (className: string): void {
     // default display is 'none' so removing the property will make the panel visible
@@ -33,7 +32,6 @@ class TopPanel {
   }
 
   /**
-   * @type {module}
    */
   hideTool (className: string): void {
     $qa(`.${className}`).forEach((el: any) => {
@@ -42,21 +40,18 @@ class TopPanel {
   }
 
   /**
-   * @type {module}
    */
   get selectedElement () {
     return this.editor.selectedElement
   }
 
   /**
-   * @type {module}
    */
   get multiselected () {
     return this.editor.multiselected
   }
 
   /**
-   * @type {module}
    */
   get path () {
     return this.editor.svgCanvas.pathActions
@@ -64,9 +59,8 @@ class TopPanel {
 
   /**
    *
-   * @param {Element} opt
-   * @param {boolean} changeElem
-   * @returns {void}
+   * @param opt
+   * @param changeElem
    */
   setStrokeOpt (opt: any, changeElem?: any): void {
     const { id } = opt
@@ -93,7 +87,6 @@ class TopPanel {
    * Updates the toolbar (colors, opacity, etc) based on the selected element.
    * This function also updates the opacity and id elements that are in the
    * context panel.
-   * @returns {void}
    */
   update () {
     let i
@@ -164,9 +157,9 @@ class TopPanel {
   }
 
   /**
-   * @param {PlainObject} [opts={}]
-   * @param {boolean} [opts.cancelDeletes=false]
-   * @returns {void} Resolves to `undefined`
+   * @param [opts={}]
+   * @param [opts.cancelDeletes=false]
+   * @returns Resolves to `undefined`
    */
   promptImgURL ({ cancelDeletes = false } = {}) {
     let curhref = this.editor.svgCanvas.getHref(this.editor.selectedElement)
@@ -185,7 +178,6 @@ class TopPanel {
 
   /**
    * Updates the context panel tools based on the selected element.
-   * @returns {void}
    */
   updateContextPanel () {
     let elem = this.editor.selectedElement
@@ -261,8 +253,8 @@ class TopPanel {
           }
           /**
            * Updates the value of an input field if needed
-           * @param {string} id - The ID of the input element to be updated.
-           * @param {number} newValue - The new numeric value to set in the input field.
+           * @param id - The ID of the input element to be updated.
+           * @param newValue - The new numeric value to set in the input field.
            */
           const updateValue = (id: any, newValue: any) => {
             const currentValue = ($id(id) as any).value // Get current value from the field
@@ -479,9 +471,8 @@ class TopPanel {
   }
 
   /**
-   * @param {Event} [e] Not used.
-   * @param {boolean} forSaving
-   * @returns {void}
+   * @param [e] Not used.
+   * @param forSaving
    */
   showSourceEditor (_e?: any, forSaving?: any): void {
     const $editorDialog = document.getElementById('se-svg-editor-dialog') as any
@@ -495,7 +486,6 @@ class TopPanel {
 
   /**
    *
-   * @returns {void}
    */
   clickWireframe () {
     ;($id('tool_wireframe') as any).pressed = !($id('tool_wireframe') as any).pressed
@@ -516,7 +506,6 @@ class TopPanel {
 
   /**
    *
-   * @returns {void}
    */
   clickUndo () {
     const { undoMgr, textActions } = this.editor.svgCanvas
@@ -531,7 +520,6 @@ class TopPanel {
 
   /**
    *
-   * @returns {void}
    */
   clickRedo () {
     const { undoMgr } = this.editor.svgCanvas
@@ -542,21 +530,18 @@ class TopPanel {
   }
 
   /**
-   * @type {module}
    */
   changeRectRadius (e: any): void {
     this.editor.svgCanvas.setRectRadius(e.target.value)
   }
 
   /**
-   * @type {module}
    */
   changeFontSize (e: any): void {
     this.editor.svgCanvas.setFontSize(e.target.value)
   }
 
   /**
-   * @type {module}
    */
   changeRotationAngle (e: any): void {
     this.editor.svgCanvas.setRotationAngle(e.target.value)
@@ -568,8 +553,7 @@ class TopPanel {
   }
 
   /**
-   * @param {PlainObject} e
-   * @returns {void}
+   * @param e
    */
   changeBlur (e: any): void {
     this.editor.svgCanvas.setBlur(e.target.value / 10, true)
@@ -577,7 +561,6 @@ class TopPanel {
 
   /**
    *
-   * @returns {void}
    */
   clickGroup () {
     // group
@@ -591,23 +574,20 @@ class TopPanel {
 
   /**
    *
-   * @returns {void}
    */
   clickClone () {
     this.editor.svgCanvas.cloneSelectedElements(20, 20)
   }
 
   /**
-   * @param {PlainObject} evt
-   * @returns {void}
+   * @param evt
    */
   clickAlignEle (evt: any): void {
     this.editor.svgCanvas.alignSelectedElements(evt.detail.value, 'page')
   }
 
   /**
-   * @param {string} pos indicate the alignment relative to top, bottom, middle etc..
-   * @returns {void}
+   * @param pos indicate the alignment relative to top, bottom, middle etc..
    */
   clickAlign (pos: any): void {
     let value = ($id('tool_align_relative') as any).value
@@ -619,7 +599,6 @@ class TopPanel {
 
   /**
    *
-   * @type {module}
    */
   attrChanger (e: any): boolean | void {
     const attr = e.target.getAttribute('data-attr')
@@ -658,7 +637,6 @@ class TopPanel {
 
   /**
    *
-   * @returns {void}
    */
   convertToPath () {
     if (this.editor.selectedElement) {
@@ -668,7 +646,6 @@ class TopPanel {
 
   /**
    *
-   * @returns {void}
    */
   reorientPath () {
     if (this.editor.selectedElement) {
@@ -678,7 +655,6 @@ class TopPanel {
 
   /**
    * Flip selected element(s) horizontally.
-   * @returns {void}
    */
   clickFlipHorizontal () {
     if (this.editor.selectedElement || this.multiselected) {
@@ -688,7 +664,6 @@ class TopPanel {
 
   /**
    * Flip selected element(s) vertically.
-   * @returns {void}
    */
   clickFlipVertical () {
     if (this.editor.selectedElement || this.multiselected) {
@@ -698,7 +673,7 @@ class TopPanel {
 
   /**
    *
-   * @returns {void} Resolves to `undefined`
+   * @returns Resolves to `undefined`
    */
   makeHyperlink (): void {
     if (this.editor.selectedElement || this.multiselected) {
@@ -715,7 +690,6 @@ class TopPanel {
 
   /**
    *
-   * @returns {void}
    */
   linkControlPoints () {
     ;($id('tool_node_link') as any).pressed = !($id('tool_node_link') as any).pressed
@@ -725,7 +699,6 @@ class TopPanel {
 
   /**
    *
-   * @returns {void}
    */
   clonePathNode () {
     if (this.path.getNodePoint()) {
@@ -735,7 +708,6 @@ class TopPanel {
 
   /**
    *
-   * @returns {void}
    */
   deletePathNode () {
     if (this.path.getNodePoint()) {
@@ -745,7 +717,6 @@ class TopPanel {
 
   /**
    *
-   * @returns {void}
    */
   addSubPath () {
     const button = ($id('tool_add_subpath') as any)
@@ -757,7 +728,6 @@ class TopPanel {
 
   /**
    *
-   * @returns {void}
    */
   opencloseSubPath () {
     this.path.opencloseSubPath()
@@ -766,7 +736,6 @@ class TopPanel {
   /**
    * Delete is a contextual tool that only appears in the ribbon if
    * an element has been selected.
-   * @returns {void}
    */
   deleteSelected () {
     if (this.editor.selectedElement || this.editor.multiselected) {
@@ -776,7 +745,6 @@ class TopPanel {
 
   /**
    *
-   * @returns {void}
    */
   moveToTopSelected () {
     if (this.editor.selectedElement) {
@@ -786,7 +754,6 @@ class TopPanel {
 
   /**
    *
-   * @returns {void}
    */
   moveToBottomSelected () {
     if (this.editor.selectedElement) {
@@ -796,7 +763,6 @@ class TopPanel {
 
   /**
    * Checks if there are currently selected text elements to avoid firing of bold,italic when no text selected
-   * @returns {boolean}
    */
   get anyTextSelected () {
     const selected = this.editor.svgCanvas.getSelectedElements()
@@ -805,7 +771,6 @@ class TopPanel {
 
   /**
    *
-   * @returns {false}
    */
   clickBold () {
     if (this.anyTextSelected) {
@@ -817,7 +782,6 @@ class TopPanel {
 
   /**
    *
-   * @returns {false}
    */
   clickItalic () {
     if (this.anyTextSelected) {
@@ -831,7 +795,7 @@ class TopPanel {
    * Handles the click on the text decoration buttons
    *
    * @param value The text decoration value
-   * @returns {boolean} false
+   * @returns false
    */
   clickTextDecoration (value: any): boolean | void {
     if (this.editor.svgCanvas.hasTextDecoration(value)) {
@@ -846,7 +810,6 @@ class TopPanel {
   /**
    * Sets the text anchor value
    *
-   * @returns {false}
    */
   clickTextAnchor (evt: any): boolean | void {
     this.editor.svgCanvas.setTextAnchor(evt.detail.value)
@@ -854,28 +817,24 @@ class TopPanel {
   }
 
   /**
-   * @type {module}
    */
   changeLetterSpacing (e: any): void {
     this.editor.svgCanvas.setLetterSpacing(e.target.value)
   }
 
   /**
-   * @type {module}
    */
   changeWordSpacing (e: any): void {
     this.editor.svgCanvas.setWordSpacing(e.target.value)
   }
 
   /**
-   * @type {module}
    */
   changeTextLength (e: any): void {
     this.editor.svgCanvas.setTextLength(e.target.value)
   }
 
   /**
-   * @type {module}
    */
   changeLengthAdjust (evt: any): void {
     this.editor.svgCanvas.setLengthAdjust(evt.detail.value)
@@ -884,8 +843,7 @@ class TopPanel {
   /**
    * Set a selected image's URL.
    * @function module:SVGthis.setImageURL
-   * @param {string} url
-   * @returns {void}
+   * @param url
    */
   setImageURL (url: any): void {
     const { editor } = this
@@ -931,9 +889,8 @@ class TopPanel {
   }
 
   /**
-   * @param {boolean} editmode
-   * @param {module:svgcanvas.SvgCanvas#event:selected} elems
-   * @returns {void}
+   * @param editmode
+   * @param elems
    */
   togglePathEditMode (editMode: any, elems: any): void {
     if (editMode) {
@@ -958,7 +915,6 @@ class TopPanel {
   }
 
   /**
-   * @type {module}
    */
   init () {
     // add Top panel

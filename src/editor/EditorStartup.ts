@@ -16,7 +16,6 @@ declare function seConfirm (msg: string): boolean | Promise<boolean | string>
 
 /**
    * @fires module:svgcanvas.SvgCanvas#event:svgEditorReady
-   * @returns {void}
    */
 const readySignal = () => {
   // let the opener know svgedit is ready (now that config is set up)
@@ -27,13 +26,11 @@ const readySignal = () => {
          * Triggered on a containing `document` (of `window.opener`
          * or `window.parent`) when the editor is loaded.
          * @event module:SVGEditor#event:svgEditorReadyEvent
-         * @type {Event}
          * @property {true} bubbles
          * @property {true} cancelable
          */
       /**
          * @name module:SVGthis.svgEditorReadyEvent
-         * @type {module:SVGEditor#event:svgEditorReadyEvent}
          */
       const svgEditorReadyEvent = new w.CustomEvent('svgEditorReady', {
         bubbles: true,
@@ -102,7 +99,6 @@ class EditorStartup {
   /**
   * Auto-run after a Promise microtask.
   * @function module:SVGthis.init
-  * @returns {void}
   */
   async init () {
     if ('localStorage' in window) {
@@ -156,7 +152,6 @@ class EditorStartup {
 
     /**
     * @name module:SVGthis.canvas
-    * @type {module:svgcanvas.SvgCanvas}
     */
     this.svgCanvas = new SvgCanvas(
       $id('svgcanvas') as HTMLElement,
@@ -232,12 +227,11 @@ class EditorStartup {
     this.svgCanvas.bind(
       'updateCanvas',
       /**
-     * @param {external:Window} win
-     * @param {PlainObject} centerInfo
-     * @param {false} centerInfo.center
-     * @param {module:math.XYObject} centerInfo.newCtr
+     * @param win
+     * @param centerInfo
+     * @param centerInfo.center
+     * @param centerInfo.newCtr
      * @listens module:svgcanvas.SvgCanvas#event:updateCanvas
-     * @returns {void}
      */
       (_win: any, { center, newCtr }: { center: boolean; newCtr: { x: number; y: number } }) => {
         this.updateCanvas(center, newCtr)
@@ -280,8 +274,7 @@ class EditorStartup {
       const destLayer = (evt as any).detail.value
       const confirmStr = this.i18next.t('notification.QmoveElemsToLayer').replace('%s', destLayer)
       /**
-    * @param {boolean} ok
-    * @returns {void}
+    * @param ok
     */
       const moveToLayer = (ok: boolean) => {
         if (!ok) { return }
@@ -432,8 +425,7 @@ class EditorStartup {
 
     /**
      * @function module:SVGthis.setPanning
-     * @param {boolean} active
-     * @returns {void}
+     * @param active
      */
     this.setPanning = (active) => {
       this.svgCanvas.spaceKey = keypan = active
@@ -441,7 +433,6 @@ class EditorStartup {
     let inp: HTMLElement | null = null
     /**
       *
-      * @returns {void}
       */
     const unfocus = () => {
       inp?.blur()
@@ -761,7 +752,7 @@ class EditorStartup {
    * @fires module:svgcanvas.SvgCanvas#event:ext_langReady
    * @fires module:svgcanvas.SvgCanvas#event:ext_langChanged
    * @fires module:svgcanvas.SvgCanvas#event:extensions_added
-   * @returns {Promise<module:locale.LangAndData>} Resolves to result of {@link module:locale.readLang}
+   * @returns Resolves to result of {@link module:locale.readLang}
    */
   async extAndLocaleFunc () {
     this.$svgEditor.style.visibility = 'visible'
@@ -769,16 +760,7 @@ class EditorStartup {
       // load standard extensions
       await Promise.all(
         this.configObj.curConfig.extensions.map(async (extname: string) => {
-          /**
-           * @tutorial ExtensionDocs
-           * @typedef {PlainObject} module:SVGthis.ExtensionObject
-           * @property {string} [name] Name of the extension. Used internally; no need for i18n. Defaults to extension name without beginning "ext-" or ending ".js".
-           * @property {module:svgcanvas.ExtensionInitCallback} [init]
-           */
           try {
-            /**
-             * @type {module:SVGthis.ExtensionObject}
-             */
             // Vite cannot statically analyze these dynamic extension imports.
             const imported = await import(/* @vite-ignore */ `${this.configObj.curConfig.extPath}/${encodeURIComponent(extname)}/${encodeURIComponent(extname)}.js`)
             const { name = extname, init: initfn } = imported.default
@@ -793,16 +775,7 @@ class EditorStartup {
       // load user extensions (given as pathNames)
       await Promise.all(
         this.configObj.curConfig.userExtensions.map(async ({ pathName, config }: { pathName: string; config: unknown }) => {
-          /**
-           * @tutorial ExtensionDocs
-           * @typedef {PlainObject} module:SVGthis.ExtensionObject
-           * @property {string} [name] Name of the extension. Used internally; no need for i18n. Defaults to extension name without beginning "ext-" or ending ".js".
-           * @property {module:svgcanvas.ExtensionInitCallback} [init]
-           */
           try {
-            /**
-             * @type {module:SVGthis.ExtensionObject}
-             */
             const imported = await import(/* @vite-ignore */ encodeURI(pathName))
             const { name, init: initfn } = imported.default
             return this.addExtension(name, (initfn && initfn.bind(this, config)), {})
@@ -816,10 +789,9 @@ class EditorStartup {
       this.svgCanvas.bind(
         'extensions_added',
         /**
-        * @param {external:Window} _win
-        * @param {module:svgcanvas.SvgCanvas#event:extensions_added} _data
+        * @param _win
+        * @param _data
         * @listens module:SvgCanvas#event:extensions_added
-        * @returns {void}
         */
         (_win: any, _data: any) => {
           this.extensionsAdded = true
@@ -831,9 +803,8 @@ class EditorStartup {
 
           this.messageQueue.forEach(
             /**
-             * @param {module:svgcanvas.SvgCanvas#event:message} messageObj
+             * @param messageObj
              * @fires module:svgcanvas.SvgCanvas#event:message
-             * @returns {void}
              */
             (messageObj) => {
               this.svgCanvas.call('message', messageObj)
@@ -850,7 +821,7 @@ class EditorStartup {
 
   /**
  * Listens to the mode change, listener is to be added on document
-* @param {Event} evt custom modeChange event
+* @param evt custom modeChange event
 */
   modeListener (_evt: Event): void {
     const mode = this.svgCanvas.getMode()
@@ -860,7 +831,7 @@ class EditorStartup {
 
   /**
    * sets cursor styling for workarea depending on the current mode
-   * @param {string} mode
+   * @param mode
    */
   setCursorStyle (mode: string): void {
     let cs = 'auto'

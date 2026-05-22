@@ -22,8 +22,7 @@ let svgCanvas: any = null
 
 /**
 * @function module:elem-get-set.init
-* @param {module:elem-get-set.elemContext} elemContext
-* @returns {void}
+* @param elemContext
 */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const init = (canvas: any): void => {
@@ -72,7 +71,7 @@ export const init = (canvas: any): void => {
 
 /**
 * @function module:elem-get-set.SvgCanvas#getResolution
-* @returns {DimensionsAndZoom} The current dimensions and zoom level in an object
+* @returns The current dimensions and zoom level in an object
 */
 const getResolutionMethod = (): { w: number; h: number; zoom: number } => {
   const zoom: number = svgCanvas.getZoom()
@@ -88,8 +87,7 @@ const getResolutionMethod = (): { w: number; h: number; zoom: number } => {
 
 /**
 * @function module:elem-get-set.SvgCanvas#getTitle
-* @param {Element} [elem]
-* @returns {string|void}
+* @param [elem]
 */
 const getTitleMethod = (elem?: Element): string | undefined => {
   const selectedElements: Element[] = svgCanvas.getSelectedElements()
@@ -114,8 +112,7 @@ const getTitleMethod = (elem?: Element): string | undefined => {
 /**
 * Sets the group/SVG's title content.
 * @function module:elem-get-set.SvgCanvas#setGroupTitle
-* @param {string} val
-* @returns {void}
+* @param val
 */
 const setGroupTitleMethod = (val: string): void => {
   const {
@@ -168,8 +165,7 @@ const setGroupTitleMethod = (val: string): void => {
 /**
 * Adds/updates a title element for the document with the given name.
 * @function module:elem-get-set.SvgCanvas#setDocumentTitle
-* @param {string} newTitle
-* @returns {void}
+* @param newTitle
 */
 const setDocumentTitleMethod = (newTitle: string): void => {
   const {
@@ -213,9 +209,8 @@ const setDocumentTitleMethod = (newTitle: string): void => {
 /**
 * Changes the document's dimensions to the given size.
 * @function module:elem-get-set.SvgCanvas#setResolution
-* @param {Float|"fit"} x
-* @param {Float} y
-* @returns {boolean}
+* @param x
+* @param y
 */
 const setResolutionMethod = (x: number | 'fit', y: number): boolean => {
   const { ChangeElementCommand, BatchCommand } = svgCanvas.history
@@ -275,8 +270,7 @@ const setResolutionMethod = (x: number | 'fit', y: number): boolean => {
 /**
 * Returns the editor's namespace URL.
 * @function module:elem-get-set.SvgCanvas#getEditorNS
-* @param {boolean} [add]
-* @returns {string}
+* @param [add]
 */
 const getEditorNSMethod = (add?: boolean): string => {
   if (add) {
@@ -288,7 +282,6 @@ const getEditorNSMethod = (add?: boolean): string => {
 /**
 * Sets the zoom level on the canvas-side based on the given value.
 * @function module:elem-get-set.SvgCanvas#setBBoxZoom
-* @returns {module:elem-get-set.ZoomAndBBox|void}
 */
 const setBBoxZoomMethod = (val: unknown, editorW: number, editorH: number): { zoom: number; bbox: unknown } | undefined => {
   const zoom: number = svgCanvas.getZoom()
@@ -357,8 +350,7 @@ const setBBoxZoomMethod = (val: unknown, editorW: number, editorH: number): { zo
 /**
 * Sets the zoom to the given level.
 * @function module:elem-get-set.SvgCanvas#setZoom
-* @param {Float} zoomLevel
-* @returns {void}
+* @param zoomLevel
 */
 const setZoomMethod = (zoomLevel: number): void => {
   if (!Number.isFinite(zoomLevel) || zoomLevel <= 0) {
@@ -385,7 +377,6 @@ const setZoomMethod = (zoomLevel: number): void => {
 /**
 * Change the current stroke/fill color/gradient value.
 * @function module:elem-get-set.SvgCanvas#setColor
-* @returns {void}
 */
 const setColorMethod = (type: string, val: string, preventUndo?: boolean): void => {
   const selectedElements: (Element | null)[] = svgCanvas.getSelectedElements()
@@ -426,7 +417,6 @@ const setColorMethod = (type: string, val: string, preventUndo?: boolean): void 
 /**
 * Apply the current gradient to selected element's fill or stroke.
 * @function module:elem-get-set.SvgCanvas#setGradient
-* @returns {void}
 */
 const setGradientMethod = (type: string): void => {
   if (!svgCanvas.getCurProperties(`${type}_paint`) ||
@@ -529,7 +519,6 @@ const findDuplicateGradient = (grad: SVGGradientElement | null): SVGGradientElem
 /**
 * Set a color/gradient to a fill/stroke.
 * @function module:elem-get-set.SvgCanvas#setPaint
-* @returns {void}
 */
 const setPaintMethod = (type: string, paint: ConstructorParameters<typeof Paint>[0]): void => {
   const p = new Paint(paint)
@@ -551,7 +540,6 @@ const setPaintMethod = (type: string, paint: ConstructorParameters<typeof Paint>
 /**
 * Sets the stroke width for the current selected elements.
 * @function module:elem-get-set.SvgCanvas#setStrokeWidth
-* @returns {void}
 */
 const setStrokeWidthMethod = (val: number): void => {
   const selectedElements: (Element | null)[] = svgCanvas.getSelectedElements()
@@ -588,7 +576,6 @@ const setStrokeWidthMethod = (val: number): void => {
 /**
 * Set the given stroke-related attribute the given value for selected elements.
 * @function module:elem-get-set.SvgCanvas#setStrokeAttr
-* @returns {void}
 */
 const setStrokeAttrMethod = (attr: string, val: string | number): void => {
   const selectedElements: (Element | null)[] = svgCanvas.getSelectedElements()
@@ -805,7 +792,7 @@ const setLengthAdjustMethod = (value: string): void => {
 }
 
 /**
- * @returns {string} The current font family
+ * @returns The current font family
  */
 const getFontFamilyMethod = (): string => {
   return svgCanvas.getCurText('font_family') as string
@@ -841,14 +828,14 @@ const setFontColorMethod = (val: string): void => {
 }
 
 /**
- * @returns {string} The current font color
+ * @returns The current font color
  */
 const getFontColorMethod = (): string => {
   return svgCanvas.getCurText('fill') as string
 }
 
 /**
- * @returns {number} The current font size
+ * @returns The current font size
  */
 const getFontSizeMethod = (): number => {
   return svgCanvas.getCurText('font_size') as number
@@ -871,7 +858,7 @@ const setFontSizeMethod = (val: number): void => {
 }
 
 /**
- * @returns {string} The current text content of the selected element
+ * @returns The current text content of the selected element
  */
 const getTextMethod = (): string => {
   const selectedElements: (Element | null)[] = svgCanvas.getSelectedElements()

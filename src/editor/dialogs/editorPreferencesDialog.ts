@@ -59,8 +59,7 @@ export class SeEditPrefsDialog extends HTMLElement {
 
   /**
    * @function init
-   * @param {any} name
-   * @returns {void}
+   * @param name
    */
    
   init (i18next: any): void {
@@ -82,7 +81,7 @@ export class SeEditPrefsDialog extends HTMLElement {
 
   /**
    * @function observedAttributes
-   * @returns {any} observed
+   * @returns observed
    */
   static get observedAttributes (): string[] {
      
@@ -91,10 +90,9 @@ export class SeEditPrefsDialog extends HTMLElement {
 
   /**
    * @function attributeChangedCallback
-   * @param {string} name
-   * @param {string} oldValue
-   * @param {string} newValue
-   * @returns {void}
+   * @param name
+   * @param oldValue
+   * @param newValue
    */
   attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
     if (oldValue === newValue) return
@@ -220,7 +218,6 @@ export class SeEditPrefsDialog extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get lang (): string {
     return this.getAttribute('lang') ?? ''
@@ -228,7 +225,6 @@ export class SeEditPrefsDialog extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set lang (value: string) {
     this.setAttribute('lang', value)
@@ -236,7 +232,6 @@ export class SeEditPrefsDialog extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get canvasbg (): string | null {
     return this.getAttribute('canvasbg')
@@ -244,7 +239,6 @@ export class SeEditPrefsDialog extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set canvasbg (value: string) {
     this.setAttribute('canvasbg', value)
@@ -252,7 +246,6 @@ export class SeEditPrefsDialog extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get bgurl (): string | null {
     return this.getAttribute('bgurl')
@@ -260,7 +253,6 @@ export class SeEditPrefsDialog extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set bgurl (value: string) {
     this.setAttribute('bgurl', value)
@@ -268,7 +260,6 @@ export class SeEditPrefsDialog extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get dialog (): string | null {
     return this.getAttribute('dialog')
@@ -276,7 +267,6 @@ export class SeEditPrefsDialog extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set dialog (value: string) {
     this.setAttribute('dialog', value)
@@ -284,7 +274,6 @@ export class SeEditPrefsDialog extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get gridsnappingon (): string | null {
     return this.getAttribute('gridsnappingon')
@@ -292,7 +281,6 @@ export class SeEditPrefsDialog extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set gridsnappingon (value: string) {
     this.setAttribute('gridsnappingon', value)
@@ -300,7 +288,6 @@ export class SeEditPrefsDialog extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get gridsnappingstep (): string | null {
     return this.getAttribute('gridsnappingstep')
@@ -308,7 +295,6 @@ export class SeEditPrefsDialog extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set gridsnappingstep (value: string) {
     this.setAttribute('gridsnappingstep', value)
@@ -316,7 +302,6 @@ export class SeEditPrefsDialog extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get gridcolor (): string | null {
     return this.getAttribute('gridcolor')
@@ -324,7 +309,6 @@ export class SeEditPrefsDialog extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set gridcolor (value: string) {
     this.setAttribute('gridcolor', value)
@@ -332,7 +316,6 @@ export class SeEditPrefsDialog extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get showrulers (): string | null {
     return this.getAttribute('showrulers')
@@ -340,7 +323,6 @@ export class SeEditPrefsDialog extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set showrulers (value: string) {
     this.setAttribute('showrulers', value)
@@ -348,7 +330,6 @@ export class SeEditPrefsDialog extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get baseunit (): string | null {
     return this.getAttribute('baseunit')
@@ -356,7 +337,6 @@ export class SeEditPrefsDialog extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set baseunit (value: string) {
     this.setAttribute('baseunit', value)
@@ -364,7 +344,6 @@ export class SeEditPrefsDialog extends HTMLElement {
 
   /**
    * @function connectedCallback
-   * @returns {void}
    */
   connectedCallback (): void {
     const onCancelHandler = () => {

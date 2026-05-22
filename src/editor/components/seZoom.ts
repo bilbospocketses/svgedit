@@ -206,7 +206,6 @@ class SeZoom extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get value (): string {
     return this.getAttribute('value') ?? ''
@@ -214,7 +213,6 @@ class SeZoom extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set value (value: string | number) {
     this.setAttribute('value', String(value))
@@ -222,10 +220,9 @@ class SeZoom extends HTMLElement {
 
   /**
    * @function attributeChangedCallback
-   * @param {string} name
-   * @param {string} oldValue
-   * @param {string} newValue
-   * @returns {void}
+   * @param name
+   * @param oldValue
+   * @param newValue
    */
   // TODO: see todo #10 — inverted-guard attributeChangedCallback: runs inner block when old===new; preserved as-is
   attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
@@ -253,7 +250,6 @@ class SeZoom extends HTMLElement {
 
   /**
    * @function handleOptionsChange
-   * @returns {void}
    */
   handleOptionsChange (): void {
     if (this.slotElement.assignedElements().length > 0) {
@@ -270,7 +266,6 @@ class SeZoom extends HTMLElement {
 
   /**
    * @function handleClick
-   * @returns {void}
    */
   handleClick () {
     this.optionsContainer.style.display = 'flex'
@@ -280,8 +275,7 @@ class SeZoom extends HTMLElement {
 
   /**
    * @function handleSelect
-   * @param {Event} e
-   * @returns {void}
+   * @param e
    */
   handleSelect (e: Event): void {
     const target = e.target as Element
@@ -291,7 +285,6 @@ class SeZoom extends HTMLElement {
 
   /**
    * @function handleShow
-   * @returns {void}
    * initialises the popup menu position
    */
   initPopup () {
@@ -307,8 +300,7 @@ class SeZoom extends HTMLElement {
 
   /**
    * @function handleClose
-   * @param {Event} e
-   * @returns {void}
+   * @param e
    * Close the popup menu
    */
   handleClose (e: Event): void {
@@ -320,7 +312,6 @@ class SeZoom extends HTMLElement {
 
   /**
    * @function handleInput
-   * @returns {void}
    */
   handleInput () {
     if (this.changedTimeout) {
@@ -332,7 +323,6 @@ class SeZoom extends HTMLElement {
 
   /**
    * @function triggerInputChanged
-   * @returns {void}
    */
   triggerInputChanged () {
     const newValue = this.inputElement.value
@@ -341,7 +331,6 @@ class SeZoom extends HTMLElement {
 
   /**
    * @function increment
-   * @returns {void}
    */
   increment (): void {
     this.value = parseInt(this.value) + 10
@@ -349,7 +338,6 @@ class SeZoom extends HTMLElement {
 
   /**
    * @function decrement
-   * @returns {void}
    */
   decrement (): void {
     const current = parseInt(this.value)
@@ -362,9 +350,8 @@ class SeZoom extends HTMLElement {
 
   /**
    * @function handleMouseDown
-   * @param {string} dir
-   * @param {boolean} isFirst
-   * @returns {void}
+   * @param dir
+   * @param isFirst
    * Increment/Decrement on mouse held down, if its the first call add a delay before starting
    */
   handleMouseDown (dir: string, isFirst: boolean): void {
@@ -397,8 +384,7 @@ class SeZoom extends HTMLElement {
 
   /**
    * @function handleMouseUp
-   * @param {string} dir
-   * @returns {void}
+   * @param dir
    */
   handleMouseUp (dir: string): void {
     if (dir === 'up') {
@@ -410,8 +396,7 @@ class SeZoom extends HTMLElement {
 
   /**
    * @function handleKeyDown
-   * @param {Event} e
-   * @returns {void}
+   * @param e
    */
   handleKeyDown (e: KeyboardEvent): void {
     if (e.key === 'ArrowUp') {

@@ -83,7 +83,7 @@ export class SESpinInput extends HTMLElement {
 
   /**
    * @function observedAttributes
-   * @returns {any} observed
+   * @returns observed
    */
   static get observedAttributes () {
     return ['value', 'label', 'src', 'size', 'min', 'max', 'step', 'title']
@@ -91,10 +91,9 @@ export class SESpinInput extends HTMLElement {
 
   /**
    * @function attributeChangedCallback
-   * @param {string} name
-   * @param {string} oldValue
-   * @param {string} newValue
-   * @returns {void}
+   * @param name
+   * @param oldValue
+   * @param newValue
    */
   attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
     if (oldValue === newValue) return
@@ -141,7 +140,6 @@ export class SESpinInput extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get title (): string {
     return this.getAttribute('title') ?? ''
@@ -149,7 +147,6 @@ export class SESpinInput extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set title (value: string) {
     this.setAttribute('title', value)
@@ -157,7 +154,6 @@ export class SESpinInput extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get label () {
     return this.getAttribute('label')
@@ -165,7 +161,6 @@ export class SESpinInput extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set label (value: string | null) {
     this.setAttribute('label', value ?? '')
@@ -173,7 +168,6 @@ export class SESpinInput extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get value () {
     return this.$input.value
@@ -181,7 +175,6 @@ export class SESpinInput extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set value (value: string) {
     this.$input.value = value
@@ -189,7 +182,6 @@ export class SESpinInput extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get src () {
     return this.getAttribute('src')
@@ -197,7 +189,6 @@ export class SESpinInput extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set src (value: string | null) {
     this.setAttribute('src', value ?? '')
@@ -205,7 +196,6 @@ export class SESpinInput extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get size () {
     return this.getAttribute('size')
@@ -213,7 +203,6 @@ export class SESpinInput extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set size (value: string | null) {
     this.setAttribute('size', value ?? '')
@@ -221,7 +210,6 @@ export class SESpinInput extends HTMLElement {
 
   /**
    * @function connectedCallback
-   * @returns {void}
    */
   connectedCallback () {
     // TODO: see todo #10 — shadowDOM-piercing; replaced when #3 (elix→Lit) lands

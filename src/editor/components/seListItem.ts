@@ -55,7 +55,7 @@ export class SeListItem extends HTMLElement {
 
   /**
    * @function observedAttributes
-   * @returns {any} observed
+   * @returns observed
    */
   static get observedAttributes () {
     return ['option', 'src', 'title', 'img-height', 'selected']
@@ -63,10 +63,9 @@ export class SeListItem extends HTMLElement {
 
   /**
    * @function attributeChangedCallback
-   * @param {string} name
-   * @param {string} oldValue
-   * @param {string} newValue
-   * @returns {void}
+   * @param name
+   * @param oldValue
+   * @param newValue
    */
   attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
     if (oldValue === newValue) return
@@ -100,7 +99,6 @@ export class SeListItem extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get option () {
     return this.getAttribute('option')
@@ -108,7 +106,6 @@ export class SeListItem extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set option (value: string | null) {
     this.setAttribute('option', value ?? '')
@@ -116,7 +113,6 @@ export class SeListItem extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get title (): string {
     return this.getAttribute('title') ?? ''
@@ -124,7 +120,6 @@ export class SeListItem extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set title (value: string) {
     this.setAttribute('title', value)
@@ -132,7 +127,6 @@ export class SeListItem extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get imgHeight () {
     return this.getAttribute('img-height')
@@ -140,7 +134,6 @@ export class SeListItem extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set imgHeight (value: string | null) {
     this.setAttribute('img-height', value ?? '')
@@ -148,7 +141,6 @@ export class SeListItem extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get src () {
     return this.getAttribute('src')
@@ -156,7 +148,6 @@ export class SeListItem extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set src (value: string | null) {
     this.setAttribute('src', value ?? '')

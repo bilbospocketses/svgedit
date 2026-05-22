@@ -68,16 +68,13 @@ class Editor extends EditorStartup {
   constructor (div: HTMLElement | null = null) {
     super(div)
     /**
-     * @type {boolean}
      */
     this.langChanged = false
     /**
-     * @type {boolean}
      */
     this.showSaveWarning = false
     /**
      * Will be set to a boolean by `ext-storage.js`
-     * @type {"ignore"|"waiting"|"closed"}
      */
     this.storagePromptState = 'ignore'
     /**
@@ -346,11 +343,10 @@ class Editor extends EditorStartup {
 
   /**
    *
-   * @param {string} str SVG string
-   * @param {PlainObject} [opts={}]
-   * @param {boolean} [opts.noAlert]
+   * @param str SVG string
+   * @param [opts={}]
+   * @param [opts.noAlert]
    * @throws {Error} Upon failure to load SVG
-   * @returns {void}
    */
   loadSvgString (str: string, { noAlert }: { noAlert?: boolean | undefined } = {}): void {
     const success = this.svgCanvas.setSvgString(str) !== false
@@ -365,7 +361,6 @@ class Editor extends EditorStartup {
   /**
    * All methods are optional.
    * @interface module:SVGthis.CustomHandler
-   * @type {PlainObject}
    */
   /**
    * Its responsibilities are:
@@ -374,7 +369,6 @@ class Editor extends EditorStartup {
    *  - calls [svgCanvas.setSvgString()]{@link module:svgcanvas.SvgCanvas#setSvgString} with the string contents of that file.
    * Not passed any parameters.
    * @function module:SVGthis.CustomHandler#open
-   * @returns {void}
    */
   /**
    * Its responsibilities are:
@@ -382,10 +376,9 @@ class Editor extends EditorStartup {
    *  - invoke a file chooser dialog in 'save' mode
    *  - save the file to location chosen by the user.
    * @function module:SVGthis.CustomHandler#save
-   * @param {external:Window} win
-   * @param {module:svgcanvas.SvgCanvas#event:saved} svgStr A string of the SVG
+   * @param win
+   * @param svgStr A string of the SVG
    * @listens module:svgcanvas.SvgCanvas#event:saved
-   * @returns {void}
    */
   /**
    * Its responsibilities (with regard to the object it is supplied in its 2nd argument) are:
@@ -395,23 +388,20 @@ class Editor extends EditorStartup {
    *    'WEBP', 'PDF'), "mimeType", and "quality" (for 'JPEG' and 'WEBP'
    *    types) to determine the proper output.
    * @function module:SVGthis.CustomHandler#exportImage
-   * @param {external:Window} win
-   * @param {module:svgcanvas.SvgCanvas#event:exported} data
+   * @param win
+   * @param data
    * @listens module:svgcanvas.SvgCanvas#event:exported
-   * @returns {void}
    */
   /**
    * @function module:SVGthis.CustomHandler#exportPDF
-   * @param {external:Window} win
-   * @param {module:svgcanvas.SvgCanvas#event:exportedPDF} data
+   * @param win
+   * @param data
    * @listens module:svgcanvas.SvgCanvas#event:exportedPDF
-   * @returns {void}
    */
 
   /**
    * @function module:SVGthis.randomizeIds
-   * @param {boolean} arg
-   * @returns {void}
+   * @param arg
    */
   randomizeIds (arg: boolean): void {
     this.svgCanvas.randomizeIds(arg)
@@ -422,7 +412,6 @@ class Editor extends EditorStartup {
    * document has been successfully persisted (e.g., ext-opensave after
    * `fileSave` resolves). Any subsequent edit re-arms the warning via
    * the `elementChanged` handler.
-   * @returns {void}
    */
   markSaved () {
     this.showSaveWarning = false
@@ -432,7 +421,6 @@ class Editor extends EditorStartup {
    *  @lends module:SVGEditor~Actions */
   /**
    * editor shortcuts init
-   * @returns {void}
    */
   setAll (): void {
     const keyHandler: Record<string, { fn: () => void; pd: boolean }> = {} // will contain the action for each pressed key
@@ -494,8 +482,7 @@ class Editor extends EditorStartup {
   }
 
   /**
-   * @param {string} sel Selector to match
-   * @returns {module:SVGthis.ToolButton}
+   * @param sel Selector to match
    */
   getButtonData (sel: string): any {
     return Object.values(this.shortcuts).find((btn: any) => {
@@ -504,10 +491,9 @@ class Editor extends EditorStartup {
   }
 
   /**
-   * @param {external:Window} win
-   * @param {module:svgcanvas.SvgCanvas#event:exported} data
+   * @param win
+   * @param data
    * @listens module:svgcanvas.SvgCanvas#event:exported
-   * @returns {void}
    */
   exportHandler (_win: any, data: any): void {
     const { issues, exportWindowName } = data
@@ -542,9 +528,8 @@ class Editor extends EditorStartup {
 
   /**
    *
-   * @param {string} color
-   * @param {string} url
-   * @returns {void}
+   * @param color
+   * @param url
    */
   setBackground (color: string, url: string): void {
     // if (color == this.configObj.pref('bkgd_color') && url == this.configObj.pref('bkgd_url')) { return; }
@@ -557,9 +542,8 @@ class Editor extends EditorStartup {
 
   /**
    * @function module:SVGthis.updateCanvas
-   * @param {boolean} center
-   * @param {module:math.XYObject} newCtr
-   * @returns {void}
+   * @param center
+   * @param newCtr
    */
   updateCanvas (center?: boolean, newCtr?: { x: number; y: number }): void {
     const zoom = this.svgCanvas.getZoom()
@@ -653,7 +637,6 @@ class Editor extends EditorStartup {
 
   /**
    *
-   * @returns {void}
    */
   updateWireFrame () {
     const rule = `
@@ -670,11 +653,10 @@ class Editor extends EditorStartup {
   // called when we've selected a different element
   /**
    *
-   * @param {external:Window} win
-   * @param {module:svgcanvas.SvgCanvas#event:selected} elems Array of elements that were selected
+   * @param win
+   * @param elems Array of elements that were selected
    * @listens module:svgcanvas.SvgCanvas#event:selected
    * @fires module:svgcanvas.SvgCanvas#event:ext_selectedChanged
-   * @returns {void}
    */
   selectedChanged (_win: any, elems: any[]): void {
     const mode = this.svgCanvas.getMode()
@@ -705,11 +687,10 @@ class Editor extends EditorStartup {
   // Call when part of element is in process of changing, generally
   // on mousemove actions like rotate, move, etc.
   /**
-   * @param {external:Window} win
-   * @param {module:svgcanvas.SvgCanvas#event:transition} elems
+   * @param win
+   * @param elems
    * @listens module:svgcanvas.SvgCanvas#event:transition
    * @fires module:svgcanvas.SvgCanvas#event:ext_elementTransition
-   * @returns {void}
    */
   elementTransition (_win: any, elems: any[]): void {
     const mode = this.svgCanvas.getMode()
@@ -743,11 +724,10 @@ class Editor extends EditorStartup {
 
   // called when any element has changed
   /**
-   * @param {external:Window} win
-   * @param {Array<PlainObject>} elems
+   * @param win
+   * @param elems
    * @listens module:svgcanvas.SvgCanvas#event:changed
    * @fires module:svgcanvas.SvgCanvas#event:ext_elementChanged
-   * @returns {void}
    */
   elementChanged (_win: any, elems: any[]): void {
     const mode = this.svgCanvas.getMode()
@@ -793,7 +773,6 @@ class Editor extends EditorStartup {
   }
 
   /**
-   * @returns {void}
    */
   elementRenamed (_win: any, renameObj: any): void {
     this.svgCanvas.runExtensions({
@@ -803,21 +782,18 @@ class Editor extends EditorStartup {
   }
 
   /**
-   * @returns {void}
    */
   afterClear (_win: any): void {
     this.svgCanvas.runExtensions({ action: 'afterClear' })
   }
 
   /**
-   * @returns {void}
    */
   beforeClear (_win: any): void {
     this.svgCanvas.runExtensions({ action: 'beforeClear' })
   }
 
   /**
-   * @returns {void}
    */
   zoomDone () {
     for (const el of this.svgCanvas.selectedElements) {
@@ -827,24 +803,12 @@ class Editor extends EditorStartup {
   }
 
   /**
-   * @typedef {PlainObject} module:SVGthis.BBoxObjectWithFactor (like `DOMRect`)
-   * @property {Float} x
-   * @property {Float} y
-   * @property {Float} width
-   * @property {Float} height
-   * @property {Float} [factor] Needed if width or height are 0
-   * @property {Float} [zoom]
-   * @see module:svgcanvas.SvgCanvas#event:zoomed
-   */
-
-  /**
    * @function module:svgcanvas.SvgCanvas#zoomChanged
-   * @param {external:Window} win
-   * @param {module:svgcanvas.SvgCanvas#event:zoomed} bbox
-   * @param {boolean} autoCenter
+   * @param win
+   * @param bbox
+   * @param autoCenter
    * @listens module:svgcanvas.SvgCanvas#event:zoomed
    * @fires module:svgcanvas.SvgCanvas#event:ext_zoomChanged
-   * @returns {void}
    */
   zoomChanged (_win: any, bbox: any, autoCenter?: boolean): void {
     const scrbar = 15
@@ -893,10 +857,9 @@ class Editor extends EditorStartup {
   }
 
   /**
-   * @param {external:Window} win
-   * @param {module:svgcanvas.SvgCanvas#event:contextset} context
+   * @param win
+   * @param context
    * @listens module:svgcanvas.SvgCanvas#event:contextset
-   * @returns {void}
    */
   contextChanged (_win: any, context: Element | null): void {
     let linkStr = ''
@@ -927,9 +890,8 @@ class Editor extends EditorStartup {
 
   /**
    * @function module:SVGEditor.setIcon
-   * @param {string|Element|external:jQuery} elem
-   * @param {string|external:jQuery} iconId
-   * @returns {void}
+   * @param elem
+   * @param iconId
    */
   setIcon (elem: string, iconId: string): void {
     const img = document.createElement('img')
@@ -950,10 +912,10 @@ class Editor extends EditorStartup {
   }
 
   /**
-   * @param {external:Window} win
-   * @param {module:svgcanvas.SvgCanvas#event:extension_added} ext
+   * @param win
+   * @param ext
    * @listens module:svgcanvas.SvgCanvas#event:extension_added
-   * @returns {Promise<void>|void} Resolves to `undefined`
+   * @returns Resolves to `undefined`
    */
   // eslint-disable-next-line @typescript-eslint/require-await
   async extAdded (_win: any, ext: any): Promise<void> {
@@ -964,7 +926,6 @@ class Editor extends EditorStartup {
 
     /**
      *
-     * @returns {void}
      */
     const runCallback = () => {
       if (ext.callback && !cbCalled) {
@@ -980,8 +941,7 @@ class Editor extends EditorStartup {
   }
 
   /**
-   * @param {Float} multiplier
-   * @returns {void}
+   * @param multiplier
    */
   zoomImage (multiplier?: number): void {
     const resolution = this.svgCanvas.getResolution()
@@ -995,7 +955,6 @@ class Editor extends EditorStartup {
 
   /**
    *
-   * @returns {void}
    */
   cutSelected () {
     if (this.selectedElement || this.multiselected) {
@@ -1005,7 +964,6 @@ class Editor extends EditorStartup {
 
   /**
    * @function copySelected
-   * @returns {void}
    */
   copySelected () {
     if (this.selectedElement || this.multiselected) {
@@ -1015,7 +973,6 @@ class Editor extends EditorStartup {
 
   /**
    *
-   * @returns {void}
    */
   pasteInCenter () {
     const { workarea } = this
@@ -1036,8 +993,7 @@ class Editor extends EditorStartup {
   }
 
   /**
-   * @param {"Up"|"Down"} dir
-   * @returns {void}
+   * @param dir
    */
   moveUpDownSelected (dir: 'Up' | 'Down'): void {
     if (this.selectedElement) {
@@ -1046,9 +1002,8 @@ class Editor extends EditorStartup {
   }
 
   /**
-   * @param {Float} dx
-   * @param {Float} dy
-   * @returns {void}
+   * @param dx
+   * @param dy
    */
   moveSelected (dx: number, dy: number): void {
     if (this.selectedElement || this.multiselected) {
@@ -1065,7 +1020,6 @@ class Editor extends EditorStartup {
 
   /**
    *
-   * @returns {void}
    */
   selectNext () {
     this.svgCanvas.cycleElement(1)
@@ -1073,16 +1027,14 @@ class Editor extends EditorStartup {
 
   /**
    *
-   * @returns {void}
    */
   selectPrev () {
     this.svgCanvas.cycleElement(0)
   }
 
   /**
-   * @param {0|1} cw
-   * @param {Integer} step
-   * @returns {void}
+   * @param cw
+   * @param step
    */
   rotateSelected (cw: 0 | 1, step: number): void {
     if (!this.selectedElement || this.multiselected) {
@@ -1098,7 +1050,6 @@ class Editor extends EditorStartup {
 
   /**
    *
-   * @returns {void}
    */
   hideSourceEditor (): void {
     const $editorDialog = $id('se-svg-editor-dialog')
@@ -1106,8 +1057,8 @@ class Editor extends EditorStartup {
   }
 
   /**
-   * @param {Event} e
-   * @returns {void} Resolves to `undefined`
+   * @param e
+   * @returns Resolves to `undefined`
    */
   async saveSourceEditor (e: any): Promise<void> {
     const $editorDialog = $id('se-svg-editor-dialog')
@@ -1134,8 +1085,8 @@ class Editor extends EditorStartup {
   }
 
   /**
-   * @param {Event} e
-   * @returns {void} Resolves to `undefined`
+   * @param e
+   * @returns Resolves to `undefined`
    */
   cancelOverlays (e: any): void {
     if ($id('dialog_box') != null) $id('dialog_box')!.style.display = 'none'
@@ -1164,7 +1115,6 @@ class Editor extends EditorStartup {
   }
 
   /**
-   * @returns {void}
    */
   toggleDynamicOutput (e: any): void {
     this.configObj.curConfig.dynamicOutput = e.detail.dynamic
@@ -1176,7 +1126,6 @@ class Editor extends EditorStartup {
   }
 
   /**
-   * @returns {void}
    */
   enableOrDisableClipboard () {
     let svgeditClipboard
@@ -1193,7 +1142,7 @@ class Editor extends EditorStartup {
 
   /**
    * @function module:SVGthis.openPrep
-   * @returns {boolean|Promise<boolean>} Resolves to boolean indicating `true` if there were no changes
+   * @returns Resolves to boolean indicating `true` if there were no changes
    *  and `false` after the user confirms.
    */
   async openPrep () {
@@ -1205,8 +1154,7 @@ class Editor extends EditorStartup {
 
   /**
    *
-   * @param {Event} e
-   * @returns {void}
+   * @param e
    */
   onDragEnter (e: DragEvent): void {
     e.stopPropagation()
@@ -1216,8 +1164,7 @@ class Editor extends EditorStartup {
 
   /**
    *
-   * @param {Event} e
-   * @returns {void}
+   * @param e
    */
   onDragOver (e: DragEvent): void {
     e.stopPropagation()
@@ -1226,8 +1173,7 @@ class Editor extends EditorStartup {
 
   /**
    *
-   * @param {Event} e
-   * @returns {void}
+   * @param e
    */
   onDragLeave (e: DragEvent): void {
     e.stopPropagation()
@@ -1237,11 +1183,11 @@ class Editor extends EditorStartup {
 
   /**
    * @function module:SVGthis.setLang
-   * @param {string} lang The language code
-   * @param {module:locale.LocaleStrings} allStrings See {@tutorial LocaleDocs}
+   * @param lang The language code
+   * @param allStrings See {@tutorial LocaleDocs}
    * @fires module:svgcanvas.SvgCanvas#event:ext_langReady
    * @fires module:svgcanvas.SvgCanvas#event:ext_langChanged
-   * @returns {void} A Promise which resolves to `undefined`
+   * @returns A Promise which resolves to `undefined`
    */
   setLang (lang: string): void {
     this.langChanged = true
@@ -1271,15 +1217,14 @@ class Editor extends EditorStartup {
 
   /**
    * @callback module:SVGthis.ReadyCallback
-   * @returns {Promise<void>|void}
    */
   /**
    * Queues a callback to be invoked when the editor is ready (or
    *   to be invoked immediately if it is already ready--i.e.,
    *   if `runCallbacks` has been run).
    * @function module:SVGthis.ready
-   * @param {module:SVGthis.ReadyCallback} cb Callback to be queued to invoke
-   * @returns {Promise<ArbitraryCallbackResult>} Resolves when all callbacks, including the supplied have resolved
+   * @param cb Callback to be queued to invoke
+   * @returns Resolves when all callbacks, including the supplied have resolved
    */
   ready (cb: () => any): Promise<any> {
     return new Promise((resolve, reject) => {
@@ -1294,7 +1239,7 @@ class Editor extends EditorStartup {
   /**
    * Invokes the callbacks previous set by `svgthis.ready`
    * @function module:SVGthis.runCallbacks
-   * @returns {Promise<void>} Resolves to `undefined` if all callbacks succeeded and rejects otherwise
+   * @returns Resolves to `undefined` if all callbacks succeeded and rejects otherwise
    */
   async runCallbacks () {
     try {
@@ -1317,10 +1262,9 @@ class Editor extends EditorStartup {
 
   /**
    * @function module:SVGthis.loadFromString
-   * @param {string} str The SVG string to load
-   * @param {PlainObject} [opts={}]
-   * @param {boolean} [opts.noAlert=false] Option to avoid alert to user and instead get rejected promise
-   * @returns {Promise<void>}
+   * @param str The SVG string to load
+   * @param [opts={}]
+   * @param [opts.noAlert=false] Option to avoid alert to user and instead get rejected promise
    */
   loadFromString (str: string, { noAlert }: { noAlert?: boolean | undefined } = {}): Promise<any> {
     return this.ready(() => {
@@ -1336,16 +1280,15 @@ class Editor extends EditorStartup {
 
   /**
    * @callback module:SVGthis.URLLoadCallback
-   * @param {boolean} success
-   * @returns {void}
+   * @param success
    */
   /**
    * @function module:SVGthis.loadFromURL
-   * @param {string} url URL from which to load an SVG string via Ajax
-   * @param {PlainObject} [opts={}] May contain properties: `cache`, `callback`
-   * @param {boolean} [opts.cache]
-   * @param {boolean} [opts.noAlert]
-   * @returns {Promise<void>} Resolves to `undefined` or rejects upon bad loading of
+   * @param url URL from which to load an SVG string via Ajax
+   * @param [opts={}] May contain properties: `cache`, `callback`
+   * @param [opts.cache]
+   * @param [opts.noAlert]
+   * @returns Resolves to `undefined` or rejects upon bad loading of
    *   the SVG (or upon failure to parse the loaded string) when `noAlert` is
    *   enabled
    */
@@ -1384,10 +1327,10 @@ class Editor extends EditorStartup {
 
   /**
    * @function module:SVGthis.loadFromDataURI
-   * @param {string} str The Data URI to base64-decode (if relevant) and load
-   * @param {PlainObject} [opts={}]
-   * @param {boolean} [opts.noAlert]
-   * @returns {Promise<void>} Resolves to `undefined` and rejects if loading SVG string fails and `noAlert` is enabled
+   * @param str The Data URI to base64-decode (if relevant) and load
+   * @param [opts={}]
+   * @param [opts.noAlert]
+   * @returns Resolves to `undefined` and rejects if loading SVG string fails and `noAlert` is enabled
    */
   loadFromDataURI (str: string, { noAlert }: { noAlert?: boolean | undefined } = {}): Promise<any> {
     return this.ready(() => {
@@ -1409,11 +1352,11 @@ class Editor extends EditorStartup {
 
   /**
    * @function module:SVGthis.addExtension
-   * @param {string} name Used internally; no need for i18n.
-   * @param {module:svgcanvas.ExtensionInitCallback} initfn Config to be invoked on this module
-   * @param {module:svgcanvas.ExtensionInitArgs} initArgs
+   * @param name Used internally; no need for i18n.
+   * @param initfn Config to be invoked on this module
+   * @param initArgs
    * @throws {Error} If called too early
-   * @returns {Promise<void>} Resolves to `undefined`
+   * @returns Resolves to `undefined`
    */
   addExtension (name: string, initfn: any, initArgs: any): Promise<void> {
     // Note that we don't want this on this.ready since some extensions

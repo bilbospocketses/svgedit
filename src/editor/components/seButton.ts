@@ -73,7 +73,7 @@ export class ToolButton extends HTMLElement {
 
   /**
    * @function observedAttributes
-   * @returns {any} observed
+   * @returns observed
    */
   static get observedAttributes () {
     return ['title', 'src', 'pressed', 'disabled', 'size', 'style']
@@ -81,10 +81,9 @@ export class ToolButton extends HTMLElement {
 
   /**
    * @function attributeChangedCallback
-   * @param {string} name
-   * @param {string} oldValue
-   * @param {string} newValue
-   * @returns {void}
+   * @param name
+   * @param oldValue
+   * @param newValue
    */
   attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
     if (oldValue === newValue) return
@@ -134,7 +133,6 @@ export class ToolButton extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get title (): string {
     return this.getAttribute('title') ?? ''
@@ -142,7 +140,6 @@ export class ToolButton extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set title (value: string) {
     this.setAttribute('title', value)
@@ -150,7 +147,6 @@ export class ToolButton extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get pressed () {
     return this.hasAttribute('pressed')
@@ -158,7 +154,6 @@ export class ToolButton extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set pressed (value: boolean) {
     // boolean value => existence = true
@@ -171,7 +166,6 @@ export class ToolButton extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get disabled () {
     return this.hasAttribute('disabled')
@@ -179,7 +173,6 @@ export class ToolButton extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set disabled (value: boolean) {
     // boolean value => existence = true
@@ -192,7 +185,6 @@ export class ToolButton extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get src () {
     return this.getAttribute('src')
@@ -200,7 +192,6 @@ export class ToolButton extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set src (value: string | null) {
     this.setAttribute('src', value ?? '')
@@ -208,7 +199,6 @@ export class ToolButton extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get size () {
     return this.getAttribute('size')
@@ -216,7 +206,6 @@ export class ToolButton extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set size (value: string | null) {
     this.setAttribute('size', value ?? '')
@@ -224,7 +213,6 @@ export class ToolButton extends HTMLElement {
 
   /**
    * @function connectedCallback
-   * @returns {void}
    */
   connectedCallback () {
     // capture shortcuts

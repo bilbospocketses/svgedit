@@ -31,12 +31,12 @@ class Layer {
   static CLASS_REGEX: RegExp = new RegExp(`(\\s|^)${Layer.CLASS_NAME}(\\s|$)`)
 
   /**
-  * @param {string} name - Layer name
-  * @param {SVGGElement | null} group - An existing SVG group element or null.
+  * @param name - Layer name
+  * @param group - An existing SVG group element or null.
   *     If group and no svgElem, use group for this layer.
   *     If group and svgElem, create a new group element and insert it in the DOM after group.
   *     If no group and svgElem, create a new group element and insert it in the DOM as the last layer.
-  * @param {SVGSVGElement} [svgElem] - The SVG DOM element. If defined, use this to add
+  * @param [svgElem] - The SVG DOM element. If defined, use this to add
   *     a new layer to the document.
   */
   constructor (name: string, group: SVGGElement | null, svgElem?: SVGSVGElement) {
@@ -68,7 +68,7 @@ class Layer {
 
   /**
    * Get the layer's name.
-   * @returns {string} The layer name
+   * @returns The layer name
    */
   getName (): string {
     return this.name_
@@ -76,7 +76,7 @@ class Layer {
 
   /**
    * Get the group element for this layer.
-   * @returns {SVGGElement} The layer SVG group
+   * @returns The layer SVG group
    */
   getGroup (): SVGGElement {
     return this.group_
@@ -84,7 +84,6 @@ class Layer {
 
   /**
    * Active this layer so it takes pointer events.
-   * @returns {void}
    */
   activate (): void {
     this.group_.style.pointerEvents = 'all'
@@ -92,7 +91,6 @@ class Layer {
 
   /**
    * Deactive this layer so it does NOT take pointer events.
-   * @returns {void}
    */
   deactivate (): void {
     this.group_.style.pointerEvents = 'none'
@@ -100,8 +98,7 @@ class Layer {
 
   /**
    * Set this layer visible or hidden based on 'visible' parameter.
-   * @param {boolean} visible - If true, make visible; otherwise, hide it.
-   * @returns {void}
+   * @param visible - If true, make visible; otherwise, hide it.
    */
   setVisible (visible?: boolean): void {
     const expected = (visible === undefined || visible) ? 'inline' : 'none'
@@ -113,7 +110,7 @@ class Layer {
 
   /**
    * Is this layer visible?
-   * @returns {boolean} True if visible.
+   * @returns True if visible.
    */
   isVisible (): boolean {
     return this.group_.getAttribute('display') !== 'none'
@@ -121,7 +118,7 @@ class Layer {
 
   /**
    * Get layer opacity.
-   * @returns {number} Opacity value.
+   * @returns Opacity value.
    */
   getOpacity (): number {
     const opacity = this.group_.getAttribute('opacity')
@@ -131,8 +128,7 @@ class Layer {
   /**
    * Sets the opacity of this layer. If opacity is not a value between 0.0 and 1.0,
    * nothing happens.
-   * @param {number} opacity - A float value in the range 0.0-1.0
-   * @returns {void}
+   * @param opacity - A float value in the range 0.0-1.0
    */
   setOpacity (opacity: number): void {
     if (typeof opacity === 'number' && opacity >= 0.0 && opacity <= 1.0) {
@@ -142,8 +138,7 @@ class Layer {
 
   /**
    * Append children to this layer.
-   * @param {Element[]} children - The children to append to this layer.
-   * @returns {void}
+   * @param children - The children to append to this layer.
    */
   appendChildren (children: Element[]): void {
     for (const child of children) {
@@ -152,7 +147,6 @@ class Layer {
   }
 
   /**
-  * @returns {SVGTitleElement | null}
   */
   getTitleElement (): SVGTitleElement | null {
     const len = this.group_.childNodes.length
@@ -167,9 +161,9 @@ class Layer {
 
   /**
    * Set the name of this layer.
-   * @param {string} name - The new name.
-   * @param {HistoryRecordingService} [hrService] - History recording service
-   * @returns {string | null} The new name if changed; otherwise, null.
+   * @param name - The new name.
+   * @param [hrService] - History recording service
+   * @returns The new name if changed; otherwise, null.
    */
   setName (name: string, hrService?: HistoryRecordingService): string | null {
     const previousName = this.name_
@@ -190,7 +184,7 @@ class Layer {
 
   /**
    * Remove this layer's group from the DOM. No more functions on group can be called after this.
-   * @returns {SVGGElement} The layer SVG group that was just removed.
+   * @returns The layer SVG group that was just removed.
    */
   removeGroup (): SVGGElement {
     const group = this.group_
@@ -201,8 +195,8 @@ class Layer {
 
   /**
    * Test whether an element is a layer or not.
-   * @param {SVGGElement | null | undefined} elem - The SVGGElement to test.
-   * @returns {boolean} True if the element is a layer
+   * @param elem - The SVGGElement to test.
+   * @returns True if the element is a layer
    */
   static isLayer (elem: SVGGElement | null | undefined): boolean {
     return !!(elem && elem.tagName === 'g' && Layer.CLASS_REGEX.test(elem.getAttribute('class') ?? ''))
@@ -212,8 +206,7 @@ class Layer {
 /**
  * Add class `Layer.CLASS_NAME` to the element (usually `class='layer'`).
  *
- * @param {SVGGElement} elem - The SVG element to update
- * @returns {void}
+ * @param elem - The SVG element to update
  */
 const addLayerClass = (elem: SVGGElement): void => {
   const classes = elem.getAttribute('class')

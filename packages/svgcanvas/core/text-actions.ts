@@ -23,8 +23,7 @@ let svgCanvas: any = null
 
 /**
  * @function module:text-actions.init
- * @param {unknown} canvas
- * @returns {void}
+ * @param canvas
  */
 export const init = (canvas: unknown): void => {
   svgCanvas = canvas
@@ -61,8 +60,8 @@ class TextActions {
    * Get the accumulated transformation matrix from the element up to the SVG content element.
    * This includes transforms from all parent groups, fixing the issue where text cursor
    * appears in the wrong position when editing text inside a transformed group.
-   * @param {Element} elem - The element to get the accumulated matrix for
-   * @returns {SVGMatrix|null} The accumulated transformation matrix, or null if none
+   * @param elem - The element to get the accumulated matrix for
+   * @returns The accumulated transformation matrix, or null if none
    * @private
    */
   #getAccumulatedMatrix = (elem: Element): SVGMatrix | null => {
@@ -93,8 +92,7 @@ class TextActions {
 
   /**
    *
-   * @param {number} [index]
-   * @returns {void}
+   * @param [index]
    * @private
    */
   #setCursor = (index?: number): void => {
@@ -161,10 +159,9 @@ class TextActions {
 
   /**
    *
-   * @param {number} start
-   * @param {number} end
-   * @param {boolean} [skipInput]
-   * @returns {void}
+   * @param start
+   * @param end
+   * @param [skipInput]
    * @private
    */
   #setSelection = (start: number, end: number, skipInput?: boolean): void => {
@@ -233,9 +230,8 @@ class TextActions {
 
   /**
    *
-   * @param {number} mouseX
-   * @param {number} mouseY
-   * @returns {number}
+   * @param mouseX
+   * @param mouseY
    * @private
    */
   #getIndexFromPoint = (mouseX: number, mouseY: number): number => {
@@ -273,9 +269,8 @@ class TextActions {
 
   /**
    *
-   * @param {number} mouseX
-   * @param {number} mouseY
-   * @returns {void}
+   * @param mouseX
+   * @param mouseY
    * @private
    */
   #setCursorFromPoint = (mouseX: number, mouseY: number): void => {
@@ -284,10 +279,9 @@ class TextActions {
 
   /**
    *
-   * @param {number} x
-   * @param {number} y
-   * @param {boolean} [apply]
-   * @returns {void}
+   * @param x
+   * @param y
+   * @param [apply]
    * @private
    */
   #setEndSelectionFromPoint = (x: number, y: number, apply?: boolean): void => {
@@ -301,9 +295,8 @@ class TextActions {
 
   /**
    *
-   * @param {number} xIn
-   * @param {number} yIn
-   * @returns {XYObject}
+   * @param xIn
+   * @param yIn
    * @private
    */
   #screenToPt = (xIn: number, yIn: number): XYObject => {
@@ -326,9 +319,8 @@ class TextActions {
 
   /**
    *
-   * @param {number} xIn
-   * @param {number} yIn
-   * @returns {XYObject}
+   * @param xIn
+   * @param yIn
    * @private
    */
   #ptToScreen = (xIn: number, yIn: number): XYObject => {
@@ -351,8 +343,7 @@ class TextActions {
 
   /**
    *
-   * @param {Event} evt
-   * @returns {void}
+   * @param evt
    * @private
    */
   #selectAll = (evt: Event): void => {
@@ -363,8 +354,7 @@ class TextActions {
 
   /**
    *
-   * @param {MouseEvent} evt
-   * @returns {void}
+   * @param evt
    * @private
    */
   #selectWord = (evt: MouseEvent): void => {
@@ -393,10 +383,9 @@ class TextActions {
   }
 
   /**
-   * @param {SVGTextElement} target
-   * @param {number} x
-   * @param {number} y
-   * @returns {void}
+   * @param target
+   * @param x
+   * @param y
    */
   select (target: SVGTextElement, x: number, y: number): void {
     this.#curtext = target
@@ -404,8 +393,7 @@ class TextActions {
   }
 
   /**
-   * @param {SVGTextElement} elem
-   * @returns {void}
+   * @param elem
    */
   start (elem: SVGTextElement): void {
     this.#curtext = elem
@@ -413,11 +401,10 @@ class TextActions {
   }
 
   /**
-   * @param {MouseEvent} evt
-   * @param {Element} mouseTarget
-   * @param {number} startX
-   * @param {number} startY
-   * @returns {void}
+   * @param evt
+   * @param mouseTarget
+   * @param startX
+   * @param startY
    */
   mouseDown (_evt: MouseEvent, _mouseTarget: Element, startX: number, startY: number): void {
     const pt = this.#screenToPt(startX, startY)
@@ -431,9 +418,8 @@ class TextActions {
   }
 
   /**
-   * @param {number} mouseX
-   * @param {number} mouseY
-   * @returns {void}
+   * @param mouseX
+   * @param mouseY
    */
   mouseMove (mouseX: number, mouseY: number): void {
     const pt = this.#screenToPt(mouseX, mouseY)
@@ -441,10 +427,9 @@ class TextActions {
   }
 
   /**
-   * @param {MouseEvent} evt
-   * @param {number} mouseX
-   * @param {number} mouseY
-   * @returns {void}
+   * @param evt
+   * @param mouseX
+   * @param mouseY
    */
   mouseUp (evt: MouseEvent, mouseX: number, mouseY: number): void {
     const pt = this.#screenToPt(mouseX, mouseY)
@@ -469,17 +454,15 @@ class TextActions {
   }
 
   /**
-   * @param {number} index
-   * @returns {void}
+   * @param index
    */
   setCursor (index: number): void {
     this.#setCursor(index)
   }
 
   /**
-   * @param {number} [x]
-   * @param {number} [y]
-   * @returns {void}
+   * @param [x]
+   * @param [y]
    */
   toEditMode (x?: number, y?: number): void {
     this.#allowDbl = false
@@ -511,9 +494,8 @@ class TextActions {
   }
 
   /**
-   * @param {boolean|Element} [selectElem]
+   * @param [selectElem]
    * @fires module:svgcanvas.SvgCanvas#event:selected
-   * @returns {void}
    */
   toSelectMode (selectElem?: boolean | Element): void {
     svgCanvas.setCurrentMode('select')
@@ -551,15 +533,13 @@ class TextActions {
   }
 
   /**
-   * @param {HTMLInputElement} elem
-   * @returns {void}
+   * @param elem
    */
   setInputElem (elem: HTMLInputElement): void {
     this.#textinput = elem
   }
 
   /**
-   * @returns {void}
    */
   clear (): void {
     if (svgCanvas.getCurrentMode() === 'textedit') {
@@ -568,8 +548,7 @@ class TextActions {
   }
 
   /**
-   * @param {Element} [_inputElem] Not in use
-   * @returns {void}
+   * @param [_inputElem] Not in use
    */
   init (_inputElem?: Element): void {
     if (!this.#curtext) {

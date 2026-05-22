@@ -28,8 +28,7 @@ let path: any = null
 
 /**
 * @function module:path-actions.init
-* @param {module:path-actions.svgCanvas} pathActionsContext
-* @returns {void}
+* @param pathActionsContext
 */
 export const init = (canvas: unknown): void => {
   svgCanvas = canvas
@@ -52,9 +51,8 @@ export const init = (canvas: unknown): void => {
  * Convert a path to one with only absolute or relative values.
  * @todo move to pathActions.js
  * @function module:path.convertPath
- * @param {SVGPathElement} pth - the path to convert
- * @param {boolean} toRel - true of convert to relative
- * @returns {string}
+ * @param pth - the path to convert
+ * @param toRel - true of convert to relative
  */
 export const convertPath = (pth: SVGPathElement, toRel: boolean): string => {
   const { pathSegList } = pth
@@ -234,11 +232,10 @@ export const convertPath = (pth: SVGPathElement, toRel: boolean): string => {
 /**
  * TODO: refactor callers in `convertPath` to use `getPathDFromSegments` instead of this function.
  * Legacy code refactored from `svgcanvas.pathActions.convertPath`.
- * @param {string} letter - path segment command
- * @param {number[][]} points - x,y points
- * @param {number[]} [morePoints] - additional numeric params
- * @param {number[]} [lastPoint] - x,y point
- * @returns {string}
+ * @param letter - path segment command
+ * @param points - x,y points
+ * @param [morePoints] - additional numeric params
+ * @param [lastPoint] - x,y point
  */
 const pathDSegment = (letter: string, points: number[][], morePoints?: number[], lastPoint?: number[]): string => {
   const parts: string[] = [
@@ -268,8 +265,7 @@ class PathActions {
   * a path element and coverts every three line segments into a single bezier
   * curve in an attempt to smooth out the free-hand.
   * @function smoothPolylineIntoPath
-  * @param {unknown} element
-  * @returns {unknown}
+  * @param element
   * @private
   */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -325,11 +321,10 @@ class PathActions {
   }
 
   /**
-  * @param {MouseEvent} evt
-  * @param {Element} mouseTarget
-  * @param {number} startX
-  * @param {number} startY
-  * @returns {boolean|undefined}
+  * @param evt
+  * @param mouseTarget
+  * @param startX
+  * @param startY
   */
    
   mouseDown (evt: MouseEvent, _mouseTarget: Element, startX: number, startY: number): boolean | undefined {
@@ -536,9 +531,8 @@ class PathActions {
   }
 
   /**
-    * @param {number} mouseX
-    * @param {number} mouseY
-    * @returns {void}
+    * @param mouseX
+    * @param mouseY
     */
   mouseMove (mouseX: number, mouseY: number): void {
     const zoom = svgCanvas.getZoom() as number
@@ -662,11 +656,10 @@ class PathActions {
   }
 
   /**
-    * @param {MouseEvent} evt
-    * @param {Element} element
-    * @param {number} _mouseX
-    * @param {number} _mouseY
-    * @returns {{ keep: boolean; element: Element } | undefined}
+    * @param evt
+    * @param element
+    * @param _mouseX
+    * @param _mouseY
     */
   mouseUp (evt: MouseEvent, element: Element, _mouseX: number, _mouseY: number): { keep: boolean; element: Element } | undefined {
     const drawnPath = svgCanvas.getDrawnPath() as SVGPathElement | null
@@ -713,8 +706,7 @@ class PathActions {
   }
 
   /**
-    * @param {Element} element
-    * @returns {void}
+    * @param element
     */
   toEditMode (element: Element): void {
     path = svgCanvas.getPath_(element)
@@ -727,9 +719,8 @@ class PathActions {
   }
 
   /**
-    * @param {Element} [elem]
+    * @param [elem]
     * @fires module:svgcanvas.SvgCanvas#event:selected
-    * @returns {void}
     */
   toSelectMode (elem?: Element): void {
     const selPath = (elem === path.elem)
@@ -750,8 +741,7 @@ class PathActions {
   }
 
   /**
-    * @param {boolean} on
-    * @returns {void}
+    * @param on
     */
   addSubPath (on: boolean): void {
     if (on) {
@@ -764,8 +754,7 @@ class PathActions {
   }
 
   /**
-    * @param {Element} target
-    * @returns {void}
+    * @param target
     */
   select (target: Element): void {
     if (this.#currentPath === target) {
@@ -778,7 +767,6 @@ class PathActions {
 
   /**
     * @fires module:svgcanvas.SvgCanvas#event:changed
-    * @returns {void}
     */
   reorient (): void {
     const elem = svgCanvas.getSelectedElements()[0] as Element | null
@@ -807,8 +795,7 @@ class PathActions {
   }
 
   /**
-    * @param {boolean} [_remove] Not in use
-    * @returns {void}
+    * @param [_remove] Not in use
     */
   clear (_remove?: boolean): void {
     const drawnPath = svgCanvas.getDrawnPath() as SVGPathElement | null
@@ -835,8 +822,7 @@ class PathActions {
   }
 
   /**
-    * @param {SVGPathElement | null | undefined} [pth]
-    * @returns {false|undefined}
+    * @param [pth]
     */
   resetOrientation (pth?: SVGPathElement | null): false | undefined {
     if (pth?.nodeName !== 'path') { return false }
@@ -872,7 +858,6 @@ class PathActions {
   }
 
   /**
-    * @returns {void}
     */
   zoomChange (): void {
     if (svgCanvas.getCurrentMode() === 'pathedit') {
@@ -881,7 +866,6 @@ class PathActions {
   }
 
   /**
-    * @returns {{ x: number; y: number; type: number }}
     */
   getNodePoint (): { x: number; y: number; type: number } {
     const selPt = path.selected_pts.length ? path.selected_pts[0] : 1
@@ -895,15 +879,13 @@ class PathActions {
   }
 
   /**
-    * @param {boolean} linkPoints
-    * @returns {void}
+    * @param linkPoints
     */
   linkControlPoints (linkPoints: boolean): void {
     svgCanvas.setLinkControlPoints(linkPoints)
   }
 
   /**
-    * @returns {void}
     */
   clonePathNode (): void {
     path.storeD()
@@ -926,7 +908,6 @@ class PathActions {
   }
 
   /**
-    * @returns {void}
     */
   opencloseSubPath (): void {
     const selPts = path.selected_pts as number[]
@@ -1020,7 +1001,6 @@ class PathActions {
   }
 
   /**
-    * @returns {void}
     */
   deletePathNode (): void {
     if (!pathActionsMethod.canDeleteNodes) { return }
@@ -1103,17 +1083,15 @@ class PathActions {
 
 
   /**
-  * @param {number | null | undefined} [v] See {@link https://www.w3.org/TR/SVG/single-page.html#paths-InterfaceSVGPathSeg}
-  * @returns {void}
+  * @param [v] See {@link https://www.w3.org/TR/SVG/single-page.html#paths-InterfaceSVGPathSeg}
   */
   setSegType (v?: number | null): void {
     path?.setSegType(v)
   }
 
   /**
-  * @param {string} attr
-  * @param {number} newValue
-  * @returns {void}
+  * @param attr
+  * @param newValue
   */
   moveNode (attr: string, newValue: number): void {
     const selPts = path.selected_pts as number[]
@@ -1130,8 +1108,7 @@ class PathActions {
   }
 
   /**
-  * @param {SVGPathElement} elem
-  * @returns {void}
+  * @param elem
   */
   fixEnd (elem: SVGPathElement): void {
     const segList = elem.pathSegList
@@ -1169,7 +1146,6 @@ class PathActions {
   /**
    * Complete the in-progress path open (NOT closed). Requires the drawn
    * path to have at least 2 segments; no-op otherwise.
-   * @returns {void}
    */
   finishPath (): void {
     const drawnPath = svgCanvas.getDrawnPath() as SVGPathElement | null
@@ -1184,7 +1160,6 @@ class PathActions {
 
   /**
    * Discard the in-progress path drawing entirely.
-   * @returns {void}
    */
   cancelPath (): void {
     if (!svgCanvas.getDrawnPath()) return

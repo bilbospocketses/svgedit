@@ -11,7 +11,6 @@ import sePlainBorderButton from './sePlainBorderButton.js'
 export default class ElixMenuButton extends (PlainMenuButton as unknown as typeof HTMLElement) {
   /**
     * @function get
-    * @returns {PlainObject}
   */
   get [defaultState] (): any {
     // @ts-expect-error: elix computed property key not in HTMLElement type

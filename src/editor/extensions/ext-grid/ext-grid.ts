@@ -91,8 +91,7 @@ export default {
 
     /**
      *
-     * @param {Float} zoom
-     * @returns {void}
+     * @param zoom
      */
     const updateGrid = (zoom: number) => {
       // TODO: Try this with <line> elements, then compare performance difference
@@ -145,7 +144,6 @@ export default {
 
     /**
      *
-     * @returns {void}
      */
     const gridUpdate = () => {
       if (showGrid) {

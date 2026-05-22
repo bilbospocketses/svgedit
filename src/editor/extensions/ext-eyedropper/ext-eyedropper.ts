@@ -75,8 +75,7 @@ export default {
 
     /**
      *
-     * @param {module:svgcanvas.SvgCanvas#event:ext_selectedChanged|module:svgcanvas.SvgCanvas#event:ext_elementChanged} opts
-     * @returns {void}
+     * @param opts
      */
     const getStyle = (opts: any) => {
       let elem = null

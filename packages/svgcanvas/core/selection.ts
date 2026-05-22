@@ -27,7 +27,6 @@ let svgCanvas: any = null
 
 /**
  * @function module:selection.init
- * @returns {void}
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const init = (canvas: any): void => {

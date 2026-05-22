@@ -36,8 +36,7 @@ const config: LoggerConfig = {
 
 /**
  * Set the logging level
- * @param {LogLevelValue} level - The log level to set
- * @returns {void}
+ * @param level - The log level to set
  */
 export const setLogLevel = (level: LogLevelValue): void => {
   if ((Object.values(LogLevel) as LogLevelValue[]).includes(level)) {
@@ -47,8 +46,7 @@ export const setLogLevel = (level: LogLevelValue): void => {
 
 /**
  * Enable or disable logging
- * @param {boolean} enabled - Whether logging should be enabled
- * @returns {void}
+ * @param enabled - Whether logging should be enabled
  */
 export const setLoggingEnabled = (enabled: boolean): void => {
   config.enabled = Boolean(enabled)
@@ -56,8 +54,7 @@ export const setLoggingEnabled = (enabled: boolean): void => {
 
 /**
  * Set the log prefix
- * @param {string} prefix - The prefix to use for log messages
- * @returns {void}
+ * @param prefix - The prefix to use for log messages
  */
 export const setLogPrefix = (prefix: string): void => {
   config.prefix = String(prefix)
@@ -65,9 +62,9 @@ export const setLogPrefix = (prefix: string): void => {
 
 /**
  * Format a log message with prefix and context
- * @param {string} message - The log message
- * @param {string} [context=''] - Optional context information
- * @returns {string} Formatted message
+ * @param message - The log message
+ * @param [context=''] - Optional context information
+ * @returns Formatted message
  */
 const formatMessage = (message: string, context = ''): string => {
   const contextStr = context ? ` [${context}]` : ''
@@ -76,10 +73,9 @@ const formatMessage = (message: string, context = ''): string => {
 
 /**
  * Log an error message
- * @param {string} message - The error message
- * @param {unknown} [errorData] - Optional error object or additional data
- * @param {string} [context=''] - Optional context (e.g., module name)
- * @returns {void}
+ * @param message - The error message
+ * @param [errorData] - Optional error object or additional data
+ * @param [context=''] - Optional context (e.g., module name)
  */
 export const error = (message: string, errorData?: unknown, context = ''): void => {
   if (!config.enabled || config.currentLevel < LogLevel.ERROR) return
@@ -92,10 +88,9 @@ export const error = (message: string, errorData?: unknown, context = ''): void 
 
 /**
  * Log a warning message
- * @param {string} message - The warning message
- * @param {unknown} [data] - Optional additional data
- * @param {string} [context=''] - Optional context (e.g., module name)
- * @returns {void}
+ * @param message - The warning message
+ * @param [data] - Optional additional data
+ * @param [context=''] - Optional context (e.g., module name)
  */
 export const warn = (message: string, data?: unknown, context = ''): void => {
   if (!config.enabled || config.currentLevel < LogLevel.WARN) return
@@ -108,10 +103,9 @@ export const warn = (message: string, data?: unknown, context = ''): void => {
 
 /**
  * Log an info message
- * @param {string} message - The info message
- * @param {unknown} [data] - Optional additional data
- * @param {string} [context=''] - Optional context (e.g., module name)
- * @returns {void}
+ * @param message - The info message
+ * @param [data] - Optional additional data
+ * @param [context=''] - Optional context (e.g., module name)
  */
 export const info = (message: string, data?: unknown, context = ''): void => {
   if (!config.enabled || config.currentLevel < LogLevel.INFO) return
@@ -124,10 +118,9 @@ export const info = (message: string, data?: unknown, context = ''): void => {
 
 /**
  * Log a debug message
- * @param {string} message - The debug message
- * @param {unknown} [data] - Optional additional data
- * @param {string} [context=''] - Optional context (e.g., module name)
- * @returns {void}
+ * @param message - The debug message
+ * @param [data] - Optional additional data
+ * @param [context=''] - Optional context (e.g., module name)
  */
 export const debug = (message: string, data?: unknown, context = ''): void => {
   if (!config.enabled || config.currentLevel < LogLevel.DEBUG) return
@@ -140,7 +133,7 @@ export const debug = (message: string, data?: unknown, context = ''): void => {
 
 /**
  * Get current logger configuration
- * @returns {LoggerConfig} Current configuration
+ * @returns Current configuration
  */
 export const getConfig = (): LoggerConfig => ({ ...config })
 

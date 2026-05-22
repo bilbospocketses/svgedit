@@ -12,7 +12,6 @@ import { fragmentFrom } from 'elix/src/core/htmlLiterals.js'
 export default class SePlainAlertDialog extends (PlainAlertDialog as unknown as typeof HTMLElement) {
   /**
     * @function get
-    * @returns {PlainObject}
   */
   get [template] (): any {
     // @ts-expect-error: elix computed property key not in HTMLElement type

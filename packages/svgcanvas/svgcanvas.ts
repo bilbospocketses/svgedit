@@ -284,8 +284,8 @@ class SvgCanvas {
   static convertUnit: typeof convertUnit
 
   /**
-   * @param {HTMLElement} container - The container HTML element that should hold the SVG root element
-   * @param {module:SVGeditor.configObj.curConfig} config - An object that contains configuration data
+   * @param container - The container HTML element that should hold the SVG root element
+   * @param config - An object that contains configuration data
    */
   constructor (container: HTMLElement, config?: Record<string, any>) {
     // imported function made available as methods
@@ -580,11 +580,10 @@ class SvgCanvas {
   }
 
   /**
-   * @param {PlainObject} changes
-   * @param {ChangeElementCommand} changes.cmd
-   * @param {SVGPathElement} changes.elem
+   * @param changes
+   * @param changes.cmd
+   * @param changes.elem
    * @fires module:svgcanvas.SvgCanvas#event:changed
-   * @returns {void}
    */
   endChanges ({ cmd, elem }: { cmd: any; elem: Element }): void {
     this.addCommandToHistory(cmd)
@@ -979,8 +978,7 @@ class SvgCanvas {
   /**
    * Sets the editor's mode to the given string.
    * @function module:svgcanvas.SvgCanvas#setMode
-   * @param {string} name - String with the new mode to change to
-   * @returns {void}
+   * @param name - String with the new mode to change to
    */
   setMode (name: string): void {
     this.pathActions.clear(true)
@@ -1000,7 +998,6 @@ class SvgCanvas {
    * Clears the current document. This is not an undoable action.
    * @function module:svgcanvas.SvgCanvas#clear
    * @fires module:svgcanvas.SvgCanvas#event:beforeClear|afterClear
-   * @returns {void}
    */
   clear (): void {
     this.call('beforeClear')
@@ -1083,9 +1080,9 @@ class SvgCanvas {
   /**
    * Attaches a callback function to an event.
    * @function module:svgcanvas.SvgCanvas#bind
-   * @param  {string} ev - String indicating the name of the event
-   * @param {module:svgcanvas.EventHandler} f - The callback function to bind to the event
-   * @returns {module:svgcanvas.EventHandler} The previous event
+   * @param ev - String indicating the name of the event
+   * @param f - The callback function to bind to the event
+   * @returns The previous event
    */
   bind (ev: string, f: (...args: any[]) => any): ((...args: any[]) => any) | undefined {
     const old = this.events[ev]
@@ -1095,7 +1092,6 @@ class SvgCanvas {
 
   /**
    * Flash the clipboard data momentarily on localStorage so all tabs can see.
-   * @returns {void}
    */
   flashStorage (): void {
     const data = sessionStorage.getItem(CLIPBOARD_ID)
@@ -1108,9 +1104,8 @@ class SvgCanvas {
   /**
    * Selects only the given elements, shortcut for `clearSelection(); addToSelection()`.
    * @function module:svgcanvas.SvgCanvas#selectOnly
-   * @param {Element[]} elems - an array of DOM elements to be selected
-   * @param {boolean} showGrips - Indicates whether the resize grips should be shown
-   * @returns {void}
+   * @param elems - an array of DOM elements to be selected
+   * @param showGrips - Indicates whether the resize grips should be shown
    */
   selectOnly (elems: Element[], showGrips?: boolean): void {
     this.clearSelection(true)
@@ -1120,8 +1115,7 @@ class SvgCanvas {
   /**
    * Removes elements from the selection.
    * @function module:svgcanvas.SvgCanvas#removeFromSelection
-   * @param {Element[]} elemsToRemove - An array of elements to remove from selection
-   * @returns {void}
+   * @param elemsToRemove - An array of elements to remove from selection
    */
   removeFromSelection (elemsToRemove: Element[]): void {
     if (!this.selectedElements[0]) {
@@ -1149,7 +1143,6 @@ class SvgCanvas {
   /**
    * Clears the selection, then adds all elements in the current layer to the selection.
    * @function module:svgcanvas.SvgCanvas#selectAllInCurrentLayer
-   * @returns {void}
    */
   selectAllInCurrentLayer (): void {
     const currentLayer = this.getCurrentDrawing().getCurrentLayer()
@@ -1169,7 +1162,7 @@ class SvgCanvas {
 
   /**
    * @function module:svgcanvas.SvgCanvas#getSnapToGrid
-   * @returns {boolean} The current snap to grid setting
+   * @returns The current snap to grid setting
    */
   getSnapToGrid (): boolean {
     return this.curConfig.gridSnapping
@@ -1177,7 +1170,7 @@ class SvgCanvas {
 
   /**
    * @function module:svgcanvas.SvgCanvas#getVersion
-   * @returns {string} A string which describes the revision number of SvgCanvas.
+   * @returns A string which describes the revision number of SvgCanvas.
    */
   getVersion (): string {
     return 'svgcanvas.js ($Rev$)'
@@ -1186,8 +1179,7 @@ class SvgCanvas {
   /**
    * Update interface strings with given values.
    * @function module:svgcanvas.SvgCanvas#setUiStrings
-   * @param {module:path.uiStrings} strs - Object with strings
-   * @returns {void}
+   * @param strs - Object with strings
    */
   setUiStrings (strs: any): void {
     Object.assign(this.uiStrings, (strs as { notification?: Record<string, string> }).notification)
@@ -1197,8 +1189,7 @@ class SvgCanvas {
   /**
    * Update configuration options with given values.
    * @function module:svgcanvas.SvgCanvas#setConfig
-   * @param {module:SVGEditor.Config} opts - Object with options
-   * @returns {void}
+   * @param opts - Object with options
    */
   setConfig (opts: Record<string, any>): void {
     Object.assign(this.curConfig, opts)
@@ -1206,7 +1197,7 @@ class SvgCanvas {
 
   /**
    * @function module:svgcanvas.SvgCanvas#getDocumentTitle
-   * @returns {string|void} The current document title or an empty string if not found
+   * @returns The current document title or an empty string if not found
    */
   getDocumentTitle (): string | undefined {
     return this.getTitle(this.svgContent) as string | undefined
@@ -1229,8 +1220,7 @@ class SvgCanvas {
 
   /**
    * @function module:svgcanvas.SvgCanvas#setFillPaint
-   * @param {module:jGraduate~Paint} paint
-   * @returns {void}
+   * @param paint
    */
   setFillPaint (paint: any): void {
     this.setPaint('fill', paint)
@@ -1238,7 +1228,7 @@ class SvgCanvas {
 
   /**
    * @function module:svgcanvas.SvgCanvas#getStrokeWidth
-   * @returns {Float|string} The current stroke-width value
+   * @returns The current stroke-width value
    */
   getStrokeWidth (): number | string {
     return this.curProperties.stroke_width
@@ -1246,7 +1236,7 @@ class SvgCanvas {
 
   /**
    * @function module:svgcanvas.SvgCanvas#getStyle
-   * @returns {module:svgcanvas.StyleOptions} current style options
+   * @returns current style options
    */
   getStyle (): Record<string, any> {
     return this.curShape
@@ -1255,8 +1245,7 @@ class SvgCanvas {
   /**
    * Sets the given opacity on the current selected elements.
    * @function module:svgcanvas.SvgCanvas#setOpacity
-   * @param {string} val
-   * @returns {void}
+   * @param val
    */
   setOpacity (val: string): void {
     this.curShape.opacity = val
@@ -1265,7 +1254,7 @@ class SvgCanvas {
 
   /**
    * @function module:svgcanvas.SvgCanvas#getFillOpacity
-   * @returns {Float} the current fill opacity
+   * @returns the current fill opacity
    */
   getFillOpacity (): number {
     return this.curShape.fill_opacity
@@ -1273,7 +1262,7 @@ class SvgCanvas {
 
   /**
    * @function module:svgcanvas.SvgCanvas#getStrokeOpacity
-   * @returns {string} the current stroke opacity
+   * @returns the current stroke opacity
    */
   getStrokeOpacity (): string {
     return this.curShape.stroke_opacity
@@ -1282,10 +1271,9 @@ class SvgCanvas {
   /**
    * Sets the current fill/stroke opacity.
    * @function module:svgcanvas.SvgCanvas#setPaintOpacity
-   * @param {string} type - String with "fill" or "stroke"
-   * @param {Float} val - Float with the new opacity value
-   * @param {boolean} preventUndo - Indicates whether or not this should be an undoable action
-   * @returns {void}
+   * @param type - String with "fill" or "stroke"
+   * @param val - Float with the new opacity value
+   * @param preventUndo - Indicates whether or not this should be an undoable action
    */
   setPaintOpacity (type: string, val: number, preventUndo?: boolean): void {
     this.curShape[`${type}_opacity`] = val
@@ -1299,8 +1287,8 @@ class SvgCanvas {
   /**
    * Gets the current fill/stroke opacity.
    * @function module:svgcanvas.SvgCanvas#getPaintOpacity
-   * @param {"fill"|"stroke"} type - String with "fill" or "stroke"
-   * @returns {Float} Fill/stroke opacity
+   * @param type - String with "fill" or "stroke"
+   * @returns Fill/stroke opacity
    */
   getPaintOpacity (type: 'fill' | 'stroke'): number {
     return type === 'fill' ? this.getFillOpacity() : this.getStrokeOpacity() as unknown as number
@@ -1309,8 +1297,8 @@ class SvgCanvas {
   /**
    * Gets the `stdDeviation` blur value of the given element.
    * @function module:svgcanvas.SvgCanvas#getBlur
-   * @param {Element} elem - The element to check the blur value for
-   * @returns {string|number} stdDeviation blur attribute value
+   * @param elem - The element to check the blur value for
+   * @returns stdDeviation blur attribute value
    */
   getBlur (elem: Element | null): string | number {
     let val: string | number = 0
@@ -1335,8 +1323,7 @@ class SvgCanvas {
   /**
    * Sets a given URL to be a "last good image" URL.
    * @function module:svgcanvas.SvgCanvas#setGoodImage
-   * @param {string} val
-   * @returns {void}
+   * @param val
    */
   setGoodImage (val: string): void {
     this.lastGoodImgUrl = val
@@ -1345,7 +1332,7 @@ class SvgCanvas {
   /**
    * Returns the current drawing as raw SVG XML text.
    * @function module:svgcanvas.SvgCanvas#getSvgString
-   * @returns {string} The current drawing as raw SVG XML text.
+   * @returns The current drawing as raw SVG XML text.
    */
   getSvgString (): string {
     this.saveOptions.apply = false
@@ -1356,8 +1343,7 @@ class SvgCanvas {
    * This function determines whether to use a nonce in the prefix, when
    * generating IDs for future documents in svgedit.
    * @function module:svgcanvas.SvgCanvas#randomizeIds
-   * @param {boolean} [enableRandomization]
-   * @returns {void}
+   * @param [enableRandomization]
    */
   randomizeIds (enableRandomization?: boolean): void {
     if (arguments.length > 0 && enableRandomization === false) {
@@ -1370,9 +1356,8 @@ class SvgCanvas {
   /**
    * Convert selected element to a path, or get the BBox of an element-as-path.
    * @function module:svgcanvas.SvgCanvas#convertToPath
-   * @param {Element} elem - The DOM element to be converted
-   * @param {boolean} getBBox - Boolean on whether or not to only return the path's BBox
-   * @returns {void|DOMRect|false|SVGPathElement|null}
+   * @param elem - The DOM element to be converted
+   * @param getBBox - Boolean on whether or not to only return the path's BBox
    */
   convertToPath (elem?: Element | null, getBBox?: boolean): any {
     if (!elem) {
@@ -1410,7 +1395,6 @@ class SvgCanvas {
    * Removes all selected elements from the DOM and adds the change to the
    * history stack. Remembers removed elements on the clipboard.
    * @function module:svgcanvas.SvgCanvas#cutSelectedElements
-   * @returns {void}
    */
   cutSelectedElements (): void {
     this.copySelectedElements()

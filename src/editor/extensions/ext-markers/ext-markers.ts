@@ -62,9 +62,9 @@ export default {
     })
 
     /**
-    * @param {Element} elem - A graphic element will have an attribute like marker-start
-    * @param {"marker-start"|"marker-mid"|"marker-end"} attr
-    * @returns {Element} The marker element that is linked to the graphic element
+    * @param elem - A graphic element will have an attribute like marker-start
+    * @param attr
+    * @returns The marker element that is linked to the graphic element
     */
     const getLinked = (elem: any, attr: string) => {
       const str = elem.getAttribute(attr)
@@ -79,8 +79,7 @@ export default {
 
     /**
      * Toggles context tool panel off/on.
-     * @param {boolean} on
-     * @returns {void}
+     * @param on
     */
     const showPanel = (on: boolean, elem?: any) => {
       $id('marker_panel').style.display = (on) ? 'block' : 'none'
@@ -97,9 +96,8 @@ export default {
     }
 
     /**
-    * @param {string} id
-    * @param {""|"nomarker"|"nomarker"|"leftarrow"|"rightarrow"|"textmarker"|"forwardslash"|"reverseslash"|"verticalslash"|"box"|"star"|"xmark"|"triangle"|"mcircle"} seType
-    * @returns {SVGMarkerElement}
+    * @param id
+    * @param seType
     */
     const addMarker = (id: string, seType: string) => {
       const selElems = svgCanvas.getSelectedElements()
@@ -153,8 +151,7 @@ export default {
     }
 
     /**
-    * @param {Element} elem
-    * @returns {SVGPolylineElement}
+    * @param elem
     */
     const convertline = (elem: any) => {
       // this routine came from the connectors extension
@@ -200,7 +197,6 @@ export default {
 
     /**
     *
-    * @returns {void}
     */
     const setMarker = (pos: string, markerType: string) => {
       const selElems = svgCanvas.getSelectedElements()
@@ -229,8 +225,7 @@ export default {
     /**
      * Called when the main system modifies an object. This routine changes
      *   the associated markers to be the same color.
-     * @param {Element} elem
-     * @returns {void}
+     * @param elem
     */
     const colorChanged = (elem: any) => {
       const color = elem.getAttribute('stroke')
@@ -251,8 +246,7 @@ export default {
     /**
     * Called when the main system creates or modifies an object.
     * Its primary purpose is to create new markers for cloned objects.
-    * @param {Element} el
-    * @returns {void}
+    * @param el
     */
     const updateReferences = (el: any) => {
       const selElems = svgCanvas.getSelectedElements()

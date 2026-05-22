@@ -12,16 +12,14 @@ let svgCanvas: any = null
 
 /**
 * @function module:blur.init
-* @param {unknown} canvas
-* @returns {void}
+* @param canvas
 */
 export const init = (canvas: unknown): void => {
   svgCanvas = canvas
 }
 
 /**
- * @param {Element} filterElem
- * @returns {Element | null}
+ * @param filterElem
  */
 const getFeGaussianBlurElem = (filterElem: Element): Element | null => {
   if (!filterElem || filterElem.nodeType !== 1) return null
@@ -31,8 +29,7 @@ const getFeGaussianBlurElem = (filterElem: Element): Element | null => {
 /**
 * Sets the `stdDeviation` blur value on the selected element without being undoable.
 * @function module:svgcanvas.SvgCanvas#setBlurNoUndo
-* @param {number} val - The new `stdDeviation` value
-* @returns {void}
+* @param val - The new `stdDeviation` value
 */
 export const setBlurNoUndo = (val: number): void => {
   const selectedElements: Element[] = svgCanvas.getSelectedElements()
@@ -85,7 +82,6 @@ export const setBlurNoUndo = (val: number): void => {
 
 /**
 * Finishes the blur change command and adds it to history if not empty.
-* @returns {void}
 */
 const finishChange = (): void => {
   const curCommand = svgCanvas.getCurCommand()
@@ -111,9 +107,8 @@ const finishChange = (): void => {
 * Sets the `x`, `y`, `width`, `height` values of the filter element in order to
 * make the blur not be clipped. Removes them if not neeeded.
 * @function module:svgcanvas.SvgCanvas#setBlurOffsets
-* @param {Element} filterElem - The filter DOM element to update
-* @param {number} stdDev - The standard deviation value on which to base the offset size
-* @returns {void}
+* @param filterElem - The filter DOM element to update
+* @param stdDev - The standard deviation value on which to base the offset size
 */
 export const setBlurOffsets = (filterElem: Element, stdDev: number): void => {
   if (!filterElem || filterElem.nodeType !== 1) {
@@ -141,9 +136,8 @@ export const setBlurOffsets = (filterElem: Element, stdDev: number): void => {
 /**
 * Adds/updates the blur filter to the selected element.
 * @function module:svgcanvas.SvgCanvas#setBlur
-* @param {number} val - Float with the new `stdDeviation` blur value
-* @param {boolean} complete - Whether or not the action should be completed (to add to the undo manager)
-* @returns {void}
+* @param val - Float with the new `stdDeviation` blur value
+* @param complete - Whether or not the action should be completed (to add to the undo manager)
 */
 export const setBlur = (val: number, complete: boolean): void => {
   const {

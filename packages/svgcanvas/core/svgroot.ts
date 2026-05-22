@@ -9,9 +9,8 @@ import { NS } from './namespaces.js'
 
 /**
 * @function module:svgcanvas.svgRootElement Build the canvas SVG root element + canvas-shadow defs.
-* @param {Document} svgdoc - the owner document the element will belong to
-* @param {[number, number]} dimensions - [width, height] of the root SVG
-* @returns {SVGSVGElement}
+* @param svgdoc - the owner document the element will belong to
+* @param dimensions - [width, height] of the root SVG
 */
 export const svgRootElement = (svgdoc: Document, dimensions: [number, number]): SVGSVGElement => {
   const w = String(dimensions[0])

@@ -15,8 +15,8 @@ class PaintBox {
   static ctr: number
 
   /**
-     * @param {string|Element|external:jQuery} container
-     * @param {"fill"} type
+     * @param container
+     * @param type
      */
   constructor (container: Element, type: string) {
     // set up gradients to be used for the buttons
@@ -43,8 +43,7 @@ class PaintBox {
   }
 
   /**
-     * @param {module:jGraduate~Paint} paint
-     * @returns {void}
+     * @param paint
      */
   setPaint (paint: any): void {
     this.paint = paint
@@ -73,11 +72,10 @@ class PaintBox {
   }
 
   /**
-   * @param {PlainObject} svgCanvas
-  * @param {string} color
-  * @param {Float} opac
-  * @param {string} type
-  * @returns {module:jGraduate~Paint}
+   * @param svgCanvas
+  * @param color
+  * @param opac
+  * @param type
   */
   static getPaint (svgCanvas: any, color: string, opac: number, type: string): any {
     // update the editor's fill paint
@@ -98,9 +96,8 @@ class PaintBox {
   }
 
   /**
-     * @param {PlainObject} svgcanvas
-     * @param {PlainObject} selectedElement
-     * @returns {any}
+     * @param svgcanvas
+     * @param selectedElement
      */
   update (svgcanvas: any, selectedElement: Element | null): any {
     if (!selectedElement) { return null }

@@ -20,7 +20,6 @@ class Rulers {
   rulerCorner: HTMLElement | null
 
   /**
-   * @type {Module}
   */
   constructor (editor: EditorInstance) {
     // Make [1,2,5] array
@@ -55,7 +54,6 @@ class Rulers {
   }
 
   /**
-   * @type {Module}
   */
   manageScroll (): void {
     if (this.rulerX) this.rulerX.scrollLeft = this.editor.workarea.scrollLeft
@@ -64,9 +62,8 @@ class Rulers {
 
   /**
    *
-   * @param {HTMLDivElement} [scanvas]
-   * @param {Float} [zoom]
-   * @returns {void}
+   * @param [scanvas]
+   * @param [zoom]
    */
   updateRulers (scanvas?: HTMLElement | null, zoom?: number): void {
     if (!zoom) { zoom = this.svgCanvas.getZoom() as number }

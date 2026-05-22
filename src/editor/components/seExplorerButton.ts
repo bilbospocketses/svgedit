@@ -51,8 +51,8 @@ export class ExplorerButton extends HTMLElement {
 
   /**
    * @function createTemplate
-   * @param {string} imgPath
-   * @returns {any} template
+   * @param imgPath
+   * @returns template
    */
 
   createTemplate (imgPath: string): HTMLTemplateElement {
@@ -159,7 +159,7 @@ export class ExplorerButton extends HTMLElement {
 
   /**
    * @function observedAttributes
-   * @returns {any} observed
+   * @returns observed
    */
   static get observedAttributes () {
     return ['title', 'pressed', 'disabled', 'lib', 'src']
@@ -167,10 +167,9 @@ export class ExplorerButton extends HTMLElement {
 
   /**
    * @function attributeChangedCallback
-   * @param {string} name
-   * @param {string} oldValue
-   * @param {string} newValue
-   * @returns {void}
+   * @param name
+   * @param oldValue
+   * @param newValue
    */
   async attributeChangedCallback (name: string, oldValue: string, newValue: string): Promise<void> {
     if (oldValue === newValue) return
@@ -219,7 +218,6 @@ export class ExplorerButton extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get title (): string {
     return this.getAttribute('title') ?? ''
@@ -227,7 +225,6 @@ export class ExplorerButton extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set title (value: string) {
     this.setAttribute('title', value)
@@ -235,7 +232,6 @@ export class ExplorerButton extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get pressed () {
     return this.hasAttribute('pressed')
@@ -243,7 +239,6 @@ export class ExplorerButton extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set pressed (value: boolean) {
     // boolean value => existence = true
@@ -256,7 +251,6 @@ export class ExplorerButton extends HTMLElement {
 
   /**
    * @function get
-   * @returns {any}
    */
   get disabled () {
     return this.hasAttribute('disabled')
@@ -264,7 +258,6 @@ export class ExplorerButton extends HTMLElement {
 
   /**
    * @function set
-   * @returns {void}
    */
   set disabled (value: boolean) {
     // boolean value => existence = true
@@ -277,7 +270,6 @@ export class ExplorerButton extends HTMLElement {
 
   /**
    * @function connectedCallback
-   * @returns {void}
    */
   connectedCallback () {
     // capture click event on the button to manage the logic
@@ -324,8 +316,7 @@ export class ExplorerButton extends HTMLElement {
 
   /**
    * @function updateLib
-   * @param {string} lib
-   * @returns {void}
+   * @param lib
    */
   async updateLib (lib: string): Promise<void> {
     const libDir = this.getAttribute('lib')

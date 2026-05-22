@@ -4,8 +4,7 @@ import { mergeDeep } from '@svgedit/svgcanvas/common/util.js'
 /**
 * Escapes special characters in a regular expression.
 * @function regexEscape
-* @param {string} str
-* @returns {string}
+* @param str
 */
 export const regexEscape = function (str: string): string {
   // Originally from: http://phpjs.org/functions
@@ -87,7 +86,7 @@ export default class ConfigObj {
   preferences = false
 
   /**
-   * @param {PlainObject} editor
+   * @param editor
    */
   constructor (editor: EditorInstance) {
     /**
@@ -251,7 +250,6 @@ export default class ConfigObj {
     this.urldata = {}
     /**
       * @name module:SVGEditor~defaultExtensions
-      * @type {string[]}
     */
     this.defaultExtensions = [
       'ext-connector',
@@ -292,7 +290,6 @@ export default class ConfigObj {
 
   /**
    * @function setupCurPrefs
-   * @returns {void}
    */
   setupCurPrefs () {
     const curPrefs = { ...this.defaultPrefs, ...this.curPrefs } // Now safe to merge with priority for curPrefs in the event any are already set
@@ -302,7 +299,6 @@ export default class ConfigObj {
 
   /**
    * Sets up current config based on defaults.
-   * @returns {void}
    */
   setupCurConfig () {
     const curConfig = { ...this.defaultConfig, ...this.curConfig } // Now safe to merge with priority for curConfig in the event any are already set
@@ -317,7 +313,6 @@ export default class ConfigObj {
 
   /**
    * @function loadFromURL Load config/data from URL if given
-   * @returns {void}
    */
   loadFromURL () {
     const { search, searchParams } = new URL(location.href)
@@ -411,7 +406,6 @@ export default class ConfigObj {
     *  change URL setting so that it always uses a different namespace,
     *  so it won't affect pre-existing user storage (but then if users saves
     *  that, it will then be subject to tampering
-    * @returns {void}
   */
   loadContentAndPrefs () {
     if (!this.curConfig.forceStorage &&
@@ -444,31 +438,29 @@ export default class ConfigObj {
   /**
   * Allows setting of preferences or configuration (including extensions).
   * @function module:SVGEditor.setConfig
-  * @param {module:SVGEditor.Config|module:SVGEditor.Prefs} opts The preferences or configuration (including extensions). See the tutorial on {@tutorial ConfigOptions} for info on config and preferences.
-  * @param {PlainObject} [cfgCfg] Describes configuration which applies to the
+  * @param opts The preferences or configuration (including extensions). See the tutorial on {@tutorial ConfigOptions} for info on config and preferences.
+  * @param [cfgCfg] Describes configuration which applies to the
   *    particular batch of supplied options
-  * @param {boolean} [cfgCfg.allowInitialUserOverride=false] Set to true if you wish
+  * @param [cfgCfg.allowInitialUserOverride=false] Set to true if you wish
   *  to allow initial overriding of settings by the user via the URL
   *  (if permitted) or previously stored preferences (if permitted);
   *  note that it will be too late if you make such calls in extension
   *  code because the URL or preference storage settings will
   *   have already taken place.
-  * @param {boolean} [cfgCfg.overwrite=true] Set to false if you wish to
+  * @param [cfgCfg.overwrite=true] Set to false if you wish to
   *  prevent the overwriting of prior-set preferences or configuration
   *  (URL settings will always follow this requirement for security
   *  reasons, so `svgedit-config-iife.js` settings cannot be overridden unless it
   *  explicitly permits via `allowInitialUserOverride` but extension config
   *  can be overridden as they will run after URL settings). Should
   *   not be needed in `svgedit-config-iife.js`.
-  * @returns {void}
 */
   setConfig (opts: Record<string, unknown>, cfgCfg: { overwrite?: boolean; allowInitialUserOverride?: boolean } = {}) {
     /**
      *
-     * @param {module:SVGEditor.Config|module:SVGEditor.Prefs} cfgObj
-     * @param {string} key
-     * @param {any} val See {@link module:SVGEditor.Config} or {@link module:SVGEditor.Prefs}
-     * @returns {void}
+     * @param cfgObj
+     * @param key
+     * @param val See {@link module:SVGEditor.Config} or {@link module:SVGEditor.Prefs}
      */
     const extendOrAdd = (cfgObj: Record<string, unknown>, key: string, val: unknown) => {
       if (cfgObj[key] && typeof cfgObj[key] === 'object' && !Array.isArray(cfgObj[key])) {
@@ -532,11 +524,11 @@ export default class ConfigObj {
   /**
   * Store and retrieve preferences.
   * @function pref
-  * @param {string} key The preference name to be retrieved or set
-  * @param {string} [val] The value. If the value supplied is missing or falsey, no change to the preference will
+  * @param key The preference name to be retrieved or set
+  * @param [val] The value. If the value supplied is missing or falsey, no change to the preference will
   * be made unless `mayBeEmpty` is set.
-  * @param {boolean} [mayBeEmpty] If value may be falsey.
-  * @returns {string|void} If val is missing or falsey and `mayBeEmpty` is not set, the
+  * @param [mayBeEmpty] If value may be falsey.
+  * @returns If val is missing or falsey and `mayBeEmpty` is not set, the
   * value of the previously stored preference will be returned.
   * @todo Review whether any remaining existing direct references to
   *  getting `curPrefs` can be changed to use `svgEditor.configObj.pref()` getting to ensure
@@ -555,7 +547,6 @@ export default class ConfigObj {
 
   /**
    * @function load load Config
-   * @returns {void}
    */
   load () {
     this.loadFromURL()

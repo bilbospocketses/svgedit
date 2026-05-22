@@ -48,17 +48,10 @@ const segData: Record<number, string[]> = {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let svgCanvas: any = null
-/**
- * @tutorial LocaleDocs
- * @typedef {module:locale.LocaleStrings|PlainObject} module:path.uiStrings
- * @property {PlainObject<string, string>} ui
-*/
-
 const uiStrings: Record<string, string> = {}
 /**
 * @function module:path.setUiStrings
-* @param {{ ui: Record<string, string> }} strs
-* @returns {void}
+* @param strs
 */
 export const setUiStrings = (strs: { ui: Record<string, string> }): void => {
   Object.assign(uiStrings, strs.ui)
@@ -75,8 +68,7 @@ let pathData: Record<string, any> = {}
 
 /**
 * @function module:path.setLinkControlPoints
-* @param {boolean} lcp
-* @returns {void}
+* @param lcp
 */
 export const setLinkControlPoints = (lcp: boolean): void => {
   linkControlPts = lcp
@@ -84,7 +76,6 @@ export const setLinkControlPoints = (lcp: boolean): void => {
 
 /**
  * @name module:path.path
- * @type {null|module:path.Path}
  * @memberof module:path
 */
 export let path: Path | null = null
@@ -94,148 +85,121 @@ export let path: Path | null = null
 */
 
 /**
-* Object with the following keys/values.
-* @typedef {PlainObject} module:path.SVGElementJSON
-* @property {string} element - Tag name of the SVG element to create
-* @property {PlainObject<string, string>} attr - Has key-value attributes to assign to the new element.
-*   An `id` should be set so that {@link module:utilities.EditorContext#addSVGElementsFromJson} can later re-identify the element for modification or replacement.
-* @property {boolean} [curStyles=false] - Indicates whether current style attributes should be applied first
-* @property {module:path.SVGElementJSON[]} [children] - Data objects to be added recursively as children
-* @property {string} [namespace="http://www.w3.org/2000/svg"] - Indicate a (non-SVG) namespace
-*/
-/**
  * @interface module:path.EditorContext
  * @property {module:select.SelectorManager} selectorManager
  * @property {module:svgcanvas.SvgCanvas} canvas
  */
 /**
  * @function module:path.EditorContext#call
- * @param {"selected"|"changed"} ev - String with the event name
- * @param {module:svgcanvas.SvgCanvas#event:selected|module:svgcanvas.SvgCanvas#event:changed} arg - Argument to pass through to the callback function.
+ * @param ev - String with the event name
+ * @param arg - Argument to pass through to the callback function.
  *  If the event is "changed", an array of `Element`s is passed; if "selected", a single-item array of `Element` is passed.
- * @returns {void}
  */
 /**
  * Note: This doesn't round to an integer necessarily.
  * @function module:path.EditorContext#round
- * @param {Float} val
- * @returns {Float} Rounded value to nearest value based on `zoom`
+ * @param val
+ * @returns Rounded value to nearest value based on `zoom`
  */
 /**
  * @function module:path.EditorContext#clearSelection
- * @param {boolean} [noCall] - When `true`, does not call the "selected" handler
- * @returns {void}
+ * @param [noCall] - When `true`, does not call the "selected" handler
 */
 /**
  * @function module:path.EditorContext#addToSelection
- * @param {Element[]} elemsToAdd - An array of DOM elements to add to the selection
- * @param {boolean} showGrips - Indicates whether the resize grips should be shown
- * @returns {void}
+ * @param elemsToAdd - An array of DOM elements to add to the selection
+ * @param showGrips - Indicates whether the resize grips should be shown
 */
 /**
  * @function module:path.EditorContext#addCommandToHistory
- * @param {Command} cmd
- * @returns {void}
+ * @param cmd
  */
 /**
  * @function module:path.EditorContext#remapElement
- * @param {Element} selected - DOM element to be changed
- * @param {PlainObject<string, string>} changes - Object with changes to be remapped
- * @param {SVGMatrix} m - Matrix object to use for remapping coordinates
- * @returns {void}
+ * @param selected - DOM element to be changed
+ * @param changes - Object with changes to be remapped
+ * @param m - Matrix object to use for remapping coordinates
  */
 /**
  * @function module:path.EditorContext#addSVGElementsFromJson
- * @param {module:path.SVGElementJSON} data
- * @returns {Element} The new element
+ * @param data
+ * @returns The new element
 */
 /**
  * @function module:path.EditorContext#getGridSnapping
- * @returns {boolean}
  */
 /**
  * @function module:path.EditorContext#getOpacity
- * @returns {Float}
  */
 /**
  * @function module:path.EditorContext#getSelectedElements
- * @returns {Element[]} the array with selected DOM elements
+ * @returns the array with selected DOM elements
 */
 /**
  * @function module:path.EditorContext#getContainer
- * @returns {Element}
  */
 /**
  * @function module:path.EditorContext#setStarted
- * @param {boolean} s
- * @returns {void}
+ * @param s
  */
 /**
  * @function module:path.EditorContext#getRubberBox
- * @returns {SVGRectElement}
 */
 /**
  * @function module:path.EditorContext#setRubberBox
- * @param {SVGRectElement} rb
- * @returns {SVGRectElement} Same as parameter passed in
+ * @param rb
+ * @returns Same as parameter passed in
  */
 /**
  * @function module:path.EditorContext#addPtsToSelection
- * @param {PlainObject} cfg
- * @param {boolean} cfg.closedSubpath
- * @param {SVGCircleElement[]} cfg.grips
- * @returns {void}
+ * @param cfg
+ * @param cfg.closedSubpath
+ * @param cfg.grips
  */
 /**
  * @function module:path.EditorContext#endChanges
- * @param {PlainObject} cfg
- * @param {string} cfg.cmd
- * @param {Element} cfg.elem
- * @returns {void}
+ * @param cfg
+ * @param cfg.cmd
+ * @param cfg.elem
 */
 /**
  * @function module:path.EditorContext#getZoom
- * @returns {Float} The current zoom level
+ * @returns The current zoom level
  */
 /**
  * Returns the last created DOM element ID string.
  * @function module:path.EditorContext#getId
- * @returns {string}
  */
 /**
  * Creates and returns a unique ID string for a DOM element.
  * @function module:path.EditorContext#getNextId
- * @returns {string}
 */
 /**
  * Gets the desired element from a mouse event.
  * @function module:path.EditorContext#getMouseTarget
- * @param {external:MouseEvent} evt - Event object from the mouse event
- * @returns {Element} DOM element we want
+ * @param evt - Event object from the mouse event
+ * @returns DOM element we want
  */
 /**
  * @function module:path.EditorContext#getCurrentMode
- * @returns {string}
  */
 /**
  * @function module:path.EditorContext#setCurrentMode
- * @param {string} cm The mode
- * @returns {string} The same mode as passed in
+ * @param cm The mode
+ * @returns The same mode as passed in
 */
 /**
  * @function module:path.EditorContext#setDrawnPath
- * @param {SVGPathElement|null} dp
- * @returns {SVGPathElement|null} The same value as passed in
+ * @param dp
+ * @returns The same value as passed in
  */
 /**
  * @function module:path.EditorContext#getSvgRoot
- * @returns {SVGSVGElement}
 */
 
 /**
 * @function module:path.init
-* @param {module:path.EditorContext} editorContext
-* @returns {void}
+* @param editorContext
 */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const init = (canvas: any): void => {
@@ -275,27 +239,24 @@ export const init = (canvas: any): void => {
 /**
 * @function module:path.ptObjToArr
 * @todo See if this should just live in `replacePathSeg`
-* @param {string} type
-* @param {SVGPathSegMovetoAbs|SVGPathSegLinetoAbs|SVGPathSegCurvetoCubicAbs|SVGPathSegCurvetoQuadraticAbs|SVGPathSegArcAbs|SVGPathSegLinetoHorizontalAbs|SVGPathSegLinetoVerticalAbs|SVGPathSegCurvetoCubicSmoothAbs|SVGPathSegCurvetoQuadraticSmoothAbs} segItem
-* @returns {ArgumentsArray}
+* @param type
+* @param segItem
 */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const ptObjToArr: (...args: any[]) => any = ptObjToArrMethod
 
 /**
 * @function module:path.getGripPt
-* @param {Segment} seg
-* @param {module:math.XYObject} altPt
-* @returns {module:math.XYObject}
+* @param seg
+* @param altPt
 */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getGripPt: (...args: any[]) => any = getGripPtMethod
 
 /**
 * @function module:path.getPointFromGrip
-* @param {module:math.XYObject} pt
-* @param {module:path.Path} pth
-* @returns {module:math.XYObject}
+* @param pt
+* @param pth
 */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getPointFromGrip: (...args: any[]) => any = getPointFromGripMethod
@@ -304,17 +265,15 @@ export const getPointFromGrip: (...args: any[]) => any = getPointFromGripMethod
 * Requires prior call to `setUiStrings` if `xlink:title`
 *    to be set on the grip.
 * @function module:path.addPointGrip
-* @param {Integer} index
-* @param {Integer} x
-* @param {Integer} y
-* @returns {SVGCircleElement}
+* @param index
+* @param x
+* @param y
 */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const addPointGrip: (...args: any[]) => any = addPointGripMethod
 
 /**
 * @function module:path.getGripContainer
-* @returns {Element}
 */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getGripContainer: () => any = getGripContainerMethod
@@ -323,33 +282,29 @@ export const getGripContainer: () => any = getGripContainerMethod
 * Requires prior call to `setUiStrings` if `xlink:title`
 *    to be set on the grip.
 * @function module:path.addCtrlGrip
-* @param {string} id
-* @returns {SVGCircleElement}
+* @param id
 */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const addCtrlGrip: (...args: any[]) => any = addCtrlGripMethod
 
 /**
 * @function module:path.getCtrlLine
-* @param {string} id
-* @returns {SVGLineElement}
+* @param id
 */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getCtrlLine: (...args: any[]) => any = getCtrlLineMethod
 
 /**
 * @function module:path.getPointGrip
-* @param {Segment} seg
-* @param {boolean} update
-* @returns {SVGCircleElement}
+* @param seg
+* @param update
 */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getPointGrip: (...args: any[]) => any = getPointGripMethod
 
 /**
 * @function module:path.getControlPoints
-* @param {Segment} seg
-* @returns {PlainObject<string, SVGLineElement|SVGCircleElement>}
+* @param seg
 */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getControlPoints: (...args: any[]) => any = getControlPointsMethod
@@ -357,29 +312,21 @@ export const getControlPoints: (...args: any[]) => any = getControlPointsMethod
 /**
 * This replaces the segment at the given index. Type is given as number.
 * @function module:path.replacePathSeg
-* @param {Integer} type Possible values set during {@link module:path.init}
-* @param {Integer} index
-* @param {ArgumentsArray} pts
-* @param {SVGPathElement} elem
-* @returns {void}
+* @param type Possible values set during {@link module:path.init}
+* @param index
+* @param pts
+* @param elem
 */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const replacePathSeg: (...args: any[]) => any = replacePathSegMethod
 
 /**
 * @function module:path.getSegSelector
-* @param {Segment} seg
-* @param {boolean} update
-* @returns {SVGPathElement}
+* @param seg
+* @param update
 */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getSegSelector: (...args: any[]) => any = getSegSelectorMethod
-
-/**
- * @typedef {PlainObject} Point
- * @property {Integer} x The x value
- * @property {Integer} y The y value
- */
 
 interface XYPoint {
   x: number
@@ -389,10 +336,10 @@ interface XYPoint {
 /**
 * Takes three points and creates a smoother line based on them.
 * @function module:path.smoothControlPoints
-* @param {XYPoint} ct1 - Object with x and y values (first control point)
-* @param {XYPoint} ct2 - Object with x and y values (second control point)
-* @param {XYPoint} pt - Object with x and y values (third point)
-* @returns {SVGPoint[] | undefined} Array of two "smoothed" point objects
+* @param ct1 - Object with x and y values (first control point)
+* @param ct2 - Object with x and y values (second control point)
+* @param pt - Object with x and y values (third point)
+* @returns Array of two "smoothed" point objects
 */
 export const smoothControlPoints = (ct1: XYPoint, ct2: XYPoint, pt: XYPoint): SVGPoint[] | undefined => {
   // each point must not be the origin
@@ -437,8 +384,7 @@ export const smoothControlPoints = (ct1: XYPoint, ct2: XYPoint, pt: XYPoint): SV
 
 /**
 * @function module:path.getPath_
-* @param {SVGPathElement} elem
-* @returns {module:path.Path}
+* @param elem
 */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getPath_ = (elem: SVGPathElement): any => {
@@ -451,8 +397,7 @@ export const getPath_ = (elem: SVGPathElement): any => {
 
 /**
 * @function module:path.removePath_
-* @param {string} id
-* @returns {void}
+* @param id
 */
 export const removePath_ = (id: string): void => {
   if (id in pathData) { delete pathData[id] }
@@ -499,7 +444,6 @@ const getRotVals = (x: number, y: number): XYPoint => {
 * @function module:path.recalcRotatedPath
 * @todo This is still using ye olde transform methods, can probably
 * be optimized or even taken care of by `recalculateDimensions`
-* @returns {void}
 */
 export const recalcRotatedPath = (): void => {
   const currentPath = path?.elem
@@ -592,7 +536,6 @@ export const recalcRotatedPath = (): void => {
 
 /**
 * @function module:path.clearData
-* @returns {void}
 */
 export const clearData = (): void => {
   pathData = {}
@@ -601,9 +544,8 @@ export const clearData = (): void => {
 // Making public for mocking
 /**
 * @function module:path.reorientGrads
-* @param {Element} elem
-* @param {SVGMatrix} m
-* @returns {void}
+* @param elem
+* @param m
 */
 export const reorientGrads = (elem: Element, m: SVGMatrix): void => {
   const bb = getBBox(elem)
@@ -652,7 +594,6 @@ export const reorientGrads = (elem: Element, m: SVGMatrix): void => {
 /**
 * This is how we map paths to our preferred relative segment types.
 * @name module:path.pathMap
-* @type {GenericArray}
 */
 const pathMap: (string | number)[] = [
   0, 'z', 'M', 'm', 'L', 'l', 'C', 'c', 'Q', 'q', 'A', 'a',
@@ -674,9 +615,8 @@ const pathMap: (string | number)[] = [
  * @todo Consolidating these is a real refactor, not a delete — out of scope
  *       for the pre-migration cleanup; revisit during/after TS migration.
  * @function module:path.convertPath
- * @param {SVGPathElement} pth - the path to convert
- * @param {boolean} toRel - true of convert to relative
- * @returns {string}
+ * @param pth - the path to convert
+ * @param toRel - true of convert to relative
  */
 export const convertPath = (pth: SVGPathElement, toRel: boolean): string => {
   const pathSegList = pth.pathSegList
@@ -839,11 +779,10 @@ export const convertPath = (pth: SVGPathElement, toRel: boolean): string => {
 /**
  * TODO: refactor callers in `convertPath` to use `getPathDFromSegments` instead of this function.
  * Legacy code refactored from `svgcanvas.pathActions.convertPath`.
- * @param {string} letter - path segment command (letter in potentially either case from {@link module:path.pathMap}; see [SVGPathSeg#pathSegTypeAsLetter]{@link https://www.w3.org/TR/SVG/single-page.html#paths-__svg__SVGPathSeg__pathSegTypeAsLetter})
- * @param {number[][]} points - x,y points
- * @param {Array<number>} [morePoints] - additional numeric params
- * @param {number[]} [lastPoint] - x,y point
- * @returns {string}
+ * @param letter - path segment command (letter in potentially either case from {@link module:path.pathMap}; see [SVGPathSeg#pathSegTypeAsLetter]{@link https://www.w3.org/TR/SVG/single-page.html#paths-__svg__SVGPathSeg__pathSegTypeAsLetter})
+ * @param points - x,y points
+ * @param [morePoints] - additional numeric params
+ * @param [lastPoint] - x,y point
  */
 const pathDSegment = (letter: string, points: number[][], morePoints?: number[], lastPoint?: number[]): string => {
   const floatPoints = points.map((pnt) => shortFloat(pnt as [number, number]))

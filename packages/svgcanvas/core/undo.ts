@@ -24,8 +24,7 @@ let svgCanvas: any = null
 
 /**
 * @function module:undo.init
-* @param {unknown} canvas
-* @returns {void}
+* @param canvas
 */
 export const init = (canvas: unknown): void => {
   svgCanvas = canvas
@@ -36,9 +35,8 @@ export const init = (canvas: unknown): void => {
 export const getUndoManager = (): InstanceType<typeof UndoManager> => {
   return new UndoManager({
     /**
-     * @param {string} eventType One of the HistoryEvent types
-     * @param {hstry.Command} cmd Fulfills the HistoryCommand interface
-     * @returns {void}
+     * @param eventType One of the HistoryEvent types
+     * @param cmd Fulfills the HistoryCommand interface
      */
     handleHistoryEvent (eventType: string, cmd: hstry.Command): void {
       const EventTypes = HistoryEventTypes
@@ -130,8 +128,8 @@ export const getUndoManager = (): InstanceType<typeof UndoManager> => {
 * @function module:svgcanvas~ffClone
 * @todo Test for this bug on load and add it to "support" object instead of
 * browser sniffing
-* @param {Element} elem - The (text) DOM element to clone
-* @returns {Element} Cloned element
+* @param elem - The (text) DOM element to clone
+* @returns Cloned element
 */
 export const ffClone = (elem: Element): Element => {
   if (!isGecko()) { return elem }
@@ -147,10 +145,9 @@ export const ffClone = (elem: Element): Element => {
 /**
 * This function makes the changes to the elements. It does not add the change
 * to the history stack.
-* @param {string} attr - Attribute name
-* @param {string | number} newValue - String or number with the new attribute value
-* @param {(Element | null)[]} elems - The DOM elements to apply the change to
-* @returns {void}
+* @param attr - Attribute name
+* @param newValue - String or number with the new attribute value
+* @param elems - The DOM elements to apply the change to
 */
 export const changeSelectedAttributeNoUndoMethod = (attr: string, newValue: string | number, elems: (Element | null)[]): void => {
   if (attr === 'id') {
@@ -294,10 +291,9 @@ export const changeSelectedAttributeNoUndoMethod = (attr: string, newValue: stri
 * If you want to change only a subset of `selectedElements`, then send the
 * subset to this function in the `elems` argument.
 * @function module:svgcanvas.SvgCanvas#changeSelectedAttribute
-* @param {string} attr - String with the attribute name
-* @param {string | number} val - String or number with the new attribute value
-* @param {(Element | null)[]} [elems] - The DOM elements to apply the change to
-* @returns {void}
+* @param attr - String with the attribute name
+* @param val - String or number with the new attribute value
+* @param [elems] - The DOM elements to apply the change to
 */
 export const changeSelectedAttributeMethod = (attr: string, val: string | number, elems?: (Element | null)[]): void => {
   const selectedElements: (Element | null)[] = svgCanvas.getSelectedElements()
