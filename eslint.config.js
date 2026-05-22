@@ -11,7 +11,13 @@ export default defineConfig([
       'coverage/**',
       'packages/svgcanvas/dist/**',
       'tests/vendor/**',
-      'src/editor/extensions/ext-shapes/shapelib/**'
+      'src/editor/extensions/ext-shapes/shapelib/**',
+      // Harness-managed worktrees (Claude Code Agent isolation): each in-flight worktree
+      // sits at .claude/worktrees/agent-<id>/ and contains a full repo checkout. Without
+      // this ignore, ESLint walks the worktree's `dist/`, `_reference/`, and `node_modules/`
+      // copies in addition to the main repo's, producing thousands of spurious findings
+      // every time a worktree is still present at lint time.
+      '.claude/**'
     ]
   },
   // TypeChecked rules only for .ts/.tsx files (they must be in a tsconfig program)
