@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Substrate (SWC for TS transform — 2026-05-21)
+
+Switch the TS-transform layer of Vite's pipeline from esbuild to SWC via `unplugin-swc`. Required to support TC39 standard decorators + the `accessor` keyword for the upcoming elix → Lit migration (todo #3, PR-1 onwards). esbuild's TC39 decorator support is incomplete — it passes the raw syntax through, leaving the browser to parse it. Rollup's parser hard-rejects the `accessor` keyword. SWC compiles stage-3 decorators to ES2022 helper-function calls that every modern browser parses cleanly.
+
+- Adds `unplugin-swc@^1.5` + `@swc/core@^1.15` as `devDependencies`.
+- `vite.config.mjs` registers `swc.vite({ jsc: { parser: { decorators: true }, transform: { decoratorVersion: '2022-03' }, target: 'es2022', keepClassNames: true }, tsconfigFile: false, sourceMaps: true })` as the first plugin in the array. Inline options only — no `.swcrc` (single source of truth).
+- `tsconfigFile: false` works around SWC's tsconfig reader not recognizing `target: "ES2025"`. tsc continues type-checking against ES2025 unchanged.
+- Verification: tsc 0 errors / lint 0e/145w / vitest 637/637 / `npm run build` success (25 modules, 11 extensions bundled) / e2e 250/250 across chromium + firefox / no source files modified.
+- Spec: `docs/superpowers/specs/2026-05-21-svgedit-swc-substrate-design.md`. Probe artifacts (not committed) at `%TEMP%/svgedit-swc-probe` validated end-to-end with real Lit components.
+- Unblocks: PR-1 of the elix → Lit migration (todo #3) and every subsequent per-component conversion.
+
 ### Changed (audit input #1 closure — ext-connector refactor + embed events 8→12 — 2026-05-21)
 
 Closes the last remaining audit-input traceability item from the embed-API design (#1 ext-connector monkey-patching). With this PR landed, **12 of 12 audit inputs closed**. PR-B per the 2026-05-21 audit-cleanup sweep.
