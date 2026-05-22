@@ -1,5 +1,6 @@
 import { LitElement, html, css, nothing } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
+import { ifDefined } from 'lit/directives/if-defined.js'
 import { t } from '../locale.js'
 
 /**
@@ -44,7 +45,7 @@ export class SeListItem extends LitElement {
   @property({ attribute: 'img-height' }) accessor imgHeight = ''
   @property() accessor selected = ''
 
-  render () {
+  render() {
     const imgPath = svgEditor.configObj.curConfig.imgPath
     return html`
       <div
@@ -53,7 +54,7 @@ export class SeListItem extends LitElement {
         @mousedown=${this._onMousedown}
       >
         ${this.src
-          ? html`<img alt="icon" src=${imgPath + '/' + this.src} title=${t(this.title)} height=${this.imgHeight} />`
+          ? html`<img alt="icon" src=${imgPath + '/' + this.src} title=${t(this.title)} height=${ifDefined(this.imgHeight || undefined)} />`
           : nothing}
         ${this.option ? t(this.option) : nothing}
         <slot></slot>
