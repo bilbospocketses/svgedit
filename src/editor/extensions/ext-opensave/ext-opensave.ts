@@ -42,21 +42,27 @@ export default {
     /**
     * @param e
     */
-    const importImage = (e: any) => {
-      const fileInput = (e.target && e.target.type === 'file') ? e.target : null
+    const importImage = (e: Event) => {
+      // This handler runs for both file-input `change` events (e.target is HTMLInputElement)
+      // and `drop` events on the drop zone (e is DragEvent with e.dataTransfer).
+      const target = e.target as HTMLInputElement | null
+      const fileInput = (target && target.type === 'file') ? target : null
       const resetFileInput = () => {
         if (fileInput) {
           fileInput.value = ''
         }
       }
       // only import files
-      if (e.dataTransfer && !e.dataTransfer.types?.includes('Files')) return
+      const dragE = e as DragEvent
+      if (dragE.dataTransfer && !dragE.dataTransfer.types?.includes('Files')) return
 
       $id('se-prompt-dialog').title = this.i18next.t('notification.loadingImage')
       $id('se-prompt-dialog').setAttribute('close', false)
       e.stopPropagation()
       e.preventDefault()
-      const file = (e.type === 'drop') ? e.dataTransfer.files[0] : e.currentTarget.files[0]
+      const file = (e.type === 'drop' && dragE.dataTransfer)
+        ? dragE.dataTransfer.files[0]
+        : (e.currentTarget as HTMLInputElement).files?.[0]
       if (!file) {
         $id('se-prompt-dialog').setAttribute('close', true)
         resetFileInput()

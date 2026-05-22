@@ -109,13 +109,15 @@ export default {
      * @param line - The line element to check for a marker.
      * @returns - Returns the calculated offset if a marker is present, otherwise returns 0.
      */
-    const getOffset = (side: string, line: any) => {
+    const getOffset = (side: string, line: Element) => {
       // Check for marker attribute on the given side ("marker-start" or "marker-end")
       const hasMarker = line.getAttribute('marker-' + side)
 
       // Calculate size based on stroke-width, multiplied by a constant factor (here, 5)
       // TODO: This factor should ideally be based on the actual size of the marker.
-      const size = line.getAttribute('stroke-width') * 5
+      // parseFloat handles `"2"`, `"2px"`, etc. — prior code multiplied a raw string
+      // by 5 producing NaN-ish results (item #18.1 — pre-existing runtime bug).
+      const size = parseFloat(line.getAttribute('stroke-width') ?? '0') * 5
 
       // Return calculated size if marker is present, otherwise return 0.
       return hasMarker ? size : 0
@@ -153,7 +155,7 @@ export default {
      * @param y - The y-coordinate.
      * @param [setMid] - Whether to set the midpoint.
      */
-    const setPoint = (elem: any, pos: number | 'end', x: number, y: number, setMid?: boolean) => {
+    const setPoint = (elem: SVGPolylineElement, pos: number | 'end', x: number, y: number, setMid?: boolean) => {
       // Create a new SVG point
       const pts = elem.points
       const pt = svgroot.createSVGPoint()
