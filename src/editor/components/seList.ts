@@ -1,263 +1,205 @@
+import { LitElement, html, css, nothing } from 'lit'
+import { customElement, property, state } from 'lit/decorators.js'
+import { ifDefined } from 'lit/directives/if-defined.js'
 import { t } from '../locale.js'
 
-const template = document.createElement('template')
-template.innerHTML = `
-<style>
-#select-container {
-  margin-top: 10px;
-  display: inline-block;
-}
-
-#select-container:hover {
-  background-color: var(--icon-bg-color-hover);
-}
-
-#select-container::part(value) {
-  background-color: var(--main-bg-color);
-}
-
-#select-container::part(popup-toggle) {
-  display: none;
-}
-::slotted(*) {
-  padding:0;
-  width:100%;
-}
-
-.closed {
-  display: none;
-}
-
-#options-container {
-  position: fixed;
-}
-
-</style>
-  <label>Label</label>
-  <div id="select-container" tabindex="0">
-    <div id="selected-value"></div>
-    <div id="options-container">
-      <slot></slot>
-    </div>
-  </div>
-
-`
 /**
- * @class SeList
+ * SeList — dropdown container custom element.
+ *
+ * External API preserved (verified via consumer grep before conversion):
+ *   - Custom element name: `se-list`
+ *   - Attributes: `label`, `width`, `height`, `title`, `value`
+ *   - Dispatches `change` CustomEvent (bubbles + composed) on item selection;
+ *     detail: `{ value: <selected value> }`
+ *   - Listens for `selectedindexchange` from child `<se-list-item>` elements;
+ *     seListItem dispatches with `bubbles: true, composed: true` so the event
+ *     crosses the shadow boundary and is received on this host element.
+ *
+ * No host-id mirror needed: grep of CSS + test files found no selectors
+ * targeting inner elements via consumer host ids (stroke_linejoin,
+ * stroke_linecap, tool_position, tool_text_anchor).
+ *
+ * Dropped:
+ *   - Imperative DOM construction via `template` + `cloneNode`
+ *   - Constructor-time `svgEditor.configObj.curConfig.imgPath` access (moved to
+ *     `_renderSelectedValue()` so it evaluates after svgEditor is set up on window)
+ *   - `@class` / `@function` JSDoc tags (Tier B style)
+ *   - `eslint-disable-next-line @typescript-eslint/no-this-alias` / `currentObj` alias
  */
-export class SeList extends HTMLElement {
-  _shadowRoot: ShadowRoot
-  $dropdown: HTMLElement
-  $label: HTMLLabelElement
-  $selection: HTMLElement
-  items: NodeListOf<Element>
-  imgPath: string
-  $optionsContainer: HTMLElement
-  isDropdownOpen: boolean
-  value: string
-
-  /**
-    * @function constructor
-    */
-  constructor () {
-    super()
-    // create the shadowDom and insert the template
-    this._shadowRoot = this.attachShadow({ mode: 'open' })
-    this._shadowRoot.append(template.content.cloneNode(true))
-    this.$dropdown = this._shadowRoot.querySelector('#select-container') as HTMLElement
-    this.$label = this._shadowRoot.querySelector('label') as HTMLLabelElement
-    this.$selection = this.$dropdown.querySelector('#selected-value') as HTMLElement
-    this.items = this.querySelectorAll('se-list-item')
-    this.imgPath = svgEditor.configObj.curConfig.imgPath
-    this.$optionsContainer = this._shadowRoot.querySelector('#options-container') as HTMLElement
-    this.$optionsContainer.classList.add('closed')
-    this.$selection.addEventListener('click', this.toggleList)
-    this.updateSelectedValue(this.items[0]?.getAttribute('value') ?? '')
-    this.isDropdownOpen = false
-    this.value = ''
-  }
-
-  toggleList = (_e: Event) => {
-    if (!this.isDropdownOpen) {
-      this.openDropdown()
-      this.setDropdownListPosition()
-    } else {
-      this.closeDropdown()
+@customElement('se-list')
+export class SeList extends LitElement {
+  static styles = css`
+    #select-container {
+      margin-top: 10px;
+      display: inline-block;
     }
+
+    #select-container:hover {
+      background-color: var(--icon-bg-color-hover);
+    }
+
+    #select-container::part(value) {
+      background-color: var(--main-bg-color);
+    }
+
+    #select-container::part(popup-toggle) {
+      display: none;
+    }
+
+    ::slotted(*) {
+      padding: 0;
+      width: 100%;
+    }
+
+    .closed {
+      display: none;
+    }
+
+    #options-container {
+      position: fixed;
+    }
+  `
+
+  @property() accessor label = ''
+  @property() accessor width = ''
+  @property() accessor height = ''
+  @property() accessor title = ''
+  @property() accessor value = ''
+
+  @state() accessor isDropdownOpen = false
+
+  // Saved reference for removal in disconnectedCallback
+  private _mousedownHandler: ((e: MouseEvent) => void) | null = null
+
+  render() {
+    return html`
+      <label>${t(this.label)}</label>
+      <div
+        id="select-container"
+        tabindex="0"
+        title=${ifDefined(this.title ? t(this.title) : undefined)}
+        style=${[
+          this.width ? `width:${this.width};` : '',
+          this.height ? `height:${this.height};` : ''
+        ].join('')}
+      >
+        <div id="selected-value" @click=${this._toggleList}>
+          ${this._renderSelectedValue()}
+        </div>
+        <div id="options-container" class=${this.isDropdownOpen ? '' : 'closed'}>
+          <slot></slot>
+        </div>
+      </div>
+    `
   }
 
-  updateSelectedValue = (newValue: string) => {
-    Array.from(this.items).forEach((element) => {
-      if (element.getAttribute('value') === newValue) {
-        element.setAttribute('selected', 'true')
-        if (element.hasAttribute('src')) {
-        // empty current selection children
-          while (this.$selection.firstChild) { this.$selection.removeChild(this.$selection.firstChild) }
-          // replace selection child with image of new value
-          const img = document.createElement('img')
-          img.src = this.imgPath + '/' + element.getAttribute('src')
-          img.style.height = element.getAttribute('img-height') ?? ''
-          img.setAttribute('title', t(element.getAttribute('title') ?? ''))
-          this.$selection.append(img)
+  private _renderSelectedValue() {
+    const imgPath = svgEditor.configObj.curConfig.imgPath
+    const items = this.querySelectorAll('se-list-item')
+    for (const el of Array.from(items)) {
+      if (el.getAttribute('value') === this.value) {
+        const src = el.getAttribute('src')
+        if (src) {
+          const imgHeight = el.getAttribute('img-height') ?? ''
+          const titleAttr = el.getAttribute('title') ?? ''
+          return html`<img
+            src=${imgPath + '/' + src}
+            style=${imgHeight ? `height:${imgHeight}` : ''}
+            title=${t(titleAttr)}
+          />`
         } else {
-          this.$selection.textContent = t(element.getAttribute('option') ?? '')
+          return html`${t(el.getAttribute('option') ?? '')}`
         }
-      } else {
-        element.setAttribute('selected', 'false')
       }
-    })
+    }
+    return nothing
   }
 
-  /**
-   * @function observedAttributes
-   * @returns observed
-   */
-  static get observedAttributes () {
-    return ['label', 'width', 'height', 'title', 'value']
-  }
-
-  /**
-   * @function attributeChangedCallback
-   * @param name
-   * @param oldValue
-   * @param newValue
-   */
-  attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
-    if (oldValue === newValue) return
-    switch (name) {
-      case 'title':
-        this.$dropdown.setAttribute('title', t(newValue))
-        break
-      case 'label':
-        this.$label.textContent = t(newValue)
-        break
-      case 'height':
-        this.$dropdown.style.height = newValue
-        break
-      case 'width':
-        this.$dropdown.style.width = newValue
-        break
-      case 'value':
-        this.updateSelectedValue(newValue)
-        break
-      default:
-        console.error(`unknown attribute: ${name}`)
-        break
+  updated(changedProps: Map<string, unknown>) {
+    if (changedProps.has('value')) {
+      this._syncItemSelected()
     }
   }
 
-  /**
-   * @function get
-   */
-  get title (): string {
-    return this.getAttribute('title') ?? ''
+  private _syncItemSelected() {
+    const items = this.querySelectorAll('se-list-item')
+    for (const el of Array.from(items)) {
+      el.setAttribute('selected', el.getAttribute('value') === this.value ? 'true' : 'false')
+    }
   }
 
-  /**
-   * @function set
-   */
-  set title (value: string) {
-    this.setAttribute('title', value)
-  }
-
-  /**
-   * @function get
-   */
-  get label () {
-    return this.getAttribute('label')
-  }
-
-  /**
-   * @function set
-   */
-  set label (value: string | null) {
-    this.setAttribute('label', value ?? '')
-  }
-
-  /**
-   * @function get
-   */
-  get width () {
-    return this.getAttribute('width')
-  }
-
-  /**
-   * @function set
-   */
-  set width (value: string | null) {
-    this.setAttribute('width', value ?? '')
-  }
-
-  /**
-   * @function get
-   */
-  get height () {
-    return this.getAttribute('height')
-  }
-
-  /**
-   * @function set
-   */
-  set height (value: string | null) {
-    this.setAttribute('height', value ?? '')
-  }
-
-  openDropdown = () => {
-    this.isDropdownOpen = true
-    this.$optionsContainer.classList.remove('closed')
-  }
-
-  closeDropdown = () => {
-    this.isDropdownOpen = false
-    this.$optionsContainer.classList.add('closed')
-  }
-
-  setDropdownListPosition = () => {
-    const windowHeight = window.innerHeight
-    const selectedContainerPosition = this.$selection.getBoundingClientRect()
-    const optionsContainerPosition = this.$optionsContainer.getBoundingClientRect()
-    // list is bottom of frame - needs to open from above
-    if (selectedContainerPosition.bottom + optionsContainerPosition.height > windowHeight) {
-      this.$optionsContainer.style.top = selectedContainerPosition.top - optionsContainerPosition.height + 'px'
-      this.$optionsContainer.style.left = selectedContainerPosition.left + 'px'
+  private _toggleList = (_e: Event) => {
+    if (!this.isDropdownOpen) {
+      this.isDropdownOpen = true
+      // Position runs after Lit has committed the open state and the container is visible
+      void this.updateComplete.then(() => { this._setDropdownListPosition() })
     } else {
-      this.$optionsContainer.style.top = selectedContainerPosition.bottom + 'px'
-      this.$optionsContainer.style.left = selectedContainerPosition.left + 'px'
+      this.isDropdownOpen = false
     }
   }
 
-  /**
-   * @function connectedCallback
-   */
-  connectedCallback () {
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
-    const currentObj = this
-    this.$dropdown.addEventListener('selectedindexchange', (e) => {
-      const detail = (e as CustomEvent).detail as { selectedItem?: string } | undefined
-      if (detail?.selectedItem !== undefined) {
-        const value = detail.selectedItem
-        const closeEvent = new CustomEvent('change', { detail: { value } })
-        currentObj.dispatchEvent(closeEvent)
-        currentObj.value = value
-        currentObj.setAttribute('value', value)
-      }
-    })
+  private _setDropdownListPosition() {
+    const selection = this.shadowRoot?.querySelector('#selected-value') as HTMLElement | null
+    const optionsContainer = this.shadowRoot?.querySelector('#options-container') as HTMLElement | null
+    if (!selection || !optionsContainer) return
+    const windowHeight = window.innerHeight
+    const selectedPos = selection.getBoundingClientRect()
+    const optionsPos = optionsContainer.getBoundingClientRect()
+    if (selectedPos.bottom + optionsPos.height > windowHeight) {
+      optionsContainer.style.top = selectedPos.top - optionsPos.height + 'px'
+      optionsContainer.style.left = selectedPos.left + 'px'
+    } else {
+      optionsContainer.style.top = selectedPos.bottom + 'px'
+      optionsContainer.style.left = selectedPos.left + 'px'
+    }
+  }
 
-    this.$dropdown.addEventListener('focusout', (_e) => {
-      this.closeDropdown()
-    })
+  connectedCallback() {
+    super.connectedCallback()
 
-    window.addEventListener('mousedown', e => {
-      // When we click on the canvas and if the dropdown is open, then just close the dropdown and stop the event
+    // selectedindexchange bubbles + composed from seListItem shadow DOM, received on host
+    this.addEventListener('selectedindexchange', this._onSelectedIndexChange)
+
+    // focusout on the shadow container — composed events cross shadow boundary to host
+    this.addEventListener('focusout', this._onFocusOut)
+
+    // Outside-click closes dropdown
+    this._mousedownHandler = (e: MouseEvent) => {
       if (this.isDropdownOpen) {
         if (!(e.target as Element).closest('se-list')) {
           e.stopPropagation()
-          this.closeDropdown()
+          this.isDropdownOpen = false
         }
       }
-    }, { capture: true })
+    }
+    window.addEventListener('mousedown', this._mousedownHandler, { capture: true })
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback()
+    this.removeEventListener('selectedindexchange', this._onSelectedIndexChange)
+    this.removeEventListener('focusout', this._onFocusOut)
+    if (this._mousedownHandler) {
+      window.removeEventListener('mousedown', this._mousedownHandler, { capture: true })
+      this._mousedownHandler = null
+    }
+  }
+
+  private _onSelectedIndexChange = (e: Event) => {
+    const detail = (e as CustomEvent).detail as { selectedItem?: string } | undefined
+    if (detail?.selectedItem !== undefined) {
+      const value = detail.selectedItem
+      this.value = value
+      this.dispatchEvent(new CustomEvent('change', {
+        bubbles: true,
+        composed: true,
+        detail: { value }
+      }))
+      this.isDropdownOpen = false
+    }
+  }
+
+  private _onFocusOut = (_e: Event) => {
+    this.isDropdownOpen = false
   }
 }
-
-// Register
-customElements.define('se-list', SeList)
