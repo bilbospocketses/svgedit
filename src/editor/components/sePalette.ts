@@ -1,4 +1,4 @@
-/* eslint-disable max-len, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
 // elix custom-element base classes ship as 'any'; cleanup deferred to #3 (Lit migration)
 const palette = [
   // Todo: Make into configuration item?
@@ -199,7 +199,6 @@ export class SEPalette extends HTMLElement {
    * @param {any} name
    * @returns {void}
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   init (i18next: any) {
     this.setAttribute('ui-palette_info', i18next.t('ui.palette_info'))
   }

@@ -62,7 +62,7 @@ describe('path', function () {
     const [mockPathContext, mockUtilitiesContext] = getMockContexts()
     pathModule.init(mockPathContext)
     utilities.init(mockUtilitiesContext)
-    new Path(path) // eslint-disable-line no-new
+    new Path(path)
 
     assert.equal(path.pathSegList.getItem(1).pathSegTypeAsLetter, 'L')
     assert.equal(path.pathSegList.getItem(1).x, 10)
@@ -82,7 +82,7 @@ describe('path', function () {
     const [mockPathContext, mockUtilitiesContext] = getMockContexts()
     pathModule.init(mockPathContext)
     utilities.init(mockUtilitiesContext)
-    new Path(path) // eslint-disable-line no-new
+    new Path(path)
 
     assert.equal(path.pathSegList.getItem(1).pathSegTypeAsLetter, 'L')
     assert.equal(path.pathSegList.getItem(1).x, 10)
@@ -138,7 +138,7 @@ describe('path', function () {
     const [mockPathContext, mockUtilitiesContext] = getMockContexts()
     pathModule.init(mockPathContext)
     utilities.init(mockUtilitiesContext)
-    new Path(path) // eslint-disable-line no-new
+    new Path(path)
 
     assert.equal(path.pathSegList.getItem(1).pathSegTypeAsLetter, 'L')
     assert.equal(path.pathSegList.getItem(1).x, 10)
@@ -215,7 +215,7 @@ describe('path', function () {
     const [mockPathContext, mockUtilitiesContext] = getMockContexts()
     pathModule.init(mockPathContext)
     utilities.init(mockUtilitiesContext)
-    new Path(path) // eslint-disable-line no-new
+    new Path(path)
 
     assert.equal(path.pathSegList.getItem(1).pathSegTypeAsLetter, 'C')
     assert.equal(path.pathSegList.getItem(1).x1, 11)
@@ -387,7 +387,7 @@ describe('path', function () {
     try {
       const pathObj = new Path(rect)
       pathObj.update()
-    } catch (e) {
+    } catch {
       // Expected for non-path elements
       assert.ok(true)
     }

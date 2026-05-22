@@ -38,8 +38,8 @@ describe('coords', function () {
       getNextId () { return String(elemId++) }
     }
     const mockDataStorage = {
-      get (elem, key) { return null },
-      has (elem, key) { return false }
+      get (_elem, _key) { return null },
+      has (_elem, _key) { return false }
     }
     coords.init(
       /**

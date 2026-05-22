@@ -433,7 +433,7 @@ describe('recalculate', function () {
     try {
       recalculate.recalculateDimensions(polyline)
       assert.ok(true)
-    } catch (e) {
+    } catch {
       // Expected if jsdom doesn't support SVGPointList
       assert.ok(true)
     }
@@ -451,7 +451,7 @@ describe('recalculate', function () {
     try {
       recalculate.recalculateDimensions(polyline)
       assert.ok(true)
-    } catch (e) {
+    } catch {
       // Expected if jsdom doesn't support SVGPointList
       assert.ok(true)
     }
@@ -470,7 +470,7 @@ describe('recalculate', function () {
     try {
       recalculate.recalculateDimensions(polygon)
       assert.ok(true)
-    } catch (e) {
+    } catch {
       // If jsdom doesn't support points property, that's ok
       assert.ok(true)
     }
@@ -1125,7 +1125,7 @@ describe('recalculate', function () {
     try {
       const cmd = recalculate.recalculateDimensions(polygon)
       assert.ok(cmd !== undefined || cmd === null)
-    } catch (e) {
+    } catch {
       // May fail due to DOM API, that's okay
       assert.ok(true)
     }
@@ -1194,7 +1194,7 @@ describe('recalculate', function () {
     try {
       recalculate.updateClipPath('url(#testClip3)', svg.createSVGMatrix())
       assert.ok(true)
-    } catch (e) {
+    } catch {
       assert.ok(true)
     }
   })
@@ -1306,7 +1306,7 @@ describe('recalculate', function () {
     try {
       const cmd = recalculate.recalculateDimensions(g)
       assert.ok(cmd !== undefined || cmd === null)
-    } catch (e) {
+    } catch {
       assert.ok(true)
     }
   })
@@ -1373,7 +1373,7 @@ describe('recalculate', function () {
     try {
       const cmd = recalculate.recalculateDimensions(rect)
       assert.ok(cmd !== undefined || cmd === null)
-    } catch (e) {
+    } catch {
       assert.ok(true)
     }
   })
@@ -1389,7 +1389,7 @@ describe('recalculate', function () {
     try {
       const cmd = recalculate.recalculateDimensions(polyline)
       assert.ok(cmd !== undefined || cmd === null)
-    } catch (e) {
+    } catch {
       assert.ok(true)
     }
   })
@@ -1405,7 +1405,7 @@ describe('recalculate', function () {
     try {
       const cmd = recalculate.recalculateDimensions(polygon)
       assert.ok(cmd !== undefined || cmd === null)
-    } catch (e) {
+    } catch {
       assert.ok(true)
     }
   })
@@ -1423,7 +1423,7 @@ describe('recalculate', function () {
     try {
       const cmd = recalculate.recalculateDimensions(text)
       assert.ok(cmd !== undefined || cmd === null)
-    } catch (e) {
+    } catch {
       assert.ok(true)
     }
   })
@@ -1442,7 +1442,7 @@ describe('recalculate', function () {
     try {
       const cmd = recalculate.recalculateDimensions(fo)
       assert.ok(cmd !== undefined || cmd === null)
-    } catch (e) {
+    } catch {
       assert.ok(true)
     }
   })
@@ -1461,7 +1461,7 @@ describe('recalculate', function () {
     try {
       const cmd = recalculate.recalculateDimensions(image)
       assert.ok(cmd !== undefined || cmd === null)
-    } catch (e) {
+    } catch {
       assert.ok(true)
     }
   })
@@ -1477,7 +1477,7 @@ describe('recalculate', function () {
     try {
       const cmd = recalculate.recalculateDimensions(path)
       assert.ok(cmd !== undefined || cmd === null)
-    } catch (e) {
+    } catch {
       assert.ok(true)
     }
   })
@@ -1508,7 +1508,7 @@ describe('recalculate', function () {
     try {
       const cmd = recalculate.recalculateDimensions(polyline)
       assert.ok(cmd !== undefined || cmd === null)
-    } catch (e) {
+    } catch {
       assert.ok(true)
     }
   })
@@ -1527,7 +1527,7 @@ describe('recalculate', function () {
     try {
       const cmd = recalculate.recalculateDimensions(tspan)
       assert.ok(cmd !== undefined || cmd === null)
-    } catch (e) {
+    } catch {
       assert.ok(true)
     }
   })
@@ -1552,7 +1552,7 @@ describe('recalculate', function () {
     try {
       const result = recalculate.updateClipPath('url(#clip1)', 10, 20, elem)
       assert.ok(result !== undefined || result === null)
-    } catch (e) {
+    } catch {
       assert.ok(true)
     }
   })
@@ -1572,7 +1572,7 @@ describe('recalculate', function () {
     try {
       const cmd = recalculate.recalculateDimensions(line)
       assert.ok(cmd !== undefined || cmd === null)
-    } catch (e) {
+    } catch {
       assert.ok(true)
     }
   })
@@ -1593,7 +1593,7 @@ describe('recalculate', function () {
     try {
       const cmd = recalculate.recalculateDimensions(switchElem)
       assert.ok(cmd !== undefined || cmd === null)
-    } catch (e) {
+    } catch {
       assert.ok(true)
     }
   })
@@ -1617,7 +1617,7 @@ describe('recalculate', function () {
     try {
       const cmd = recalculate.recalculateDimensions(g1)
       assert.ok(cmd !== undefined || cmd === null)
-    } catch (e) {
+    } catch {
       assert.ok(true)
     }
   })
@@ -1636,7 +1636,7 @@ describe('recalculate', function () {
     try {
       const cmd = recalculate.recalculateDimensions(rect)
       assert.ok(cmd !== undefined || cmd === null)
-    } catch (e) {
+    } catch {
       assert.ok(true)
     }
   })
@@ -1655,7 +1655,7 @@ describe('recalculate', function () {
     try {
       const cmd = recalculate.recalculateDimensions(rect)
       assert.ok(cmd !== undefined || cmd === null)
-    } catch (e) {
+    } catch {
       assert.ok(true)
     }
   })
@@ -1748,7 +1748,7 @@ describe('recalculate', function () {
     try {
       const cmd = recalculate.recalculateDimensions(rect)
       assert.ok(cmd !== undefined || cmd === null)
-    } catch (e) {
+    } catch {
       assert.ok(true)
     }
   })
@@ -1787,7 +1787,7 @@ describe('recalculate', function () {
     try {
       const result = recalculate.updateClipPath('url(#clip2)', 10, 20, elem)
       assert.ok(result !== undefined || result === null)
-    } catch (e) {
+    } catch {
       assert.ok(true)
     }
   })
@@ -1812,7 +1812,7 @@ describe('recalculate', function () {
     try {
       const result = recalculate.updateClipPath('url(#clip3)', 10, 20, elem)
       assert.ok(result !== undefined || result === null)
-    } catch (e) {
+    } catch {
       assert.ok(true)
     }
   })
@@ -1837,7 +1837,7 @@ describe('recalculate', function () {
     try {
       const result = recalculate.updateClipPath('url(#clip4)', 10, 20, elem)
       assert.ok(result !== undefined || result === null)
-    } catch (e) {
+    } catch {
       assert.ok(true)
     }
   })
@@ -1859,7 +1859,7 @@ describe('recalculate', function () {
     try {
       const result = recalculate.updateClipPath('url(#clip5)', 10, 20, elem)
       assert.ok(result !== undefined || result === null)
-    } catch (e) {
+    } catch {
       assert.ok(true)
     }
   })
@@ -1881,7 +1881,7 @@ describe('recalculate', function () {
     try {
       const result = recalculate.updateClipPath('url(#clip6)', 10, 20, elem)
       assert.ok(result !== undefined || result === null)
-    } catch (e) {
+    } catch {
       assert.ok(true)
     }
   })
@@ -1903,7 +1903,7 @@ describe('recalculate', function () {
     try {
       const result = recalculate.updateClipPath('url(#clip7)', 10, 20, elem)
       assert.ok(result !== undefined || result === null)
-    } catch (e) {
+    } catch {
       assert.ok(true)
     }
   })

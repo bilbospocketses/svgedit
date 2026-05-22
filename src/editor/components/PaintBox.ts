@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
 // jGraduate (legacy jQuery plugin) ships as 'any'; cleanup deferred to #3 (Lit migration)
 import { jGraduate } from './jgraduate/jQuery.jGraduate.js'
 /**
@@ -9,7 +9,6 @@ class PaintBox {
   defs: Element
   grad: Element
   type: string
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   paint: any
   _paintColor: string | null
   _paintOpacity: number
@@ -47,26 +46,20 @@ class PaintBox {
      * @param {module:jGraduate~Paint} paint
      * @returns {void}
      */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setPaint (paint: any): void {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     this.paint = paint
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const ptype: string = paint.type
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const opac: number = paint.alpha / 100
 
     let fillAttr = 'none'
     switch (ptype) {
       case 'solidColor':
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         fillAttr = (paint[ptype] !== 'none') ? '#' + paint[ptype] : paint[ptype]
         break
       case 'linearGradient':
       case 'radialGradient': {
         this.grad.remove()
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
         this.grad = paint[ptype]
         this.defs.appendChild(this.grad)
         const id = (this.grad as Element & { id: string }).id = 'gradbox_' + this.type
@@ -86,27 +79,21 @@ class PaintBox {
   * @param {string} type
   * @returns {module:jGraduate~Paint}
   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static getPaint (svgCanvas: any, color: string, opac: number, type: string): any {
     // update the editor's fill paint
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const opts: Record<string, any> = { alpha: opac }
     if (color.startsWith('url(#')) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       let refElem = svgCanvas.getRefElem(color)
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       refElem = (refElem) ? refElem.cloneNode(true) : document.querySelectorAll('#' + type + '_color defs *')[0]
       if (!refElem) {
         console.error(`the color ${color} is referenced by an url that can't be identified - using 'none'`)
         opts.solidColor = 'none'
       } else {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         opts[refElem.tagName] = refElem
       }
     } else if (color.startsWith('#')) {
       opts.solidColor = color.substr(1)
     }
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     return new (jGraduate as any).Paint(opts)
   }
 
@@ -115,7 +102,6 @@ class PaintBox {
      * @param {PlainObject} selectedElement
      * @returns {any}
      */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   update (svgcanvas: any, selectedElement: Element | null): any {
     if (!selectedElement) { return null }
 

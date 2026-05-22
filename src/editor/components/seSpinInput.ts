@@ -61,7 +61,6 @@ export class SESpinInput extends HTMLElement {
   $img: HTMLImageElement
   $label: HTMLElement
   $event: CustomEvent
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   $input: any
   imgPath: string
 
@@ -114,10 +113,8 @@ export class SESpinInput extends HTMLElement {
       case 'size':
       // access to the underlying input box
         // TODO: see todo #10 — shadowDOM-piercing; replaced when #3 (elix→Lit) lands
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         this.$input.shadowRoot.getElementById('input').size = newValue
         // below seems mandatory to override the default width style that takes precedence on size
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         this.$input.shadowRoot.getElementById('input').style.width = 'unset'
         break
       case 'step':
@@ -178,7 +175,6 @@ export class SESpinInput extends HTMLElement {
    * @function get
    * @returns {any}
    */
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   get value () {
     return this.$input.value
   }
@@ -229,7 +225,6 @@ export class SESpinInput extends HTMLElement {
    */
   connectedCallback () {
     // TODO: see todo #10 — shadowDOM-piercing; replaced when #3 (elix→Lit) lands
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const shadow = this.$input.shadowRoot
     const childNodes = Array.from((shadow as ShadowRoot).childNodes)
     childNodes.forEach((childNode) => {
@@ -244,7 +239,6 @@ export class SESpinInput extends HTMLElement {
         })
       }
     })
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     this.$input.addEventListener('change', (e: Event) => {
       e.preventDefault()
       this.value = (e.target as HTMLInputElement).value

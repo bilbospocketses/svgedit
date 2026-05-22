@@ -171,7 +171,7 @@ describe('elem-get-set', () => {
 
         set src (value) {
           this._src = value
-          this.onerror && this.onerror(new Error('load failed'))
+          this.onerror?.(new Error('load failed'))
         }
       }
 
