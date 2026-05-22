@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (#17 Tier B follow-up — signature tightening from sample audit — 2026-05-22)
+
+Follow-up to the Tier B sweep. A 200-sample audit of the 1,513 stripped JSDoc `{Type}` tokens flagged 5 cases (~2.5% rate; ~38 extrapolated across the project) where the TS signature was `any`/`unknown` and the JSDoc had concrete type info — meaning the strip lost the only type information for those params/returns. This PR tightens 15 of those signatures using the JSDoc-suggested type as the new TS annotation, restoring (and now compiler-enforcing) the lost type info.
+
+- **DOM Event handlers (4)** — JSDoc said `{Event}` but code accesses `e.detail` (a `CustomEvent` property), so the correct TS type is `CustomEvent`: `Editor.ts` `saveSourceEditor` + `cancelOverlays`; `MainMenu.ts` `saveDocProperties` + `savePreferences`.
+- **Element params (4)** in `src/editor/extensions/ext-markers/ext-markers.ts`: `getLinked`, `convertline`, `colorChanged`, `updateReferences` — `elem` / `el` now typed `Element`.
+- **Other primitive types (7)** in `src/editor/panels/TopPanel.ts`: `setStrokeOpt` `changeElem?: boolean`; `updateValue` `id: string` + `newValue: number`; `showSourceEditor` `forSaving?: boolean`; `clickAlign` `pos: string`; `setImageURL` `url: string`. Plus `src/editor/extensions/ext-polystar/ext-polystar.ts` `setAttr` `val: string | number`.
+- **6 proposals REVERTED** when tightening surfaced pre-existing semantic issues — the JSDoc was either misleading or the code is genuinely loose. These remain `any`/`unknown` and are logged for separate follow-up:
+  - `ConfigObj.ts` `pref()` return — stays `unknown` (implementation returns more than `string | void`).
+  - `ext-connector.ts` `setPoint` `elem` — stays `any` (code accesses `.points` which lives on `SVGPolylineElement`, not `Element`).
+  - `ext-connector.ts` `getOffset` `line` — stays `any` (code does `line.getAttribute('stroke-width') * 5` — pre-existing arithmetic-on-string; fixing requires a separate bug-fix scope).
+  - `ext-opensave.ts` `importImage` `e` — stays `any` (multi-event handler receives `Event` + `DragEvent`).
+  - `LeftPanel.ts` `updateLeftPanel` `button` — stays `any` (code does `.disabled` which isn't on plain `Element`).
+  - `TopPanel.ts` `setStrokeOpt` `opt` — stays `any` (code does `.parentNode` without null guard).
+- **Net diff:** 5 files changed, +14 / -14 lines.
+- **Verification:** tsc --build --force 0 errors; lint 0 errors / 23 warnings (jgraduate-deferred unchanged); vitest 640/640 unchanged; e2e 250/250 chromium + firefox unchanged; build success (11 extensions).
+
 ### Changed (#17 Tier B — JSDoc-as-types strip — 2026-05-22)
 
 Stripped 1,513 `@param {Type}` / `@returns {Type}` / `@type {Type}` JSDoc type annotations from non-jgraduate `.ts` files; deleted 9 `@typedef` blocks that were documentation-only (not referenced as TS types). The TypeScript signature annotations on each function/variable are now the single source of truth; JSDoc retains the param-name + description form for documentation richness.
