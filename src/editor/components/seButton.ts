@@ -1,220 +1,117 @@
+import { LitElement, html, css } from 'lit'
+import { customElement, property } from 'lit/decorators.js'
+import { ifDefined } from 'lit/directives/if-defined.js'
 import { t } from '../locale.js'
-const template = document.createElement('template')
-template.innerHTML = `
-  <style>
-  @keyframes btnHover {
-    from {
-      background-color: var(--main-bg-color);
-    }
 
-    to {
+/**
+ * SeButton — icon-button custom element.
+ *
+ * External API preserved (verified via consumer grep before conversion):
+ *   - Custom element name: `se-button`
+ *   - Attributes: `title`, `src`, `pressed`, `disabled`, `size`, `style` (observed)
+ *   - Attribute: `shortcut` (read in connectedCallback; not observed)
+ *   - Consumers attach click handlers via `$click($id('tool_xxx'), handler)` on the host.
+ *   - Tests select by host id only (`#tool_export`, `#tool_undo`, etc.) — no shadow-pierce.
+ *
+ * No host-id mirror needed: test locators target the host element, not inner shadow elements.
+ *
+ * Dropped:
+ *   - Static template + `cloneNode`, `_shadowRoot`, `$div`, `$img` instance fields
+ *   - `observedAttributes` / `attributeChangedCallback` imperative dispatch
+ *   - Getters/setters for title/pressed/disabled/src/size (Lit attr↔property handles them)
+ *   - Constructor-time `svgEditor.configObj.curConfig.imgPath` access (moved to render())
+ *   - `@class` / `@function` JSDoc tags (Tier B style; reference components don't use them)
+ *
+ * style attribute conflict: HTMLElement.style is a CSSStyleDeclaration — do NOT declare
+ * @property() accessor style. Forward host's `style` attribute to inner div via
+ * `this.getAttribute('style')` in render().
+ */
+@customElement('se-button')
+export class SeButton extends LitElement {
+  static styles = css`
+    @keyframes btnHover {
+      from {
+        background-color: var(--main-bg-color);
+      }
+
+      to {
+        background-color: var(--icon-bg-color-hover);
+      }
+    }
+    :host(:hover) :not(.disabled)
+    {
+      animation: btnHover 0.2s forwards;
+    }
+    div
+    {
+      height: 24px;
+      width: 24px;
+      margin: 4px 1px 4px;
+      padding: 3px;
+      background-color: var(--icon-bg-color);
+      cursor: pointer;
+      border-radius: 3px;
+    }
+    .small {
+      width: 14px;
+      height: 14px;
+      padding: 1px;
+      border-radius: 1px;
+    }
+    img {
+      border: none;
+      width: 100%;
+      height: 100%;
+    }
+    .pressed {
       background-color: var(--icon-bg-color-hover);
     }
-  }
-  :host(:hover) :not(.disabled)
-  {
-    animation: btnHover 0.2s forwards;
-  }
-  div
-  {
-    height: 24px;
-    width: 24px;
-    margin: 4px 1px 4px;
-    padding: 3px;
-    background-color: var(--icon-bg-color);
-    cursor: pointer;
-    border-radius: 3px;
-  }
-  .small {
-    width: 14px;
-    height: 14px;
-    padding: 1px;
-    border-radius: 1px;
-  }
-  img {
-    border: none;
-    width: 100%;
-    height: 100%;
-  }
-  .pressed {
-    background-color: var(--icon-bg-color-hover);
-  }
-  .disabled {
-    opacity: 0.3;
-    cursor: default;
-  }
-  </style>
-  <div title="title">
-    <img alt="icon">
-  </div>
-`
-/**
- * @class ToolButton
- */
-export class ToolButton extends HTMLElement {
-  _shadowRoot: ShadowRoot
-  $div: HTMLDivElement
-  $img: HTMLImageElement
-  imgPath: string
-
-  /**
-    * @function constructor
-    */
-  constructor () {
-    super()
-    // create the shadowDom and insert the template
-    this._shadowRoot = this.attachShadow({ mode: 'open' })
-    this._shadowRoot.append(template.content.cloneNode(true))
-    // locate the component
-    this.$div = this._shadowRoot.querySelector('div') as HTMLDivElement
-    this.$img = this._shadowRoot.querySelector('img') as HTMLImageElement
-    this.imgPath = svgEditor.configObj.curConfig.imgPath
-  }
-
-  /**
-   * @function observedAttributes
-   * @returns observed
-   */
-  static get observedAttributes () {
-    return ['title', 'src', 'pressed', 'disabled', 'size', 'style']
-  }
-
-  /**
-   * @function attributeChangedCallback
-   * @param name
-   * @param oldValue
-   * @param newValue
-   */
-  attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
-    if (oldValue === newValue) return
-    switch (name) {
-      case 'title':
-        {
-          const shortcut = this.getAttribute('shortcut')
-          this.$div.setAttribute('title', `${t(newValue)} ${shortcut ? `[${t(shortcut)}]` : ''}`)
-        }
-        break
-      case 'style':
-        this.$div.setAttribute('style', newValue)
-        break
-      case 'src':
-        if (newValue.indexOf('data:') !== -1) {
-          this.$img.setAttribute('src', newValue)
-        } else {
-          this.$img.setAttribute('src', this.imgPath + '/' + newValue)
-        }
-        break
-      case 'pressed':
-        if (newValue === null) {
-          this.$div.classList.remove('pressed')
-        } else {
-          this.$div.classList.add('pressed')
-        }
-        break
-      case 'size':
-        if (newValue === 'small') {
-          this.$div.classList.add('small')
-        } else {
-          this.$div.classList.remove('small')
-        }
-        break
-      case 'disabled':
-        if (newValue) {
-          this.$div.classList.add('disabled')
-        } else {
-          this.$div.classList.remove('disabled')
-        }
-        break
-      default:
-        console.error(`unknown attribute: ${name}`)
-        break
+    .disabled {
+      opacity: 0.3;
+      cursor: default;
     }
-  }
+  `
 
-  /**
-   * @function get
-   */
-  get title (): string {
-    return this.getAttribute('title') ?? ''
-  }
+  @property() accessor title = ''
+  @property() accessor src = ''
+  @property({ type: Boolean }) accessor pressed = false
+  @property({ type: Boolean }) accessor disabled = false
+  @property() accessor size = ''
 
-  /**
-   * @function set
-   */
-  set title (value: string) {
-    this.setAttribute('title', value)
-  }
+  render() {
+    const divClass = [
+      this.pressed && 'pressed',
+      this.disabled && 'disabled',
+      this.size === 'small' && 'small'
+    ].filter(Boolean).join(' ')
 
-  /**
-   * @function get
-   */
-  get pressed () {
-    return this.hasAttribute('pressed')
-  }
+    const shortcut = this.getAttribute('shortcut') ?? ''
+    const divTitle = `${t(this.title)} ${shortcut ? '[' + t(shortcut) + ']' : ''}`.trim()
 
-  /**
-   * @function set
-   */
-  set pressed (value: boolean) {
-    // boolean value => existence = true
-    if (value) {
-      this.setAttribute('pressed', 'true')
-    } else {
-      this.removeAttribute('pressed')
+    let imgSrc: string | undefined
+    if (this.src) {
+      if (this.src.indexOf('data:') !== -1) {
+        imgSrc = this.src
+      } else {
+        imgSrc = svgEditor.configObj.curConfig.imgPath + '/' + this.src
+      }
     }
+
+    const hostStyle = this.getAttribute('style')
+
+    return html`
+      <div
+        title=${divTitle}
+        class=${divClass}
+        style=${ifDefined(hostStyle ?? undefined)}
+      >
+        <img alt="icon" src=${ifDefined(imgSrc)} />
+      </div>
+    `
   }
 
-  /**
-   * @function get
-   */
-  get disabled () {
-    return this.hasAttribute('disabled')
-  }
-
-  /**
-   * @function set
-   */
-  set disabled (value: boolean) {
-    // boolean value => existence = true
-    if (value) {
-      this.setAttribute('disabled', 'true')
-    } else {
-      this.removeAttribute('disabled')
-    }
-  }
-
-  /**
-   * @function get
-   */
-  get src () {
-    return this.getAttribute('src')
-  }
-
-  /**
-   * @function set
-   */
-  set src (value: string | null) {
-    this.setAttribute('src', value ?? '')
-  }
-
-  /**
-   * @function get
-   */
-  get size () {
-    return this.getAttribute('size')
-  }
-
-  /**
-   * @function set
-   */
-  set size (value: string | null) {
-    this.setAttribute('size', value ?? '')
-  }
-
-  /**
-   * @function connectedCallback
-   */
-  connectedCallback () {
+  connectedCallback() {
+    super.connectedCallback()
     // capture shortcuts
     const shortcut = this.getAttribute('shortcut')
     if (shortcut) {
@@ -232,6 +129,3 @@ export class ToolButton extends HTMLElement {
     }
   }
 }
-
-// Register
-customElements.define('se-button', ToolButton)

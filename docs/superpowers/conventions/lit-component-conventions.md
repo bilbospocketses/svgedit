@@ -4,7 +4,7 @@
 
 > **For agent prompts (PR-2 onward):** Paste this entire doc verbatim into per-component dispatch prompts. Do NOT reference it by path — the agent will not read it from disk reliably. The conventions are the contract; deviation = bug.
 
-## The 12-bullet checklist
+## The 14-bullet checklist (locked PR-1 2026-05-21; bullets 13-14 added from PR-2 pilot calibration 2026-05-22)
 
 1. Use `@customElement('se-name')` + `@property() accessor name = default` decorators (the `accessor` keyword is REQUIRED — TC39 standard decorators + Lit 3 only match the `ClassAccessorDecorator` overload, bare class fields produce TS1240/TS1270); never `static properties` map.
 2. Open shadow DOM (Lit default); never override `createRenderRoot()`.
@@ -18,6 +18,8 @@
 10. Name: keep `se-*` prefix verbatim (zero consumer churn outside the component file).
 11. File per component in `src/editor/components/` (or `src/editor/dialogs/` for the 5 dialog components); no barrel files; export class + run `@customElement` decorator side-effect.
 12. Test: trust existing e2e; add a focused unit-test contract only for components with non-trivial form-control or stateful semantics (seInput in PR-1 is the pattern reference).
+13. **`ifDefined` for optional attributes with empty-string defaults** (added 2026-05-22 from PR-2 pilot). When an `@property() accessor` has an empty-string default (`= ''`) AND the corresponding HTML attribute is OPTIONAL on consumers (i.e., consumers may omit it from markup), wrap the binding with `ifDefined(this.X || undefined)` in `render()` to avoid rendering `attr=""` on the DOM. Reference: `seInput.ts`'s `size=${ifDefined(this.size || undefined)}` for the `size` attribute on `<input>`. Without `ifDefined`, Lit emits `attr=""` as a literal DOM attribute, which browsers may interpret as 0 (for numeric attrs like `height`) or trigger CSS attribute-selector mismatches.
+14. **Kebab-case HTML attributes map via `@property({ attribute: 'kebab-case' })`** (added 2026-05-22 from PR-2 pilot). For HTML attributes with kebab-case names (e.g., `img-height`), declare as `@property({ attribute: 'img-height' }) accessor imgHeight = ''`. The `attribute:` option maps the kebab-case attribute on the DOM to the camelCase property in TypeScript. Required whenever the HTML attribute name doesn't match the JS property name verbatim.
 
 ## Reference component shapes
 

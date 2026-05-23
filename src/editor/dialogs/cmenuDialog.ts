@@ -1,62 +1,100 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-this-alias */
-// elix custom-element base classes ship as 'any'; cleanup deferred to #3 (Lit migration)
-// @ts-expect-error: *.html imported as string via vite-plugin-string; no ambient module declaration
-import cMenuDialogHTML from './cmenuDialog.html'
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
+// i18next is passed as `any` from the editor; typing deferred to #3 (full i18n type pass)
+import { LitElement, html, css } from 'lit'
+import { customElement, property, state } from 'lit/decorators.js'
+import { classMap } from 'lit/directives/class-map.js'
+import { styleMap } from 'lit/directives/style-map.js'
 
-// Template uses a static HTML file; innerHTML is safe (build-time constant, not user input)
-const template = document.createElement('template')
-template.innerHTML = cMenuDialogHTML as string  
+@customElement('se-cmenu_canvas-dialog')
+export class SeCMenuCanvasDialog extends LitElement {
+  static styles = css`
+    .contextMenu {
+      position: absolute;
+      z-index: 99999;
+      border: solid 1px rgba(0, 0, 0, .33);
+      background: rgba(255, 255, 255, .95);
+      padding: 5px 0;
+      margin: 0px;
+      font: 12px/15px Lucida Sans, Helvetica, Verdana, sans-serif;
+      border-radius: 5px;
+      -moz-border-radius: 5px;
+      -moz-box-shadow: 2px 5px 10px rgba(0, 0, 0, .3);
+      -webkit-box-shadow: 2px 5px 10px rgba(0, 0, 0, .3);
+      box-shadow: 2px 5px 10px rgba(0, 0, 0, .3);
+    }
 
-declare const svgEditor: SvgEditorGlobal
+    .contextMenu li {
+      list-style: none;
+      padding: 0px;
+      margin: 0px;
+    }
 
-/**
- * @class SeCMenuDialog
- */
-export class SeCMenuDialog extends HTMLElement {
-  declare _shadowRoot: ShadowRoot
-  declare _workarea: Element | null
-  declare $dialog: HTMLElement | null
-  declare $copyLink: Element | null
-  declare $cutLink: Element | null
-  declare $pasteLink: Element | null
-  declare $pasteInPlaceLink: Element | null
-  declare $deleteLink: Element | null
-  declare $groupLink: Element | null
-  declare $ungroupLink: Element | null
-  declare $moveFrontLink: Element | null
-  declare $moveUpLink: Element | null
-  declare $moveDownLink: Element | null
-  declare $moveBackLink: Element | null
+    .contextMenu .shortcut {
+      width: 115px;
+      text-align: right;
+      float: right;
+    }
 
-  /**
-    * @function constructor
-    */
-  constructor () {
-    super()
-    // create the shadowDom and insert the template
-    this._shadowRoot = this.attachShadow({ mode: 'open' })
-    this._shadowRoot.append(template.content.cloneNode(true))
-    this._workarea = document.getElementById('workarea')
-    this.$dialog = this._shadowRoot.querySelector('#cmenu_canvas')
-    this.$copyLink = this._shadowRoot.querySelector('#se-copy')
-    this.$cutLink = this._shadowRoot.querySelector('#se-cut')
-    this.$pasteLink = this._shadowRoot.querySelector('#se-paste')
-    this.$pasteInPlaceLink = this._shadowRoot.querySelector('#se-paste-in-place')
-    this.$deleteLink = this._shadowRoot.querySelector('#se-delete')
-    this.$groupLink = this._shadowRoot.querySelector('#se-group')
-    this.$ungroupLink = this._shadowRoot.querySelector('#se-ungroup')
-    this.$moveFrontLink = this._shadowRoot.querySelector('#se-move-front')
-    this.$moveUpLink = this._shadowRoot.querySelector('#se-move-up')
-    this.$moveDownLink = this._shadowRoot.querySelector('#se-move-down')
-    this.$moveBackLink = this._shadowRoot.querySelector('#se-move-back')
-  }
+    .contextMenu a {
+      -moz-user-select: none;
+      -webkit-user-select: none;
+      user-select: none;
+      color: #222;
+      text-decoration: none;
+      display: block;
+      line-height: 20px;
+      height: 20px;
+      background-position: 6px center;
+      background-repeat: no-repeat;
+      outline: none;
+      padding: 0px 15px 1px 20px;
+    }
 
-  /**
-   * @function init
-   * @param name
-   */
-   
-  init (i18next: any): void {
+    .contextMenu li.hover a {
+      background-color: #2e5dea;
+      color: white;
+      cursor: default;
+    }
+
+    .contextMenu li.disabled a {
+      color: #999;
+      pointer-events: none;
+    }
+
+    .contextMenu li.hover.disabled a {
+      background-color: transparent;
+    }
+
+    .contextMenu li.separator {
+      border-top: solid 1px #E3E3E3;
+      padding-top: 5px;
+      margin-top: 5px;
+    }
+  `
+
+  @property({ attribute: 'tools-cut' }) accessor toolsCut = ''
+  @property({ attribute: 'tools-copy' }) accessor toolsCopy = ''
+  @property({ attribute: 'tools-paste' }) accessor toolsPaste = ''
+  @property({ attribute: 'tools-paste_in_place' }) accessor toolsPasteInPlace = ''
+  @property({ attribute: 'tools-delete' }) accessor toolsDelete = ''
+  @property({ attribute: 'tools-group' }) accessor toolsGroup = ''
+  @property({ attribute: 'tools-ungroup' }) accessor toolsUngroup = ''
+  @property({ attribute: 'tools-move_front' }) accessor toolsMoveFront = ''
+  @property({ attribute: 'tools-move_up' }) accessor toolsMoveUp = ''
+  @property({ attribute: 'tools-move_down' }) accessor toolsMoveDown = ''
+  @property({ attribute: 'tools-move_back' }) accessor toolsMoveBack = ''
+  @property() accessor disableallmenu = ''
+  @property() accessor enablemenuitems = ''
+  @property() accessor disablemenuitems = ''
+
+  @state() private accessor menuOpen = false
+  @state() private accessor menuTop = '0px'
+  @state() private accessor menuLeft = '0px'
+
+  private _workarea: Element | null = null
+  private _workareaListenersAttached = false
+
+  init(i18next: any): void {
     this.setAttribute('tools-cut', i18next.t('tools.cut'))
     this.setAttribute('tools-copy', i18next.t('tools.copy'))
     this.setAttribute('tools-paste', i18next.t('tools.paste'))
@@ -70,197 +108,137 @@ export class SeCMenuDialog extends HTMLElement {
     this.setAttribute('tools-move_back', i18next.t('tools.move_back'))
   }
 
-  /**
-   * @function observedAttributes
-   * @returns observed
-   */
-  static get observedAttributes (): string[] {
-    return ['disableallmenu', 'enablemenuitems', 'disablemenuitems', 'tools-cut',
-      'tools-copy', 'tools-paste', 'tools-paste_in_place', 'tools-delete', 'tools-group',
-      'tools-ungroup', 'tools-move_front', 'tools-move_up', 'tools-move_down',
-      'tools-move_back']
+  private _onMenuOpen = (e: MouseEvent): void => {
+    e.preventDefault()
+    // Detect mouse position
+    let x = e.pageX
+    let y = e.pageY
+
+    // TODO: see todo #10 — uses screen.* instead of window.inner* (UX bug, fix deferred)
+    const xOff = screen.width - 250 // menu width
+    const yOff = screen.height - (276 + 150) // menu height + bottom panel height and scroll bar
+
+    if (x > xOff) {
+      x = xOff
+    }
+    if (y > yOff) {
+      y = yOff
+    }
+    this.menuTop = y + 'px'
+    this.menuLeft = x + 'px'
+    this.menuOpen = true
   }
 
-  /**
-   * @function attributeChangedCallback
-   * @param name
-   * @param oldValue
-   * @param newValue
-   */
-  attributeChangedCallback (name: string, _oldValue: string, newValue: string): void {
-    let eles: string[] = []
-    let textnode: Text | undefined
-    const sdowRoot = this._shadowRoot
-    switch (name) {
-      case 'disableallmenu':
-        if (newValue === 'true') {
-          const elesli = sdowRoot.querySelectorAll('li')
-          elesli.forEach(function (eleli) {
-            eleli.classList.add('disabled')
-          })
-        }
-        break
-      case 'enablemenuitems':
-        eles = newValue.split(',')
-        eles.forEach(function (ele) {
-          const selEle = sdowRoot.querySelector('a[href*="' + ele + '"]')
-          selEle?.parentElement?.classList.remove('disabled')
-        })
-        break
-      case 'disablemenuitems':
-        eles = newValue.split(',')
-        eles.forEach(function (ele) {
-          const selEle = sdowRoot.querySelector('a[href*="' + ele + '"]')
-          selEle?.parentElement?.classList.add('disabled')
-        })
-        break
-      case 'tools-cut':
-        textnode = document.createTextNode(newValue)
-        this.$cutLink?.prepend(textnode)
-        break
-      case 'tools-copy':
-        textnode = document.createTextNode(newValue)
-        this.$copyLink?.prepend(textnode)
-        break
-      case 'tools-paste':
-        if (this.$pasteLink) this.$pasteLink.textContent = newValue
-        break
-      case 'tools-paste_in_place':
-        if (this.$pasteInPlaceLink) this.$pasteInPlaceLink.textContent = newValue
-        break
-      case 'tools-delete':
-        textnode = document.createTextNode(newValue)
-        this.$deleteLink?.prepend(textnode)
-        break
-      case 'tools-group':
-        textnode = document.createTextNode(newValue)
-        this.$groupLink?.prepend(textnode)
-        break
-      case 'tools-ungroup':
-        textnode = document.createTextNode(newValue)
-        this.$ungroupLink?.prepend(textnode)
-        break
-      case 'tools-move_front':
-        textnode = document.createTextNode(newValue)
-        this.$moveFrontLink?.prepend(textnode)
-        break
-      case 'tools-move_up':
-        textnode = document.createTextNode(newValue)
-        this.$moveUpLink?.prepend(textnode)
-        break
-      case 'tools-move_down':
-        textnode = document.createTextNode(newValue)
-        this.$moveDownLink?.prepend(textnode)
-        break
-      case 'tools-move_back':
-        textnode = document.createTextNode(newValue)
-        this.$moveBackLink?.prepend(textnode)
-        break
-      default:
-      // super.attributeChangedCallback(name, oldValue, newValue);
-        break
+  private _onMenuClose = (e: MouseEvent): void => {
+    if (e.button !== 2) {
+      this.menuOpen = false
     }
   }
 
-  /**
-   * @function get
-   */
-  get disableallmenu (): string | null {
-    return this.getAttribute('disableallmenu')
-  }
-
-  /**
-   * @function set
-   */
-  set disableallmenu (value: string) {
-    this.setAttribute('disableallmenu', value)
-  }
-
-  /**
-   * @function get
-   */
-  get enablemenuitems (): string | null {
-    return this.getAttribute('enablemenuitems')
-  }
-
-  /**
-   * @function set
-   */
-  set enablemenuitems (value: string) {
-    this.setAttribute('enablemenuitems', value)
-  }
-
-  /**
-   * @function get
-   */
-  get disablemenuitems (): string | null {
-    return this.getAttribute('disablemenuitems')
-  }
-
-  /**
-   * @function set
-   */
-  set disablemenuitems (value: string) {
-    this.setAttribute('disablemenuitems', value)
-  }
-
-  /**
-   * @function connectedCallback
-   */
-  connectedCallback (): void {
-    const current = this
-    const onMenuOpenHandler = (e: MouseEvent): void => {
-      e.preventDefault()
-      // Detect mouse position
-      let x = e.pageX
-      let y = e.pageY
-
-      // TODO: see todo #10 — uses screen.* instead of window.inner* (UX bug, fix deferred)
-      const xOff = screen.width - 250 // menu width
-      const yOff = screen.height - (276 + 150) // menu height + bottom panel height and scroll bar
-
-      if (x > xOff) {
-        x = xOff
+  private _dispatchMenuChange = (action: string): void => {
+    this.dispatchEvent(new CustomEvent('change', {
+      detail: {
+        trigger: action
       }
-      if (y > yOff) {
-        y = yOff
+    }))
+  }
+
+  private _onCut = (e: Event): void => { e.preventDefault(); this._dispatchMenuChange('cut') }
+  private _onCopy = (e: Event): void => { e.preventDefault(); this._dispatchMenuChange('copy') }
+  private _onPaste = (e: Event): void => { e.preventDefault(); this._dispatchMenuChange('paste') }
+  private _onPasteInPlace = (e: Event): void => { e.preventDefault(); this._dispatchMenuChange('paste_in_place') }
+  private _onDelete = (e: Event): void => { e.preventDefault(); this._dispatchMenuChange('delete') }
+  private _onGroup = (e: Event): void => { e.preventDefault(); this._dispatchMenuChange('group') }
+  private _onUngroup = (e: Event): void => { e.preventDefault(); this._dispatchMenuChange('ungroup') }
+  private _onMoveFront = (e: Event): void => { e.preventDefault(); this._dispatchMenuChange('move_front') }
+  private _onMoveUp = (e: Event): void => { e.preventDefault(); this._dispatchMenuChange('move_up') }
+  private _onMoveDown = (e: Event): void => { e.preventDefault(); this._dispatchMenuChange('move_down') }
+  private _onMoveBack = (e: Event): void => { e.preventDefault(); this._dispatchMenuChange('move_back') }
+
+  private _isDisabled(action: string): boolean {
+    // The external API uses href-style tokens: '#cut', '#copy', etc.
+    const token = '#' + action
+    if (this.disableallmenu === 'true') {
+      // If enablemenuitems is also set, those items are re-enabled
+      if (this.enablemenuitems) {
+        const enabled = this.enablemenuitems.split(',').map(s => s.trim())
+        if (enabled.includes(token)) return false
       }
-      if (current.$dialog) {
-        current.$dialog.style.top = y + 'px'
-        current.$dialog.style.left = x + 'px'
-        current.$dialog.style.display = 'block'
-      }
+      return true
     }
-    const onMenuCloseHandler = (e: MouseEvent): void => {
-      if (e.button !== 2) {
-        if (current.$dialog) current.$dialog.style.display = 'none'
-      }
+    if (this.disablemenuitems) {
+      const disabled = this.disablemenuitems.split(',').map(s => s.trim())
+      if (disabled.includes(token)) return true
     }
-    const onMenuClickHandler = (_e: Event, action: string): void => {
-      const triggerEvent = new CustomEvent('change', {
-        detail: {
-          trigger: action
-        }
-      })
-      this.dispatchEvent(triggerEvent)
-    }
-    if (this._workarea) {
-      this._workarea.addEventListener('contextmenu', onMenuOpenHandler as EventListener)
-      this._workarea.addEventListener('mousedown', onMenuCloseHandler as EventListener)
-    }
-    svgEditor.$click(this.$cutLink as EventTarget, (evt) => onMenuClickHandler(evt, 'cut'))
-    svgEditor.$click(this.$copyLink as EventTarget, (evt) => onMenuClickHandler(evt, 'copy'))
-    svgEditor.$click(this.$pasteLink as EventTarget, (evt) => onMenuClickHandler(evt, 'paste'))
-    svgEditor.$click(this.$pasteInPlaceLink as EventTarget, (evt) => onMenuClickHandler(evt, 'paste_in_place'))
-    svgEditor.$click(this.$deleteLink as EventTarget, (evt) => onMenuClickHandler(evt, 'delete'))
-    svgEditor.$click(this.$groupLink as EventTarget, (evt) => onMenuClickHandler(evt, 'group'))
-    svgEditor.$click(this.$ungroupLink as EventTarget, (evt) => onMenuClickHandler(evt, 'ungroup'))
-    svgEditor.$click(this.$moveFrontLink as EventTarget, (evt) => onMenuClickHandler(evt, 'move_front'))
-    svgEditor.$click(this.$moveUpLink as EventTarget, (evt) => onMenuClickHandler(evt, 'move_up'))
-    svgEditor.$click(this.$moveDownLink as EventTarget, (evt) => onMenuClickHandler(evt, 'move_down'))
-    svgEditor.$click(this.$moveBackLink as EventTarget, (evt) => onMenuClickHandler(evt, 'move_back'))
+    return false
+  }
+
+  render() {
+    return html`
+      <ul id="cmenu_canvas" class="contextMenu" style=${styleMap({
+        display: this.menuOpen ? 'block' : 'none',
+        top: this.menuTop,
+        left: this.menuLeft
+      })}>
+        <li class=${classMap({ disabled: this._isDisabled('cut') })}>
+          <a href="#cut" id="se-cut" @click=${this._onCut}>${this.toolsCut}<span class="shortcut">META+X</span></a>
+        </li>
+        <li class=${classMap({ disabled: this._isDisabled('copy') })}>
+          <a href="#copy" id="se-copy" @click=${this._onCopy}>${this.toolsCopy}<span class="shortcut">META+C</span></a>
+        </li>
+        <li class=${classMap({ disabled: this._isDisabled('paste') })}>
+          <a href="#paste" id="se-paste" @click=${this._onPaste}>${this.toolsPaste}</a>
+        </li>
+        <li class=${classMap({ disabled: this._isDisabled('paste_in_place') })}>
+          <a href="#paste_in_place" id="se-paste-in-place" @click=${this._onPasteInPlace}>${this.toolsPasteInPlace}</a>
+        </li>
+        <li class=${classMap({ separator: true, disabled: this._isDisabled('delete') })}>
+          <a href="#delete" id="se-delete" @click=${this._onDelete}>${this.toolsDelete}<span class="shortcut">BACKSPACE</span></a>
+        </li>
+        <li class=${classMap({ separator: true, disabled: this._isDisabled('group') })}>
+          <a href="#group" id="se-group" @click=${this._onGroup}>${this.toolsGroup}<span class="shortcut">G</span></a>
+        </li>
+        <li class=${classMap({ disabled: this._isDisabled('ungroup') })}>
+          <a href="#ungroup" id="se-ungroup" @click=${this._onUngroup}>${this.toolsUngroup}<span class="shortcut">G</span></a>
+        </li>
+        <li class=${classMap({ separator: true, disabled: this._isDisabled('move_front') })}>
+          <a href="#move_front" id="se-move-front" @click=${this._onMoveFront}>${this.toolsMoveFront}<span class="shortcut">CTRL+SHFT+]</span></a>
+        </li>
+        <li class=${classMap({ disabled: this._isDisabled('move_up') })}>
+          <a href="#move_up" id="se-move-up" @click=${this._onMoveUp}>${this.toolsMoveUp}<span class="shortcut">CTRL+]</span></a>
+        </li>
+        <li class=${classMap({ disabled: this._isDisabled('move_down') })}>
+          <a href="#move_down" id="se-move-down" @click=${this._onMoveDown}>${this.toolsMoveDown}<span class="shortcut">CTRL+[</span></a>
+        </li>
+        <li class=${classMap({ disabled: this._isDisabled('move_back') })}>
+          <a href="#move_back" id="se-move-back" @click=${this._onMoveBack}>${this.toolsMoveBack}<span class="shortcut">CTRL+SHFT+[</span></a>
+        </li>
+      </ul>
+    `
+  }
+
+  override connectedCallback(): void {
+    super.connectedCallback()
+    this._workarea = document.getElementById('workarea')
+    this._attachWorkareaListeners()
+  }
+
+  private _attachWorkareaListeners(): void {
+    if (this._workareaListenersAttached || this._workarea === null) return
+    this._workareaListenersAttached = true
+    this._workarea.addEventListener('contextmenu', this._onMenuOpen as EventListener)
+    this._workarea.addEventListener('mousedown', this._onMenuClose as EventListener)
+  }
+
+  private _detachWorkareaListeners(): void {
+    if (!this._workareaListenersAttached) return
+    this._workarea?.removeEventListener('contextmenu', this._onMenuOpen as EventListener)
+    this._workarea?.removeEventListener('mousedown', this._onMenuClose as EventListener)
+    this._workareaListenersAttached = false
+  }
+
+  override disconnectedCallback(): void {
+    super.disconnectedCallback()
+    this._detachWorkareaListeners()
   }
 }
-
-// Register
-customElements.define('se-cmenu_canvas-dialog', SeCMenuDialog)
