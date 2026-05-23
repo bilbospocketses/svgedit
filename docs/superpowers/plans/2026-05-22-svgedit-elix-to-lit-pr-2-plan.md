@@ -661,7 +661,11 @@ This is a HUMAN-IN-THE-LOOP checkpoint. The main session pauses and asks the use
 
 ---
 
-### Task 13: Convert `svgSourceDialog.ts`
+### Task 13: ~~Convert `svgSourceDialog.ts`~~ — DEFERRED TO PR-3 (2026-05-23)
+
+**Deferred at Batch 4 dispatch time.** `svgSourceDialog.html` uses `<elix-dialog>` (registered via `import 'elix/define/Dialog.js'` in `src/editor/dialogs/index.ts`); code calls `$dialog.open()` / `.close()` (elix API). Incompatible with PR-2's "pure custom elements without elix dependency" discipline. See spec doc `2026-05-21-svgedit-elix-to-lit-design.md` Amendment section.
+
+Original fill-ins preserved below for PR-3 reference:
 
 **Per-component fill-ins:**
 - File path: `C:/Users/jscha/source/repos/svgedit/src/editor/dialogs/svgSourceDialog.ts`
@@ -677,7 +681,11 @@ This is a HUMAN-IN-THE-LOOP checkpoint. The main session pauses and asks the use
 
 ---
 
-### Task 14: Convert `imagePropertiesDialog.ts`
+### Task 14: ~~Convert `imagePropertiesDialog.ts`~~ — DEFERRED TO PR-3 (2026-05-23)
+
+**Deferred at Batch 4 dispatch time.** Same elix-dialog dependency as Task 13. See Amendment in spec doc.
+
+Original fill-ins preserved below for PR-3 reference:
 
 **Per-component fill-ins:**
 - File path: `C:/Users/jscha/source/repos/svgedit/src/editor/dialogs/imagePropertiesDialog.ts`
@@ -693,7 +701,11 @@ This is a HUMAN-IN-THE-LOOP checkpoint. The main session pauses and asks the use
 
 ---
 
-### Task 15: Convert `editorPreferencesDialog.ts`
+### Task 15: ~~Convert `editorPreferencesDialog.ts`~~ — DEFERRED TO PR-3 (2026-05-23)
+
+**Deferred at Batch 4 dispatch time.** Same elix-dialog dependency as Task 13. See Amendment in spec doc.
+
+Original fill-ins preserved below for PR-3 reference:
 
 **Per-component fill-ins:**
 - File path: `C:/Users/jscha/source/repos/svgedit/src/editor/dialogs/editorPreferencesDialog.ts`
