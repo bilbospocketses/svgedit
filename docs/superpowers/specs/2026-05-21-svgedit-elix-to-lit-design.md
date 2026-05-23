@@ -8,6 +8,28 @@
 - Implementation pending — next step: implementation plan via `superpowers:writing-plans` (PR-1 first; subsequent PRs get their own plans at execution time).
 - **2026-05-21 (PR-1 execution):** Consumer audit surfaced two regressions in the original Reference shape A — `<se-zoom>` (BottomPanel) reads child `<se-text>` `value` attribute for zoom-option values, and `LayersPanel.html:5` `<se-text id="layersLabel">` depends on the current code's host-id-to-inner-div propagation for the bold-sizing CSS rule to match. Reference shape A corrected to add `@property() value` + scope the CSS via `:host([id="layersLabel"])`. Reference shape B (`seInput`) unchanged structurally; the `change` event-type shift (`CustomEvent('change')` → `Event('change', {bubbles, composed})`) was consumer-verified equivalent.
 - **2026-05-22 (PR-1 LANDED):** PR [#20](https://github.com/bilbospocketses/svgedit/pull/20) squash-merged to master `fda81244` (web-flow signed, verified true, all 4 required checks green). Conventions doc landed at `docs/superpowers/conventions/lit-component-conventions.md`; reference components `seText.ts` + `seInput.ts` on master. **Gate-verification regression caught + fixed forward (commit `c3a7cc67`):** the PR-1 consumer audit caught `<se-text id="layersLabel">` (CSS) but missed `<se-text id="sidepanel_handle">` (LayersPanel.html:2), which `layers-panel.spec.js:20,46` targets via the Playwright selector `div#sidepanel_handle` — the original seText's `attributeChangedCallback case 'id'` did imperative id-mirroring onto the inner shadow div, and that mirror was lost in the Lit conversion. Fix: `<div id=${ifDefined(this.id || undefined)} ...>` to restore the mirror. **Audit refinement memorialized:** consumer audits MUST grep test files for selectors (`div#<id>` / `<tag>#<id>` / Playwright + vitest patterns), not just CSS + component HTML. Worth pasting verbatim into PR-2 / PR-3 / PR-4 / PR-5 dispatch packets. **Next gating item before PR-2:** todo #17 (JSDoc → TS types doc-pass, eliminate the 140 remaining lint warnings) — decided 2026-05-21 LATE to slot BEFORE PR-2 agent-team kickoff so parallel subagents see the right TS-native type-style example.
+- **2026-05-23 (PR-2 LANDED):** PR [#28](https://github.com/bilbospocketses/svgedit/pull/28) squash-merged to master `ee392de8` (web-flow signed, verified true, all 5 required checks green). **10 of original 14 PR-2 components converted**; 4 deferred to PR-3 (see Amendment below). Execution via `superpowers:subagent-driven-development` in 4 batches — pilot (seListItem) → fan-out 5 (Batch 2) → fan-out 3 (Batch 3) → solo (Batch 4: cmenuDialog only); each implementer subagent followed by spec + code-quality reviewer subagents in parallel + per-task gate re-verification by main session per `feedback_verify_subagent_gate_claims`. Cumulative net LOC reduction: −705 across 10 source files + 2 deleted HTML files (`cmenuLayersDialog.html` + `cmenuDialog.html`, both inlined into their TS files). 5 patterns established (now in `lit-component-conventions.md` as bullets 15-21): `boolAttr` module-local converter constant; `classMap` directive over JS template interpolation; `styleMap` directive for imperative `style.*` mutations; `unsafeHTML` directive for dynamic-innerHTML scenarios with internal config data; full `disconnectedCallback` lifecycle for components attaching listeners to external DOM nodes. Touchend double-fire bug (latent: `svgEditor.$click` registered both `click` AND `touchend`, causing handlers to fire twice per touch tap) fixed at every `$click` site swapped to declarative `@click=`.
+
+### Amendment (2026-05-23): 4 deferrals from PR-2 → PR-3
+
+The original spec listed 14 components/dialogs for PR-2. Execution discovered 4 were actually elix-coupled and incompatible with the "pure custom elements without elix dependency" PR-2 discipline. They move to PR-3:
+
+| Deferred component | Why discovered late | Disposition |
+|---|---|---|
+| `sePromptDialog` | Lives at `src/editor/dialogs/sePromptDialog.ts` (not `components/` as spec table said) AND internally instantiates `new SePlainAlertDialog()` (an elix-bound class queued for PR-3). Found at PR-2 plan-write time. | Defer to PR-3 alongside `SePlainAlertDialog`. Audit input #4 (the rename-during-conversion to match the dialog's actual purpose) shifts to PR-3. |
+| `svgSourceDialog` | HTML template uses `<elix-dialog>` (registered via `import 'elix/define/Dialog.js'` in `src/editor/dialogs/index.ts`); code calls `$dialog.open()` / `.close()` (elix API). Found at PR-2 Batch 4 dispatch time. | Defer to PR-3. Conversion approach (native HTML5 `<dialog>` swap vs. Lit `<se-dialog>` primitive) decided in PR-3 scope. |
+| `imagePropertiesDialog` | Same elix-dialog dependency. | Defer to PR-3. |
+| `editorPreferencesDialog` | Same elix-dialog dependency. | Defer to PR-3. |
+
+**Root cause of the late discovery:** `AUDIT_2026-05-16.md` enumerated the TS-side dependency graph for the original "16 pure custom elements" list but did NOT walk the HTML files for each component to catch elix-dialog usage in the templates. The PR-2 plan-write Step 4 inventory check (`grep -lE "from ['\"]elix" src/editor/components/*.ts src/editor/dialogs/*.ts`) only caught TS-side imports, missing HTML-side ones.
+
+**Lesson for future migration audits:** for components with companion HTML files (via `vite-plugin-string` import or similar pattern), audit the HTML side too. The vite-plugin-string pattern was specifically the loophole.
+
+**Updated counts:**
+- PR-2 SHIPPED: 10 components/dialogs (1 pilot + 5 Batch 2 + 3 Batch 3 + 1 Batch 4)
+- PR-3 ADDED: 4 components/dialogs (above) — increases PR-3 from "11 elix-bound" to **15 elix-bound + sePromptDialog**
+
+The PR-2 + PR-3 tables below have been updated to reflect this; the rest of the spec doc (Goals, Per-conversion approach, Risks table, etc.) is unchanged — the amendment is a scope-rebalance, not a re-design.
 
 ## Context
 
@@ -198,30 +220,24 @@ Plus verify in PR-1 (one-time substrate checks):
 
 ---
 
-### PR-2: 14 remaining pure custom elements via agent-team parallel dispatch
+### PR-2: 10 pure custom elements/dialogs via subagent-driven-development (SHIPPED 2026-05-23, PR #28)
 
-**Scope (tentative — final inventory verified at PR-1 execution):** 14 components from the audit's "16 pure" list, minus `seText` (done in PR-1) and any inventory-revealed reclassifications.
+**Scope as shipped:** 10 components/dialogs from the audit's "16 pure" list, minus `seText` (done in PR-1), minus 4 elix-coupled deferrals (moved to PR-3 — see Amendment above and PR-3 table below).
 
 | Component | File | Audit notes / preserves |
 |---|---|---|
-| `seListItem` | `src/editor/components/seListItem.ts` | — |
-| `seSelect` | `src/editor/components/seSelect.ts` | Verify not elix-bound at inspection |
-| `seButton` | `src/editor/components/seButton.ts` | `Editor.ts:setAll` shortcut key normalization (todo #10) preserved |
-| `sePalette` | `src/editor/components/sePalette.ts` | `// Todo: Make into configuration item?` preserved (todo #10) |
+| `seListItem` (PILOT) | `src/editor/components/seListItem.ts` | — |
+| `seSelect` | `src/editor/components/seSelect.ts` | — |
+| `seButton` | `src/editor/components/seButton.ts` | `Editor.ts:setAll` shortcut key normalization (todo #10) preserved; class rename `ToolButton` → `SeButton` |
+| `sePalette` | `src/editor/components/sePalette.ts` | `// Todo: Make into configuration item?` preserved (todo #10); class rename `SEPalette` → `SePalette` |
 | `seList` | `src/editor/components/seList.ts` | — |
-| `seFlyingButton` | `src/editor/components/seFlyingButton.ts` | — |
-| `seExplorerButton` | `src/editor/components/seExplorerButton.ts` | Dead `XMLHttpRequest` at `:26` preserved (todo #10); HTML syntax error at `:134` preserved (todo #10) |
-| `seZoom` | `src/editor/components/seZoom.ts` | Missing semicolon at `:78-79` preserved; inverted-guard `attributeChangedCallback` at `:211-222` preserved |
-| `sePromptDialog` → renamed | `src/editor/components/sePromptDialog.ts` | **Renamed during conversion** — closes audit input #4 (misnamed; actually a status-display modal). New name candidates: `seStatusDialog`, `seInfoDialog`, `seStatusModal`. Decision at dispatch time. ALL callsites updated in the same agent prompt. |
-| `cmenuDialog` *(dialog, not component)* | `src/editor/dialogs/cmenuDialog.ts` (path verified at execution) | `:204-205` `screen.*` → `window.inner*` bug preserved (todo #10) |
-| `cmenuLayersDialog` *(dialog)* | `src/editor/dialogs/cmenuLayersDialog.ts` (path verified at execution) | — |
-| `svgSourceDialog` *(dialog)* | `src/editor/dialogs/svgSourceDialog.ts` (path verified at execution) | `:100` `super.attributeChangedCallback()` latent throw preserved (todo #10) |
-| `imagePropertiesDialog` *(dialog)* | `src/editor/dialogs/imagePropertiesDialog.ts` (path verified at execution) | `:174` same `super.attributeChangedCallback()` issue preserved |
-| `editorPreferencesDialog` *(dialog)* | `src/editor/dialogs/editorPreferencesDialog.ts` (path verified at execution) | `:182` same `super.attributeChangedCallback()` issue preserved |
+| `seFlyingButton` | `src/editor/components/seFlyingButton.ts` | Class rename `FlyingButton` → `SeFlyingButton`; latent touchend double-fire bug fixed (cascade applied to all subsequent `$click` sites in PR-2) |
+| `seExplorerButton` | `src/editor/components/seExplorerButton.ts` | `:26` dead `XMLHttpRequest` preserve was already-gone by execution time (audit-flag predated TS migration); `:134` HTML syntax error preserve also already-gone; class rename `ExplorerButton` → `SeExplorerButton`; uses `unsafeHTML` for innerHTML-style shape-library generation |
+| `seZoom` | `src/editor/components/seZoom.ts` | Inverted-guard `attributeChangedCallback` preserved via explicit override + `super.attributeChangedCallback()` call; press-and-hold setTimeout chain preserved verbatim (500ms initial / 50ms repeat) |
+| `cmenuLayersDialog` *(dialog)* | `src/editor/dialogs/cmenuLayersDialog.ts` | Class rename `SeCMenuLayerDialog` → `SeCMenuLayersDialog` (missing `s`); HTML import via `vite-plugin-string` replaced by inline `static styles` + `render()`; `cmenuLayersDialog.html` DELETED; full `disconnectedCallback` lifecycle for workarea + `#sidepanels` listeners |
+| `cmenuDialog` *(dialog)* | `src/editor/dialogs/cmenuDialog.ts` | `:204-205` `screen.*` viewport bug preserved verbatim with TODO comment; class rename `SeCMenuDialog` → `SeCMenuCanvasDialog` (matches `<se-cmenu_canvas-dialog>` tag); `cmenuDialog.html` DELETED |
 
-The 5 dialog files live in `src/editor/dialogs/`, not `src/editor/components/`. PR-2's per-agent dispatch packet must use the correct file path per component (verified by `git ls-files` at PR-2 execution).
-
-**Dispatch model:** all 14 in parallel via `superpowers:subagent-driven-development`. See "PR-2 agent-team dispatch discipline" section for the per-agent packet contents and main-session protocol.
+**Dispatch model:** subagent-driven-development in 4 batches (1 pilot → 5 fan-out → 3 fan-out → 1 solo). Per-task implementer subagent + spec reviewer + code-quality reviewer (all sonnet model). Sequential merge with full gate re-verification at PR-2 branch HEAD after each. See "PR-2 agent-team dispatch discipline" section for the per-agent packet contents and main-session protocol.
 
 **Verification gate (main session re-runs after each worktree merges back):**
 
@@ -233,17 +249,19 @@ npx tsx scripts/run-e2e.ts → 250/250 passing both browsers
 manual smoke: click through each converted component (button, palette, zoom, dialogs)
 ```
 
-**Net size:** ~14 files converted, ~500-1500 LOC net reduction depending on per-component shrinkage.
+**Net size as shipped:** 10 source files converted + 2 HTML files deleted; **−705 LOC** across both.
 
-**Risk callout:** `sePromptDialog` rename is THE name-change in this PR. The agent that owns sePromptDialog gets ALL the callsite paths in its prompt (grep result for the old name) + a clear "rename to `<new-name>` in ALL files listed below" directive. This is the only conversion in PR-2 that touches callsites outside the component file.
+**Class renames as shipped:** `ToolButton` → `SeButton`; `SEPalette` → `SePalette`; `FlyingButton` → `SeFlyingButton`; `ExplorerButton` → `SeExplorerButton`; `SeCMenuLayerDialog` → `SeCMenuLayersDialog` (with missing `s`); `SeCMenuDialog` → `SeCMenuCanvasDialog`. All in-file casts updated; no consumer-side changes (all consumer-side references were already `as any`-typed or used `document.createElement('<tag>')` which doesn't depend on the class name).
+
+**Risk callout — original was sePromptDialog rename**: deferred to PR-3 alongside sePromptDialog itself.
 
 ---
 
-### PR-3: 11 remaining elix-bound components + se-elix vendored overrides (sequential)
+### PR-3: 15 elix-bound components + sePromptDialog + se-elix vendored overrides (sequential)
 
-**Scope (tentative — final inventory verified at PR-2 completion):** 11 elix-bound from the audit's "12" list, minus `seInput` (done in PR-1). Sequential because each needs an elix-replacement design.
+**Scope:** 11 elix-bound from the audit's "12" list (minus `seInput` done in PR-1) + 4 deferrals from PR-2 (see Amendment above) = **15 elix-bound + sePromptDialog**. Sequential because each needs an elix-replacement design.
 
-Tentative list:
+**Original PR-3 list (11):**
 
 - `seMenu.ts` (uses `<elix-menu-button>`; `:46` shadowDOM-piercing site resolves naturally once elix internals disappear)
 - `seMenuItem.ts` (uses `<elix-menu-item>`; `:31-32` shadowDOM-piercing site resolves naturally)
@@ -256,6 +274,15 @@ Tentative list:
 - `src/editor/dialogs/se-elix/src/base/NumberSpinBox.js` (vendored override → delete)
 - `src/editor/dialogs/se-elix/src/plain/PlainNumberSpinBox.js` (vendored override → delete)
 - `src/editor/dialogs/se-elix/define/NumberSpinBox.js` (vendored override → delete)
+
+**Deferred from PR-2 (4):**
+
+- `sePromptDialog.ts` (in `src/editor/dialogs/`; internally instantiates `new SePlainAlertDialog()`) — **renamed during conversion** to match actual purpose (status-display modal, not prompt-with-input); closes audit input #4. New name candidates: `seStatusDialog`, `seInfoDialog`, `seStatusModal`. Decision at PR-3 dispatch time. ALL callsites updated in the same agent prompt.
+- `svgSourceDialog.ts` (in `src/editor/dialogs/`; uses `<elix-dialog>` in HTML template) — `:100` `super.attributeChangedCallback()` latent throw preserved (todo #10)
+- `imagePropertiesDialog.ts` (in `src/editor/dialogs/`; uses `<elix-dialog>` in HTML template) — `:174` same `super.attributeChangedCallback()` issue preserved
+- `editorPreferencesDialog.ts` (in `src/editor/dialogs/`; uses `<elix-dialog>` in HTML template) — `:182` same `super.attributeChangedCallback()` issue preserved
+
+**PR-3 sequencing consideration:** convert `SePlainAlertDialog` early in PR-3 so the sePromptDialog conversion (which internally instantiates it) can follow without `as any` casts on the constructor. The 3 elix-dialog-coupled dialogs can be converted independently — either swap `<elix-dialog>` for the native HTML5 `<dialog>` element (which has `.showModal()` / `.show()` / `.close()` matching the existing API) or build a Lit `<se-dialog>` primitive. The choice is a PR-3-time decision.
 
 **Per-conversion approach:** Read the elix-using component + the elix internals it composes (`node_modules/elix/.../*.js`) + the panels that consume the component. Design the Lit replacement that owns the previously-elix-internal markup directly. The 5 audit-flagged shadowDOM-piercing sites all resolve here because the elix internals disappear — our Lit components own everything internally.
 
