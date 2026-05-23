@@ -1,69 +1,55 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument */
-// elix custom-element base classes ship as 'any'; cleanup deferred to #3 (Lit migration)
+/* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
+// fetch().json() returns `any`; typed via `as` casts below; cleanup deferred to #3
+
+import { LitElement, html, css } from 'lit'
+import { customElement, property, state } from 'lit/decorators.js'
+import { classMap } from 'lit/directives/class-map.js'
+import { unsafeHTML } from 'lit/directives/unsafe-html.js'
 
 /**
- * @class ExplorerButton
+ * Boolean attribute contract for `pressed` / `disabled`:
+ * reflect as the string `'true'` so DOM queries like `[pressed]` and
+ * regex matchers like `toHaveAttribute('pressed', /./)` succeed. Lit's
+ * default Boolean reflect emits `''`, which fails single-character matchers.
  */
-export class ExplorerButton extends HTMLElement {
-  _shadowRoot: ShadowRoot
-  $button: Element
-  $overall: Element
-  $img: HTMLImageElement
-  $menu: Element
-  $handle: Element
-  $lib: Element
-  files: string[]
-  imgPath: string
-  template: HTMLTemplateElement
-  currentAction: Element
-  data: Record<string, any>
-
-  /**
-    * @function constructor
-    */
-  constructor () {
-    super()
-    // create the shadowDom and insert the template
-    // create the shadowDom and insert the template
-    this.imgPath = svgEditor.configObj.curConfig.imgPath
-    this.template = this.createTemplate(this.imgPath)
-    this._shadowRoot = this.attachShadow({ mode: 'open' })
-    this._shadowRoot.append(this.template.content.cloneNode(true))
-    // locate the component
-    this.$button = this._shadowRoot.querySelector('.menu-button') as Element
-    this.$overall = this._shadowRoot.querySelector('.overall') as Element
-    this.$img = this._shadowRoot.querySelector('.menu-button img') as HTMLImageElement
-    this.$menu = this._shadowRoot.querySelector('.menu') as Element
-    this.$handle = this._shadowRoot.querySelector('.handle') as Element
-    this.$lib = this._shadowRoot.querySelector('.image-lib') as Element
-    this.files = []
-    this.imgPath = svgEditor.configObj.curConfig.imgPath
-    this.currentAction = this.$button
-    this.data = {}
-
-    // Closes opened (pressed) lib menu on click on the canvas
-    const workarea = document.getElementById('workarea')
-    workarea?.addEventListener('click', (_e) => {
-      this.$menu.classList.remove('open')
-      this.$lib.classList.remove('open-lib')
-    })
+const boolAttr = {
+  reflect: true,
+  converter: {
+    fromAttribute: (v: string | null) => v !== null,
+    toAttribute: (v: boolean) => v ? 'true' : null
   }
+} as const
 
-  /**
-   * @function createTemplate
-   * @param imgPath
-   * @returns template
-   */
-
-  createTemplate (imgPath: string): HTMLTemplateElement {
-    const template = document.createElement('template')
-    template.innerHTML = `
-    <style>
+/**
+ * SeExplorerButton — toolbar explorer button with shape library and menu popups.
+ *
+ * External API preserved (verified via consumer grep before conversion):
+ *   - Custom element name: `se-explorerbutton`
+ *   - Attributes: `title`, `pressed`, `disabled`, `lib`, `src` (observed)
+ *   - Attribute: `shortcut` (read at render time for tooltip composition; not observed)
+ *   - Consumer: ext-shapes uses `id="tool_shapelib"` on host — default Lit behavior correct
+ *
+ * Behavioral fix (this conversion):
+ *   - Drops the touchend half of the previous svgEditor.$click registration —
+ *     synthetic click events cover touch on modern targets, removing the
+ *     latent double-fire bug on touchscreen taps. Host addEventListener('click')
+ *     for slotted/shadow bubbled events, matching seFlyingButton precedent.
+ *
+ * Dropped:
+ *   - Static template + cloneNode + querySelector field assignments
+ *   - observedAttributes/attributeChangedCallback imperative dispatch
+ *   - Constructor-time imgPath cache (moved to render)
+ *   - @class/@function JSDoc tags
+ */
+@customElement('se-explorerbutton')
+export class SeExplorerButton extends LitElement {
+  static styles = css`
     :host {
-      position:relative;
+      position: relative;
     }
-    .menu-button:hover, se-button:hover, .menu-item:hover
-    {
+    .menu-button:hover,
+    se-button:hover,
+    .menu-item:hover {
       background-color: var(--icon-bg-color-hover);
     }
     img {
@@ -97,10 +83,10 @@ export class ExplorerButton extends HTMLElement {
     .handle {
       height: 8px;
       width: 8px;
-      background-image: url(${imgPath}/handle.svg);
-      position:absolute;
+      position: absolute;
       bottom: 0px;
       right: 0px;
+      background-image: var(--handle-bg-url);
     }
     .button-icon {
     }
@@ -108,7 +94,7 @@ export class ExplorerButton extends HTMLElement {
       position: fixed;
       margin-left: 34px;
       background: none !important;
-      display:none;
+      display: none;
       top: 30%;
       left: 171px;
     }
@@ -139,198 +125,141 @@ export class ExplorerButton extends HTMLElement {
     .overall {
       background: none !important;
     }
-    </style>
-  
-    <div class="overall">
-      <div class="menu-button">
-        <img class="button-icon" src="explorer.svg" alt="icon">
-        <div class="handle"></div>
+  `
+
+  @property() accessor title = ''
+  @property(boolAttr) accessor pressed = false
+  @property(boolAttr) accessor disabled = false
+  @property() accessor lib = ''
+  @property() accessor src = ''
+
+  @state() private accessor _opened = false
+  @state() private accessor _activeSrc = ''
+  @state() private accessor _menuHtml = '<div class="menu-item">menu</div>'
+  @state() private accessor _libHtml = '<se-button></se-button>'
+
+  private _data: Record<string, string> = {}
+  private _workareaClickHandler: ((e: Event) => void) | null = null
+
+  connectedCallback() {
+    super.connectedCallback()
+    // Host-level click receives bubbled events from shadow children and slotted elements
+    this.addEventListener('click', this._onClick)
+
+    // Closes opened lib menu on click on the canvas (preserved from original constructor)
+    const workarea = document.getElementById('workarea')
+    if (workarea) {
+      this._workareaClickHandler = (_e: Event) => {
+        this._opened = false
+      }
+      workarea.addEventListener('click', this._workareaClickHandler)
+    }
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback()
+    this.removeEventListener('click', this._onClick)
+    const workarea = document.getElementById('workarea')
+    if (workarea && this._workareaClickHandler) {
+      workarea.removeEventListener('click', this._workareaClickHandler)
+      this._workareaClickHandler = null
+    }
+  }
+
+  updated(changed: Map<string, unknown>) {
+    if (changed.has('lib') && this.lib) {
+      void this._loadLib(this.lib)
+    }
+    if (changed.has('src') && this.src) {
+      const imgPath = svgEditor.configObj.curConfig.imgPath
+      this._activeSrc = imgPath + '/' + this.src
+    }
+  }
+
+  render() {
+    const imgPath = svgEditor.configObj.curConfig.imgPath
+    const shortcut = this.getAttribute('shortcut')
+    const titleText = `${this.title}${shortcut ? ` [${shortcut}]` : ''}`
+
+    return html`
+      <style>:host { --handle-bg-url: url(${imgPath}/handle.svg); }</style>
+      <div class=${classMap({ overall: true, pressed: this.pressed, disabled: this.disabled })}>
+        <div class="menu-button" title=${titleText}>
+          <img class="button-icon" src=${this._activeSrc || 'explorer.svg'} alt="icon" />
+          <div class="handle" @click=${this._onClick}></div>
+        </div>
+        <div class=${classMap({ 'image-lib': true, 'open-lib': this._opened })}>
+          ${unsafeHTML(this._libHtml)}
+        </div>
+        <div class=${classMap({ menu: true, open: this._opened })} @click=${this._onClick}>
+          ${unsafeHTML(this._menuHtml)}
+        </div>
       </div>
-      <!-- TODO: see todo #10 — HTML syntax error: class="image-lib"" (extra quote in original) preserved as-is -->
-      <div class="image-lib">
-        <se-button></se-button>
-     </div>
-      <div class="menu">
-        <div class="menu-item">menu</div>
-     </div>
-    </div>`
-    return template
+    `
   }
 
-  /**
-   * @function observedAttributes
-   * @returns observed
-   */
-  static get observedAttributes () {
-    return ['title', 'pressed', 'disabled', 'lib', 'src']
-  }
-
-  /**
-   * @function attributeChangedCallback
-   * @param name
-   * @param oldValue
-   * @param newValue
-   */
-  async attributeChangedCallback (name: string, oldValue: string, newValue: string): Promise<void> {
-    if (oldValue === newValue) return
-    switch (name) {
-      case 'title':
-        {
-          const shortcut = this.getAttribute('shortcut')
-          this.$button.setAttribute('title', `${newValue} [${shortcut}]`)
-        }
+  private _onClick = (ev: Event) => {
+    ev.stopPropagation()
+    const target = ev.target as HTMLElement
+    switch (target.nodeName) {
+      case 'SE-EXPLORERBUTTON':
+        this._opened = !this._opened
         break
-      case 'pressed':
-        if (newValue) {
-          this.$overall.classList.add('pressed')
-        } else {
-          this.$overall.classList.remove('pressed')
-        }
+      case 'SE-BUTTON':
+        // change to the current action
+        this._activeSrc = target.getAttribute('src') ?? ''
+        this.dataset.draw = this._data[target.dataset.shape ?? '']
+        this.shadowRoot?.querySelectorAll('.image-lib [pressed]').forEach((b) => {
+          (b as SeExplorerButton).pressed = false
+        })
+        target.setAttribute('pressed', 'pressed')
+        // and close the menu
+        this._opened = false
         break
-      case 'disabled':
-        if (newValue) {
-          this.$overall.classList.add('disabled')
-        } else {
-          this.$overall.classList.remove('disabled')
+      case 'DIV':
+        if (target.classList[0] === 'handle') {
+          // click on the handle: open/close the menu
+          this._opened = !this._opened
+        } else if (target.classList.contains('menu-item')) {
+          this.shadowRoot?.querySelectorAll('.menu > .pressed').forEach((b) => {
+            b.classList.remove('pressed')
+          })
+          target.classList.add('pressed')
+          void this._updateLib(target.dataset.menu ?? '')
         }
-        break
-      case 'lib':
-        try {
-          const response = await fetch(`${newValue}index.json`)
-          const json = await response.json()
-          const { lib } = json
-          this.$menu.innerHTML = (lib as string[]).map((menu: string, i: number) => (
-          `<div data-menu="${menu}" class="menu-item ${(i === 0) ? 'pressed' : ''} ">${menu}</div>`
-          )).join('')
-          await this.updateLib(lib[0])
-        } catch (error) {
-          console.error(error)
-        }
-        break
-      case 'src':
-        this.$img.setAttribute('src', this.imgPath + '/' + newValue)
         break
       default:
-        console.error(`unknown attribute: ${name}`)
-        break
+        console.error('unknown nodeName for:', target, target.className)
     }
   }
 
-  /**
-   * @function get
-   */
-  get title (): string {
-    return this.getAttribute('title') ?? ''
-  }
-
-  /**
-   * @function set
-   */
-  set title (value: string) {
-    this.setAttribute('title', value)
-  }
-
-  /**
-   * @function get
-   */
-  get pressed () {
-    return this.hasAttribute('pressed')
-  }
-
-  /**
-   * @function set
-   */
-  set pressed (value: boolean) {
-    // boolean value => existence = true
-    if (value) {
-      this.setAttribute('pressed', 'true')
-    } else {
-      this.removeAttribute('pressed')
+  private async _loadLib(libDir: string): Promise<void> {
+    try {
+      const response = await fetch(`${libDir}index.json`)
+      const json = await response.json()
+      const { lib } = json as { lib: string[] }
+      this._menuHtml = lib.map((menu: string, i: number) =>
+        `<div data-menu="${menu}" class="menu-item ${i === 0 ? 'pressed' : ''} ">${menu}</div>`
+      ).join('')
+      if (lib[0]) await this._updateLib(lib[0])
+    } catch (error) {
+      console.error(error)
     }
   }
 
-  /**
-   * @function get
-   */
-  get disabled () {
-    return this.hasAttribute('disabled')
-  }
-
-  /**
-   * @function set
-   */
-  set disabled (value: boolean) {
-    // boolean value => existence = true
-    if (value) {
-      this.setAttribute('disabled', 'true')
-    } else {
-      this.removeAttribute('disabled')
-    }
-  }
-
-  /**
-   * @function connectedCallback
-   */
-  connectedCallback () {
-    // capture click event on the button to manage the logic
-    const onClickHandler = (ev: Event) => {
-      ev.stopPropagation()
-      const target = ev.target as HTMLElement
-      switch (target.nodeName) {
-        case 'SE-EXPLORERBUTTON':
-          this.$menu.classList.toggle('open')
-          this.$lib.classList.toggle('open-lib')
-          break
-        case 'SE-BUTTON':
-        // change to the current action
-          this.currentAction = target
-          this.$img.setAttribute('src', this.currentAction.getAttribute('src') ?? '')
-          this.dataset.draw = this.data[target.dataset.shape ?? '']
-          this._shadowRoot.querySelectorAll('.image-lib [pressed]').forEach((b) => { (b as ExplorerButton).pressed = false })
-          this.currentAction.setAttribute('pressed', 'pressed')
-          // and close the menu
-          this.$menu.classList.remove('open')
-          this.$lib.classList.remove('open-lib')
-          break
-        case 'DIV':
-          if (target.classList[0] === 'handle') {
-          // this is a click on the handle so let's open/close the menu.
-            this.$menu.classList.toggle('open')
-            this.$lib.classList.toggle('open-lib')
-          } else {
-            this._shadowRoot.querySelectorAll('.menu > .pressed').forEach((b) => { b.classList.remove('pressed') })
-            target.classList.add('pressed')
-            void this.updateLib(target.dataset.menu ?? '')
-          }
-          break
-        default:
-          console.error('unknown nodeName for:', target, target.className)
-      }
-    }
-    // capture event from slots
-    svgEditor.$click(this, onClickHandler)
-    svgEditor.$click(this.$menu, onClickHandler)
-    svgEditor.$click(this.$lib, onClickHandler)
-    svgEditor.$click(this.$handle, onClickHandler)
-  }
-
-  /**
-   * @function updateLib
-   * @param lib
-   */
-  async updateLib (lib: string): Promise<void> {
-    const libDir = this.getAttribute('lib')
+  private async _updateLib(lib: string): Promise<void> {
+    const libDir = this.lib
     try {
       // initialize buttons for all shapes defined for this library
       const response = await fetch(`${libDir}${lib}.json`)
       const json = await response.json()
-      this.data = json.data
-      const size = json.size ?? 300
+      this._data = json.data as Record<string, string>
+      const size = (json.size as number) ?? 300
       const fill = json.fill ? '#333' : 'none'
       const off = size * 0.05
       const vb = [-off, -off, size + off * 2, size + off * 2].join(' ')
       const stroke = json.fill ? 0 : (size / 30)
-      this.$lib.innerHTML = Object.entries(this.data).map(([key, path]) => {
+      this._libHtml = Object.entries(this._data).map(([key, path]) => {
         const encoded = btoa(`
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24">
           <svg viewBox="${vb}"><path fill="${fill}" stroke="#f8bb00" stroke-width="${stroke}" d="${path}"></path></svg>
@@ -342,6 +271,3 @@ export class ExplorerButton extends HTMLElement {
     }
   }
 }
-
-// Register
-customElements.define('se-explorerbutton', ExplorerButton)
