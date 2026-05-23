@@ -1,169 +1,205 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-this-alias */
-// elix custom-element base classes ship as 'any'; cleanup deferred to #3 (Lit migration)
-// @ts-expect-error: *.html imported as string via vite-plugin-string; no ambient module declaration
-import cMenuLayersDialog from './cmenuLayersDialog.html'
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
+// i18next is passed as `any` from the editor; typing deferred to #3 (full i18n type pass)
+import { LitElement, html, css } from 'lit'
+import { customElement, property, state } from 'lit/decorators.js'
+import { styleMap } from 'lit/directives/style-map.js'
 
-const template = document.createElement('template')
- 
-template.innerHTML = cMenuLayersDialog as string
+@customElement('se-cmenu-layers')
+export class SeCMenuLayersDialog extends LitElement {
+  static styles = css`
+    .contextMenu {
+      position: absolute;
+      z-index: 99999;
+      border: solid 1px rgba(0, 0, 0, .33);
+      background: rgba(255, 255, 255, .95);
+      padding: 5px 0;
+      margin: 0px;
+      font: 12px/15px Lucida Sans, Helvetica, Verdana, sans-serif;
+      border-radius: 5px;
+      -moz-border-radius: 5px;
+      -moz-box-shadow: 2px 5px 10px rgba(0, 0, 0, .3);
+      -webkit-box-shadow: 2px 5px 10px rgba(0, 0, 0, .3);
+      box-shadow: 2px 5px 10px rgba(0, 0, 0, .3);
+    }
 
-declare const svgEditor: SvgEditorGlobal
+    .contextMenu li {
+      list-style: none;
+      padding: 0px;
+      margin: 0px;
+    }
 
-/**
- * @class SeCMenuLayerDialog
- */
-export class SeCMenuLayerDialog extends HTMLElement {
-  declare _shadowRoot: ShadowRoot
-  declare source: string
-  declare _workarea: Element | undefined
-  declare $sidePanels: Element | null
-  declare $dialog: HTMLElement | null
-  declare $duplicateLink: Element | null
-  declare $deleteLink: Element | null
-  declare $mergeDownLink: Element | null
-  declare $mergeAllLink: Element | null
+    .contextMenu .shortcut {
+      width: 115px;
+      text-align: right;
+      float: right;
+    }
 
-  /**
-    * @function constructor
-    */
-  constructor () {
-    super()
-    // create the shadowDom and insert the template
-    this._shadowRoot = this.attachShadow({ mode: 'open' })
-    this._shadowRoot.append(template.content.cloneNode(true))
-    this.source = ''
-    this._workarea = undefined
-    this.$sidePanels = document.getElementById('sidepanels')
-    this.$dialog = this._shadowRoot.querySelector('#cmenu_layers')
-    this.$duplicateLink = this._shadowRoot.querySelector('#se-dupe')
-    this.$deleteLink = this._shadowRoot.querySelector('#se-layer-delete')
-    this.$mergeDownLink = this._shadowRoot.querySelector('#se-merge-down')
-    this.$mergeAllLink = this._shadowRoot.querySelector('#se-merge-all')
-  }
+    .contextMenu a {
+      -moz-user-select: none;
+      -webkit-user-select: none;
+      user-select: none;
+      color: #222;
+      text-decoration: none;
+      display: block;
+      line-height: 20px;
+      height: 20px;
+      background-position: 6px center;
+      background-repeat: no-repeat;
+      outline: none;
+      padding: 0px 15px 1px 20px;
+    }
 
-  /**
-   * @function init
-   * @param name
-   */
-   
-  init (i18next: any): void {
+    .contextMenu li.hover a {
+      background-color: #2e5dea;
+      color: white;
+      cursor: default;
+    }
+
+    .contextMenu li.disabled a {
+      color: #999;
+      pointer-events: none;
+    }
+
+    .contextMenu li.hover.disabled a {
+      background-color: transparent;
+    }
+
+    .contextMenu li.separator {
+      border-top: solid 1px #E3E3E3;
+      padding-top: 5px;
+      margin-top: 5px;
+    }
+  `
+
+  @property() accessor value = ''
+  @property() accessor leftclick = ''
+  @property({ attribute: 'layers-dupe' }) accessor layersDupe = ''
+  @property({ attribute: 'layers-del' }) accessor layersDel = ''
+  @property({ attribute: 'layers-merge_down' }) accessor layersMergeDown = ''
+  @property({ attribute: 'layers-merge_all' }) accessor layersMergeAll = ''
+
+  @state() private accessor menuOpen = false
+  @state() private accessor menuTop = '0px'
+  @state() private accessor menuLeft = '0px'
+
+  source = ''
+  private _workarea: Element | undefined
+  private _sidePanels: Element | null = null
+  private _workareaListenersAttached = false
+
+  init(i18next: any): void {
     this.setAttribute('layers-dupe', i18next.t('layers.dupe'))
     this.setAttribute('layers-del', i18next.t('layers.del'))
     this.setAttribute('layers-merge_down', i18next.t('layers.merge_down'))
     this.setAttribute('layers-merge_all', i18next.t('layers.merge_all'))
   }
 
-  /**
-   * @function observedAttributes
-   * @returns observed
-   */
-  static get observedAttributes (): string[] {
-    return ['value', 'leftclick', 'layers-dupe', 'layers-del', 'layers-merge_down', 'layers-merge_all']
+  private _onMenuOpen = (e: MouseEvent): void => {
+    e.preventDefault()
+    this.menuTop = e.pageY + 'px'
+    this.menuLeft = (e.pageX - 126) + 'px'
+    this.menuOpen = true
   }
 
-  /**
-   * @function attributeChangedCallback
-   * @param name
-   * @param oldValue
-   * @param newValue
-   */
-  attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
-    if (oldValue === newValue) return
-    switch (name) {
-      case 'value':
-        this.source = newValue
-        if (newValue !== '' && newValue !== undefined) {
-          this._workarea = document.getElementById(this.source) ?? undefined
-        }
-        break
-      case 'layers-dupe':
-        if (this.$duplicateLink) this.$duplicateLink.textContent = newValue
-        break
-      case 'layers-del':
-        if (this.$deleteLink) this.$deleteLink.textContent = newValue
-        break
-      case 'layers-merge_down':
-        if (this.$mergeDownLink) this.$mergeDownLink.textContent = newValue
-        break
-      case 'layers-merge_all':
-        if (this.$mergeAllLink) this.$mergeAllLink.textContent = newValue
-        break
-      default:
-      // super.attributeChangedCallback(name, oldValue, newValue);
-        break
+  private _onMenuClose = (e: MouseEvent): void => {
+    if (e.button !== 2) {
+      this.menuOpen = false
     }
   }
 
-  /**
-   * @function get
-   */
-  get value (): string | null {
-    return this.getAttribute('value')
+  private _dispatchMenuChange(action: string): void {
+    const triggerEvent = new CustomEvent('change', {
+      detail: {
+        trigger: action,
+        source: this.source
+      }
+    })
+    this.dispatchEvent(triggerEvent)
+    this.menuOpen = false
   }
 
-  /**
-   * @function set
-   */
-  set value (value: string) {
-    this.setAttribute('value', value)
+  private _onDupe = (e: Event): void => {
+    e.preventDefault()
+    this._dispatchMenuChange('dupe')
   }
 
-  /**
-   * @function get
-   */
-  get leftclick (): string | null {
-    return this.getAttribute('leftclick')
+  private _onDelete = (e: Event): void => {
+    e.preventDefault()
+    this._dispatchMenuChange('delete')
   }
 
-  /**
-   * @function set
-   */
-  set leftclick (value: string) {
-    this.setAttribute('leftclick', value)
+  private _onMergeDown = (e: Event): void => {
+    e.preventDefault()
+    this._dispatchMenuChange('merge_down')
   }
 
-  /**
-   * @function connectedCallback
-   */
-  connectedCallback (): void {
-    const current = this
-    const onMenuOpenHandler = (e: MouseEvent): void => {
-      e.preventDefault()
-      if (current.$dialog) {
-        current.$dialog.style.top = e.pageY + 'px'
-        current.$dialog.style.left = e.pageX - 126 + 'px'
-        current.$dialog.style.display = 'block'
+  private _onMergeAll = (e: Event): void => {
+    e.preventDefault()
+    this._dispatchMenuChange('merge_all')
+  }
+
+  render() {
+    return html`
+      <ul id="cmenu_layers" class="contextMenu" style=${styleMap({
+        display: this.menuOpen ? 'block' : 'none',
+        top: this.menuTop,
+        left: this.menuLeft
+      })}>
+        <li><a href="#dupe" id="se-dupe" @click=${this._onDupe}>${this.layersDupe}</a></li>
+        <li><a href="#delete" id="se-layer-delete" @click=${this._onDelete}>${this.layersDel}</a></li>
+        <li><a href="#merge_down" id="se-merge-down" @click=${this._onMergeDown}>${this.layersMergeDown}</a></li>
+        <li><a href="#merge_all" id="se-merge-all" @click=${this._onMergeAll}>${this.layersMergeAll}</a></li>
+      </ul>
+    `
+  }
+
+  override updated(changedProps: Map<string, unknown>): void {
+    if (changedProps.has('value')) {
+      const newValue = this.value
+      this.source = newValue
+      if (newValue !== '' && newValue !== undefined) {
+        this._detachWorkareaListeners()
+        this._workarea = document.getElementById(newValue) ?? undefined
+        this._attachWorkareaListeners()
       }
     }
-    const onMenuCloseHandler = (e: MouseEvent): void => {
-      if (e.button !== 2) {
-        if (current.$dialog) current.$dialog.style.display = 'none'
-      }
+  }
+
+  override connectedCallback(): void {
+    super.connectedCallback()
+    if (this.value !== '') {
+      this.source = this.value
+      this._workarea = document.getElementById(this.value) ?? undefined
     }
-    const onMenuClickHandler = (_e: Event, action: string, id: string): void => {
-      const triggerEvent = new CustomEvent('change', {
-        detail: {
-          trigger: action,
-          source: id
-        }
-      })
-      this.dispatchEvent(triggerEvent)
-      if (current.$dialog) current.$dialog.style.display = 'none'
+    this._attachWorkareaListeners()
+  }
+
+  private _attachWorkareaListeners(): void {
+    if (this._workareaListenersAttached || this._workarea === undefined) return
+    this._workareaListenersAttached = true
+    this._workarea.addEventListener('contextmenu', this._onMenuOpen as EventListener)
+    if (this.leftclick === 'true') {
+      this._workarea.addEventListener('click', this._onMenuOpen as EventListener)
     }
-    if (this._workarea !== undefined) {
-      this._workarea.addEventListener('contextmenu', onMenuOpenHandler as EventListener)
-      if (this.getAttribute('leftclick') === 'true') {
-        svgEditor.$click(this._workarea, onMenuOpenHandler as EventListener)
-      }
-      this._workarea.addEventListener('mousedown', onMenuCloseHandler as EventListener)
-      this.$sidePanels?.addEventListener('mousedown', onMenuCloseHandler as EventListener)
+    this._workarea.addEventListener('mousedown', this._onMenuClose as EventListener)
+    this._sidePanels = document.getElementById('sidepanels')
+    this._sidePanels?.addEventListener('mousedown', this._onMenuClose as EventListener)
+  }
+
+  private _detachWorkareaListeners(): void {
+    if (!this._workareaListenersAttached) return
+    this._workarea?.removeEventListener('contextmenu', this._onMenuOpen as EventListener)
+    if (this.leftclick === 'true') {
+      this._workarea?.removeEventListener('click', this._onMenuOpen as EventListener)
     }
-    svgEditor.$click(this.$duplicateLink as EventTarget, (evt) => onMenuClickHandler(evt, 'dupe', this.source))
-    svgEditor.$click(this.$deleteLink as EventTarget, (evt) => onMenuClickHandler(evt, 'delete', this.source))
-    svgEditor.$click(this.$mergeDownLink as EventTarget, (evt) => onMenuClickHandler(evt, 'merge_down', this.source))
-    svgEditor.$click(this.$mergeAllLink as EventTarget, (evt) => onMenuClickHandler(evt, 'merge_all', this.source))
+    this._workarea?.removeEventListener('mousedown', this._onMenuClose as EventListener)
+    this._sidePanels?.removeEventListener('mousedown', this._onMenuClose as EventListener)
+    this._sidePanels = null
+    this._workareaListenersAttached = false
+  }
+
+  override disconnectedCallback(): void {
+    super.disconnectedCallback()
+    this._detachWorkareaListeners()
   }
 }
-
-// Register
-customElements.define('se-cmenu-layers', SeCMenuLayerDialog)
