@@ -62,6 +62,41 @@ Cleared 117 of 140 ESLint warnings on master (the 23 remaining are all in `src/e
 - 28 files changed, +53 / -97 lines net.
 - Verification: `npx tsc --build --force` 0 errors; `npm run lint` 0 errors / **23 warnings** (all `src/editor/components/jgraduate/` — deferred); `npx vitest run` 640/640 unchanged; `npx tsx scripts/run-e2e.ts` 250/250 unchanged across chromium + firefox; `npm run build` success.
 
+### Added (#3 elix → Lit migration — PR-2: 10 pure custom elements/dialogs Lit-converted — 2026-05-23)
+
+PR-2 of the 5-PR elix → Lit migration (spec at `docs/superpowers/specs/2026-05-21-svgedit-elix-to-lit-design.md`). Converted 10 pure (non-elix-coupled) custom elements/dialogs from hand-rolled `HTMLElement` + `observedAttributes` boilerplate to LitElement with `@customElement` + `@property() accessor` decorators, per the conventions locked in `docs/superpowers/conventions/lit-component-conventions.md`. Implementation via `superpowers:subagent-driven-development` — pilot (seListItem) → 3 fan-out batches (5 + 3 + 1 conversions) with per-task spec + code-quality reviewer subagents and sequential merge with full gate re-verification after each. External API surface preserved verbatim per spec § Risks #2; CSS custom-property names preserved (`--*-color` series unchanged); audit-flagged bugs preserved as-is per spec § Risks #2 (todo #10 covers their later fix).
+
+**Components converted (7):**
+- `src/editor/components/seListItem.ts` — 158 → 72 LOC (PILOT)
+- `src/editor/components/seSelect.ts` — 197 → 84 LOC
+- `src/editor/components/seList.ts` — 263 → 205 LOC
+- `src/editor/components/seButton.ts` — 237 → 131 LOC (also class rename `ToolButton` → `SeButton`)
+- `src/editor/components/sePalette.ts` — 248 → 188 LOC (also class rename `SEPalette` → `SePalette`)
+- `src/editor/components/seFlyingButton.ts` — 316 → 220 LOC (also class rename `FlyingButton` → `SeFlyingButton`); **also fixes latent touchend double-fire bug** by dropping `svgEditor.$click` (which registered both `click` AND `touchend`; modern browsers synthesize `click` from touch taps natively, so `touchend` caused handlers to fire twice per tap). Touchend-drop applied to all subsequent `$click` sites in this PR.
+- `src/editor/components/seExplorerButton.ts` — 347 → 273 LOC (also class rename `ExplorerButton` → `SeExplorerButton`); uses `unsafeHTML` for innerHTML-style shape-library button generation (JSON-fed, internal config data); adds `disconnectedCallback` for workarea-listener cleanup (original constructor-registered listener leaked on unmount)
+- `src/editor/components/seZoom.ts` — 411 → 353 LOC; preserves audit-flagged inverted-guard `attributeChangedCallback` via explicit override + `super.attributeChangedCallback()` call; press-and-hold setTimeout chain preserved verbatim (500ms initial / 50ms repeat); document-level click listener moved from leaky constructor to `connectedCallback` / `disconnectedCallback` pair
+
+**Dialogs converted (3):**
+- `src/editor/dialogs/cmenuLayersDialog.ts` — 169 TS + 71 HTML → 190 TS, **HTML file deleted** (net −54 LOC across both files); also class rename `SeCMenuLayerDialog` → `SeCMenuLayersDialog` (with missing `s`); HTML import via `vite-plugin-string` replaced by inline `static styles` + `render()` template; full `disconnectedCallback` lifecycle for workarea + `#sidepanels` listeners; detach-before-resolve in `updated()` for dynamic `value`-change re-binding
+- `src/editor/dialogs/cmenuDialog.ts` — 266 TS + 118 HTML → 244 TS, **HTML file deleted** (net −140 LOC across both files); also class rename `SeCMenuDialog` → `SeCMenuCanvasDialog` (matches `<se-cmenu_canvas-dialog>` tag's `_canvas` segment); 11 `$click` sites → declarative `@click=` bindings funneled through shared `_dispatchMenuChange` helper; `classMap` for `li.disabled` toggling (replacing imperative `classList.add/remove` from `attributeChangedCallback`)
+
+**Patterns established (referenced inline in conventions doc):**
+- **`boolAttr` module-local converter constant** — for Lit boolean properties needing `reflect: true` with `'true'` string reflection (matches consumer tests using `toHaveAttribute('attr', /./)`). Default `{ type: Boolean }` reflects `true` as `''` which fails the regex.
+- **`classMap` directive** over JS template interpolation for `class="base ${conditional}"` patterns (more efficient than full re-render).
+- **`styleMap` directive** for replacing imperative `style.display = '...'` / `style.top = '...'` / `style.left = '...'` mutations (drives from reactive `@state()` accessors).
+- **`unsafeHTML` directive** for dynamically-constructed innerHTML scenarios where the data is from internal config files (NOT user-controlled). Avoid for any user-controlled data.
+- **Full `disconnectedCallback` lifecycle** for components that look up external DOM nodes (`document.getElementById(...)`) and attach listeners — factor `_attachXxxListeners()` / `_detachXxxListeners()` helpers + call detach from both `updated()` (when target changes) AND `disconnectedCallback()`.
+- **Touchend double-fire bug fix** — every `svgEditor.$click(...)` call site eliminated. Declarative `@click=` for in-template clicks; `this.addEventListener('click', ...)` in `connectedCallback()` for bubbled slot clicks.
+- **`Se`-prefix class name convention** — pre-existing names like `ToolButton` / `SEPalette` / `FlyingButton` / `ExplorerButton` / `SeCMenuLayerDialog` (missing `s`) standardized during conversion.
+
+**Spec amendments (sePromptDialog + 3 elix-dialogs deferred to PR-3, total 4 deferrals from original PR-2 list of 14):**
+- `sePromptDialog.ts` — deferred at plan-write time. Found to live at `src/editor/dialogs/sePromptDialog.ts` (not `components/` as spec table said) AND internally instantiates `new SePlainAlertDialog()` (an elix-bound class queued for PR-3). Audit input #4 (the misnamed-dialog rename) shifts to PR-3.
+- `svgSourceDialog.ts`, `imagePropertiesDialog.ts`, `editorPreferencesDialog.ts` — deferred at Batch 4 dispatch time. Each uses `<elix-dialog>` in its HTML template (registered via `import 'elix/define/Dialog.js'` in `src/editor/dialogs/index.ts`) and calls the elix `.open()` / `.close()` API on `$dialog`. The original `AUDIT_2026-05-16.md` enumeration missed the HTML-side elix dependency. Per spec discipline ("PR-2 = pure custom elements without elix dependency"), these 3 move to PR-3 alongside `SePlainAlertDialog`. Will be revisited as part of the PR-3 spec scope, where the conversion approach (native `<dialog>` swap vs. Lit `<se-dialog>` primitive vs. preserve-as-elix during this PR) can be decided in the context of the rest of the elix-bound work.
+
+**Cumulative net LOC reduction across the 10 conversions:** −705 LOC across 10 source files + 2 deleted HTML files (cmenuLayersDialog.html + cmenuDialog.html). Average ~30-50% LOC reduction per file.
+
+**Verification:** `npx tsc --build --force` 0 errors; `npm run lint` 0 errors / 23 warnings (jgraduate-deferred baseline — PR-4 clears); `npx vitest run` 640/640; `npx tsx scripts/run-e2e.ts` 250/250 chromium + firefox.
+
 ### Added (#3 elix → Lit migration — PR-1: Lit infrastructure + 2 reference components — 2026-05-21)
 
 PR-1 of the 5-PR elix → Lit migration (spec at `docs/superpowers/specs/2026-05-21-svgedit-elix-to-lit-design.md`). Lit-conventions lock gate — once this lands, PR-2's agent-team dispatch has a concrete pattern to point at. Substrate-compat verified (Vite HMR + ESLint v9 / TC39 decorators).
