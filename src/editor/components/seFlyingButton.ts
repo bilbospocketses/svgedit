@@ -1,316 +1,219 @@
+import { LitElement, html, css } from 'lit'
+import { customElement, property, state } from 'lit/decorators.js'
+import { classMap } from 'lit/directives/class-map.js'
 import { t } from '../locale.js'
 
 /**
- * @class FlyingButton
+ * Boolean attribute contract for `pressed` / `disabled` / `opened`:
+ * reflect as the string `'true'` so DOM queries like `[pressed]` and
+ * regex matchers like `toHaveAttribute('pressed', /./)` succeed. Lit's
+ * default Boolean reflect emits `''`, which fails single-character matchers.
  */
-export class FlyingButton extends HTMLElement {
-  _shadowRoot: ShadowRoot
-  $button: Element
-  $handle: Element
-  $overall: Element
-  $img: HTMLImageElement
-  $menu: Element
-  $elements: Element[]
-  imgPath: string
-  template: HTMLTemplateElement
-  activeSlot: Element
+const boolAttr = {
+  reflect: true,
+  converter: {
+    fromAttribute: (v: string | null) => v !== null,
+    toAttribute: (v: boolean) => v ? 'true' : null
+  }
+} as const
 
-  /**
-    * @function constructor
-    */
-  constructor () {
-    super()
-    // create the shadowDom and insert the template
-    this.imgPath = svgEditor.configObj.curConfig.imgPath
-    this.template = this.createTemplate(this.imgPath)
-    this._shadowRoot = this.attachShadow({ mode: 'open' })
-    this._shadowRoot.append(this.template.content.cloneNode(true))
-    // locate the component
-    this.$button = this._shadowRoot.querySelector('.menu-button') as Element
-    this.$handle = this._shadowRoot.querySelector('.handle') as Element
-    this.$overall = this._shadowRoot.querySelector('.overall') as Element
-    this.$img = this._shadowRoot.querySelector('img') as HTMLImageElement
-    this.$menu = this._shadowRoot.querySelector('.menu') as Element
-    // the last element of the div is the slot
-    // we retrieve all elements added in the slot (i.e. se-buttons)
-    this.$elements = (this.$menu.lastElementChild as HTMLSlotElement).assignedElements()
-    this.activeSlot = this.$elements[0] as Element
+/**
+ * SeFlyingButton — toolbar flyout button with slotted secondary actions.
+ *
+ * External API preserved (verified via consumer grep before conversion):
+ *   - Custom element name: `se-flyingbutton`
+ *   - Attributes: `title`, `pressed`, `disabled`, `opened` (observed)
+ *   - Attribute: `shortcut` (read at render time for tooltip composition; not observed)
+ *   - Default slot for child `<se-button>` flyout actions
+ *   - `pressed` setter special-case: setting false also removes `opened`
+ *     (enforced via willUpdate lifecycle hook)
+ *
+ * Behavioral fix (this conversion):
+ *   - Drops the touchend half of the previous svgEditor.$click registration —
+ *     synthetic click events cover touch on modern targets, removing the
+ *     latent double-fire bug on touchscreen taps. Pure Lit @click= now,
+ *     matching seSelect/seList declarative @click= precedent.
+ *
+ * Dropped:
+ *   - Static template + cloneNode + querySelector field assignments
+ *   - observedAttributes/attributeChangedCallback imperative dispatch
+ *   - Constructor-time imgPath cache (moved to render)
+ *   - @class/@function JSDoc tags
+ */
+@customElement('se-flyingbutton')
+export class SeFlyingButton extends LitElement {
+  static styles = css`
+    :host {
+      position: relative;
+    }
+    @keyframes btnHover {
+      from {
+        background-color: transparent;
+      }
 
-    // Closes opened menu on click
-    document.addEventListener('click', (_e) => {
+      to {
+        background-color: var(--icon-bg-color-hover);
+      }
+    }
+    .overall .menu-button:hover {
+      animation: btnHover 0.2s forwards;
+    }
+    img {
+      border: none;
+      width: 24px;
+      height: 24px;
+    }
+    .overall.pressed .button-icon,
+    .overall.pressed .handle {
+      background-color: var(--icon-bg-color-hover) !important;
+    }
+    .overall.pressed .menu-button {
+      background-color: var(--icon-bg-color-hover) !important;
+    }
+    .disabled {
+      opacity: 0.3;
+      cursor: default;
+    }
+    .menu-button {
+      height: 24px;
+      width: 24px;
+      margin: 2px 1px 4px;
+      padding: 3px;
+      background-color: var(--icon-bg-color);
+      cursor: pointer;
+      position: relative;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .handle {
+      height: 8px;
+      width: 8px;
+      position: absolute;
+      bottom: 0px;
+      right: 0px;
+      background-image: var(--handle-bg-url);
+    }
+    .button-icon {
+    }
+    .menu {
+      position: fixed;
+      background: none !important;
+      display: none;
+      margin-left: 34px;
+    }
+    .open {
+      display: flex;
+    }
+    .menu-item {
+      align-content: flex-start;
+      height: 24px;
+      width: 24px;
+      top: 0px;
+      left: 0px;
+    }
+    .overall {
+      background: none !important;
+    }
+  `
+
+  @property() accessor title = ''
+  @property(boolAttr) accessor pressed = false
+  @property(boolAttr) accessor disabled = false
+  @property(boolAttr) accessor opened = false
+
+  @state() private accessor _activeSlotSrc = ''
+
+  private _activeSlot: Element | null = null
+  private _documentClickHandler: ((e: Event) => void) | null = null
+
+  connectedCallback() {
+    super.connectedCallback()
+    // Host-level click receives bubbled events from slotted <se-button> children
+    this.addEventListener('click', this._onClick)
+    // Document click closes opened menu (preserves original behavior)
+    this._documentClickHandler = (_e: Event) => {
       if (this.opened) {
         this.opened = false
       }
-    })
+    }
+    document.addEventListener('click', this._documentClickHandler)
   }
 
-  /**
-   * @function createTemplate
-   * @param imgPath
-   * @returns template
-   */
+  disconnectedCallback() {
+    super.disconnectedCallback()
+    this.removeEventListener('click', this._onClick)
+    if (this._documentClickHandler) {
+      document.removeEventListener('click', this._documentClickHandler)
+      this._documentClickHandler = null
+    }
+  }
 
-  createTemplate (imgPath: string): HTMLTemplateElement {
-    const template = document.createElement('template')
-    template.innerHTML = `
-      <style>
-        :host {
-          position:relative;
-        }
-        @keyframes btnHover {
-          from {
-            background-color: transparent;
-          }
+  firstUpdated() {
+    const slot = this.shadowRoot?.querySelector('slot') as HTMLSlotElement | null
+    const elements = slot?.assignedElements() ?? []
+    if (elements.length > 0) {
+      this._activeSlot = elements[0] as Element
+      this._activeSlotSrc = this._activeSlot.getAttribute('src') ?? ''
+    }
+  }
 
-          to {
-            background-color: var(--icon-bg-color-hover);
-          }
-        }
-        .overall .menu-button:hover {
-          animation: btnHover 0.2s forwards;
-        }
-        img {
-          border: none;
-          width: 24px;
-          height: 24px;
-        }
-        .overall.pressed .button-icon,
-        .overall.pressed .handle {
-          background-color: var(--icon-bg-color-hover) !important;
-        }
-        .overall.pressed .menu-button {
-          background-color: var(--icon-bg-color-hover) !important;
-        }
-        .disabled {
-          opacity: 0.3;
-          cursor: default;
-        }
-        .menu-button {
-          height: 24px;
-          width: 24px;
-          margin: 2px 1px 4px;
-          padding: 3px;
-          background-color: var(--icon-bg-color);
-          cursor: pointer;
-          position: relative;
-          border-radius: 3px;
-          overflow: hidden;
-        }
-        .handle {
-          height: 8px;
-          width: 8px;
-          background-image: url(${imgPath}/handle.svg);
-          position:absolute;
-          bottom: 0px;
-          right: 0px;
-        }
-        .button-icon {
-        }
-        .menu {
-          position: fixed;
-          background: none !important;
-          display:none;
-          margin-left: 34px;
-        }
-        .open {
-          display: flex;
-        }
-        .menu-item {
-          align-content: flex-start;
-          height: 24px;
-          width: 24px;
-          top:0px;
-          left:0px;
-        }
-        .overall {
-          background: none !important;
-        }
-      </style>
+  willUpdate(changed: Map<string, unknown>) {
+    // pressed=false must also clear opened (preserved from original setter behavior)
+    if (changed.has('pressed') && this.pressed === false && this.opened === true) {
+      this.opened = false
+    }
+  }
 
-      <div class="overall">
-        <div class="menu">
+  render() {
+    const imgPath = svgEditor.configObj.curConfig.imgPath
+    const shortcut = this.getAttribute('shortcut')
+    const titleText = `${t(this.title)} ${shortcut ? `[${t(shortcut)}]` : ''}`.trim()
+
+    return html`
+      <style>:host { --handle-bg-url: url(${imgPath}/handle.svg); }</style>
+      <div class=${classMap({ overall: true, pressed: this.pressed, disabled: this.disabled })}>
+        <div class=${classMap({ menu: true, open: this.opened })}>
           <slot></slot>
         </div>
-        <div class="menu-button">
-          <img class="button-icon" src="logo.svg" alt="icon">
-          <div class="handle"></div>
+        <div class="menu-button" title=${titleText}>
+          <img class="button-icon" src=${imgPath + '/' + this._activeSlotSrc} alt="icon" />
+          <div class="handle" @click=${this._onClick}></div>
         </div>
-      </div>`
-    return template
+      </div>
+    `
   }
 
-  /**
-   * @function observedAttributes
-   * @returns observed
-   */
-  static get observedAttributes () {
-    return ['title', 'pressed', 'disabled', 'opened']
-  }
-
-  /**
-   * @function attributeChangedCallback
-   * @param name
-   * @param oldValue
-   * @param newValue
-   */
-  attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
-    if (oldValue === newValue) return
-    switch (name) {
-      case 'title':
-        {
-          const shortcut = this.getAttribute('shortcut')
-          this.$button.setAttribute('title', `${t(newValue)} ${shortcut ? `[${t(shortcut)}]` : ''}`)
+  private _onClick = (ev: Event) => {
+    ev.stopPropagation()
+    const target = ev.target as Element
+    switch (target.nodeName) {
+      case 'SE-FLYINGBUTTON':
+        if (this.pressed) {
+          this.opened = true
+        } else {
+          (this._activeSlot as HTMLElement | null)?.click()
+          this.pressed = true
         }
         break
-      case 'pressed':
-        if (newValue) {
-          this.$overall.classList.add('pressed')
-        } else {
-          this.$overall.classList.remove('pressed')
-        }
+      case 'SE-BUTTON':
+        this._activeSlotSrc = target.getAttribute('src') ?? ''
+        this._activeSlot = target
+        this.pressed = true
+        this.opened = false
         break
-      case 'opened':
-        if (newValue) {
-          this.$menu.classList.add('open')
+      case 'DIV':
+        if (this.opened) {
+          this.opened = false
         } else {
-          this.$menu.classList.remove('open')
-        }
-        break
-      case 'disabled':
-        if (newValue) {
-          this.$overall.classList.add('disabled')
-        } else {
-          this.$overall.classList.remove('disabled')
+          this.opened = true
+          // Position the menu: preserve original menu.style.top behavior
+          const rect = this.getBoundingClientRect()
+          const menu = this.shadowRoot?.querySelector('.menu') as HTMLElement | null
+          if (menu) menu.style.top = rect.top + 'px'
         }
         break
       default:
-        console.error(`unknown attribute: ${name}`)
-        break
+        console.error('unkonw nodeName for:', target, (target as HTMLElement).className)
     }
-  }
-
-  /**
-   * @function get
-   */
-  get title (): string {
-    return this.getAttribute('title') ?? ''
-  }
-
-  /**
-   * @function set
-   */
-  set title (value: string) {
-    this.setAttribute('title', value)
-  }
-
-  /**
-   * @function get
-   */
-  get pressed () {
-    return this.hasAttribute('pressed')
-  }
-
-  /**
-   * @function set
-   */
-  set pressed (value: boolean) {
-    // boolean value => existence = true
-    if (value) {
-      this.setAttribute('pressed', 'true')
-    } else {
-      this.removeAttribute('pressed')
-      // close also the menu if open
-      this.removeAttribute('opened')
-    }
-  }
-
-  /**
-   * @function get
-   */
-  get opened () {
-    return this.hasAttribute('opened')
-  }
-
-  /**
-   * @function set
-   */
-  set opened (value: boolean) {
-    // boolean value => existence = true
-    if (value) {
-      this.setAttribute('opened', 'opened')
-    } else {
-      this.removeAttribute('opened')
-    }
-  }
-
-  /**
-   * @function get
-   */
-  get disabled () {
-    return this.hasAttribute('disabled')
-  }
-
-  /**
-   * @function set
-   */
-  set disabled (value: boolean) {
-    // boolean value => existence = true
-    if (value) {
-      this.setAttribute('disabled', 'true')
-    } else {
-      this.removeAttribute('disabled')
-    }
-  }
-
-  /**
-   * @function connectedCallback
-   */
-  connectedCallback () {
-    const slot = this.shadowRoot?.querySelector('slot') as HTMLSlotElement
-    this.activeSlot = slot.assignedElements()[0] as Element
-    this.$img.setAttribute('src', this.imgPath + '/' + this.activeSlot.getAttribute('src'))
-    // capture click event on the button to manage the logic
-    const onClickHandler = (ev: Event) => {
-      ev.stopPropagation()
-      const target = ev.target as Element
-      switch (target.nodeName) {
-        case 'SE-FLYINGBUTTON':
-          if (this.pressed) {
-            this.setAttribute('opened', 'opened')
-          } else {
-          // launch current action
-            ;(this.activeSlot as HTMLElement).click()
-            this.setAttribute('pressed', 'pressed')
-          }
-          break
-        case 'SE-BUTTON':
-        // change to the current action
-          this.$img.setAttribute('src', this.imgPath + '/' + target.getAttribute('src'))
-          this.activeSlot = target
-          this.setAttribute('pressed', 'pressed')
-          // and close the menu
-          this.$menu.classList.remove('open')
-          break
-        case 'DIV':
-        // this is a click on the handle so let's open/close the menu.
-          if (this.opened) {
-            this.removeAttribute('opened')
-          } else {
-            this.setAttribute('opened', 'opened')
-            // In case menu scroll on top or bottom position based popup position set
-            const rect = this.getBoundingClientRect()
-            ;(this.$menu as HTMLElement).style.top = rect.top + 'px'
-          }
-          break
-        default:
-          console.error('unkonw nodeName for:', target, (target as HTMLElement).className)
-      }
-    }
-    // capture event from slots
-    svgEditor.$click(this, onClickHandler)
-    svgEditor.$click(this.$handle, onClickHandler)
   }
 }
-
-// Register
-customElements.define('se-flyingbutton', FlyingButton)
