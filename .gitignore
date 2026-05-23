@@ -9,6 +9,9 @@ dist
 coverage/*
 !coverage/coverage-summary.json
 
+# Playwright per-run artifacts (test-results/.last-run.json overwritten every run)
+test-results
+
 # Editor / IDE scratch
 .vs
 .vscode
