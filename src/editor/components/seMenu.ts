@@ -1,6 +1,5 @@
 import { LitElement, html, css, nothing } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
-import { classMap } from 'lit/directives/class-map.js'
 
 /**
  * SeMenu — popup wrapper for `<se-menu-item>` children, owning its own button
@@ -17,6 +16,15 @@ import { classMap } from 'lit/directives/class-map.js'
  * render-time per the seSpinInput pilot pattern. Document-level click /
  * Escape-key listeners are attached on open and detached on close +
  * `disconnectedCallback` per PR-2 pattern #5.
+ *
+ * Firefox-layout hardening: the popup container is conditionally rendered —
+ * when closed the popup `<div>` is omitted entirely (no slot, no
+ * position:absolute element) so it cannot influence document scroll or
+ * containing-block geometry. `:host` is given `contain: layout` to additionally
+ * isolate layout effects when the popup IS open. Originally a `display:none`
+ * popup was always rendered with a slot inside; observed Firefox-only e2e
+ * flakiness (clipboard right-click coordinate drift by one SVG-canvas viewport)
+ * traced back to layout instability around the always-mounted absolute popup.
  */
 @customElement('se-menu')
 export class SeMenu extends LitElement {
@@ -24,6 +32,8 @@ export class SeMenu extends LitElement {
     :host {
       padding: 0px;
       position: relative;
+      display: inline-block;
+      contain: layout;
     }
     .menu-button {
       padding: 0.25em 0.30em;
@@ -45,11 +55,7 @@ export class SeMenu extends LitElement {
       background-color: var(--icon-bg-color);
       color: #fff;
       z-index: 1;
-      display: none;
       min-width: 100%;
-    }
-    .popup.open {
-      display: block;
     }
     :host ::slotted([current]) {
       background-color: var(--icon-bg-color-hover) !important;
@@ -84,13 +90,13 @@ export class SeMenu extends LitElement {
           : nothing}
         ${this.label ? html`<span>${this.label}</span>` : nothing}
       </div>
-      <div
-        class=${classMap({ popup: true, open: this._open })}
-        role="menu"
-        @click=${this._onSlotClick}
-      >
-        <slot></slot>
-      </div>
+      ${this._open
+        ? html`
+            <div class="popup" role="menu" @click=${this._onSlotClick}>
+              <slot></slot>
+            </div>
+          `
+        : nothing}
     `
   }
 
