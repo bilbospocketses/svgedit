@@ -1,6 +1,5 @@
 import { LitElement, html, css, nothing } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
-import { t } from '../locale.js'
 
 /**
  * SeMenu — popup wrapper for `<se-menu-item>` children, owning its own button
@@ -100,7 +99,7 @@ export class SeMenu extends LitElement {
         class="menu-button"
         aria-haspopup="true"
         aria-expanded=${this._open ? 'true' : 'false'}
-        aria-label=${t('tools.main_menu')}
+        aria-label="Main Menu"
         @click=${this._toggle}
       >
         ${imgSrc
