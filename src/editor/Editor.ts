@@ -516,7 +516,7 @@ class Editor extends EditorStartup {
         const pre = '\n \u2022 '
         note +=
           '\n\n' +
-          this.i18next.t('notification..noteTheseIssues') +
+          this.i18next.t('notification.noteTheseIssues') +
           pre +
           issues.join(pre)
       }
@@ -1205,7 +1205,7 @@ class Editor extends EditorStartup {
 
     if (renameLayer) {
       this.svgCanvas.renameCurrentLayer(
-        this.i18next.t('notification.common.layer') + ' 1'
+        this.i18next.t('layers.layer') + ' 1'
       )
       this.layersPanel.populateLayers()
     }
