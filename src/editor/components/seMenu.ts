@@ -1,5 +1,6 @@
 import { LitElement, html, css, nothing } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
+import { t } from '../locale.js'
 
 /**
  * SeMenu — popup wrapper for `<se-menu-item>` children, owning its own button
@@ -10,12 +11,13 @@ import { customElement, property, state } from 'lit/decorators.js'
  * bubble natively (host listens to close the popup on a slotted-child click).
  *
  * Substrate notes: drops `import 'elix/define/MenuItem.js'` and
- * `import './sePlainMenuButton.js'`. The double shadow-pierce in the original
- * (constructor line 54: `(this.$menu as any).shadowRoot.querySelector('#popupToggle').shadowRoot`)
- * resolves naturally — Lit owns the button face directly. `imgPath` is read at
- * render-time per the seSpinInput pilot pattern. Document-level click /
- * Escape-key listeners are attached on open and detached on close +
- * `disconnectedCallback` per PR-2 pattern #5.
+ * `import './sePlainMenuButton.js'`. The double shadow-pierce in the **pre-Lit**
+ * `seMenu.ts` (historical reference — its constructor line 54 read
+ * `(this.$menu as any).shadowRoot.querySelector('#popupToggle').shadowRoot`)
+ * resolves naturally in the Lit shape — Lit owns the button face directly.
+ * `imgPath` is read at render-time per the seSpinInput pilot pattern.
+ * Document-level click / Escape-key listeners are attached on open and detached
+ * on close + `disconnectedCallback` per PR-2 pattern #5.
  *
  * Firefox-layout hardening: the popup container is conditionally rendered —
  * when closed the popup `<div>` is omitted entirely (no slot, no
@@ -25,6 +27,12 @@ import { customElement, property, state } from 'lit/decorators.js'
  * popup was always rendered with a slot inside; observed Firefox-only e2e
  * flakiness (clipboard right-click coordinate drift by one SVG-canvas viewport)
  * traced back to layout instability around the always-mounted absolute popup.
+ *
+ * Layout note: the `:host { display: inline-block }` setting is blockified by
+ * parent CSS Grid containers (per CSS Grid spec), which is what the sole
+ * consumer pattern at `MainMenu.ts:235` relies on — `<se-menu id="main_button">`
+ * sits inside a grid layout and renders as a grid cell. `inline-block` remains
+ * the right default for any non-grid usage.
  */
 @customElement('se-menu')
 export class SeMenu extends LitElement {
@@ -92,11 +100,11 @@ export class SeMenu extends LitElement {
         class="menu-button"
         aria-haspopup="true"
         aria-expanded=${this._open ? 'true' : 'false'}
-        aria-label="Main Menu"
+        aria-label=${t('tools.main_menu')}
         @click=${this._toggle}
       >
         ${imgSrc
-          ? html`<img alt="logo" width="24" height="24" src=${imgSrc} />`
+          ? html`<img alt="logo" src=${imgSrc} />`
           : nothing}
         ${this.label ? html`<span>${this.label}</span>` : nothing}
       </button>
@@ -115,8 +123,10 @@ export class SeMenu extends LitElement {
     this._detachDocumentListeners()
   }
 
-  private _toggle = (e: Event) => {
-    e.stopPropagation()
+  private _toggle = () => {
+    // No stopPropagation needed — _onDocumentClick uses composedPath().includes(this)
+    // which catches self-clicks and no-ops, so propagation is harmless. Dropping
+    // the call keeps intent transparent.
     if (this._open) {
       this._close()
     } else {
@@ -151,6 +161,9 @@ export class SeMenu extends LitElement {
   private _onDocumentKeydown = (e: KeyboardEvent) => {
     if (e.key === 'Escape') {
       this._close()
+      // Return focus to the menu trigger so the menu-button stays Tab-reachable
+      // after the popup closes (a11y-keyboard parity with native disclosure).
+      this.shadowRoot?.querySelector('button')?.focus()
     }
   }
 
