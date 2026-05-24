@@ -1,11 +1,9 @@
 import { LitElement, html, css } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import { classMap } from 'lit/directives/class-map.js'
-import { ifDefined } from 'lit/directives/if-defined.js'
-import { t } from '../locale.js'
 
 /**
- * SeDropdown — toolbar dropdown with slotted options + popup listbox.
+ * SeDropdown — toolbar dropdown with slotted options + popup container.
  *
  * External API preserved (verified via consumer grep before conversion — ZERO
  * external consumers found: no <se-dropdown> markup, no document.createElement,
@@ -21,11 +19,20 @@ import { t } from '../locale.js'
  *   - Dropped elix ListComboBox + NumberSpinBox + internal.template/render/state
  *     overrides; replaced with native Lit @state + classMap popup toggle.
  *   - Original combined typed-input + popup-list; no consumers exercise the typed
- *     input, so simplified to icon + button-toggle + popup-listbox + slot.
+ *     input, so simplified to icon + button-toggle + popup + slot.
  *   - Class rename `Dropdown` → `SeDropdown` for PR-2 cascade consistency
  *     (matches SeButton / SePalette / SeFlyingButton / SeExplorerButton).
  *   - Document click + Escape listeners with full disconnectedCallback pairing
- *     per PR-2 pattern #5.
+ *     per PR-2 pattern #5 — handlers now declared as class-field arrows
+ *     (convention bullet #8) instead of nullable-typed fields assigned at connect.
+ *
+ * Aria posture (PR-3a Fix 3 follow-up): the toggle exposes `aria-haspopup` +
+ * `aria-expanded`. The popup container is a plain `<div>` with no `role`;
+ * slotted options also have no `role="option"` and there is no keyboard
+ * navigation across options. Half-applied listbox aria was removed because it
+ * was misleading rather than helpful. Full listbox semantics (option roles +
+ * arrow-key navigation + activedescendant) is a follow-up if a consumer ever
+ * relies on the dropdown for non-mouse interaction (currently: ZERO consumers).
  */
 @customElement('se-dropdown')
 export class SeDropdown extends LitElement {
@@ -44,13 +51,6 @@ export class SeDropdown extends LitElement {
     img {
       width: 18px;
       height: 18px;
-    }
-    input[part~="input"] {
-      background: var(--input-color);
-      border: 1px solid #5a6162;
-      border-radius: 3px;
-      padding: 2px 4px;
-      box-sizing: border-box;
     }
     .popup {
       position: absolute;
@@ -78,42 +78,23 @@ export class SeDropdown extends LitElement {
 
   @property() accessor title = ''
   @property() accessor src = 'logo.svg'
+  // no-op — preserved for backward attribute parity; original elix-bound input
+  // was decorative on non-typed-input usage and has been dropped from render.
   @property() accessor inputsize = '100%'
   @property() accessor value = ''
 
   @state() private accessor _open = false
 
-  private _documentClickHandler: ((e: Event) => void) | null = null
-  private _documentKeyHandler: ((e: KeyboardEvent) => void) | null = null
-
   connectedCallback() {
     super.connectedCallback()
-    this._documentClickHandler = (e: Event) => {
-      // Close on outside-click; composedPath includes shadow tree, so self-clicks
-      // (toggle button, slotted options) won't match and stay open / close via own handlers.
-      if (this._open && !e.composedPath().includes(this)) {
-        this._open = false
-      }
-    }
-    this._documentKeyHandler = (e: KeyboardEvent) => {
-      if (this._open && e.key === 'Escape') {
-        this._open = false
-      }
-    }
-    document.addEventListener('click', this._documentClickHandler)
-    document.addEventListener('keydown', this._documentKeyHandler)
+    document.addEventListener('click', this._onDocumentClick)
+    document.addEventListener('keydown', this._onDocumentKeydown)
   }
 
   disconnectedCallback() {
     super.disconnectedCallback()
-    if (this._documentClickHandler) {
-      document.removeEventListener('click', this._documentClickHandler)
-      this._documentClickHandler = null
-    }
-    if (this._documentKeyHandler) {
-      document.removeEventListener('keydown', this._documentKeyHandler)
-      this._documentKeyHandler = null
-    }
+    document.removeEventListener('click', this._onDocumentClick)
+    document.removeEventListener('keydown', this._onDocumentKeydown)
   }
 
   render() {
@@ -121,21 +102,15 @@ export class SeDropdown extends LitElement {
       <div
         class="source"
         part="source"
-        title=${ifDefined(this.title ? t(this.title) : undefined)}
+        aria-haspopup="listbox"
+        aria-expanded=${this._open ? 'true' : 'false'}
         @click=${this._onToggle}
       >
         <img src=${this.src} alt="icon" part="icon" />
-        <input
-          part="input"
-          .value=${this.value}
-          style=${`width: ${this.inputsize};`}
-          readonly
-        />
       </div>
       <div
         class=${classMap({ popup: true, open: this._open })}
         part="popup"
-        role="listbox"
         @click=${this._onOptionClick}
       >
         <slot></slot>
@@ -143,11 +118,26 @@ export class SeDropdown extends LitElement {
     `
   }
 
-  // Class-field arrows: avoid @typescript-eslint/unbound-method false-positive
-  // on Lit's @event=${this._handler} pattern (per convention bullet #8).
+  // Class-field arrows per convention bullet #8 — avoids
+  // @typescript-eslint/unbound-method false-positive on Lit's
+  // @event=${this._handler} pattern and aligns with seMenu's posture.
   private _onToggle = (e: Event) => {
     e.stopPropagation()
     this._open = !this._open
+  }
+
+  private _onDocumentClick = (e: Event) => {
+    // Close on outside-click; composedPath includes shadow tree, so self-clicks
+    // (toggle, slotted options) won't match and stay open / close via own handlers.
+    if (this._open && !e.composedPath().includes(this)) {
+      this._open = false
+    }
+  }
+
+  private _onDocumentKeydown = (e: KeyboardEvent) => {
+    if (this._open && e.key === 'Escape') {
+      this._open = false
+    }
   }
 
   private _onOptionClick = (e: Event) => {
@@ -172,22 +162,3 @@ export class SeDropdown extends LitElement {
     }
   }
 }
-
-/*
-{TODO
-    min: 0.001, max: 10000, step: 50, stepfunc: stepZoom,
-  function stepZoom (elem, step) {
-    const origVal = Number(elem.value);
-    if (origVal === 0) { return 100; }
-    const sugVal = origVal + step;
-    if (step === 0) { return origVal; }
-
-    if (origVal >= 100) {
-      return sugVal;
-    }
-    if (sugVal >= origVal) {
-      return origVal * 2;
-    }
-    return origVal / 2;
-  }
-*/
