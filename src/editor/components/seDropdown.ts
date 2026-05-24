@@ -26,13 +26,17 @@ import { classMap } from 'lit/directives/class-map.js'
  *     per PR-2 pattern #5 — handlers now declared as class-field arrows
  *     (convention bullet #8) instead of nullable-typed fields assigned at connect.
  *
- * Aria posture (PR-3a Fix 3 follow-up): the toggle exposes `aria-haspopup` +
- * `aria-expanded`. The popup container is a plain `<div>` with no `role`;
- * slotted options also have no `role="option"` and there is no keyboard
- * navigation across options. Half-applied listbox aria was removed because it
- * was misleading rather than helpful. Full listbox semantics (option roles +
- * arrow-key navigation + activedescendant) is a follow-up if a consumer ever
- * relies on the dropdown for non-mouse interaction (currently: ZERO consumers).
+ * Aria posture (PR-3a Fix 3 follow-up): the toggle is a native
+ * `<button type="button">` (keyboard-focusable via Tab) exposing
+ * `aria-haspopup` + `aria-expanded`. The popup container is a plain `<div>`
+ * with no `role`; slotted options also have no `role="option"` and there is
+ * no keyboard navigation across options. Half-applied listbox aria was removed
+ * because it was misleading rather than helpful. Full listbox semantics
+ * (option roles + arrow-key navigation + activedescendant) is a follow-up if
+ * a consumer ever relies on the dropdown for non-mouse interaction (currently:
+ * ZERO consumers). Native-button visual parity preserved via CSS-default
+ * neutralization (`border: none`, `background: transparent`, `font: inherit`,
+ * etc.) plus a `:focus-visible` outline — same pattern as seMenu's trigger.
  */
 @customElement('se-dropdown')
 export class SeDropdown extends LitElement {
@@ -47,6 +51,20 @@ export class SeDropdown extends LitElement {
       align-items: center;
       cursor: pointer;
       gap: 2px;
+      /* Neutralize native <button> defaults so visual parity with the
+         original <div> rendering is preserved (same pattern as seMenu). */
+      border: none;
+      font: inherit;
+      color: inherit;
+      line-height: inherit;
+      outline: inherit;
+      text-align: inherit;
+      background: transparent;
+      padding: 0;
+    }
+    .source:focus-visible {
+      outline: 2px solid #5a6162;
+      outline-offset: 1px;
     }
     img {
       width: 18px;
@@ -99,7 +117,8 @@ export class SeDropdown extends LitElement {
 
   render() {
     return html`
-      <div
+      <button
+        type="button"
         class="source"
         part="source"
         aria-haspopup="listbox"
@@ -107,7 +126,7 @@ export class SeDropdown extends LitElement {
         @click=${this._onToggle}
       >
         <img src=${this.src} alt="icon" part="icon" />
-      </div>
+      </button>
       <div
         class=${classMap({ popup: true, open: this._open })}
         part="popup"
