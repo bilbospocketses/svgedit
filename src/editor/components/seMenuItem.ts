@@ -1,132 +1,91 @@
-import 'elix/define/Menu.js'
-import 'elix/define/MenuItem.js'
+import { LitElement, html, css, nothing } from 'lit'
+import { customElement, property } from 'lit/decorators.js'
+import { ifDefined } from 'lit/directives/if-defined.js'
 import { t } from '../locale.js'
-const template = document.createElement('template')
-template.innerHTML = `
-  <style>
-  </style>
-  <elix-menu-item>
-    <div style="display:flex; align-items: center;">
-      <img src="logo.svg" alt="icon" style="display:none;" width="24"/>
-      <span style="margin-left: 7px;"></span>
-    </div>
-  </elix-menu-item>
-`
+
 /**
- * @class SeMenuItem
+ * SeMenuItem — menu-item custom element with optional icon and keyboard shortcut.
+ * Migrated from a manual-shadowDOM wrapper around `<elix-menu-item>` to a
+ * Lit-owned `<button role="menuitem">` per PR-3a Task 3.
+ *
+ * External API preserved: tag `se-menu-item`, class `SeMenuItem`, attrs
+ * `label`/`src` (observed) + `shortcut`/`id` (read-only). Native `click` bubbles
+ * from the host so MainMenu + ext-opensave `$click($id('tool_xxx'), …)` keeps firing.
+ *
+ * Substrate: drops `elix/define/Menu.js` + `elix/define/MenuItem.js`. The original
+ * shadowDOM-pierce that hid elix's `#checkmark` resolves naturally (no checkmark
+ * rendered). Document keydown listener now paired with `disconnectedCallback`
+ * cleanup per PR-2 pattern #5. `imgPath` read at render-time. Shortcut normalization
+ * preserved verbatim (shared helper deferred to todo #10).
  */
-export class SeMenuItem extends HTMLElement {
-  _shadowRoot: ShadowRoot
-  $img: HTMLImageElement
-  $label: HTMLSpanElement
-  $menuitem: Element
-  // TODO: see todo #10 — shadowDOM-piercing preserved; replaced when #3 (elix→Lit) lands
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  $svg: any
-  imgPath: string
-
-  /**
-    * @function constructor
-    */
-  constructor () {
-    super()
-    // create the shadowDom and insert the template
-    this._shadowRoot = this.attachShadow({ mode: 'open' })
-    this._shadowRoot.append(template.content.cloneNode(true))
-    this.$img = this._shadowRoot.querySelector('img') as HTMLImageElement
-    this.$label = this._shadowRoot.querySelector('span') as HTMLSpanElement
-    this.$menuitem = this._shadowRoot.querySelector('elix-menu-item') as Element
-    // TODO: see todo #10 — shadowDOM-piercing; replaced when #3 (elix→Lit) lands
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
-    this.$svg = (this.$menuitem as any).shadowRoot.querySelector('#checkmark')
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    this.$svg.setAttribute('style', 'display: none;')
-    this.imgPath = svgEditor.configObj.curConfig.imgPath
-  }
-
-  /**
-   * @function observedAttributes
-   * @returns observed
-   */
-  static get observedAttributes () {
-    return ['label', 'src']
-  }
-
-  /**
-   * @function attributeChangedCallback
-   * @param name
-   * @param oldValue
-   * @param newValue
-   */
-  attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
-    let shortcut = ''
-    if (oldValue === newValue) return
-    switch (name) {
-      case 'src':
-        this.$img.style.display = 'inline-block'
-        this.$img.setAttribute('src', this.imgPath + '/' + newValue)
-        break
-      case 'label':
-        shortcut = this.getAttribute('shortcut') ?? ''
-        this.$label.textContent = `${t(newValue)} ${shortcut ? `(${shortcut})` : ''}`
-        break
-      default:
-        console.error(`unknown attribute: ${name}`)
-        break
+@customElement('se-menu-item')
+export class SeMenuItem extends LitElement {
+  static styles = css`
+    :host button {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      padding: 0;
+      margin: 0;
+      border: none;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
     }
+    :host button > span {
+      margin-left: 7px;
+    }
+  `
+
+  @property() accessor label = ''
+  @property() accessor src = ''
+
+  render() {
+    const shortcut = this.getAttribute('shortcut') ?? ''
+    const imgSrc = this.src ? svgEditor.configObj.curConfig.imgPath + '/' + this.src : undefined
+    const labelText = `${t(this.label)} ${shortcut ? `(${shortcut})` : ''}`
+
+    return html`
+      <button type="button" role="menuitem" part="item">
+        ${this.src
+          ? html`<img alt="icon" width="24" src=${ifDefined(imgSrc)} />`
+          : nothing}
+        <span part="label">${labelText}</span>
+      </button>
+    `
   }
 
-  /**
-   * @function get
-   */
-  get label () {
-    return this.getAttribute('label')
+  connectedCallback() {
+    super.connectedCallback()
+    document.addEventListener('keydown', this._onDocumentKeydown)
   }
 
-  /**
-   * @function set
-   */
-  set label (value: string | null) {
-    this.setAttribute('label', value ?? '')
+  disconnectedCallback() {
+    super.disconnectedCallback()
+    document.removeEventListener('keydown', this._onDocumentKeydown)
   }
 
-  /**
-   * @function get
-   */
-  get src () {
-    return this.getAttribute('src')
-  }
-
-  /**
-   * @function set
-   */
-  set src (value: string | null) {
-    this.setAttribute('src', value ?? '')
-  }
-
-  /**
-   * @function connectedCallback
-   */
-  connectedCallback () {
-    // capture shortcuts
+  // Class-field arrow per convention bullet #8 — aligned with seMenu's
+  // `_onDocumentKeydown` pattern. Reads `shortcut` at fire time rather than
+  // caching at connect time; semantically equivalent since consumers do not
+  // mutate the attribute after connect.
+  private _onDocumentKeydown = (e: KeyboardEvent) => {
     const shortcut = this.getAttribute('shortcut')
-    if (shortcut) {
-      // register the keydown event
-      document.addEventListener('keydown', (e) => {
-        // only track keyboard shortcuts for the body containing the svgedit editor
-        if ((e.target as Element).nodeName !== 'BODY') return
-        // normalize key
-        const key = `${(e.metaKey) ? 'meta+' : ''}${(e.ctrlKey) ? 'ctrl+' : ''}${(e.shiftKey) ? 'shift+' : ''}${e.key.toUpperCase()}`
-        if (shortcut !== key) return
-        // launch the click event
-        if (this.id) {
-          document.getElementById(this.id)?.click()
-        }
-        e.preventDefault()
-      })
+    if (!shortcut) return
+    // only track keyboard shortcuts for the body containing the svgedit editor
+    if ((e.target as Element).nodeName !== 'BODY') return
+    // normalize key
+    const key = `${(e.metaKey) ? 'meta+' : ''}${(e.ctrlKey) ? 'ctrl+' : ''}${(e.shiftKey) ? 'shift+' : ''}${e.key.toUpperCase()}`
+    if (shortcut !== key) return
+    // launch the click event — `this` IS the element document.getElementById
+    // would return, so call click() directly. Guard on `this.id` preserved
+    // because consumers bind their handlers via `$click($id('tool_xxx'), …)`,
+    // i.e. an ID-less menu-item has no consumer listener to trigger.
+    if (this.id) {
+      this.click()
     }
+    e.preventDefault()
   }
 }
-
-// Register
-customElements.define('se-menu-item', SeMenuItem)

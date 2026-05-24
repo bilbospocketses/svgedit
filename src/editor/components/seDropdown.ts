@@ -1,185 +1,183 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */
-// elix custom-element base classes ship as 'any'; cleanup deferred to #3 (Lit migration)
-import ListComboBox from 'elix/define/ListComboBox.js'
-import { defaultState } from 'elix/src/base/internal.js'
-import { templateFrom, fragmentFrom } from 'elix/src/core/htmlLiterals.js'
-import { internal } from 'elix'
-import NumberSpinBox from '../dialogs/se-elix/define/NumberSpinBox.js'
+import { LitElement, html, css } from 'lit'
+import { customElement, property, state } from 'lit/decorators.js'
+import { classMap } from 'lit/directives/class-map.js'
 
 /**
- * @class Dropdown
+ * SeDropdown — toolbar dropdown with slotted options + popup container.
+ *
+ * External API preserved (verified via consumer grep before conversion — ZERO
+ * external consumers found: no <se-dropdown> markup, no document.createElement,
+ * no class imports; the registration is preserved for the slot/popup contract):
+ *   - Custom element name: `se-dropdown`
+ *   - Attributes: `title`, `src`, `inputsize`, `value` (observed)
+ *   - Default <slot> for `<option value="...">` children
+ *   - Dispatches `change` CustomEvent (bubbles + composed) with `detail: { value }`
+ *     when a slotted option is clicked (preserves the original elix `close`-then-
+ *     `change` re-dispatch shape; consumers may read e.detail.value).
+ *
+ * Substrate changes (this conversion):
+ *   - Dropped elix ListComboBox + NumberSpinBox + internal.template/render/state
+ *     overrides; replaced with native Lit @state + classMap popup toggle.
+ *   - Original combined typed-input + popup-list; no consumers exercise the typed
+ *     input, so simplified to icon + button-toggle + popup + slot.
+ *   - Class rename `Dropdown` → `SeDropdown` for PR-2 cascade consistency
+ *     (matches SeButton / SePalette / SeFlyingButton / SeExplorerButton).
+ *   - Document click + Escape listeners with full disconnectedCallback pairing
+ *     per PR-2 pattern #5 — handlers now declared as class-field arrows
+ *     (convention bullet #8) instead of nullable-typed fields assigned at connect.
+ *
+ * Aria posture (PR-3a Fix 3 follow-up): the toggle is a native
+ * `<button type="button">` (keyboard-focusable via Tab) exposing
+ * `aria-haspopup` + `aria-expanded`. The popup container is a plain `<div>`
+ * with no `role`; slotted options also have no `role="option"` and there is
+ * no keyboard navigation across options. Half-applied listbox aria was removed
+ * because it was misleading rather than helpful. Full listbox semantics
+ * (option roles + arrow-key navigation + activedescendant) is a follow-up if
+ * a consumer ever relies on the dropdown for non-mouse interaction (currently:
+ * ZERO consumers). Native-button visual parity preserved via CSS-default
+ * neutralization (`border: none`, `background: transparent`, `font: inherit`,
+ * etc.) plus a `:focus-visible` outline — same pattern as seMenu's trigger.
  */
-class Dropdown extends (ListComboBox as any) {
-  $img!: HTMLImageElement
-  $input!: HTMLElement
-  /**
-    * @function get
-    */
-  get [defaultState] () {
-    return Object.assign(super[defaultState], {
-      inputPartType: NumberSpinBox,
-      src: 'logo.svg',
-      inputsize: '100%'
-    })
+@customElement('se-dropdown')
+export class SeDropdown extends LitElement {
+  static styles = css`
+    :host {
+      position: relative;
+      display: inline-block;
+    }
+    .source {
+      display: grid;
+      grid-template-columns: 20px 1fr auto;
+      align-items: center;
+      cursor: pointer;
+      gap: 2px;
+      /* Neutralize native <button> defaults so visual parity with the
+         original <div> rendering is preserved (same pattern as seMenu). */
+      border: none;
+      font: inherit;
+      color: inherit;
+      line-height: inherit;
+      outline: inherit;
+      text-align: inherit;
+      background: transparent;
+      padding: 0;
+    }
+    .source:focus-visible {
+      outline: 2px solid #5a6162;
+      outline-offset: 1px;
+    }
+    img {
+      width: 18px;
+      height: 18px;
+    }
+    .popup {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 150%;
+      display: none;
+      background: #fff;
+      border: 1px solid #5a6162;
+      z-index: 10;
+    }
+    .popup.open {
+      display: block;
+    }
+    ::slotted(*) {
+      padding: 4px;
+      background: #E8E8E8;
+      border: 1px solid #5a6162;
+      width: 100%;
+      display: block;
+      box-sizing: border-box;
+      cursor: pointer;
+    }
+  `
+
+  @property() accessor title = ''
+  @property() accessor src = 'logo.svg'
+  // no-op — preserved for backward attribute parity; original elix-bound input
+  // was decorative on non-typed-input usage and has been dropped from render.
+  @property() accessor inputsize = '100%'
+  @property() accessor value = ''
+
+  @state() private accessor _open = false
+
+  connectedCallback() {
+    super.connectedCallback()
+    document.addEventListener('click', this._onDocumentClick)
+    document.addEventListener('keydown', this._onDocumentKeydown)
   }
 
-  /**
-    * @function get
-  */
-  get [internal.template] () {
-    const result = super[internal.template]
-    const source = result.content.getElementById('source')
-    // add a icon before our dropdown
-    source.prepend(fragmentFrom.html`
-      <img src="dropdown.svg" alt="icon" width="18" height="18"></img>
-      `.cloneNode(true))
-    // change the style so it fits in our toolbar
-    result.content.append(
-      templateFrom.html`
-        <style>
-        [part~="source"] {
-          grid-template-columns: 20px 1fr auto;
+  disconnectedCallback() {
+    super.disconnectedCallback()
+    document.removeEventListener('click', this._onDocumentClick)
+    document.removeEventListener('keydown', this._onDocumentKeydown)
+  }
+
+  render() {
+    return html`
+      <button
+        type="button"
+        class="source"
+        part="source"
+        aria-haspopup="listbox"
+        aria-expanded=${this._open ? 'true' : 'false'}
+        @click=${this._onToggle}
+      >
+        <img src=${this.src} alt="icon" part="icon" />
+      </button>
+      <div
+        class=${classMap({ popup: true, open: this._open })}
+        part="popup"
+        @click=${this._onOptionClick}
+      >
+        <slot></slot>
+      </div>
+    `
+  }
+
+  // Class-field arrows per convention bullet #8 — avoids
+  // @typescript-eslint/unbound-method false-positive on Lit's
+  // @event=${this._handler} pattern and aligns with seMenu's posture.
+  private _onToggle = (e: Event) => {
+    e.stopPropagation()
+    this._open = !this._open
+  }
+
+  private _onDocumentClick = (e: Event) => {
+    // Close on outside-click; composedPath includes shadow tree, so self-clicks
+    // (toggle, slotted options) won't match and stay open / close via own handlers.
+    if (this._open && !e.composedPath().includes(this)) {
+      this._open = false
+    }
+  }
+
+  private _onDocumentKeydown = (e: KeyboardEvent) => {
+    if (this._open && e.key === 'Escape') {
+      this._open = false
+    }
+  }
+
+  private _onOptionClick = (e: Event) => {
+    e.stopPropagation()
+    // Walk composedPath to find the slotted option element bearing a `value` attr.
+    const path = e.composedPath()
+    for (const node of path) {
+      if (node === this) break
+      if (node instanceof Element) {
+        const v = node.getAttribute('value')
+        if (v !== null) {
+          this.value = v
+          this.dispatchEvent(new CustomEvent('change', {
+            detail: { value: v },
+            bubbles: true,
+            composed: true
+          }))
+          this._open = false
+          return
         }
-        ::slotted(*) {
-          padding: 4px;
-          background: #E8E8E8;
-          border: 1px solid #5a6162;
-          width: 100%;
-        }
-        [part~="popup"] {
-          width: 150%;
-        }
-        </style>
-      `.content
-    )
-    return result
-  }
-
-  /**
-   * @function observedAttributes
-   * @returns observed
-   */
-  static get observedAttributes () {
-    return ['title', 'src', 'inputsize', 'value']
-  }
-
-  /**
-   * @function attributeChangedCallback
-   * @param name
-   * @param oldValue
-   * @param newValue
-   */
-  attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
-    if (oldValue === newValue) return
-    switch (name) {
-      case 'title':
-      // this.$span.setAttribute('title', `${newValue} ${shortcut ? `[${shortcut}]` : ''}`);
-        break
-      case 'src':
-        this.src = newValue
-        break
-      case 'inputsize':
-        this.inputsize = newValue
-        break
-      default:
-        super.attributeChangedCallback(name, oldValue, newValue)
-        break
+      }
     }
-  }
-
-  /**
-    * @function [internal.render]
-    * @param changed
-    */
-  [internal.render] (changed: Record<string, boolean>) {
-    super[internal.render](changed)
-    if (this[internal.firstRender]) {
-      this.$img = this.shadowRoot.querySelector('img')
-      this.$input = this.shadowRoot.getElementById('input')
-    }
-    if (changed.src) {
-      this.$img.setAttribute('src', this[internal.state].src)
-    }
-    if (changed.inputsize) {
-      ;(this.$input.shadowRoot?.querySelector('[part~="input"]') as HTMLElement | null)?.style.setProperty('width', this[internal.state].inputsize)
-    }
-    if (changed.inputPartType) {
-      // Wire up handler on new input.
-      ;(this as unknown as HTMLElement).addEventListener('close', (e) => {
-        e.preventDefault()
-        const value = (e as CustomEvent).detail?.closeResult?.getAttribute('value')
-        if (value) {
-          const closeEvent = new CustomEvent('change', { detail: { value } })
-          ;(this as unknown as HTMLElement).dispatchEvent(closeEvent)
-        }
-      })
-    }
-  }
-
-  /**
-   * @function src
-   * @returns src
-   */
-  get src () {
-    return this[internal.state].src
-  }
-
-  /**
-   * @function src
-   */
-  set src (src: string) {
-    this[internal.setState]({ src })
-  }
-
-  /**
-   * @function inputsize
-   * @returns src
-   */
-  get inputsize () {
-    return this[internal.state].inputsize
-  }
-
-  /**
-   * @function src
-   */
-  set inputsize (inputsize: string) {
-    this[internal.setState]({ inputsize })
-  }
-
-  /**
-   * @function value
-   * @returns src
-   */
-  get value () {
-    return this[internal.state].value
-  }
-
-  /**
-   * @function value
-   */
-  set value (value: string) {
-    this[internal.setState]({ value })
   }
 }
-
-// Register
-customElements.define('se-dropdown', Dropdown as unknown as CustomElementConstructor)
-
-/*
-{TODO
-    min: 0.001, max: 10000, step: 50, stepfunc: stepZoom,
-  function stepZoom (elem, step) {
-    const origVal = Number(elem.value);
-    if (origVal === 0) { return 100; }
-    const sugVal = origVal + step;
-    if (step === 0) { return origVal; }
-
-    if (origVal >= 100) {
-      return sugVal;
-    }
-    if (sugVal >= origVal) {
-      return origVal * 2;
-    }
-    return origVal / 2;
-  }
-*/
