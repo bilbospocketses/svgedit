@@ -42,8 +42,6 @@ export class SeMenuItem extends LitElement {
   @property() accessor label = ''
   @property() accessor src = ''
 
-  private _keydownHandler: ((e: KeyboardEvent) => void) | null = null
-
   render() {
     const shortcut = this.getAttribute('shortcut') ?? ''
     const imgSrc = this.src ? svgEditor.configObj.curConfig.imgPath + '/' + this.src : undefined
@@ -61,36 +59,30 @@ export class SeMenuItem extends LitElement {
 
   connectedCallback() {
     super.connectedCallback()
-    this._attachKeydown()
+    document.addEventListener('keydown', this._onDocumentKeydown)
   }
 
   disconnectedCallback() {
     super.disconnectedCallback()
-    this._detachKeydown()
+    document.removeEventListener('keydown', this._onDocumentKeydown)
   }
 
-  private _attachKeydown() {
+  // Class-field arrow per convention bullet #8 — aligned with seMenu's
+  // `_onDocumentKeydown` pattern. Reads `shortcut` at fire time rather than
+  // caching at connect time; semantically equivalent since consumers do not
+  // mutate the attribute after connect.
+  private _onDocumentKeydown = (e: KeyboardEvent) => {
     const shortcut = this.getAttribute('shortcut')
     if (!shortcut) return
-    this._keydownHandler = (e: KeyboardEvent) => {
-      // only track keyboard shortcuts for the body containing the svgedit editor
-      if ((e.target as Element).nodeName !== 'BODY') return
-      // normalize key
-      const key = `${(e.metaKey) ? 'meta+' : ''}${(e.ctrlKey) ? 'ctrl+' : ''}${(e.shiftKey) ? 'shift+' : ''}${e.key.toUpperCase()}`
-      if (shortcut !== key) return
-      // launch the click event
-      if (this.id) {
-        document.getElementById(this.id)?.click()
-      }
-      e.preventDefault()
+    // only track keyboard shortcuts for the body containing the svgedit editor
+    if ((e.target as Element).nodeName !== 'BODY') return
+    // normalize key
+    const key = `${(e.metaKey) ? 'meta+' : ''}${(e.ctrlKey) ? 'ctrl+' : ''}${(e.shiftKey) ? 'shift+' : ''}${e.key.toUpperCase()}`
+    if (shortcut !== key) return
+    // launch the click event
+    if (this.id) {
+      document.getElementById(this.id)?.click()
     }
-    document.addEventListener('keydown', this._keydownHandler)
-  }
-
-  private _detachKeydown() {
-    if (this._keydownHandler) {
-      document.removeEventListener('keydown', this._keydownHandler)
-      this._keydownHandler = null
-    }
+    e.preventDefault()
   }
 }
