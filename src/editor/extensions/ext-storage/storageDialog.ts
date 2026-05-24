@@ -1,155 +1,156 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument */
-// svgCanvas / extension API surface is loosely typed; cleanup deferred to #3 or follow-up
-// @ts-expect-error: *.html imported as string via vite-plugin-string; no ambient module declaration
-import storageDialogHTML from './storageDialog.html'
+import { LitElement, html, css } from 'lit'
+import { customElement, state } from 'lit/decorators.js'
 
-declare const svgEditor: SvgEditorGlobal
-
-const template = document.createElement('template')
-template.innerHTML = storageDialogHTML as string
 /**
- * @class SeStorageDialog
+ * Storage-preferences dialog (formerly elix-backed).
+ *
+ * External API contract (preserved):
+ * - Tag: `se-storage-dialog`
+ * - `init(i18next)` — sets ok/cancel/notification/preferences/remember labels
+ * - `dialog` attribute: 'open' -> showModal; else -> close
+ * - `storage` attribute: 'true' enables first option; else disables it
+ * - Dispatches: CustomEvent('change', { detail: { trigger, select, checkbox } })
  */
-export class SeStorageDialog extends HTMLElement {
-  declare _shadowRoot: ShadowRoot
-  declare $dialog: any
-  declare $storage: any
-  declare $okBtn: any
-  declare $cancelBtn: any
-  declare $storageInput: any
-  declare $rememberInput: any
-
-  /**
-    * @function constructor
-    */
-  constructor () {
-    super()
-    // create the shadowDom and insert the template
-    this._shadowRoot = this.attachShadow({ mode: 'open' })
-    this._shadowRoot.append(template.content.cloneNode(true))
-    this.$dialog = this._shadowRoot.querySelector('#dialog_box')
-    this.$storage = this._shadowRoot.querySelector('#js-storage')
-    this.$okBtn = this._shadowRoot.querySelector('#storage_ok')
-    this.$cancelBtn = this._shadowRoot.querySelector('#storage_cancel')
-    this.$storageInput = this._shadowRoot.querySelector('#se-storage-pref')
-    this.$rememberInput = this._shadowRoot.querySelector('#se-remember')
-  }
-
-  /**
-   * @function init
-   * @param name
-   */
-  init (i18next: any) {
-    this.setAttribute('common-ok', i18next.t('common.ok'))
-    this.setAttribute('common-cancel', i18next.t('common.cancel'))
-    this.setAttribute('notify-editor_pref_msg', i18next.t('notification.editorPreferencesMsg'))
-    this.setAttribute('properties-prefs_and_content', i18next.t('properties.prefs_and_content'))
-    this.setAttribute('properties-prefs_only', i18next.t('properties.prefs_only'))
-    this.setAttribute('properties-no_prefs_or_content', i18next.t('properties.no_prefs_or_content'))
-    this.setAttribute('tools-remember_this_choice', i18next.t('tools.remember_this_choice'))
-    this.setAttribute('tools-remember_this_choice_title', i18next.t('tools.remember_this_choice_title'))
-  }
-
-  /**
-   * @function observedAttributes
-   * @returns observed
-   */
-  static get observedAttributes () {
-    return ['dialog', 'storage', 'common-ok', 'common-cancel', 'notify-editor_pref_msg', 'properties-prefs_and_content', 'tools-remember_this_choice', 'tools-remember_this_choice_title', 'properties-prefs_only', 'properties-no_prefs_or_content']
-  }
-
-  /**
-   * @function attributeChangedCallback
-   * @param name
-   * @param oldValue
-   * @param newValue
-   */
-  attributeChangedCallback (name: string, _oldValue: string | null, newValue: string | null) {
-    let node: any
-    switch (name) {
-      case 'dialog':
-        if (newValue === 'open') {
-          this.$dialog.open()
-        } else {
-          this.$dialog.close()
-        }
-        break
-      case 'storage':
-        if (newValue === 'true') {
-          this.$storageInput.options[0].disabled = false
-        } else {
-          this.$storageInput.options[0].disabled = true
-        }
-        break
-      case 'common-ok':
-        this.$okBtn.textContent = newValue
-        break
-      case 'common-cancel':
-        this.$cancelBtn.textContent = newValue
-        break
-      case 'notify-editor_pref_msg':
-        node = this._shadowRoot.querySelector('#notificationNote')
-        node.textContent = newValue
-        break
-      case 'properties-prefs_and_content':
-        node = this._shadowRoot.querySelector('#prefsAndContent')
-        node.textContent = newValue
-        break
-      case 'properties-prefs_only':
-        node = this._shadowRoot.querySelector('#prefsOnly')
-        node.textContent = newValue
-        break
-      case 'properties-no_prefs_or_content':
-        node = this._shadowRoot.querySelector('#noPrefsOrContent')
-        node.textContent = newValue
-        break
-      case 'tools-remember_this_choice':
-        node = this._shadowRoot.querySelector('#se-remember-title')
-        node.prepend(newValue)
-        break
-      case 'tools-remember_this_choice_title':
-        node = this._shadowRoot.querySelector('#se-remember-title')
-        node.setAttribute('title', newValue)
-        break
-      default:
-        // super.attributeChangedCallback(name, oldValue, newValue);
-        break
+@customElement('se-storage-dialog')
+export class SeStorageDialog extends LitElement {
+  static styles = css`
+    dialog {
+      padding: 0;
+      background: #5a6162;
+      max-width: 440px;
+      border: 1px outset #777;
+      font-family: Verdana, Helvetica, sans-serif;
+      font-size: 0.8em;
+      border-radius: 5px;
+      text-align: center;
     }
+
+    dialog::backdrop {
+      background: rgba(0, 0, 0, 0.3);
+    }
+
+    #dialog_content {
+      margin: 10px 10px 5px 10px;
+      background: #DDD;
+      overflow: auto;
+      text-align: left;
+      border: 1px solid #5a6162;
+      border-radius: 5px;
+    }
+
+    #dialog_content p,
+    #dialog_content select,
+    #dialog_content label {
+      margin: 10px;
+      line-height: 1.3em;
+    }
+
+    #dialog_buttons {
+      padding: 5px;
+    }
+
+    #dialog_buttons button {
+      margin: 0 1em;
+    }
+  `
+
+  @state() accessor _okLabel = ''
+  @state() accessor _cancelLabel = ''
+  @state() accessor _notificationText = ''
+  @state() accessor _prefsAndContentLabel = ''
+  @state() accessor _prefsOnlyLabel = ''
+  @state() accessor _noPrefsOrContentLabel = ''
+  @state() accessor _rememberLabel = ''
+  @state() accessor _rememberTitle = ''
+  @state() accessor _storageEnabled = false
+
+  static get observedAttributes (): string[] {
+    return ['dialog', 'storage']
   }
 
-  /**
-   * @function get
-   */
-  get dialog () {
+  init (i18next: { t: (key: string) => string }): void {
+    this._okLabel = i18next.t('common.ok')
+    this._cancelLabel = i18next.t('common.cancel')
+    this._notificationText = i18next.t('notification.editorPreferencesMsg')
+    this._prefsAndContentLabel = i18next.t('properties.prefs_and_content')
+    this._prefsOnlyLabel = i18next.t('properties.prefs_only')
+    this._noPrefsOrContentLabel = i18next.t('properties.no_prefs_or_content')
+    this._rememberLabel = i18next.t('tools.remember_this_choice')
+    this._rememberTitle = i18next.t('tools.remember_this_choice_title')
+  }
+
+  get dialog (): string | null {
     return this.getAttribute('dialog')
   }
 
-  /**
-   * @function set
-   */
   set dialog (value: string | null) {
     this.setAttribute('dialog', value ?? '')
   }
 
-  /**
-   * @function connectedCallback
-   */
-  connectedCallback () {
-    const onSubmitHandler = (_e: Event, action: string) => {
-      const triggerEvent = new CustomEvent('change',
-        {
-          detail: {
-            trigger: action,
-            select: this.$storageInput.value,
-            checkbox: this.$rememberInput.checked
-          }
-        })
-      this.dispatchEvent(triggerEvent)
+  attributeChangedCallback (name: string, oldValue: string | null, newValue: string | null): void {
+    super.attributeChangedCallback(name, oldValue, newValue)
+    switch (name) {
+      case 'dialog':
+        if (newValue === 'open') {
+          void this.updateComplete.then(() => {
+            const dlg = this.shadowRoot?.querySelector('dialog')
+            if (dlg && !dlg.open) dlg.showModal()
+          })
+        } else {
+          const dlg = this.shadowRoot?.querySelector('dialog')
+          if (dlg?.open) dlg.close()
+        }
+        break
+      case 'storage':
+        this._storageEnabled = newValue === 'true'
+        break
     }
-    svgEditor.$click(this.$okBtn, (evt) => onSubmitHandler(evt, 'ok'))
-    svgEditor.$click(this.$cancelBtn, (evt) => onSubmitHandler(evt, 'cancel'))
+  }
+
+  private _onOkClick = (): void => {
+    const select = this.shadowRoot?.querySelector<HTMLSelectElement>('#se-storage-pref')
+    const checkbox = this.shadowRoot?.querySelector<HTMLInputElement>('#se-remember')
+    this.dispatchEvent(new CustomEvent('change', {
+      detail: {
+        trigger: 'ok',
+        select: select?.value ?? '',
+        checkbox: checkbox?.checked ?? false
+      }
+    }))
+  }
+
+  private _onCancelClick = (): void => {
+    const select = this.shadowRoot?.querySelector<HTMLSelectElement>('#se-storage-pref')
+    const checkbox = this.shadowRoot?.querySelector<HTMLInputElement>('#se-remember')
+    this.dispatchEvent(new CustomEvent('change', {
+      detail: {
+        trigger: 'cancel',
+        select: select?.value ?? '',
+        checkbox: checkbox?.checked ?? false
+      }
+    }))
+  }
+
+  render () {
+    return html`
+      <dialog aria-label="svgedit storage preferences">
+        <div id="dialog_content">
+          <p id="notificationNote">${this._notificationText}</p>
+          <select id="se-storage-pref">
+            <option value="prefsAndContent" ?disabled=${!this._storageEnabled}>${this._prefsAndContentLabel}</option>
+            <option value="prefsOnly">${this._prefsOnlyLabel}</option>
+            <option value="noPrefsOrContent">${this._noPrefsOrContentLabel}</option>
+          </select>
+          <label title=${this._rememberTitle} id="se-remember-title">
+            ${this._rememberLabel}
+            <input type="checkbox" id="se-remember" checked>
+          </label>
+        </div>
+        <div id="dialog_buttons">
+          <button type="button" id="storage_ok" @click=${this._onOkClick}>${this._okLabel}</button>
+          <button type="button" id="storage_cancel" @click=${this._onCancelClick}>${this._cancelLabel}</button>
+        </div>
+      </dialog>
+    `
   }
 }
-
-// Register
-customElements.define('se-storage-dialog', SeStorageDialog)
