@@ -66,7 +66,7 @@ test.describe('Group transform preservation', () => {
 
     // Test 3: Rotate the group
     await page.locator('#angle').evaluate(el => {
-      const input = el.shadowRoot.querySelector('elix-number-spin-box')
+      const input = el.shadowRoot.querySelector('input')
       input.value = '5'
       input.dispatchEvent(new Event('change', { bubbles: true }))
     })
@@ -129,7 +129,7 @@ test.describe('Group transform preservation', () => {
 
     // Rotate first
     await page.locator('#angle').evaluate(el => {
-      const input = el.shadowRoot.querySelector('elix-number-spin-box')
+      const input = el.shadowRoot.querySelector('input')
       input.value = '45'
       input.dispatchEvent(new Event('change', { bubbles: true }))
     })
