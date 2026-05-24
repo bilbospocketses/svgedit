@@ -7,6 +7,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (#3 PR-3a — 4 elix-bound user-facing components Lit-converted + 2 dead files deleted — 2026-05-24)
+
+First of 3 sub-PRs under todo item #3 PR-3 of the 5-PR elix → Lit migration. Converts 4 elix-internals-bound user-facing components in `src/editor/components/` to Lit; deletes 2 internal-only files made orphan by the conversion. After this PR: `components/` is mostly elix-free (`PaintBox.ts` + `seColorPicker.ts` remain — jGraduate-bound, PR-4 scope).
+
+**Sub-PR scope decisions locked at planning time** (docs/superpowers/plans/2026-05-24-svgedit-elix-to-lit-pr-3a-plan.md § "Decisions locked"):
+- Sub-PR split: 3 sub-PRs (PR-3a / PR-3b / PR-3c) by strategic axis (vs 1 big PR or 2)
+- `<elix-dialog>` replacement (PR-3c scope, not this PR): native HTML5 `<dialog>` element
+- `sePromptDialog` rename target (PR-3b scope, not this PR): `seStatusDialog`
+- `storageDialog` inclusion: yes, added to PR-3c
+
+**Conversions (4):**
+
+- **`seSpinInput` (PILOT)** — 244 → 143 LOC. Native `<input type="number">` + `<button>` arrows. All 8 attributes preserved (`value`, `label`, `src`, `size`, `min`, `max`, `step`, `title`). 3 shadowDOM-piercing sites at original lines 106 / 108 / 217-229 resolved naturally. `svgEditor.$click` swapped to declarative `@click=` per PR-2 touchend-double-fire cascade. Pre-existing test selectors at `tests/e2e/issues.spec.js:29,48,75` + `tests/e2e/group-transforms.spec.js:69,132` that pierced `elix-number-spin-box` updated to target `input` (consumer-audit refinement of [[feedback_consumer_audit_grep_test_files]] — the original audit grepped `<se-spin-input>` but missed elix-internal selectors in test files).
+- **`seMenu`** — 125 → 167 LOC (over plan's 50-70 target due to popup-lifecycle infrastructure: open/close + document-level click + Escape listeners with full `disconnectedCallback` cleanup per PR-2 pattern #5; popup conditionally rendered via `${this._open ? html\`...\` : nothing}` after a firefox-only e2e regression surfaced during main-session gate verification — the always-mounted `position: absolute` popup with `display: none` caused intermittent layout-coordinate drift in firefox under sustained parallel-test load). Native `<button type="button">` for the menu trigger (replacing the original `<div role="button">` which was keyboard-inaccessible regression vs elix-menu-button — fixed in same PR). `aria-haspopup` + `aria-expanded` + `aria-label` + `:focus-visible` outline. Double shadowDOM-piercing at original line 54 (`(this.$menu).shadowRoot.querySelector('#popupToggle').shadowRoot`) eliminated naturally. `imgPath` read at render-time (matches seButton / seSpinInput pattern).
+- **`seMenuItem`** — 132 → 88 LOC. Native `<button role="menuitem">`. Single `_onDocumentKeydown` class-field arrow handler (per convention bullet 8 — original used `_keydownHandler` field assigned imperatively inside `_attachKeydown`, refactored in same PR to align with sibling reference shapes). Reads `shortcut` attribute at fire time. Shortcut normalization preserved verbatim (shared `normalizeShortcut(e)` helper deferred to todo #10 — cross-file refactor scope). The shadowDOM-piercing site at original lines 31-32 (elix `#checkmark` hide) resolves naturally (no checkmark rendered).
+- **`seDropdown`** — 186 → 164 LOC. **Class rename `Dropdown` → `SeDropdown`** per PR-2 cascade (consistent with `ToolButton → SeButton`, `SEPalette → SePalette`, `FlyingButton → SeFlyingButton`, `ExplorerButton → SeExplorerButton`, `SeCMenuLayerDialog → SeCMenuLayersDialog`, `SeCMenuDialog → SeCMenuCanvasDialog`). Native `<button>` toggle + popup `<div>` with `<slot>` for slotted options. Dispatches `new CustomEvent('change', { detail: { value }, bubbles: true, composed: true })` preserving the `{detail:{value}}` shape on option click via `composedPath()` walk. **Component has ZERO external consumers** (verified via repo-wide grep: no HTML markup, no dynamic creation, no class imports). Registration preserved per task brief. Decorative `<input readonly>` + the original `stepZoom` TODO comment block (referring to a typed-input code path that never existed) DROPPED to match the doc-comment's own simplification claim. `role="listbox"` dropped (was misleading — slotted children have no `role="option"`); `aria-haspopup="listbox"` + `aria-expanded` added to the toggle for honest open/closed signal.
+
+**Deletes (2 dead-on-arrival):**
+
+- **`src/editor/components/sePlainMenuButton.ts`** (23 LOC) — sole registration of `<elix-menu-button>` (`customElements.define('elix-menu-button', ElixMenuButton)` line 23). Only consumer was `seMenu`'s template. Made dead by seMenu Lit conversion (which owns its popup button face directly).
+- **`src/editor/components/sePlainBorderButton.ts`** (34 LOC) — default-exported `SePlainBorderButton` class composed via `sourcePartType: sePlainBorderButton` inside `sePlainMenuButton` (only consumer). Transitively dead after sePlainMenuButton deletion.
+
+**Cumulative LOC delta** vs master (`12f6a70e`): **−238 LOC** across 6 files (+496 / -677 / -57 deleted).
+
+**PR-2 patterns applied:**
+
+1. **Full `disconnectedCallback` lifecycle** for external-DOM-listener cleanup — seMenu document-level click + Escape listeners; seMenuItem keyboard-shortcut listener (original was leaky); seDropdown document-level click + Escape listeners. Always paired via `attach()` / `detach()` helpers OR class-field-arrow handlers + add/removeEventListener.
+2. **`classMap` directive** for class-toggle patterns (seMenu's `open` state until refactored to conditional rendering for the firefox-fix; seDropdown's popup-toggle state).
+3. **`ifDefined` directive** for optional empty-string-default attributes (seSpinInput's `size`/`min`/`max`/`step`; seMenuItem's `src`).
+4. **Touchend double-fire bug fix at all `svgEditor.$click` sites** — swapped to declarative `@click=` in templates. The `$click` helper at `packages/svgcanvas/core/utilities.ts:1273` registers both `click` AND `touchend`; modern browsers synthesize `click` from touch taps natively, causing handlers to fire twice per tap. Native `@click=` fires once.
+
+**Not in scope (deferred per plan's locked decisions):**
+
+- 3 vendored se-elix overrides under `src/editor/dialogs/se-elix/` (register `<elix-number-spin-box>`; `exportDialog.html:51` still uses this tag — deferred to PR-3c).
+- `PaintBox.ts` + `seColorPicker.ts` (jGraduate-bound, PR-4 scope).
+- Plain alert/status dialogs (`SePlainAlertDialog`, `sePromptDialog` → `seStatusDialog` rename + 5 callsite updates) — PR-3b scope.
+- Elix-dialog HTML-bound dialogs (`svgSourceDialog`, `imagePropertiesDialog`, `editorPreferencesDialog`, `exportDialog`, `storageDialog`) — PR-3c scope.
+- Shared `normalizeShortcut(e)` helper extraction across `seButton.ts:234` / `seMenuItem.ts` / `Editor.ts:setAll:410-412` — cross-file refactor logged to todo #10.
+
+**Verification:**
+
+- `npx tsc --build --force`: 0 errors
+- `npm run lint`: 0 errors, 23 warnings (jgraduate-deferred baseline from PR #23 Tier B unchanged)
+- `npx vitest run`: 640 / 640 passing (49 test files)
+- `npx tsx scripts/run-e2e.ts`: 250 / 250 passing both browsers (chromium + firefox)
+- `npm run build`: clean (11 extensions bundled)
+
+**Lessons captured (worth pasting into PR-3b / PR-3c dispatch packets):**
+
+1. **Consumer audits for elix-bound component rewrites MUST grep for elix-internal tags in test files**, not just `<se-*>` tags. Tests pierce shadow DOM via the elix-internal element selectors (`elix-number-spin-box`, `elix-menu-button`, etc.) — those selectors break when the component owns its own markup directly. Refines [[feedback_consumer_audit_grep_test_files]] for PR-3 scope.
+2. **Parallel-batch dispatch has port-8000 contention.** Vite preview uses port 8000 with `reuseExistingServer: true` + `--strictPort`; the first agent captures the port and siblings risk running tests against the WRONG `dist/`. Mitigation: agents detecting contention should run their own preview on a different port (e.g., 8431) with a custom playwright config. Affects PR-3b / PR-3c if any parallel batch is dispatched.
+3. **Firefox-only layout regression under parallel-test load.** The seMenu's always-mounted `position: absolute` popup (with `display: none` toggle) caused intermittent right-click coordinate drift in firefox e2e tests — paste position offset by exactly one SVG viewport. Could not be deterministically reproduced in isolation but was reliably reproducible under the full parallel-test suite. Defensive fix: conditional rendering of the popup (`${this._open ? html\`...\` : nothing}`) eliminated the issue. Worth a CSS-discipline note for future popup-style components: prefer conditional rendering over always-mounted-with-display-none for absolute-positioned overlays.
+4. **`<div role="button">` is keyboard-inaccessible** — Tab navigation can't reach it; Enter / Space don't activate it without explicit `@keydown` handling. Always use `<button type="button">` for click triggers. Pre-existing in original seMenu (which wrapped elix-menu-button which DID wrap a real `<button>` internally); regression on first Lit conversion; fixed in same PR.
+
 ### Fixed (#18 — pre-existing semantic issues surfaced by #17 audit — 2026-05-22)
 
 Cleanup of the 6 items the PR #24 audit revealed as pre-existing semantic issues hidden by `any` typing. **One runtime bug** + **5 type-precision improvements**.
