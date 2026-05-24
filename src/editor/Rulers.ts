@@ -67,7 +67,7 @@ class Rulers {
    */
   updateRulers (scanvas?: HTMLElement | null, zoom?: number): void {
     if (!zoom) { zoom = this.svgCanvas.getZoom() as number }
-    if (!scanvas) { scanvas = document.getElementById('svgcanvas') }
+    if (!scanvas) { scanvas = $id('svgcanvas') }
 
     let d: number; let i: number
     const limit = 30000

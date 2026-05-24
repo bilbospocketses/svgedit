@@ -243,7 +243,7 @@ export default {
 
           // If part is null or undefined, fetch it and store it
           if (!part) {
-            part = document.getElementById(
+            part = $id(
               ((connector.attributes as any)['se:connector']).value.split(' ')[i]
             )
             dataStorage.put(connector, `c_${pos}`, part.id)
@@ -254,7 +254,7 @@ export default {
             )
           } else {
             // If part is already stored, fetch it by ID
-            part = document.getElementById(part)
+            part = $id(part)
           }
 
           // Add the part to the parts array
@@ -712,7 +712,7 @@ export default {
         return { remove }
       },
       toolButtonStateUpdate (opts: any) {
-        const button = document.getElementById('tool_connect') as any
+        const button = $id('tool_connect')
         if (opts.nostroke && button.pressed === true) {
           svgEditor.clickSelect()
         }

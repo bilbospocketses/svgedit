@@ -4,6 +4,9 @@ import { LitElement, html, css } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import { classMap } from 'lit/directives/class-map.js'
 import { styleMap } from 'lit/directives/style-map.js'
+import SvgCanvas from '@svgedit/svgcanvas'
+
+const { $id } = SvgCanvas
 
 @customElement('se-cmenu_canvas-dialog')
 export class SeCMenuCanvasDialog extends LitElement {
@@ -219,7 +222,7 @@ export class SeCMenuCanvasDialog extends LitElement {
 
   override connectedCallback(): void {
     super.connectedCallback()
-    this._workarea = document.getElementById('workarea')
+    this._workarea = $id('workarea')
     this._attachWorkareaListeners()
   }
 

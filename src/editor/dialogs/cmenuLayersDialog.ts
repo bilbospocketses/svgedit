@@ -3,6 +3,9 @@
 import { LitElement, html, css } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import { styleMap } from 'lit/directives/style-map.js'
+import SvgCanvas from '@svgedit/svgcanvas'
+
+const { $id } = SvgCanvas
 
 @customElement('se-cmenu-layers')
 export class SeCMenuLayersDialog extends LitElement {
@@ -159,7 +162,7 @@ export class SeCMenuLayersDialog extends LitElement {
       this.source = newValue
       if (newValue !== '' && newValue !== undefined) {
         this._detachWorkareaListeners()
-        this._workarea = document.getElementById(newValue) ?? undefined
+        this._workarea = $id(newValue) ?? undefined
         this._attachWorkareaListeners()
       }
     }
@@ -169,7 +172,7 @@ export class SeCMenuLayersDialog extends LitElement {
     super.connectedCallback()
     if (this.value !== '') {
       this.source = this.value
-      this._workarea = document.getElementById(this.value) ?? undefined
+      this._workarea = $id(this.value) ?? undefined
     }
     this._attachWorkareaListeners()
   }
@@ -182,7 +185,7 @@ export class SeCMenuLayersDialog extends LitElement {
       this._workarea.addEventListener('click', this._onMenuOpen as EventListener)
     }
     this._workarea.addEventListener('mousedown', this._onMenuClose as EventListener)
-    this._sidePanels = document.getElementById('sidepanels')
+    this._sidePanels = $id('sidepanels')
     this._sidePanels?.addEventListener('mousedown', this._onMenuClose as EventListener)
   }
 

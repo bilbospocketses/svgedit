@@ -199,7 +199,7 @@ class TopPanel {
         : null
 
     const isNode = currentMode === 'pathedit'
-    const menuItems = document.getElementById('se-cmenu_canvas') as any
+    const menuItems = $id('se-cmenu_canvas') as any
     this.hideTool('selected_panel')
     this.hideTool('multiselected_panel')
     this.hideTool('g_panel')
@@ -464,7 +464,7 @@ class TopPanel {
       ;($id('selLayerNames') as any).setAttribute('value', currentLayerName)
 
       // Enable regular menu options
-      const canCMenu = document.getElementById('se-cmenu_canvas') as any
+      const canCMenu = $id('se-cmenu_canvas') as any
       canCMenu.setAttribute(
         'enablemenuitems',
         '#delete,#cut,#copy,#move_front,#move_up,#move_down,#move_back'
@@ -479,7 +479,7 @@ class TopPanel {
    * @param forSaving
    */
   showSourceEditor (_e?: any, forSaving?: boolean): void {
-    const $editorDialog = document.getElementById('se-svg-editor-dialog') as any
+    const $editorDialog = $id('se-svg-editor-dialog') as any
     if ($editorDialog.getAttribute('dialog') === 'open') return
     const origSource = this.editor.svgCanvas.getSvgString()
     $editorDialog.setAttribute('dialog', 'open')
