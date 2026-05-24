@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (PR #32 — unify shortcut normalization + sweep document.getElementById → $id — 2026-05-24)
+
+Two cross-cutting refactors addressing long-standing drift surfaced during the PR-3a code review.
+
+**1. Shortcut-key normalization unified.** Extract `normalizeShortcut(e)` + `matchShortcut(e, shortcut)` to a new `src/editor/common/shortcut.ts`. Canonical format: `alt+shift+meta+ctrl+UPPERCASE_KEY` (modifier order fixed, key always uppercased via `toUpperCase()`). Closes the "Shortcut key normalization unified" line item in todo #10 (correctness backlog).
+
+- Replaces 3 drifted normalization shapes that diverged in original svgedit (preserved verbatim through Step 3 TS migration + PR-2 + PR-3a per "preserve verbatim" spec discipline): `seButton.ts:123` (meta+ctrl+UPPER), `seMenuItem.ts:80` (meta+ctrl+shift+UPPER), `Editor.ts:setAll:454-456` (alt+shift+meta+ctrl+lower).
+- Editor.ts `this.shortcuts` array entries updated to canonical UPPERCASE (~30 entries).
+- **Latent broken shortcut fixed:** `ctrl+shift+arrowleft/right` reordered to canonical `shift+ctrl+ARROWLEFT/RIGHT` — these never fired before because Editor.ts's normalizer used `alt+shift+meta+ctrl` order so user keypresses produced `shift+ctrl+arrowleft` ≠ array entry `ctrl+shift+arrowleft`. Verified firing in manual smoke (chromium).
+- TopPanel.html `Ctrl+Shift+]` / `Ctrl+Shift+[` updated to canonical lowercase modifiers + uppercase key.
+- `matchShortcut(e, shortcut)` adds `/` alternative parsing (e.g., `DELETE/BACKSPACE`) — the seButton handler now supports the same alternative shape that Editor.ts already did.
+
+**2. seButton disconnect-leak fixed.** Same pattern PR-3a applied to seMenuItem — keydown listener now paired via `connectedCallback` / `disconnectedCallback` class-field arrow per PR-2 pattern #5. Closes the reviewer-flagged cross-component disconnect-leak from the PR-3a code review.
+
+**3. `document.getElementById` → `$id()` sweep across editor TS sources.** Brings 21 lingering sites into the established `$id()` convention (335 existing vs 25 lingering → 4 remaining: 3 HTML-inline-script files which can't import the helper + 1 reference in a comment). Files touched: Rulers.ts, seExplorerButton.ts, contextmenu.ts (preserves the `appendChild(string)` bug at lines 76/81 per todo #10), cmenuDialog.ts, cmenuLayersDialog.ts, exportDialog.ts, ext-connector.ts, ext-polystar.ts, ext-shapes.ts, ext-storage.ts, TopPanel.ts, Editor.ts.
+
+### Fixed (PR #32 follow-up — seMenu aria-label i18n restore — 2026-05-24)
+
+`seMenu.ts` `aria-label` restored to `${t('tools.main_menu')}` after an earlier incorrect revert. Initial PR-3a polish correctly wrapped the literal `"Main Menu"` in `t('tools.main_menu')`; a subsequent revert dropped the wrap based on a too-literal grep for `'tools.main_menu'` that missed the nested structure (`tools: { main_menu: 'Main Menu' }`) at `lang.en.ts:122-123`. Key exists; restored. Lesson: when grepping i18n keys, use the rightmost-portion-only pattern (e.g., `main_menu`) rather than the dotted form.
+
+### Verification (PR #32 + follow-up)
+
+tsc 0 errors / lint 0 errors + 23 warnings (jgraduate-deferred baseline unchanged) / vitest 640/640 / e2e 250/250 passing both browsers (chromium + firefox). Manual cross-browser smoke (chromium via Playwright MCP) verified: top-menu open/close + Escape (with focus return) + click-outside; tool shortcuts (Q/L/T/R/P + ctrl+Z + shift+ctrl+] + shift+D); spin inputs (stroke_width 5→12 + opacity 100→50); zoom dropdown + toolbar dropdowns rendered.
+
+### Audit findings logged for future work (PR #32 session)
+
+Recorded in todo #10 / #13 follow-ups:
+
+- `ext-layer_view.ts:81` shortcut bug — `shortcut="${name}:buttons.0.key"` uses the literal i18n key as the shortcut value rather than `t(...)`-resolving it. Pre-existing — fix needs design (the locale value `'Ctrl+Shift+L'` is display-ergonomic; canonical-format `'shift+ctrl+L'` would degrade the button-title display).
+- `TopPanel.html` + `LeftPanel.html` display-only shortcut labels (`Delete/Backspace`, `Z / Alt + wheels`) — keep display-only by design; actual key handling is via Editor.ts shortcut array. Consider HTML comment OR drop the `shortcut` attribute entirely.
+- 3 HTML inline-script files (`iife-index.html`, `index.html`, `xdomain-index.html`) still use `document.getElementById('container')` — intentional bootstrap pattern; inline scripts can't import module helpers.
+
 ### Changed (#3 PR-3a — 4 elix-bound user-facing components Lit-converted + 2 dead files deleted — 2026-05-24)
 
 First of 3 sub-PRs under todo item #3 PR-3 of the 5-PR elix → Lit migration. Converts 4 elix-internals-bound user-facing components in `src/editor/components/` to Lit; deletes 2 internal-only files made orphan by the conversion. After this PR: `components/` is mostly elix-free (`PaintBox.ts` + `seColorPicker.ts` remain — jGraduate-bound, PR-4 scope).
