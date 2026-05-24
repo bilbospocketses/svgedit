@@ -43,6 +43,16 @@ export class SeMenu extends LitElement {
       display: inline-flex;
       align-items: center;
       gap: 4px;
+      /* Neutralize native <button> defaults so visual parity with the
+         original <div role="button"> rendering is preserved. */
+      border: none;
+      font: inherit;
+      text-align: inherit;
+      line-height: inherit;
+    }
+    .menu-button:focus-visible {
+      outline: 2px solid var(--icon-bg-color-hover);
+      outline-offset: 1px;
     }
     .menu-button img {
       width: 24px;
@@ -77,9 +87,9 @@ export class SeMenu extends LitElement {
       ? svgEditor.configObj.curConfig.imgPath + '/' + this.src
       : undefined
     return html`
-      <div
+      <button
+        type="button"
         class="menu-button"
-        role="button"
         aria-haspopup="true"
         aria-expanded=${this._open ? 'true' : 'false'}
         aria-label="Main Menu"
@@ -89,7 +99,7 @@ export class SeMenu extends LitElement {
           ? html`<img alt="logo" width="24" height="24" src=${imgSrc} />`
           : nothing}
         ${this.label ? html`<span>${this.label}</span>` : nothing}
-      </div>
+      </button>
       ${this._open
         ? html`
             <div class="popup" role="menu" @click=${this._onSlotClick}>
