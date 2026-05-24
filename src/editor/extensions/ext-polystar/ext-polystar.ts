@@ -311,7 +311,7 @@ export default {
 
           const circumradius =
             Math.sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy)) / 1.5
-          const RadiusMultiplier = (document.getElementById('RadiusMultiplier') as HTMLInputElement).value
+          const RadiusMultiplier = ($id('RadiusMultiplier') as HTMLInputElement).value
           const inradius =
             circumradius / Number(RadiusMultiplier)
           newFO.setAttribute('r', circumradius)

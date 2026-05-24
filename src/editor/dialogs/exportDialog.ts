@@ -3,6 +3,9 @@
 import './se-elix/define/NumberSpinBox.js'
 // @ts-expect-error: *.html imported as string via vite-plugin-string; no ambient module declaration
 import exportDialogHTML from './exportDialog.html'
+import SvgCanvas from '@svgedit/svgcanvas'
+
+const { $id } = SvgCanvas
 
 declare const svgEditor: SvgEditorGlobal
 
@@ -125,7 +128,7 @@ export class SeExportDialog extends HTMLElement {
     })
     const onSubmitHandler = (_e: Event, action: string): void => {
       if (action === 'cancel') {
-        document.getElementById('se-export-dialog')?.setAttribute('dialog', 'close')
+        $id('se-export-dialog')?.setAttribute('dialog', 'close')
       } else {
         const triggerEvent = new CustomEvent('change', {
           detail: {
@@ -135,7 +138,7 @@ export class SeExportDialog extends HTMLElement {
           }
         })
         this.dispatchEvent(triggerEvent)
-        document.getElementById('se-export-dialog')?.setAttribute('dialog', 'close')
+        $id('se-export-dialog')?.setAttribute('dialog', 'close')
       }
     }
      

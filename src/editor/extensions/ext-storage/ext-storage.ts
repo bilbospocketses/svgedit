@@ -64,6 +64,7 @@ export default {
   init (this: any) {
     const svgEditor: any = this
     const { svgCanvas, storage } = svgEditor
+    const { $id } = svgCanvas
 
     // We could empty any already-set data for users when they decline storage,
     //  but it would be a risk for users who wanted to store but accidentally
@@ -256,7 +257,7 @@ export default {
           // Open select-with-checkbox dialog
           // From svg-editor.js
           svgEditor.storagePromptState = 'waiting'
-          const $storageDialog = document.getElementById('se-storage-dialog')!
+          const $storageDialog = $id('se-storage-dialog')!
           $storageDialog.setAttribute('dialog', 'open')
           $storageDialog.setAttribute('storage', String(options))
         } else if (!noStorageOnLoad || forceStorage) {

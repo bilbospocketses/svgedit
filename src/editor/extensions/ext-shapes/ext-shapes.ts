@@ -59,7 +59,7 @@ export default {
         const mode = canv.getMode()
         if (mode !== modeId) { return undefined }
 
-        const currentD = document.getElementById('tool_shapelib')!.dataset.draw
+        const currentD = $id('tool_shapelib')!.dataset.draw
         startX = opts.start_x
         const x = startX
         startY = opts.start_y

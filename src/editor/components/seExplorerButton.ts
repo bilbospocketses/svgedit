@@ -5,6 +5,9 @@ import { LitElement, html, css } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import { classMap } from 'lit/directives/class-map.js'
 import { unsafeHTML } from 'lit/directives/unsafe-html.js'
+import SvgCanvas from '@svgedit/svgcanvas'
+
+const { $id } = SvgCanvas
 
 /**
  * Boolean attribute contract for `pressed` / `disabled`:
@@ -147,7 +150,7 @@ export class SeExplorerButton extends LitElement {
     this.addEventListener('click', this._onClick)
 
     // Closes opened lib menu on click on the canvas (preserved from original constructor)
-    const workarea = document.getElementById('workarea')
+    const workarea = $id('workarea')
     if (workarea) {
       this._workareaClickHandler = (_e: Event) => {
         this._opened = false
@@ -159,7 +162,7 @@ export class SeExplorerButton extends LitElement {
   disconnectedCallback() {
     super.disconnectedCallback()
     this.removeEventListener('click', this._onClick)
-    const workarea = document.getElementById('workarea')
+    const workarea = $id('workarea')
     if (workarea && this._workareaClickHandler) {
       workarea.removeEventListener('click', this._workareaClickHandler)
       this._workareaClickHandler = null
