@@ -1,12 +1,12 @@
 import { test, expect } from './fixtures.js'
 
 test.describe('Dialog helpers', () => {
-  test('se-prompt-dialog toggles title and close', async ({ page }) => {
+  test('se-status-dialog toggles title and close', async ({ page }) => {
     await page.goto('/index.html')
-    await page.waitForFunction(() => Boolean(customElements.get('se-prompt-dialog')))
+    await page.waitForFunction(() => Boolean(customElements.get('se-status-dialog')))
 
     const result = await page.evaluate(() => {
-      const prompt = document.createElement('se-prompt-dialog')
+      const prompt = document.createElement('se-status-dialog')
       document.body.append(prompt)
       prompt.title = 'Hello'
       prompt.close = true
@@ -27,9 +27,9 @@ test.describe('Dialog helpers', () => {
     await page.waitForFunction(() => typeof window.seAlert === 'function')
 
     const created = await page.evaluate(() => {
-      const before = document.querySelectorAll('se-elix-alert-dialog').length
+      const before = document.querySelectorAll('se-plain-alert-dialog').length
       window.seAlert('Cover alert dialog')
-      const after = document.querySelectorAll('se-elix-alert-dialog').length
+      const after = document.querySelectorAll('se-plain-alert-dialog').length
       return after > before
     })
 

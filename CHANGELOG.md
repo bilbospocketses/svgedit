@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (#3 PR-3b — 2 plain-alert/status dialogs Lit-converted + sePromptDialog → seStatusDialog rename — 2026-05-24)
+
+Second of 3 sub-PRs under todo item #3 PR-3 (5-PR elix → Lit migration). Closes audit input #4 (misnamed dialog — `sePromptDialog` was misleading since it's a cancel-only status display, not a prompt-with-input).
+
+**Conversions (2):**
+
+- **SePlainAlertDialog** (92 → 155 LOC): native HTML5 `<dialog>` element + `<slot>` for textContent + dynamic choice buttons via `map` directive. Preserved full imperative API surface (`.choices`, `.open()`, `.close()`, `.opened`, `.whenClosed()`, `.keyChoice`) for the 3 `window.seAlert/seConfirm/seSelect` wrapper consumers. Tag renamed `<se-elix-alert-dialog>` → `<se-plain-alert-dialog>` (elix prefix misleading post-conversion; class name preserved — 4 consumers use it as the constructor). `dialog.close(label)` + `dialog.returnValue` leverage native dialog API for the choice-passing mechanism.
+- **sePromptDialog → seStatusDialog** (103 → 110 LOC): file renamed `sePromptDialog.ts` → `seStatusDialog.ts`; class renamed `SePromptDialog` → `SeStatusDialog`; tag renamed `<se-prompt-dialog>` → `<se-status-dialog>`. Inlined as standalone native `<dialog>` (drops the `new SePlainAlertDialog() as any` composition). Preserved the `close` attribute toggle-on-any-value semantics verbatim (latent quirk that ext-opensave relies on; logged to todo #10 as investigation follow-up).
+
+**5 callsite updates:** `dialogs/index.ts` (import path), `EditorStartup.ts` (createElement + setAttribute id), `ext-opensave.ts` (5 `$id()` sites), `Editor.ts` (comment refresh preserving historical name for traceability), `tests/e2e/dialogs-extra.spec.js` (test description + selectors for both renames).
+
+**After PR-3b:** `dialogs/` is mostly elix-free. Only the 5 elix-dialog-coupled HTML-bound dialogs remain for PR-3c + 3 vendored se-elix overrides + `import 'elix/define/Dialog.js'` in `dialogs/index.ts`. Native HTML5 `<dialog>` pattern established (first use in svgedit; reusable for all PR-3c dialogs).
+
+**Patterns applied:** native `<dialog>` + `.showModal()` / `.close()` (new for PR-3b), `<button type="button">` inside dialog context (avoids form-submit default), `void this.updateComplete.then(...)` for no-floating-promises compliance, class-field-arrow handlers, `@state()` for internal reactive state, `dialog::backdrop` for modal overlay.
+
+**Lessons:** (1) `dialog.close(returnValue)` + `dialog.returnValue` is the native mechanism for passing structured close-results — no custom event or property gymnastics needed. (2) Hybrid LitElement + manual `attributeChangedCallback` override works cleanly when consumers expect exactly the original attribute-driven behavior (title → open with text, close → toggle); Lit's `super.attributeChangedCallback()` handles its own property-sync internally.
+
+**Verification:** tsc 0 errors / lint 0 errors + 23 warnings (jgraduate-deferred baseline unchanged) / vitest 640/640 / e2e 250/250 chromium + firefox.
+
 ### Fixed (todo #10 small-fix bundle — 2026-05-24)
 
 Four surgical fixes from the todo #10 correctness backlog. Pre-existing bugs preserved-verbatim through previous migrations now repaired:

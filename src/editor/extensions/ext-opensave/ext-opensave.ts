@@ -56,15 +56,15 @@ export default {
       const dragE = e as DragEvent
       if (dragE.dataTransfer && !dragE.dataTransfer.types?.includes('Files')) return
 
-      $id('se-prompt-dialog').title = this.i18next.t('notification.loadingImage')
-      $id('se-prompt-dialog').setAttribute('close', false)
+      $id('se-status-dialog').title = this.i18next.t('notification.loadingImage')
+      $id('se-status-dialog').setAttribute('close', false)
       e.stopPropagation()
       e.preventDefault()
       const file = (e.type === 'drop' && dragE.dataTransfer)
         ? dragE.dataTransfer.files[0]
         : (e.currentTarget as HTMLInputElement).files?.[0]
       if (!file) {
-        $id('se-prompt-dialog').setAttribute('close', true)
+        $id('se-status-dialog').setAttribute('close', true)
         resetFileInput()
         return
       }
@@ -85,7 +85,7 @@ export default {
           this.svgCanvas.alignSelectedElements('c', 'page')
           // highlight imported element, otherwise we get strange empty selectbox
           this.svgCanvas.selectOnly([newElement])
-          $id('se-prompt-dialog').setAttribute('close', true)
+          $id('se-status-dialog').setAttribute('close', true)
           resetFileInput()
         }
         reader.readAsText(file)
@@ -116,7 +116,7 @@ export default {
             this.svgCanvas.alignSelectedElements('m', 'page')
             this.svgCanvas.alignSelectedElements('c', 'page')
             this.topPanel.updateContextPanel()
-            $id('se-prompt-dialog').setAttribute('close', true)
+            $id('se-status-dialog').setAttribute('close', true)
             resetFileInput()
           }
           // create dummy img so we know the default dimensions
