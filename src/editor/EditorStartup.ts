@@ -138,8 +138,8 @@ class EditorStartup {
       alertBox.setAttribute('id', 'se-alert-dialog')
       this.$container.append(alertBox)
       // promptDialog added to DOM
-      const promptBox = document.createElement('se-prompt-dialog') as any
-      promptBox.setAttribute('id', 'se-prompt-dialog')
+      const promptBox = document.createElement('se-status-dialog') as any
+      promptBox.setAttribute('id', 'se-status-dialog')
       this.$container.append(promptBox)
       // Export dialog added to DOM
       const exportDialog = document.createElement('se-export-dialog') as any

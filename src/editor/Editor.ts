@@ -334,7 +334,7 @@ class Editor extends EditorStartup {
         alert: (msg) => { seAlert(msg); return Promise.resolve() },
         confirm: async (msg) => Boolean(await seConfirm(msg)),
         prompt: (_msg, def) => {
-          // V7 lacks a real prompt-with-input (audit input #4 — sePromptDialog is status-display).
+          // V7 lacks a real prompt-with-input (audit input #4 — seStatusDialog (formerly sePromptDialog) is status-display).
           // Until #13 adds a real prompt, return the default; hosts that need real prompts must register a handler.
           return Promise.resolve(def ?? null)
         }
