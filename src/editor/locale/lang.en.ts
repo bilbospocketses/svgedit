@@ -139,6 +139,8 @@ export default {
     align_to_page: 'Align Element to Page',
     align_bottom: 'Align Bottom',
     align_center: 'Align Center',
+    align_distrib_horiz: 'Distribute Horizontally',
+    align_distrib_verti: 'Distribute Vertically',
     align_left: 'Align Left',
     align_middle: 'Align Middle',
     align_right: 'Align Right',

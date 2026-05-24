@@ -263,7 +263,7 @@ class LayersPanel {
       const _eye = document.createElement('img')
       _eye.src = './images/eye.svg'
       _eye.style.width = '14px'
-      _eye.style.width = '14px' // TODO: see todo #10 — duplicate assignment; second should be _eye.style.height
+      _eye.style.height = '14px'
       layerVis.appendChild(_eye)
 
       const layerName = document.createElement('td')
@@ -291,8 +291,7 @@ class LayersPanel {
         self.editor.svgCanvas.runExtensions({ action: 'layersChanged' })
         evt.preventDefault()
       })
-      // TODO: see todo #10 — duplicate 'mouseup' listener; second should be 'mouseover'
-      element.addEventListener('mouseup', (evt) => {
+      element.addEventListener('mouseover', (evt) => {
         self.toggleHighlightLayer((evt.currentTarget as any).textContent)
       })
       element.addEventListener('mouseout', (_evt) => {

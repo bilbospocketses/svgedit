@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (todo #10 small-fix bundle — 2026-05-24)
+
+Four surgical fixes from the todo #10 correctness backlog. Pre-existing bugs preserved-verbatim through previous migrations now repaired:
+
+- **`Editor.ts:519`** — i18n key `'notification..noteTheseIssues'` (double-dot) → `'notification.noteTheseIssues'`. Without the fix, the user sees the raw key text in the issues-encountered notification path instead of the translated message ("Also note the following issues: …").
+- **`Editor.ts:1208`** — i18n key `'notification.common.layer'` (wrong namespace path) → `'layers.layer'`. The original lookup pointed at a non-existent path; the correct key is at `layers.layer` ('Layer'). Affects the new-layer-name default ("Layer 1") when language changes via runtime locale switch.
+- **`LayersPanel.ts:266`** — duplicate `_eye.style.width = '14px'` (second assignment) → `_eye.style.height = '14px'`. Without the fix, the layer-visibility eye icon renders distorted (width set twice, height never set, falls back to image's natural height — typically wrong aspect ratio).
+- **`LayersPanel.ts:294`** — duplicate `'mouseup'` listener on layer-name cells → `'mouseover'`. Without the fix, the layer-highlight-on-hover behavior fires on click instead of hover (functional bug — hover-highlight was meant to preview which layer a row belongs to before the user clicks).
+- **`lang.en.ts:142-143`** — added `tools.align_distrib_horiz: 'Distribute Horizontally'` + `tools.align_distrib_verti: 'Distribute Vertically'`. Both keys consumed by TopPanel's align-distribute buttons (rendered as tooltips) but never defined in the locale; tooltips were showing raw key text.
+
+**Verification:** tsc 0 errors / lint 0 errors + 23 warnings (jgraduate-deferred baseline unchanged) / vitest 640/640 / e2e 250/250 chromium + firefox.
+
+**Closes the corresponding todo #10 line items.** Three other items in #10 (3 `super.attributeChangedCallback()` sites, ext-markers `tools.mkr_*` family, etc.) remain deferred — the 3 dialog-attributeChanged sites fix naturally during PR-3c conversion; ext-markers has 21 keys to add and is a separate bundle.
+
 ### Changed (PR #32 — unify shortcut normalization + sweep document.getElementById → $id — 2026-05-24)
 
 Two cross-cutting refactors addressing long-standing drift surfaced during the PR-3a code review.
