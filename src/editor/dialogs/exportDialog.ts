@@ -1,159 +1,158 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument */
-// elix custom-element base classes ship as 'any'; cleanup deferred to #3 (Lit migration)
-import './se-elix/define/NumberSpinBox.js'
-// @ts-expect-error: *.html imported as string via vite-plugin-string; no ambient module declaration
-import exportDialogHTML from './exportDialog.html'
+import { LitElement, html, css } from 'lit'
+import { customElement, property, state } from 'lit/decorators.js'
 import SvgCanvas from '@svgedit/svgcanvas'
 
 const { $id } = SvgCanvas
 
-declare const svgEditor: SvgEditorGlobal
-
-const template = document.createElement('template')
-template.innerHTML = exportDialogHTML as string  
-
 /**
- * @class SeExportDialog
+ * SeExportDialog — export-format picker dialog.
+ *
+ * Migrated from elix-dialog wrapper + HTML string template to Lit 3 LitElement
+ * with native HTML5 `<dialog>` per PR-3c Task 1 (pilot).
+ *
+ * External API preserved:
+ *   - Tag: `se-export-dialog`
+ *   - Class: `SeExportDialog`
+ *   - `init(i18next): void` — sets i18n text + resets value to 100
+ *   - `dialog` attribute: 'open' -> showModal(), else -> close()
+ *   - `value: number` property — quality (0-100)
+ *   - Dispatches `CustomEvent('change', { detail: { trigger, imgType, quality } })`
  */
-export class SeExportDialog extends HTMLElement {
-  declare _shadowRoot: ShadowRoot
-   
-  declare $dialog: any
-  declare $okBtn: Element | null
-  declare $cancelBtn: Element | null
-   
-  declare $exportOption: any
-   
-  declare $qualityCont: any
-   
-  declare $input: any
-  declare value: number
+@customElement('se-export-dialog')
+export class SeExportDialog extends LitElement {
+  static styles = css`
+    #dialog_content {
+      margin: 10px 10px 5px 10px;
+      background: #5a6162;
+      overflow: auto;
+      border: 1px solid #c8c8c8;
+    }
 
-  /**
-    * @function constructor
-    */
-  constructor () {
-    super()
-    // create the shadowDom and insert the template
-    this._shadowRoot = this.attachShadow({ mode: 'open' })
-    this._shadowRoot.append(template.content.cloneNode(true))
-    this.$dialog = this._shadowRoot.querySelector('#export_box')
-    this.$okBtn = this._shadowRoot.querySelector('#export_ok')
-    this.$cancelBtn = this._shadowRoot.querySelector('#export_cancel')
-    this.$exportOption = this._shadowRoot.querySelector('#se-storage-pref')
-    this.$qualityCont = this._shadowRoot.querySelector('#se-quality')
-    this.$input = this._shadowRoot.querySelector('#se-quality')
-    this.value = 1
-  }
+    #dialog_content p,
+    #dialog_content select,
+    #dialog_content label {
+      margin: 10px;
+      line-height: 0.3em;
+      color: #fff;
+    }
 
-  /**
-   * @function init
-   * @param name
-   */
-   
-  init (i18next: any): void {
-    this.setAttribute('common-ok', i18next.t('common.ok'))
-    this.setAttribute('common-cancel', i18next.t('common.cancel'))
-    this.setAttribute('ui-export_type_label', i18next.t('ui.export_type_label'))
+    dialog {
+      padding: 0;
+      font-family: Verdana, Helvetica, sans-serif;
+      text-align: center;
+      max-width: 400px;
+      background: #5a6162;
+      border: 1px outset #777;
+      font-size: 0.8em;
+      border-radius: 5px;
+    }
+
+    dialog::backdrop {
+      background: rgba(0, 0, 0, 0.3);
+    }
+
+    #dialog_content {
+      border-radius: 5px;
+    }
+
+    #dialog_buttons input[type=text] {
+      width: 90%;
+      display: block;
+      margin: 0 0 5px 11px;
+    }
+
+    #dialog_buttons input[type=button] {
+      margin: 0 1em;
+    }
+
+    .se-select {
+      text-align: center;
+    }
+  `
+
+  @property({ reflect: true }) accessor dialog = ''
+
+  @state() accessor _okText = ''
+  @state() accessor _cancelText = ''
+  @state() accessor _exportLabel = ''
+  @state() accessor _showQuality = true
+
+  value = 100
+
+  init (i18next: { t: (key: string) => string }): void {
+    this._okText = i18next.t('common.ok')
+    this._cancelText = i18next.t('common.cancel')
+    this._exportLabel = i18next.t('ui.export_type_label')
     this.value = 100
   }
 
-  /**
-   * @function observedAttributes
-   * @returns observed
-   */
-  static get observedAttributes (): string[] {
-    return ['dialog', 'common-ok', 'common-cancel', 'ui-export_type_label']
-  }
-
-  /**
-   * @function attributeChangedCallback
-   * @param name
-   * @param oldValue
-   * @param newValue
-   */
-  attributeChangedCallback (name: string, _oldValue: string, newValue: string): void {
-    let node: Element | null
-    switch (name) {
-      case 'dialog':
-        if (newValue === 'open') {
-          this.$dialog.open()
-        } else {
-          this.$dialog.close()
-        }
-        break
-      case 'common-ok':
-        if (this.$okBtn) this.$okBtn.textContent = newValue
-        break
-      case 'common-cancel':
-        if (this.$cancelBtn) this.$cancelBtn.textContent = newValue
-        break
-      case 'ui-export_type_label':
-        node = this._shadowRoot.querySelector('#export_select')
-        if (node) node.textContent = newValue
-        break
-      default:
-      // super.attributeChangedCallback(name, oldValue, newValue);
-        break
-    }
-  }
-
-  /**
-   * @function get
-   */
-  get dialog (): string | null {
-    return this.getAttribute('dialog')
-  }
-
-  /**
-   * @function set
-   */
-  set dialog (value: string) {
-    this.setAttribute('dialog', value)
-  }
-
-  /**
-   * @function connectedCallback
-   */
-  connectedCallback (): void {
-     
-    this.$input.addEventListener('change', (e: any) => {
-      e.preventDefault()
-      this.value = e.target.value
-    })
-     
-    svgEditor.$click(this.$input, (e: any) => {
-      e.preventDefault()
-      this.value = e.target.value
-    })
-    const onSubmitHandler = (_e: Event, action: string): void => {
-      if (action === 'cancel') {
-        $id('se-export-dialog')?.setAttribute('dialog', 'close')
+  protected override updated (changed: Map<string, unknown>): void {
+    if (changed.has('dialog')) {
+      const dlg = this.shadowRoot?.querySelector('dialog')
+      if (this.dialog === 'open') {
+        if (dlg && !dlg.open) dlg.showModal()
       } else {
-        const triggerEvent = new CustomEvent('change', {
-          detail: {
-            trigger: action,
-            imgType: this.$exportOption.value,
-            quality: this.value
-          }
-        })
-        this.dispatchEvent(triggerEvent)
-        $id('se-export-dialog')?.setAttribute('dialog', 'close')
+        if (dlg?.open) dlg.close()
       }
     }
-     
-    const onChangeHandler = (e: any): void => {
-      if (e.target.value === 'PDF') {
-        this.$qualityCont.style.display = 'none'
-      } else {
-        this.$qualityCont.style.display = 'block'
+  }
+
+  private _onOk = (): void => {
+    const selectEl = this.shadowRoot?.querySelector('#se-storage-pref') as HTMLElement & { value: string } | null
+    const triggerEvent = new CustomEvent('change', {
+      detail: {
+        trigger: 'ok',
+        imgType: selectEl?.value ?? 'PNG',
+        quality: this.value
       }
-    }
-    svgEditor.$click(this.$okBtn as EventTarget, (evt) => onSubmitHandler(evt, 'ok'))
-    svgEditor.$click(this.$cancelBtn as EventTarget, (evt) => onSubmitHandler(evt, 'cancel'))
-    this.$exportOption.addEventListener('change', (evt: Event) => onChangeHandler(evt))
+    })
+    this.dispatchEvent(triggerEvent)
+    $id('se-export-dialog')?.setAttribute('dialog', 'close')
+  }
+
+  private _onCancel = (): void => {
+    $id('se-export-dialog')?.setAttribute('dialog', 'close')
+  }
+
+  private _onQualityChange = (e: Event): void => {
+    const target = e.target as HTMLElement & { value: string }
+    this.value = Number(target.value)
+  }
+
+  private _onFormatChange = (e: Event): void => {
+    const target = e.target as HTMLElement & { value: string }
+    this._showQuality = target.value !== 'PDF'
+  }
+
+  render () {
+    return html`
+      <dialog id="export_box" aria-label="export svg">
+        <div id="dialog_content">
+          <p id="export_select">${this._exportLabel}</p>
+          <se-select
+            id="se-storage-pref"
+            label=""
+            options="PNG,JPEG,BMP,WEBP,PDF"
+            values="PNG::JPEG::BMP::WEBP::PDF"
+            @change=${this._onFormatChange}
+          ></se-select>
+          <se-spin-input
+            id="se-quality"
+            label="ui.quality"
+            size="3"
+            min="0"
+            max="100"
+            value="100"
+            step="5"
+            style=${this._showQuality ? 'display:block' : 'display:none'}
+            @change=${this._onQualityChange}
+          ></se-spin-input>
+        </div>
+        <div id="dialog_buttons">
+          <button type="button" id="export_ok" @click=${this._onOk}>${this._okText}</button>
+          <button type="button" id="export_cancel" @click=${this._onCancel}>${this._cancelText}</button>
+        </div>
+      </dialog>
+    `
   }
 }
-
-// Register
-customElements.define('se-export-dialog', SeExportDialog)
