@@ -15,6 +15,7 @@
 
 import './components/index.js'
 import './dialogs/index.js'
+import { normalizeShortcut } from './common/shortcut.js'
 
 import { isMac } from '@svgedit/svgcanvas/common/browser'
 
@@ -102,61 +103,61 @@ class Editor extends EditorStartup {
     this.shortcuts = [
       // Shortcuts not associated with buttons
       {
-        key: ['ctrl+arrowleft', true],
+        key: ['ctrl+ARROWLEFT', true],
         fn: () => {
           this.rotateSelected(0, 1)
         }
       },
       {
-        key: 'ctrl+arrowright',
+        key: 'ctrl+ARROWRIGHT',
         fn: () => {
           this.rotateSelected(1, 1)
         }
       },
       {
-        key: ['ctrl+shift+arrowleft', true],
+        key: ['shift+ctrl+ARROWLEFT', true],
         fn: () => {
           this.rotateSelected(0, 5)
         }
       },
       {
-        key: 'ctrl+shift+arrowright',
+        key: 'shift+ctrl+ARROWRIGHT',
         fn: () => {
           this.rotateSelected(1, 5)
         }
       },
       {
-        key: 'shift+o',
+        key: 'shift+O',
         fn: () => {
           this.svgCanvas.cycleElement(0)
         }
       },
       {
-        key: 'shift+p',
+        key: 'shift+P',
         fn: () => {
           this.svgCanvas.cycleElement(1)
         }
       },
       {
-        key: 'tab',
+        key: 'TAB',
         fn: () => {
           this.svgCanvas.cycleElement(0)
         }
       },
       {
-        key: 'shift+tab',
+        key: 'shift+TAB',
         fn: () => {
           this.svgCanvas.cycleElement(1)
         }
       },
       {
-        key: [modKey + 'arrowup', true],
+        key: [modKey + 'ARROWUP', true],
         fn: () => {
           this.zoomImage(2)
         }
       },
       {
-        key: [modKey + 'arrowdown', true],
+        key: [modKey + 'ARROWDOWN', true],
         fn: () => {
           this.zoomImage(0.5)
         }
@@ -174,103 +175,103 @@ class Editor extends EditorStartup {
         }
       },
       {
-        key: ['arrowup', true],
+        key: ['ARROWUP', true],
         fn: () => {
           this.moveSelected(0, -1)
         }
       },
       {
-        key: ['arrowdown', true],
+        key: ['ARROWDOWN', true],
         fn: () => {
           this.moveSelected(0, 1)
         }
       },
       {
-        key: ['arrowleft', true],
+        key: ['ARROWLEFT', true],
         fn: () => {
           this.moveSelected(-1, 0)
         }
       },
       {
-        key: ['arrowright', true],
+        key: ['ARROWRIGHT', true],
         fn: () => {
           this.moveSelected(1, 0)
         }
       },
       {
-        key: 'shift+arrowup',
+        key: 'shift+ARROWUP',
         fn: () => {
           this.moveSelected(0, -10)
         }
       },
       {
-        key: 'shift+arrowdown',
+        key: 'shift+ARROWDOWN',
         fn: () => {
           this.moveSelected(0, 10)
         }
       },
       {
-        key: 'shift+arrowleft',
+        key: 'shift+ARROWLEFT',
         fn: () => {
           this.moveSelected(-10, 0)
         }
       },
       {
-        key: 'shift+arrowright',
+        key: 'shift+ARROWRIGHT',
         fn: () => {
           this.moveSelected(10, 0)
         }
       },
       {
-        key: ['alt+arrowup', true],
+        key: ['alt+ARROWUP', true],
         fn: () => {
           this.svgCanvas.cloneSelectedElements(0, -1)
         }
       },
       {
-        key: ['alt+arrowdown', true],
+        key: ['alt+ARROWDOWN', true],
         fn: () => {
           this.svgCanvas.cloneSelectedElements(0, 1)
         }
       },
       {
-        key: ['alt+arrowleft', true],
+        key: ['alt+ARROWLEFT', true],
         fn: () => {
           this.svgCanvas.cloneSelectedElements(-1, 0)
         }
       },
       {
-        key: ['alt+arrowright', true],
+        key: ['alt+ARROWRIGHT', true],
         fn: () => {
           this.svgCanvas.cloneSelectedElements(1, 0)
         }
       },
       {
-        key: ['alt+shift+arrowup', true],
+        key: ['alt+shift+ARROWUP', true],
         fn: () => {
           this.svgCanvas.cloneSelectedElements(0, -10)
         }
       },
       {
-        key: ['alt+shift+arrowdown', true],
+        key: ['alt+shift+ARROWDOWN', true],
         fn: () => {
           this.svgCanvas.cloneSelectedElements(0, 10)
         }
       },
       {
-        key: ['alt+shift+arrowleft', true],
+        key: ['alt+shift+ARROWLEFT', true],
         fn: () => {
           this.svgCanvas.cloneSelectedElements(-10, 0)
         }
       },
       {
-        key: ['alt+shift+arrowright', true],
+        key: ['alt+shift+ARROWRIGHT', true],
         fn: () => {
           this.svgCanvas.cloneSelectedElements(10, 0)
         }
       },
       {
-        key: ['delete/backspace', true],
+        key: ['DELETE/BACKSPACE', true],
         fn: () => {
           if (this.selectedElement || this.multiselected) {
             this.svgCanvas.deleteSelectedElements()
@@ -278,37 +279,37 @@ class Editor extends EditorStartup {
         }
       },
       {
-        key: 'a',
+        key: 'A',
         fn: () => {
           this.svgCanvas.selectAllInCurrentLayer()
         }
       },
       {
-        key: [modKey + 'a', true],
+        key: [modKey + 'A', true],
         fn: () => {
           this.svgCanvas.selectAllInCurrentLayer()
         }
       },
       {
-        key: modKey + 'x',
+        key: modKey + 'X',
         fn: () => {
           this.cutSelected()
         }
       },
       {
-        key: modKey + 'c',
+        key: modKey + 'C',
         fn: () => {
           this.copySelected()
         }
       },
       {
-        key: modKey + 'v',
+        key: modKey + 'V',
         fn: () => {
           this.pasteInCenter()
         }
       },
       {
-        key: 'escape',
+        key: 'ESCAPE',
         fn: () => {
           if (this.enableToolCancel) {
             this.cancelTool()
@@ -440,6 +441,8 @@ class Editor extends EditorStartup {
         }
         keyval = String(keyval)
         const { fn } = shortcut
+        // Split on '/' for alternative keys (e.g., 'DELETE/BACKSPACE'). The dict
+        // lookup must use the canonical UPPERCASE_KEY form per normalizeShortcut().
         ;(keyval as string).split('/').forEach((key: string) => {
           keyHandler[key] = { fn, pd }
         })
@@ -450,10 +453,8 @@ class Editor extends EditorStartup {
     document.addEventListener('keydown', (e) => {
       // only track keyboard shortcuts for the body containing the svgedit editor
       if ((e.target as Element)?.nodeName !== 'BODY') return
-      // normalize key
-      const key = `${e.altKey ? 'alt+' : ''}${e.shiftKey ? 'shift+' : ''}${
-        e.metaKey ? 'meta+' : ''
-      }${e.ctrlKey ? 'ctrl+' : ''}${e.key.toLowerCase()}`
+      // normalize key (canonical: alt+shift+meta+ctrl+UPPERCASE_KEY)
+      const key = normalizeShortcut(e)
       // return if no shortcut defined for this key
       if (!keyHandler[key]) return
       // launch associated handler and preventDefault if necessary
@@ -1119,7 +1120,7 @@ class Editor extends EditorStartup {
   toggleDynamicOutput (e: any): void {
     this.configObj.curConfig.dynamicOutput = e.detail.dynamic
     this.svgCanvas.setConfig(this.configObj.curConfig)
-    const $editorDialog = document.getElementById('se-svg-editor-dialog')
+    const $editorDialog = $id('se-svg-editor-dialog')
     const origSource = this.svgCanvas.getSvgString()
     $editorDialog?.setAttribute('dialog', 'open')
     $editorDialog?.setAttribute('value', origSource)

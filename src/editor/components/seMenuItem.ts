@@ -2,6 +2,7 @@ import { LitElement, html, css, nothing } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import { ifDefined } from 'lit/directives/if-defined.js'
 import { t } from '../locale.js'
+import { matchShortcut } from '../common/shortcut.js'
 
 /**
  * SeMenuItem — menu-item custom element with optional icon and keyboard shortcut.
@@ -76,9 +77,7 @@ export class SeMenuItem extends LitElement {
     if (!shortcut) return
     // only track keyboard shortcuts for the body containing the svgedit editor
     if ((e.target as Element).nodeName !== 'BODY') return
-    // normalize key
-    const key = `${(e.metaKey) ? 'meta+' : ''}${(e.ctrlKey) ? 'ctrl+' : ''}${(e.shiftKey) ? 'shift+' : ''}${e.key.toUpperCase()}`
-    if (shortcut !== key) return
+    if (!matchShortcut(e, shortcut)) return
     // launch the click event — `this` IS the element document.getElementById
     // would return, so call click() directly. Guard on `this.id` preserved
     // because consumers bind their handlers via `$click($id('tool_xxx'), …)`,

@@ -2,6 +2,7 @@ import { LitElement, html, css } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import { ifDefined } from 'lit/directives/if-defined.js'
 import { t } from '../locale.js'
+import { matchShortcut } from '../common/shortcut.js'
 
 /**
  * SeButton — icon-button custom element.
@@ -112,20 +113,22 @@ export class SeButton extends LitElement {
 
   connectedCallback() {
     super.connectedCallback()
-    // capture shortcuts
+    document.addEventListener('keydown', this._onDocumentKeydown)
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback()
+    document.removeEventListener('keydown', this._onDocumentKeydown)
+  }
+
+  // Reads `shortcut` at fire time so the attribute can change after mount.
+  // Body-target guard scopes shortcuts to the editor surface only.
+  private _onDocumentKeydown = (e: KeyboardEvent) => {
     const shortcut = this.getAttribute('shortcut')
-    if (shortcut) {
-      // register the keydown event
-      document.addEventListener('keydown', (e) => {
-        // only track keyboard shortcuts for the body containing the svgedit editor
-        if ((e.target as Element).nodeName !== 'BODY') return
-        // normalize key
-        const key = `${(e.metaKey) ? 'meta+' : ''}${(e.ctrlKey) ? 'ctrl+' : ''}${e.key.toUpperCase()}`
-        if (shortcut !== key) return
-        // launch the click event
-        this.click()
-        e.preventDefault()
-      })
-    }
+    if (!shortcut) return
+    if ((e.target as Element).nodeName !== 'BODY') return
+    if (!matchShortcut(e, shortcut)) return
+    this.click()
+    e.preventDefault()
   }
 }
