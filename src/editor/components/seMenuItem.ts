@@ -21,7 +21,7 @@ import { t } from '../locale.js'
 @customElement('se-menu-item')
 export class SeMenuItem extends LitElement {
   static styles = css`
-    button {
+    :host button {
       display: flex;
       align-items: center;
       width: 100%;
@@ -34,7 +34,7 @@ export class SeMenuItem extends LitElement {
       text-align: left;
       cursor: pointer;
     }
-    span {
+    :host button > span {
       margin-left: 7px;
     }
   `
@@ -79,9 +79,12 @@ export class SeMenuItem extends LitElement {
     // normalize key
     const key = `${(e.metaKey) ? 'meta+' : ''}${(e.ctrlKey) ? 'ctrl+' : ''}${(e.shiftKey) ? 'shift+' : ''}${e.key.toUpperCase()}`
     if (shortcut !== key) return
-    // launch the click event
+    // launch the click event — `this` IS the element document.getElementById
+    // would return, so call click() directly. Guard on `this.id` preserved
+    // because consumers bind their handlers via `$click($id('tool_xxx'), …)`,
+    // i.e. an ID-less menu-item has no consumer listener to trigger.
     if (this.id) {
-      document.getElementById(this.id)?.click()
+      this.click()
     }
     e.preventDefault()
   }
