@@ -573,7 +573,6 @@ class SvgCanvas {
   }
 
   addPtsToSelection ({ closedSubpath, grips }: { closedSubpath: boolean; grips: Element[] }): void {
-    this.pathActions.canDeleteNodes = true
     this.pathActions.closed_subpath = closedSubpath
     this.call('pointsAdded', { closedSubpath, grips })
     this.call('selected', grips)
@@ -596,6 +595,9 @@ class SvgCanvas {
 
   setCurrentMode (cm: string): string {
     this.currentMode = cm
+    if (this.modeEvent) {
+      document.dispatchEvent(this.modeEvent)
+    }
     return this.currentMode
   }
 
