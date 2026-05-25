@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (Step 14a + 14b — svgcanvas type-safety pass — 2026-05-25)
+
+- `svgcanvas.ts` — `curCommand: any` field, `getCurCommand()`, and `setCurCommand()` typed as `history.BatchCommand | null` (PR #53)
+- `json.ts` — `addSVGElementsFromJson` converted from arrow to function declaration with overload signatures; callers passing `SVGElementJSON` now get `Element` return type instead of `Element | Text | null` (PR #54)
+- `svgcanvas.ts` — removed `as Element` cast from `createSVGElement()`, narrowed its `jsonMap` param from `any` to `SVGElementJSON` (PR #54)
+- `svgcanvas.ts` — removed `as any` cast when passing `addSVGElementsFromJson` to `getBBoxOfElementAsPath()` (PR #54)
+
 ### Changed (Step 12b — Editor + EditorStartup class unification — 2026-05-25)
 
 **Commit 1 (`ae711453`): merge EditorStartup into Editor.**
