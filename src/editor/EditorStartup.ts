@@ -10,10 +10,6 @@ import editorTemplate from './templates/editorTemplate.html'
 import SvgCanvas from '@svgedit/svgcanvas'
 import Rulers from './Rulers.js'
 
-/** `seAlert` / `seConfirm` are custom element dialogs registered globally at runtime. */
-declare function seAlert (msg: string): void
-declare function seConfirm (msg: string): boolean | Promise<boolean | string>
-
 /**
    * @fires module:svgcanvas.SvgCanvas#event:svgEditorReady
    */
@@ -270,29 +266,23 @@ class EditorStartup {
 
     // fired when user wants to move elements to another layer
     let promptMoveLayerOnce = false
-    $id('selLayerNames')?.addEventListener('change', (evt) => {
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    $id('selLayerNames')?.addEventListener('change', async (evt) => {
       const destLayer = (evt as any).detail.value
-      const confirmStr = this.i18next.t('notification.QmoveElemsToLayer').replace('%s', destLayer)
-      /**
-    * @param ok
-    */
-      const moveToLayer = (ok: boolean) => {
-        if (!ok) { return }
+      if (!destLayer) return
+      if (promptMoveLayerOnce) {
         promptMoveLayerOnce = true
         this.svgCanvas.moveSelectedToLayer(destLayer)
         this.svgCanvas.clearSelection()
         this.layersPanel.populateLayers()
-      }
-      if (destLayer) {
-        if (promptMoveLayerOnce) {
-          moveToLayer(true)
-        } else {
-          const ok = seConfirm(confirmStr)
-          if (!ok) {
-            return
-          }
-          moveToLayer(true)
-        }
+      } else {
+        const confirmStr = this.i18next.t('notification.QmoveElemsToLayer').replace('%s', destLayer)
+        const ok = await seConfirm(confirmStr)
+        if (ok === 'Cancel') return
+        promptMoveLayerOnce = true
+        this.svgCanvas.moveSelectedToLayer(destLayer)
+        this.svgCanvas.clearSelection()
+        this.layersPanel.populateLayers()
       }
     })
     $id('tool_font_family')?.addEventListener('change', (evt) => {

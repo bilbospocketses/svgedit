@@ -5,9 +5,6 @@ import { isChrome } from '@svgedit/svgcanvas/common/browser.js'
 const { $id, $click, convertUnit, isValidUnit } = SvgCanvas
 const homePage = 'https://github.com/bilbospocketses/svgedit'
 
-/** `seAlert` is a custom element dialog registered globally at runtime. */
-declare function seAlert (msg: string): void
-
 /** The editor instance — typed loosely to avoid circular reference. */
 type EditorInstance = any
 

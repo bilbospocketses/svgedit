@@ -72,13 +72,13 @@ export const getCustomHandler = function (handlerKey: string): MenuItemAction {
 * @param menuItem
 */
 const injectExtendedContextMenuItemIntoDom = function (menuItem: MenuItem): void {
+  const host = $id('cmenu_canvas')
+  if (!host) return
   if (!Object.keys(contextMenuExtensions).length) {
-    // all menuItems appear at the bottom of the menu in their own container.
-    // if this is the first extension menu we need to add the separator.
-    $id('cmenu_canvas')!.insertAdjacentHTML('beforeend', '<li class="separator"></li>')
+    host.insertAdjacentHTML('beforeend', '<li class="separator"></li>')
   }
   const shortcut = menuItem.shortcut || ''
-  $id('cmenu_canvas')!.insertAdjacentHTML('beforeend',
+  host.insertAdjacentHTML('beforeend',
     `<li class="disabled"><a href="#${menuItem.id}">${menuItem.label}<span class="shortcut">${shortcut}</span></a></li>`)
 }
 
