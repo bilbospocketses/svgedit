@@ -605,12 +605,13 @@ export const getPathDFromElement = (elem: Element): string | undefined => {
 
 /**
  * Get a set of extra attributes from an element useful for convertToPath.
- * NOTE: audit-flagged (todo #10) — missing @transform, @clip-rule, @fill-rule etc.; preserved as-is.
+ * Get a set of extra attributes from an element useful for convertToPath.
  */
 export const getExtraAttributesForConvertToPath = (elem: Element): Record<string, string> => {
-  // TODO: make this list global so that we can properly maintain it
-  // TODO: what about @transform, @clip-rule, @fill-rule, etc?
-  const attributeNames = ['marker-start', 'marker-end', 'marker-mid', 'filter', 'clip-path']
+  const attributeNames = [
+    'marker-start', 'marker-end', 'marker-mid', 'filter', 'clip-path',
+    'transform', 'fill-rule', 'clip-rule'
+  ]
 
   return attributeNames.reduce<Record<string, string>>((attrs, name) => {
     const value = elem.getAttribute(name)
@@ -883,12 +884,9 @@ export const getBBoxWithTransform = (
   const hasMatrixXForm = hasMatrixTransform(tlist)
 
   if (angle || hasMatrixXForm) {
-    // audit-flagged at :1015-1017: circle bbox-optim exclusion — preserved as-is (todo #10)
     let goodBb: BBoxObject | false = false
     if (bBoxCanBeOptimizedOverNativeGetBBox(angle, hasMatrixXForm)) {
-      // Get the BBox from the raw path for these elements
-      // TODO: why ellipse and not circle
-      const elemNames = ['ellipse', 'path', 'line', 'polyline', 'polygon']
+      const elemNames = ['circle', 'ellipse', 'path', 'line', 'polyline', 'polygon']
       if (elemNames.includes(elem.tagName)) {
         const pathBox = getBBoxOfElementAsPath(
           elem,
@@ -925,11 +923,8 @@ export const getBBoxWithTransform = (
   return bb
 }
 
-// audit-flagged at :1057-1059: stroke-width single-horizontal-line bbox overrun — preserved as-is (todo #10)
 const getStrokeOffsetForBBox = (elem: Element): number => {
-  const sw = elem.getAttribute('stroke-width')
-  // pre-existing bug: sw is a string; isNaN coercion + division preserved intentionally
-  // @ts-expect-error: pre-existing bug — see todo #10 (sw / 2 where sw is string)
+  const sw = parseFloat(elem.getAttribute('stroke-width') ?? '')
   return !isNaN(sw) && elem.getAttribute('stroke') !== 'none' ? sw / 2 : 0
 }
 
@@ -991,15 +986,12 @@ export const getStrokedBBox = (
         addSVGElementsFromJson,
         pathActions
       )
-      if (curBb) {
+      if (curBb && elem.nodeType === 1) {
         const offset = getStrokeOffsetForBBox(elem)
         minX = Math.min(minX, curBb.x - offset)
         minY = Math.min(minY, curBb.y - offset)
-        // TODO: The old code had this test for max, but not min. I suspect this test should be for both min and max
-        if (elem.nodeType === 1) {
-          maxX = Math.max(maxX, curBb.x + curBb.width + offset)
-          maxY = Math.max(maxY, curBb.y + curBb.height + offset)
-        }
+        maxX = Math.max(maxX, curBb.x + curBb.width + offset)
+        maxY = Math.max(maxY, curBb.y + curBb.height + offset)
       }
     })
   }
