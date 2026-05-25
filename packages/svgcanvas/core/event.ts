@@ -955,10 +955,8 @@ const mouseUpEvent = (evt: MouseEvent): void => {
 
     t = evt.target
 
-    // if this element is in a group, go up until we reach the top-level group
-    // just below the layer groups
-    // TODO: once we implement links, we also would have to check for <a> elements
-    while ((t as Element | null)?.parentNode?.parentNode && (t as Element).parentNode?.parentNode instanceof Element && ((t as Element).parentNode!.parentNode as Element).tagName === 'g') {
+    // Walk up through groups and <a> link wrappers to the top-level group
+    while ((t as Element | null)?.parentNode?.parentNode && (t as Element).parentNode?.parentNode instanceof Element && ['g', 'a'].includes(((t as Element).parentNode!.parentNode as Element).tagName)) {
       t = (t as Element).parentNode
     }
     // if we are not in the middle of creating a path, and we've clicked on some shape,

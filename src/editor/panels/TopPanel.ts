@@ -315,9 +315,7 @@ class TopPanel {
         return
       }
 
-      // update contextual tools here
-      // TODO: see todo #10 — panels missing polyline, polygon, path entries (feature gap)
-      const panels = {
+      const panels: Record<string, string[]> = {
         g: [],
         a: [],
         rect: ['rx', 'width', 'height'],
@@ -325,6 +323,8 @@ class TopPanel {
         circle: ['cx', 'cy', 'r'],
         ellipse: ['cx', 'cy', 'rx', 'ry'],
         line: ['x1', 'y1', 'x2', 'y2'],
+        polyline: [],
+        polygon: [],
         text: [],
         use: []
       }
