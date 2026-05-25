@@ -616,11 +616,12 @@ const importSvgString = (xmlString: string, preserveDimension?: boolean): Elemen
 
     let useExisting = false
     // Look for symbol and make sure symbol exists in image
-    // Audit-flagged: importSvgString interop edge cases (svg-exec.ts:633-639) — preserve
     if (svgCanvas.getImportIds(uid) && svgCanvas.getImportIds(uid).symbol) {
       const parents = getParents(svgCanvas.getImportIds(uid).symbol, '#svgroot')
       if (parents?.length) {
         useExisting = true
+      } else {
+        svgCanvas.setImportIds(uid, null)
       }
     }
 
@@ -983,9 +984,10 @@ const exportPDF = (
  */
 const uniquifyElemsMethod = (g: Element): void => {
   const ids: Record<string, { elem: Element | null; attrs: Attr[]; hrefs: Element[] }> = {}
-  // Audit-flagged: markers/connectors not re-identified properly (svg-exec.ts:1112) — preserve
   const refElems = [
+    'a',
     'filter',
+    'image',
     'linearGradient',
     'pattern',
     'radialGradient',
@@ -1206,76 +1208,81 @@ const convertGradientsMethod = (elem: Element): void => {
           }
         }
       }
-      // get object's bounding box
-      const bb = fillStrokeElems[0] ? utilsGetBBox(fillStrokeElems[0]) : null
-
-      // This will occur if the element is inside a <defs> or a <symbol>,
-      // in which we shouldn't need to convert anyway.
-      if (!bb) {
-        return
+      const convertGradForBBox = (g: Element, bb: { x: number; y: number; width: number; height: number }): void => {
+        if (g.tagName === 'linearGradient') {
+          const gCoords = {
+            x1: Number(g.getAttribute('x1') ?? 0),
+            y1: Number(g.getAttribute('y1') ?? 0),
+            x2: Number(g.getAttribute('x2') ?? 1),
+            y2: Number(g.getAttribute('y2') ?? 0)
+          }
+          const tlist = getTransformList(g)
+          if (tlist && tlist.numberOfItems > 0) {
+            const m = transformListToTransform(tlist).matrix
+            const pt1 = transformPoint(gCoords.x1, gCoords.y1, m)
+            const pt2 = transformPoint(gCoords.x2, gCoords.y2, m)
+            gCoords.x1 = pt1.x
+            gCoords.y1 = pt1.y
+            gCoords.x2 = pt2.x
+            gCoords.y2 = pt2.y
+            g.removeAttribute('gradientTransform')
+          }
+          g.setAttribute('x1', String((gCoords.x1 - bb.x) / bb.width))
+          g.setAttribute('y1', String((gCoords.y1 - bb.y) / bb.height))
+          g.setAttribute('x2', String((gCoords.x2 - bb.x) / bb.width))
+          g.setAttribute('y2', String((gCoords.y2 - bb.y) / bb.height))
+          g.removeAttribute('gradientUnits')
+        } else if (g.tagName === 'radialGradient') {
+          const getNum = (value: string | null, fallback: number): number => {
+            const num = Number(value)
+            return Number.isFinite(num) ? num : fallback
+          }
+          let cx = getNum(g.getAttribute('cx'), 0.5)
+          let cy = getNum(g.getAttribute('cy'), 0.5)
+          let r = getNum(g.getAttribute('r'), 0.5)
+          let fx = getNum(g.getAttribute('fx'), cx)
+          let fy = getNum(g.getAttribute('fy'), cy)
+          const tlist = getTransformList(g)
+          if (tlist && tlist.numberOfItems > 0) {
+            const m = transformListToTransform(tlist).matrix
+            const cpt = transformPoint(cx, cy, m)
+            const fpt = transformPoint(fx, fy, m)
+            const rpt = transformPoint(cx + r, cy, m)
+            cx = cpt.x
+            cy = cpt.y
+            fx = fpt.x
+            fy = fpt.y
+            r = Math.hypot(rpt.x - cpt.x, rpt.y - cpt.y)
+            g.removeAttribute('gradientTransform')
+          }
+          if (!bb.width || !bb.height) return
+          g.setAttribute('cx', String((cx - bb.x) / bb.width))
+          g.setAttribute('cy', String((cy - bb.y) / bb.height))
+          g.setAttribute('fx', String((fx - bb.x) / bb.width))
+          g.setAttribute('fy', String((fy - bb.y) / bb.height))
+          g.setAttribute('r', String(r / Math.max(bb.width, bb.height)))
+          g.removeAttribute('gradientUnits')
+        }
       }
-      if (grad.tagName === 'linearGradient') {
-        const gCoords = {
-          x1: Number(grad.getAttribute('x1') ?? 0),
-          y1: Number(grad.getAttribute('y1') ?? 0),
-          x2: Number(grad.getAttribute('x2') ?? 1),
-          y2: Number(grad.getAttribute('y2') ?? 0)
-        }
 
-        // If has transform, convert
-        const tlist = getTransformList(grad)
-        if (tlist && tlist.numberOfItems > 0) {
-          const m = transformListToTransform(tlist).matrix
-          const pt1 = transformPoint(gCoords.x1, gCoords.y1, m)
-          const pt2 = transformPoint(gCoords.x2, gCoords.y2, m)
+      const firstBb = fillStrokeElems[0] ? utilsGetBBox(fillStrokeElems[0]) : null
+      if (!firstBb) return
 
-          gCoords.x1 = pt1.x
-          gCoords.y1 = pt1.y
-          gCoords.x2 = pt2.x
-          gCoords.y2 = pt2.y
-          grad.removeAttribute('gradientTransform')
-        }
-        grad.setAttribute('x1', String((gCoords.x1 - bb.x) / bb.width))
-        grad.setAttribute('y1', String((gCoords.y1 - bb.y) / bb.height))
-        grad.setAttribute('x2', String((gCoords.x2 - bb.x) / bb.width))
-        grad.setAttribute('y2', String((gCoords.y2 - bb.y) / bb.height))
-        grad.removeAttribute('gradientUnits')
-      } else if (grad.tagName === 'radialGradient') {
-        const getNum = (value: string | null, fallback: number): number => {
-          const num = Number(value)
-          return Number.isFinite(num) ? num : fallback
-        }
-        let cx = getNum(grad.getAttribute('cx'), 0.5)
-        let cy = getNum(grad.getAttribute('cy'), 0.5)
-        let r = getNum(grad.getAttribute('r'), 0.5)
-        let fx = getNum(grad.getAttribute('fx'), cx)
-        let fy = getNum(grad.getAttribute('fy'), cy)
-
-        // If has transform, convert
-        const tlist = getTransformList(grad)
-        if (tlist && tlist.numberOfItems > 0) {
-          const m = transformListToTransform(tlist).matrix
-          const cpt = transformPoint(cx, cy, m)
-          const fpt = transformPoint(fx, fy, m)
-          const rpt = transformPoint(cx + r, cy, m)
-          cx = cpt.x
-          cy = cpt.y
-          fx = fpt.x
-          fy = fpt.y
-          r = Math.hypot(rpt.x - cpt.x, rpt.y - cpt.y)
-          grad.removeAttribute('gradientTransform')
-        }
-
-        if (!bb.width || !bb.height) {
-          return
-        }
-        grad.setAttribute('cx', String((cx - bb.x) / bb.width))
-        grad.setAttribute('cy', String((cy - bb.y) / bb.height))
-        grad.setAttribute('fx', String((fx - bb.x) / bb.width))
-        grad.setAttribute('fy', String((fy - bb.y) / bb.height))
-        grad.setAttribute('r', String(r / Math.max(bb.width, bb.height)))
-        grad.removeAttribute('gradientUnits')
+      // Clone gradient per-element when multiple elements share it
+      for (let idx = 1; idx < fillStrokeElems.length; idx++) {
+        const el = fillStrokeElems[idx]
+        if (!el) continue
+        const elBb = utilsGetBBox(el)
+        if (!elBb) continue
+        const clone = grad.cloneNode(true) as Element
+        clone.id = svgCanvas.getNextId()
+        grad.parentNode?.insertBefore(clone, grad.nextSibling)
+        convertGradForBBox(clone, elBb)
+        const attr = el.getAttribute('fill')?.includes(grad.id) ? 'fill' : 'stroke'
+        el.setAttribute(attr, `url(#${clone.id})`)
       }
+
+      convertGradForBBox(grad, firstBb)
     }
   })
 }

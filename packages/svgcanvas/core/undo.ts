@@ -81,7 +81,7 @@ export const getUndoManager = (): InstanceType<typeof UndoManager> => {
           } else if (!isApply) {
             svgCanvas.restoreRefElements(cmd.elem)
           }
-          if (cmd.elem?.tagName === 'use') {
+          if (cmd.elem) {
             svgCanvas.setUseData(cmd.elem)
           }
         } else if (cmdType === 'ChangeElementCommand') {
