@@ -315,13 +315,11 @@ export class SeImgPropDialog extends LitElement {
     let saveOpt = ''
     const w = this._canvasWidth.value
     const h = this._canvasHeight.value
-    // @ts-expect-error: pre-existing null-misuse, see todo #10 — isValidUnit called with 2 args (missing selectedElement)
     if (w !== 'fit' && !isValidUnit('width', w)) {
       this._canvasWidth.parentElement?.classList.add('error')
     } else {
       this._canvasWidth.parentElement?.classList.remove('error')
     }
-    // @ts-expect-error: pre-existing null-misuse, see todo #10 — isValidUnit called with 2 args (missing selectedElement)
     if (h !== 'fit' && !isValidUnit('height', w)) {
       this._canvasHeight.parentElement?.classList.add('error')
     } else {

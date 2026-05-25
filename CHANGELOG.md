@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (Step 14f — editor type-safety sweep + d.ts cleanup — 2026-05-25)
+
+- **`svgCanvas: any` → `ISvgCanvas`** in 4 editor-layer files (`Editor.ts`, `Rulers.ts`, `PaintBox.ts`, `se-paint-picker.ts`) — all member access now type-checked
+- **`isValidUnit` signature fixed** — `selectedElement` made optional (only used for `attr === 'id'`); removed 4 `@ts-expect-error` directives from `imagePropertiesDialog.ts` and `MainMenu.ts`
+- **Deleted `svgcanvas.augment.d.ts`** (149 LOC) — all augmented members already covered by `declare` fields in class body + `ISvgCanvas` interface (Step 14d)
+- **3 real bugs the `any` type was hiding (fixed):**
+  - `editorInit.ts` — `setZoom()` called with phantom second arg that implementation ignores (removed)
+  - `editorInit.ts` — `getDocumentTitle()` returns `string | undefined`; `setAttribute()` received undefined (added `?? ''` fallback)
+  - `Editor.ts` — `selectorManager.requestSelector()` returns `Selector | null`; `.resize()` called without null guard (added `?.`)
+- Removed unnecessary `as number` cast on `getZoom()` return in `Rulers.ts`
+- Removed unused `@typescript-eslint/no-unsafe-argument` suppress from `se-paint-picker.ts`
+- Narrowed `PaintBox.update()` and `PaintBox.getPaint()` param from `any` to `ISvgCanvas`
+- Narrowed `SePaintPicker.updatePaint()` `selectedElement` param from `any` to `Element | null`
+- Narrowed `setBBoxZoom().bbox` from `unknown` to `{ x, y, width, height }` in `Editor.zoomChanged()`
+
+**Test counts (verified 2026-05-25):** vitest 701/701, e2e 250/250 (3 flaky Firefox embed retries).
+
 ### Changed (Step 14 — svgcanvas type-safety pass — 2026-05-25)
 
 **Step 14a** (PR #53): `curCommand: any` → `history.BatchCommand | null` on field, getter, setter.

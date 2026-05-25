@@ -169,7 +169,7 @@ export const convertToNum = (attr: string, val: string): number => {
 /**
  * Check if an attribute's value is in a valid format.
  */
-export const isValidUnit = (attr: string, val: string, selectedElement: Element): boolean => {
+export const isValidUnit = (attr: string, val: string, selectedElement?: Element | null): boolean => {
   if (unitAttrs.includes(attr)) {
     // True if it's just a number
     if (!isNaN(Number(val))) {

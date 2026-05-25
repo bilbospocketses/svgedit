@@ -60,12 +60,10 @@ export default defineConfig([
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }]
     }
   },
-  // packages/svgcanvas/svgcanvas.d.ts — the existing hand-written shim slated for
-  // removal in Task 10. Downgrade its strictness so it doesn't block lint while it
-  // still lives on the branch. New hand-authored .d.ts files (e.g. the Task 3
-  // svgcanvas.augment.d.ts) inherit strict rules from the .ts block above.
+  // Legacy svgcanvas.d.ts shim override — retained in case any .d.ts files are
+  // reintroduced, but svgcanvas.augment.d.ts and svgcanvas.d.ts are both deleted.
   {
-    files: ['packages/svgcanvas/svgcanvas.d.ts'],
+    files: ['packages/svgcanvas/*.d.ts'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-unsafe-function-type': 'warn',

@@ -2,6 +2,7 @@
 // @ts-expect-error: *.html imported as string via vite-plugin-string; no ambient module declaration exists yet
 import rulersTemplate from './templates/rulersTemplate.html'
 import SvgCanvas from '@svgedit/svgcanvas'
+import type { ISvgCanvas } from '@svgedit/svgcanvas'
 
 const { $id, getTypeMap } = SvgCanvas
 
@@ -13,7 +14,7 @@ type EditorInstance = any
  */
 class Rulers {
   rulerIntervals: number[]
-  svgCanvas: any
+  svgCanvas: ISvgCanvas
   editor: EditorInstance
   rulerX: HTMLElement | null
   rulerY: HTMLElement | null
@@ -66,7 +67,7 @@ class Rulers {
    * @param [zoom]
    */
   updateRulers (scanvas?: HTMLElement | null, zoom?: number): void {
-    if (!zoom) { zoom = this.svgCanvas.getZoom() as number }
+    if (!zoom) { zoom = this.svgCanvas.getZoom() }
     if (!scanvas) { scanvas = $id('svgcanvas') }
 
     let d: number; let i: number

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
 import SvgCanvas from '@svgedit/svgcanvas'
+import type { ISvgCanvas } from '@svgedit/svgcanvas'
 /**
  *
  */
@@ -75,12 +76,12 @@ class PaintBox {
   * @param opac
   * @param type
   */
-  static getPaint (svgCanvas: any, color: string, opac: number, type: string): any {
+  static getPaint (svgCanvas: ISvgCanvas, color: string, opac: number, type: string): any {
     // update the editor's fill paint
     const opts: Record<string, any> = { alpha: opac }
     if (color.startsWith('url(#')) {
-      let refElem = svgCanvas.getRefElem(color)
-      refElem = (refElem) ? refElem.cloneNode(true) : document.querySelectorAll('#' + type + '_color defs *')[0]
+      let refElem: Element | null = svgCanvas.getRefElem(color)
+      refElem = refElem ? refElem.cloneNode(true) as Element : (document.querySelectorAll('#' + type + '_color defs *')[0] ?? null)
       if (!refElem) {
         console.error(`the color ${color} is referenced by an url that can't be identified - using 'none'`)
         opts.solidColor = 'none'
@@ -97,7 +98,7 @@ class PaintBox {
      * @param svgcanvas
      * @param selectedElement
      */
-  update (svgcanvas: any, selectedElement: Element | null): any {
+  update (svgcanvas: ISvgCanvas, selectedElement: Element | null): any {
     if (!selectedElement) { return null }
 
     const { type } = this
