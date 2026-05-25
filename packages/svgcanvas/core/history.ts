@@ -389,9 +389,14 @@ export class ChangeElementCommand extends Command {
   }
 }
 
-// TODO: create a 'typing' command object that tracks changes in text
-// if a new Typing command is created and the top command on the stack is also a Typing
-// and they both affect the same element, then collapse the two commands into one
+function unwrapTextChange (cmd: Command): ChangeElementCommand | null {
+  if (cmd instanceof ChangeElementCommand && '#text' in cmd.oldValues) return cmd
+  if (cmd instanceof BatchCommand && cmd.stack.length === 1) {
+    const sub = cmd.stack[0]
+    if (sub) return unwrapTextChange(sub)
+  }
+  return null
+}
 
 /**
 * History command that can contain/execute multiple other commands.
@@ -483,23 +488,22 @@ interface UndoableChangeEntry {
 */
 export class UndoManager {
   _handler: HistoryEventHandler | null
+  maxHistory: number
   undoStackPointer: number
   undoStack: Command[]
-  // this is the stack that stores the original values, the elements and
-  // the attribute name for begin/finish
   undoChangeStackPointer: number
   undoableChangeStack: (UndoableChangeEntry | null)[]
 
   /**
   * @param historyEventHandler
+  * @param maxHistory - Maximum undo stack size (oldest entries trimmed when exceeded)
   */
-  constructor (historyEventHandler: HistoryEventHandler | null) {
+  constructor (historyEventHandler: HistoryEventHandler | null, maxHistory: number = 100) {
     this._handler = historyEventHandler || null
+    this.maxHistory = maxHistory
     this.undoStackPointer = 0
     this.undoStack = []
 
-    // this is the stack that stores the original values, the elements and
-    // the attribute name for begin/finish
     this.undoChangeStackPointer = -1
     this.undoableChangeStack = []
   }
@@ -565,19 +569,28 @@ export class UndoManager {
   * @param cmd - The command object to add
   */
   addCommandToHistory (cmd: Command): void {
-    // TODO: we MUST compress consecutive text changes to the same element
-    // (right now each keystroke is saved as a separate command that includes the
-    // entire text contents of the text element)
-    // TODO: consider limiting the history that we store here (need to do some slicing)
-
-    // if our stack pointer is not at the end, then we have to remove
-    // all commands after the pointer and insert the new command
-    // (pre-existing audit-flagged behavior — see todo #10: typing-undo compression; no stack size limit)
     if (this.undoStackPointer < this.undoStack.length && this.undoStack.length > 0) {
       this.undoStack = this.undoStack.splice(0, this.undoStackPointer)
     }
+
+    const incoming = unwrapTextChange(cmd)
+    const topCmd = this.undoStackPointer > 0 ? this.undoStack[this.undoStackPointer - 1] : undefined
+    if (incoming && topCmd) {
+      const existing = unwrapTextChange(topCmd)
+      if (existing && incoming.elem === existing.elem) {
+        existing.newValues['#text'] = incoming.newValues['#text'] ?? null
+        return
+      }
+    }
+
     this.undoStack.push(cmd)
     this.undoStackPointer = this.undoStack.length
+
+    if (this.undoStack.length > this.maxHistory) {
+      const excess = this.undoStack.length - this.maxHistory
+      this.undoStack.splice(0, excess)
+      this.undoStackPointer -= excess
+    }
   }
 
   /**

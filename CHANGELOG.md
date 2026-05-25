@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (Step 7 — history/undo compression + stack limit — 2026-05-25)
+
+**Typing-undo compression:** Consecutive text-editing keystrokes now collapse into a single undo entry. Previously every keystroke pushed a separate command with the full `textContent`. A single undo now reverts to the text before the typing session began.
+
+**Stack size limit:** Undo history is capped at `maxUndoHistory` (default 100, configurable via `Config.maxUndoHistory`). Oldest entries are trimmed when the cap is exceeded. Prevents unbounded memory growth in long sessions.
+
+**Verification:** tsc 0 / lint 0e+0w / vitest 701/701 / e2e 250/250.
+
 ### Changed (PR-6 — triage sweep + mechanical fixes — 2026-05-25)
 
 Backlog-clearing PR: correctness fixes, dead code removal, i18n completeness, and code-quality improvements from todo #10 and #2 TS migration follow-ups.

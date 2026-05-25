@@ -33,6 +33,7 @@ export const init = (canvas: unknown): void => {
 }
 
 export const getUndoManager = (): InstanceType<typeof UndoManager> => {
+  const maxHistory: number = svgCanvas?.configObj?.curConfig?.maxUndoHistory ?? 100
   return new UndoManager({
     /**
      * @param eventType One of the HistoryEvent types
@@ -118,7 +119,7 @@ export const getUndoManager = (): InstanceType<typeof UndoManager> => {
         }
       }
     }
-  })
+  }, maxHistory)
 }
 
 /**

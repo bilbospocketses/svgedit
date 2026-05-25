@@ -590,4 +590,140 @@ describe('history', function () {
     const batch = new history.BatchCommand('my test batch')
     assert.equal(batch.getText(), 'my test batch')
   })
+
+  it('compresses consecutive #text changes to the same element', function () {
+    const svg = document.createElementNS(NS.SVG, 'svg')
+    document.body.append(svg)
+    const textEl = document.createElementNS(NS.SVG, 'text')
+    svg.append(textEl)
+
+    textEl.textContent = 'a'
+    const cmd1 = new history.BatchCommand('Change #text')
+    cmd1.addSubCommand(new history.ChangeElementCommand(textEl, { '#text': '' }))
+    undoMgr.addCommandToHistory(cmd1)
+
+    textEl.textContent = 'ab'
+    const cmd2 = new history.BatchCommand('Change #text')
+    cmd2.addSubCommand(new history.ChangeElementCommand(textEl, { '#text': 'a' }))
+    undoMgr.addCommandToHistory(cmd2)
+
+    textEl.textContent = 'abc'
+    const cmd3 = new history.BatchCommand('Change #text')
+    cmd3.addSubCommand(new history.ChangeElementCommand(textEl, { '#text': 'ab' }))
+    undoMgr.addCommandToHistory(cmd3)
+
+    assert.equal(undoMgr.getUndoStackSize(), 1)
+
+    undoMgr.undo()
+    assert.equal(textEl.textContent, '')
+    assert.equal(undoMgr.getUndoStackSize(), 0)
+
+    undoMgr.redo()
+    assert.equal(textEl.textContent, 'abc')
+
+    svg.remove()
+  })
+
+  it('does not compress #text changes to different elements', function () {
+    const svg = document.createElementNS(NS.SVG, 'svg')
+    document.body.append(svg)
+    const textEl1 = document.createElementNS(NS.SVG, 'text')
+    const textEl2 = document.createElementNS(NS.SVG, 'text')
+    svg.append(textEl1, textEl2)
+
+    textEl1.textContent = 'a'
+    const cmd1 = new history.BatchCommand('Change #text')
+    cmd1.addSubCommand(new history.ChangeElementCommand(textEl1, { '#text': '' }))
+    undoMgr.addCommandToHistory(cmd1)
+
+    textEl2.textContent = 'x'
+    const cmd2 = new history.BatchCommand('Change #text')
+    cmd2.addSubCommand(new history.ChangeElementCommand(textEl2, { '#text': '' }))
+    undoMgr.addCommandToHistory(cmd2)
+
+    assert.equal(undoMgr.getUndoStackSize(), 2)
+
+    svg.remove()
+  })
+
+  it('breaks compression chain when non-text command intervenes', function () {
+    const svg = document.createElementNS(NS.SVG, 'svg')
+    document.body.append(svg)
+    const textEl = document.createElementNS(NS.SVG, 'text')
+    svg.append(textEl)
+
+    textEl.textContent = 'a'
+    const cmd1 = new history.BatchCommand('Change #text')
+    cmd1.addSubCommand(new history.ChangeElementCommand(textEl, { '#text': '' }))
+    undoMgr.addCommandToHistory(cmd1)
+
+    undoMgr.addCommandToHistory(new MockCommand('move'))
+
+    textEl.textContent = 'ab'
+    const cmd3 = new history.BatchCommand('Change #text')
+    cmd3.addSubCommand(new history.ChangeElementCommand(textEl, { '#text': 'a' }))
+    undoMgr.addCommandToHistory(cmd3)
+
+    assert.equal(undoMgr.getUndoStackSize(), 3)
+
+    svg.remove()
+  })
+
+  it('enforces maxHistory stack size limit', function () {
+    const mgr = new history.UndoManager(null, 5)
+
+    for (let i = 0; i < 10; i++) {
+      mgr.addCommandToHistory(new MockCommand(`cmd${i}`))
+    }
+
+    assert.equal(mgr.getUndoStackSize(), 5)
+    assert.equal(mgr.getNextUndoCommandText(), 'cmd9')
+
+    // Stack holds cmd5..cmd9. Undo all 5 to reach empty.
+    mgr.undo()
+    assert.equal(mgr.getNextUndoCommandText(), 'cmd8')
+    mgr.undo()
+    mgr.undo()
+    mgr.undo()
+    mgr.undo()
+    assert.equal(mgr.getNextUndoCommandText(), '')
+    assert.equal(mgr.getUndoStackSize(), 0)
+    assert.equal(mgr.getRedoStackSize(), 5)
+  })
+
+  it('adjusts undo pointer correctly after stack trim', function () {
+    const mgr = new history.UndoManager(null, 3)
+
+    mgr.addCommandToHistory(new MockCommand('a'))
+    mgr.addCommandToHistory(new MockCommand('b'))
+    mgr.addCommandToHistory(new MockCommand('c'))
+    assert.equal(mgr.getUndoStackSize(), 3)
+
+    // Undo once, then push d — trims redo, stack is [a,b,d], at cap
+    mgr.undo()
+    mgr.addCommandToHistory(new MockCommand('d'))
+    assert.equal(mgr.getUndoStackSize(), 3)
+    assert.equal(mgr.getRedoStackSize(), 0)
+    assert.equal(mgr.getNextUndoCommandText(), 'd')
+
+    // Push e — exceeds cap, trims oldest → stack is [b,d,e]
+    mgr.addCommandToHistory(new MockCommand('e'))
+    assert.equal(mgr.getUndoStackSize(), 3)
+    assert.equal(mgr.getNextUndoCommandText(), 'e')
+
+    mgr.undo()
+    mgr.undo()
+    assert.equal(mgr.getNextUndoCommandText(), 'b')
+  })
+
+  it('defaults to 100 when no maxHistory is provided', function () {
+    const mgr = new history.UndoManager(null)
+
+    for (let i = 0; i < 110; i++) {
+      mgr.addCommandToHistory(new MockCommand(`cmd${i}`))
+    }
+
+    assert.equal(mgr.getUndoStackSize(), 100)
+    assert.equal(mgr.getNextUndoCommandText(), 'cmd109')
+  })
 })
