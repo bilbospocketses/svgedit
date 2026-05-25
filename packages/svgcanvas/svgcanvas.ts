@@ -183,6 +183,10 @@ class SvgCanvas implements ISvgCanvas {
   // parameter / nextParameter are set dynamically by event handlers
   parameter?: any
   nextParameter?: any
+  // spaceKey is set by the editor (editorInit.ts) key handlers
+  declare spaceKey: boolean
+  // canvas is a self-reference set via setCanvas('canvas', this)
+  declare canvas: this
 
   // ── Instance fields: wired on by core/*.ts init() calls ──────────────────
   // These are augmented via svgcanvas.augment.d.ts for external consumers.
@@ -190,44 +194,44 @@ class SvgCanvas implements ISvgCanvas {
   // TS2339 (property does not exist) errors inside this file.
 
   // From core/elem-get-set.js (init wires these on)
-  declare getBold: (...args: unknown[]) => unknown
-  declare setBold: (...args: unknown[]) => unknown
-  declare getItalic: (...args: unknown[]) => unknown
-  declare setItalic: (...args: unknown[]) => unknown
-  declare hasTextDecoration: (...args: unknown[]) => unknown
-  declare addTextDecoration: (...args: unknown[]) => unknown
-  declare removeTextDecoration: (...args: unknown[]) => unknown
-  declare setTextAnchor: (...args: unknown[]) => unknown
-  declare setLetterSpacing: (...args: unknown[]) => unknown
-  declare setWordSpacing: (...args: unknown[]) => unknown
-  declare setTextLength: (...args: unknown[]) => unknown
-  declare setLengthAdjust: (...args: unknown[]) => unknown
-  declare getFontFamily: (...args: unknown[]) => unknown
-  declare setFontFamily: (...args: unknown[]) => unknown
-  declare setFontColor: (...args: unknown[]) => unknown
-  declare getFontColor: (...args: unknown[]) => unknown
-  declare getFontSize: (...args: unknown[]) => unknown
-  declare setFontSize: (...args: unknown[]) => unknown
-  declare getText: (...args: unknown[]) => unknown
-  declare setTextContent: (...args: unknown[]) => unknown
-  declare setImageURL: (...args: unknown[]) => unknown
-  declare setLinkURL: (...args: unknown[]) => unknown
-  declare setRectRadius: (...args: unknown[]) => unknown
-  declare makeHyperlink: (...args: unknown[]) => unknown
-  declare removeHyperlink: (...args: unknown[]) => unknown
-  declare setSegType: (...args: unknown[]) => unknown
-  declare setStrokeWidth: (...args: unknown[]) => unknown
-  declare getTitle: (...args: unknown[]) => unknown
-  declare setGroupTitle: (...args: unknown[]) => unknown
-  declare setStrokeAttr: (...args: unknown[]) => unknown
-  declare setBackground: (...args: unknown[]) => unknown
-  declare setDocumentTitle: (...args: unknown[]) => unknown
-  declare getEditorNS: (...args: unknown[]) => unknown
-  declare setBBoxZoom: (...args: unknown[]) => unknown
-  declare setCurrentZoom: (...args: unknown[]) => unknown
-  declare setColor: (...args: unknown[]) => unknown
-  declare setGradient: (...args: unknown[]) => unknown
-  declare setPaint: (...args: unknown[]) => unknown
+  declare getBold: () => boolean
+  declare setBold: (b: boolean) => void
+  declare getItalic: () => boolean
+  declare setItalic: (i: boolean) => void
+  declare hasTextDecoration: (value: string) => boolean
+  declare addTextDecoration: (value: string) => void
+  declare removeTextDecoration: (value: string) => void
+  declare setTextAnchor: (value: string) => void
+  declare setLetterSpacing: (value: string) => void
+  declare setWordSpacing: (value: string) => void
+  declare setTextLength: (value: string) => void
+  declare setLengthAdjust: (value: string) => void
+  declare getFontFamily: () => string
+  declare setFontFamily: (val: string) => void
+  declare setFontColor: (val: string) => void
+  declare getFontColor: () => string
+  declare getFontSize: () => number
+  declare setFontSize: (val: number) => void
+  declare getText: () => string
+  declare setTextContent: (val: string) => void
+  declare setImageURL: (val: string) => void
+  declare setLinkURL: (val: string) => void
+  declare setRectRadius: (val: string | number) => void
+  declare makeHyperlink: (url: string) => void
+  declare removeHyperlink: () => void
+  declare setSegType: (newType: number) => void
+  declare setStrokeWidth: (val: number) => void
+  declare getTitle: (elem?: Element) => string | undefined
+  declare setGroupTitle: (val: string) => void
+  declare setStrokeAttr: (attr: string, val: string | number) => void
+  declare setBackground: (color: string, url: string) => void
+  declare setDocumentTitle: (newTitle: string) => void
+  declare getEditorNS: (add?: boolean) => string
+  declare setBBoxZoom: (val: unknown, editorW: number, editorH: number) => { zoom: number; bbox: unknown } | undefined
+  declare setCurrentZoom: (zoomLevel: number) => void
+  declare setColor: (type: string, val: string, preventUndo?: boolean) => void
+  declare setGradient: (type: string) => void
+  declare setPaint: (type: string, paint: any) => void
   declare getResolution: () => { w: number; h: number; zoom: number }
   declare setResolution: (x: number | 'fit', y: number) => boolean
 
@@ -243,50 +247,52 @@ class SvgCanvas implements ISvgCanvas {
   declare addedNew?: boolean
 
   // From core/path.ts (init wires these on)
-  declare replacePathSeg: (...args: unknown[]) => unknown
-  declare addPointGrip: (...args: unknown[]) => unknown
+  declare replacePathSeg: (type: number, index: number, pts: number[], elem?: SVGPathElement | SVGElement | null) => void
+  declare addPointGrip: (index: number, x?: number, y?: number) => SVGCircleElement
   declare removePath_: (id: string) => void
-  declare getPath_: (elem: SVGPathElement) => unknown
-  declare addCtrlGrip: (...args: unknown[]) => unknown
-  declare getCtrlLine: (...args: unknown[]) => unknown
-  declare getGripPt: (...args: unknown[]) => unknown
-  declare getPointFromGrip: (...args: unknown[]) => unknown
+  declare getPath_: (elem: SVGPathElement) => any
+  declare addCtrlGrip: (id: string) => SVGCircleElement
+  declare getCtrlLine: (id: string) => SVGLineElement
+  declare getGripPt: (seg: any, altPt?: { x: number; y: number } | null) => { x: number; y: number }
+  declare getPointFromGrip: (pt: { x: number; y: number }, pth: any) => { x: number; y: number }
   declare setLinkControlPoints: (lcp: boolean) => void
   declare reorientGrads: (elem: Element, m: SVGMatrix) => void
   declare recalcRotatedPath: () => void
   declare getSegData: () => Record<number, string[]>
-  declare getUIStrings: () => Record<string, string>
-  declare getPathObj: () => unknown
-  declare setPathObj: (obj: unknown) => void
+  // Note: getUIStrings is also defined as a class method below — the path.ts
+  // init() overwrites it at runtime.  The `declare` is removed to avoid a
+  // TS duplicate-declaration error; the class method signature is authoritative.
+  declare getPathObj: () => any
+  declare setPathObj: (obj: any) => void
   declare getPathFuncs: () => (string | number)[]
   declare getLinkControlPts: () => boolean
 
   // From core/selected-elem.ts (init wires these on)
-  declare pushGroupProperties: (...args: unknown[]) => unknown
-  declare flipSelectedElements: (...args: unknown[]) => unknown
-  declare alignSelectedElements: (...args: unknown[]) => unknown
-  declare updateCanvas: (...args: unknown[]) => unknown
-  declare cycleElement: (...args: unknown[]) => unknown
-  declare cloneSelectedElements: (...args: unknown[]) => unknown
+  declare pushGroupProperties: (g: Element, undoable: boolean) => any
+  declare flipSelectedElements: (scaleX: number, scaleY: number) => void
+  declare alignSelectedElements: (type: string, relativeTo: string) => void
+  declare updateCanvas: (w: number, h: number) => { x: number; y: number; old_x: number; old_y: number; d_x: number; d_y: number }
+  declare cycleElement: (next: boolean | number) => void
+  declare cloneSelectedElements: (x: number, y: number) => void
   declare copySelectedElements: () => void
   declare groupSelectedElements: (type?: string, urlArg?: string) => void
   declare ungroupSelectedElement: () => void
   declare moveToTopSelectedElement: () => void
   declare moveToBottomSelectedElement: () => void
   declare moveUpDownSelected: (dir: 'Up' | 'Down') => void
-  declare moveSelectedElements: (dx: number | number[], dy: number | number[], undoable?: boolean) => unknown
+  declare moveSelectedElements: (dx: number | number[], dy: number | number[], undoable?: boolean) => any
   declare deleteSelectedElements: () => void
 
   // From core/selection.js (init wires these on)
   declare clearSelection: (noCall?: boolean) => void
-  declare getMouseTarget: (...args: unknown[]) => unknown
+  declare getMouseTarget: (evt: MouseEvent | null) => Element | null
   declare addToSelection: (elemsToAdd: Element[], showGrips?: boolean) => void
-  declare getIntersectionList: (...args: unknown[]) => unknown
+  declare getIntersectionList: (rect?: { x: number; y: number; width: number; height: number }) => Element[] | null
   declare runExtensions: (opts: { action: string; vars?: unknown }) => unknown[]
-  declare groupSvgElem: (...args: unknown[]) => unknown
-  declare prepareSvg: (...args: unknown[]) => unknown
-  declare recalculateAllSelectedDimensions: (...args: unknown[]) => unknown
-  declare setRotationAngle: (...args: unknown[]) => unknown
+  declare groupSvgElem: (elem: Element) => void
+  declare prepareSvg: (newDoc: XMLDocument) => void
+  declare recalculateAllSelectedDimensions: () => void
+  declare setRotationAngle: (val: string | number, preventUndo?: boolean) => void
 
   // From core/undo.js (init wires these on)
   declare undoMgr: import('./core/history.js').UndoManager
@@ -1596,6 +1602,7 @@ SvgCanvas.isValidUnit = isValidUnit
 SvgCanvas.convertUnit = convertUnit
 
 export default SvgCanvas
+export type { ISvgCanvas } from './core/svgcanvas-types.js'
 
 // Re-export additional utilities (previously in svgcanvas.d.ts shim).
 // Both units.js and utilities.js export an internal `init` symbol;
