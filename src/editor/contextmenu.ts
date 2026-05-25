@@ -75,15 +75,11 @@ const injectExtendedContextMenuItemIntoDom = function (menuItem: MenuItem): void
   if (!Object.keys(contextMenuExtensions).length) {
     // all menuItems appear at the bottom of the menu in their own container.
     // if this is the first extension menu we need to add the separator.
-    // TODO: see todo #10 — appendChild with string arg is a pre-existing bug (should be a Node)
-    // @ts-expect-error: pre-existing bug — appendChild expects Node not string; preserved verbatim
-    $id('cmenu_canvas').appendChild('<li class=\'separator\'>')
+    $id('cmenu_canvas')!.insertAdjacentHTML('beforeend', '<li class="separator"></li>')
   }
   const shortcut = menuItem.shortcut || ''
-  // TODO: see todo #10 — appendChild with string arg is a pre-existing bug (should be a Node)
-  // @ts-expect-error: pre-existing bug — appendChild expects Node not string; preserved verbatim
-  $id('cmenu_canvas').appendChild(`
-    <li class='disabled'><a href='#${menuItem.id}'>${menuItem.label}<span class='shortcut'>${shortcut}</span></a></li>`)
+  $id('cmenu_canvas')!.insertAdjacentHTML('beforeend',
+    `<li class="disabled"><a href="#${menuItem.id}">${menuItem.label}<span class="shortcut">${shortcut}</span></a></li>`)
 }
 
 /**
