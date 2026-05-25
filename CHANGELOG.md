@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (#3 PR-5 — jamilih dependency removed — 2026-05-25)
+
+Final sub-PR under todo item #3 (elix → Lit migration). Removes the `jamilih` devDependency (0.63.1) from package.json. All jamilih usage was already eliminated during earlier PRs (TS migration + Lit component conversions replaced jamilih's declarative-DOM role with Lit's `html\`\`` template literals). This was the last third-party dependency from the original elix/jQuery/jamilih stack.
+
+**Verification:** tsc 0 / lint 0e+0w / vitest 695/695.
+
 ### Changed (#3 PR-4b — se-gradient-editor + se-paint-picker complete jQuery elimination — 2026-05-25)
 
 Second and final sub-PR under todo item #3 PR-4 (jGraduate + jPicker Lit-rewrite). Replaces the jQuery-based gradient editor and wires everything into the editor.
