@@ -1,65 +1,124 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument */
-// elix custom-element base classes ship as 'any'; cleanup deferred to #3 (Lit migration)
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
+import { LitElement, html, css } from 'lit'
+import { customElement, property, state, query } from 'lit/decorators.js'
 import SvgCanvas from '@svgedit/svgcanvas'
-// @ts-expect-error: *.html imported as string via vite-plugin-string; no ambient module declaration
-import imagePropertiesDialogHTML from './imagePropertiesDialog.html'
-
-declare const svgEditor: SvgEditorGlobal
 
 const { isValidUnit } = SvgCanvas
 
-const template = document.createElement('template')
-template.innerHTML = imagePropertiesDialogHTML as string  
 /**
  * @class SeImgPropDialog
  */
-export class SeImgPropDialog extends HTMLElement {
-  declare eventlisten: boolean
-  declare _shadowRoot: ShadowRoot
-   
-  declare $saveBtn: any
-   
-  declare $cancelBtn: any
-   
-  declare $resolution: any
-   
-  declare $canvasTitle: any
-   
-  declare $canvasWidth: any
-   
-  declare $canvasHeight: any
-   
-  declare $imageOptEmbed: any
-   
-  declare $imageOptRef: any
-   
-  declare $dialog: any
+@customElement('se-img-prop-dialog')
+export class SeImgPropDialog extends LitElement {
+  static styles = css`
+    :not(:defined) {
+      display: none;
+    }
 
-  /**
-    * @function constructor
-    */
-  constructor () {
-    super()
-    // create the shadowDom and insert the template
-    this.eventlisten = false
-    this._shadowRoot = this.attachShadow({ mode: 'open' })
-    this._shadowRoot.append(template.content.cloneNode(true))
-    this.$saveBtn = this._shadowRoot.querySelector('#tool_docprops_save')
-    this.$cancelBtn = this._shadowRoot.querySelector('#tool_docprops_cancel')
-    this.$resolution = this._shadowRoot.querySelector('#resolution')
-    this.$canvasTitle = this._shadowRoot.querySelector('#canvas_title')
-    this.$canvasWidth = this._shadowRoot.querySelector('#canvas_width')
-    this.$canvasHeight = this._shadowRoot.querySelector('#canvas_height')
-    this.$imageOptEmbed = this._shadowRoot.querySelector('#image_embed')
-    this.$imageOptRef = this._shadowRoot.querySelector('#image_ref')
-    this.$dialog = this._shadowRoot.querySelector('#svg_docprops')
+    /* Force the scroll bar to appear so we see it hide when overlay opens. */
+    body::-webkit-scrollbar {
+      background: lightgray;
+    }
+
+    body::-webkit-scrollbar-thumb {
+      background: darkgray;
+    }
+
+    dialog {
+      padding: 0;
+      border: none;
+      background: transparent;
+    }
+
+    dialog::backdrop {
+      background: rgba(0, 0, 0, 0.3);
+    }
+
+    #svg_docprops_container {
+      padding: 10px;
+      background-color: #5a6162;
+      color: #c5c5c5;
+      border: 1px outset #777;
+      opacity: 1.0;
+      font-family: Verdana, Helvetica, sans-serif;
+      font-size: .8em;
+      z-index: 20001;
+    }
+
+    .error {
+      border: 1px solid red;
+      padding: 3px;
+    }
+
+    #resolution {
+      max-width: 14em;
+    }
+
+    #tool_docprops_back {
+      margin-left: 1em;
+      overflow: auto;
+    }
+
+    #svg_docprops_container #svg_docprops_docprops {
+      float: left;
+      width: 221px;
+      margin: 5px .7em;
+      overflow: hidden;
+    }
+
+    legend {
+      max-width: 195px;
+    }
+
+    #svg_docprops_docprops > legend {
+      font-weight: bold;
+      font-size: 1.1em;
+    }
+
+    #svg_docprops_container fieldset {
+      padding: 5px;
+      margin: 5px;
+      border: 1px solid #DDD;
+    }
+
+    #svg_docprops_container label {
+      display: block;
+      margin: .5em;
+    }
+  `
+
+  @state() accessor _labelOk = ''
+  @state() accessor _labelCancel = ''
+  @state() accessor _labelImageProps = ''
+  @state() accessor _labelDocTitle = ''
+  @state() accessor _labelDocDims = ''
+  @state() accessor _labelWidth = ''
+  @state() accessor _labelHeight = ''
+  @state() accessor _labelSelectPredefined = ''
+  @state() accessor _labelFitToContent = ''
+  @state() accessor _labelIncludedImages = ''
+  @state() accessor _labelImageOptEmbed = ''
+  @state() accessor _labelImageOptRef = ''
+
+  @query('#svg_docprops') accessor _dialog!: HTMLDialogElement
+  @query('#canvas_title') accessor _canvasTitle!: HTMLInputElement
+  @query('#canvas_width') accessor _canvasWidth!: HTMLInputElement
+  @query('#canvas_height') accessor _canvasHeight!: HTMLInputElement
+  @query('#resolution') accessor _resolution!: HTMLSelectElement
+  @query('#image_embed') accessor _imageOptEmbed!: HTMLInputElement
+  @query('#image_ref') accessor _imageOptRef!: HTMLInputElement
+
+  static get observedAttributes (): string[] {
+    return [...super.observedAttributes, 'title', 'width', 'height', 'save', 'embed', 'common-ok',
+      'common-cancel', 'config-image_props', 'config-doc_title', 'config-doc_dims',
+      'common-width', 'common-height', 'config-select_predefined',
+      'tools-fit-to-content', 'config-included_images', 'config-image_opt_embed',
+      'config-image_opt_ref']
   }
 
   /**
    * @function init
-   * @param name
    */
-   
   init (i18next: any): void {
     this.setAttribute('common-ok', i18next.t('common.ok'))
     this.setAttribute('common-cancel', i18next.t('common.cancel'))
@@ -75,300 +134,282 @@ export class SeImgPropDialog extends HTMLElement {
     this.setAttribute('config-image_opt_ref', i18next.t('config.image_opt_ref'))
   }
 
-  /**
-   * @function observedAttributes
-   * @returns observed
-   */
-  static get observedAttributes (): string[] {
-    return ['title', 'width', 'height', 'save', 'dialog', 'embed', 'common-ok',
-      'common-cancel', 'config-image_props', 'config-doc_title', 'config-doc_dims',
-      'common-width', 'common-height', 'config-select_predefined',
-      'tools-fit-to-content', 'config-included_images', 'config-image_opt_embed',
-      'config-image_opt_ref']
-  }
-
-  /**
-   * @function attributeChangedCallback
-   * @param name
-   * @param oldValue
-   * @param newValue
-   */
-  attributeChangedCallback (name: string, oldValue: string, newValue: string): void {
+  attributeChangedCallback (name: string, oldValue: string | null, newValue: string | null): void {
+    super.attributeChangedCallback(name, oldValue, newValue)
     if (oldValue === newValue) return
-    let node: Element | null
     switch (name) {
       case 'title':
-        this.$canvasTitle.value = newValue
+        void this.updateComplete.then(() => {
+          if (this._canvasTitle) this._canvasTitle.value = newValue ?? ''
+        })
         break
       case 'width':
-        if (newValue === 'fit') {
-          this.$canvasWidth.removeAttribute('disabled')
-          this.$canvasWidth.value = 100
-          this.$canvasHeight.removeAttribute('disabled')
-          this.$canvasHeight.value = 100
-        } else {
-          this.$canvasWidth.value = newValue
-        }
+        void this.updateComplete.then(() => {
+          if (newValue === 'fit') {
+            this._canvasWidth.removeAttribute('disabled')
+            this._canvasWidth.value = '100'
+            this._canvasHeight.removeAttribute('disabled')
+            this._canvasHeight.value = '100'
+          } else {
+            this._canvasWidth.value = newValue ?? ''
+          }
+        })
         break
       case 'height':
-        if (newValue === 'fit') {
-          this.$canvasWidth.removeAttribute('disabled')
-          this.$canvasWidth.value = 100
-          this.$canvasHeight.removeAttribute('disabled')
-          this.$canvasHeight.value = 100
-        } else {
-          this.$canvasHeight.value = newValue
-        }
+        void this.updateComplete.then(() => {
+          if (newValue === 'fit') {
+            this._canvasWidth.removeAttribute('disabled')
+            this._canvasWidth.value = '100'
+            this._canvasHeight.removeAttribute('disabled')
+            this._canvasHeight.value = '100'
+          } else {
+            this._canvasHeight.value = newValue ?? ''
+          }
+        })
         break
       case 'dialog':
-        if (this.eventlisten) {
-          if (newValue === 'open') {
-            this.$dialog.open()
-          } else {
-            this.$dialog.close()
-          }
-        }
         break
       case 'save':
-        if (newValue === 'ref') {
-          this.$imageOptEmbed.setAttribute('checked', false)
-          this.$imageOptRef.setAttribute('checked', true)
-        } else {
-          this.$imageOptEmbed.setAttribute('checked', true)
-          this.$imageOptRef.setAttribute('checked', false)
-        }
+        void this.updateComplete.then(() => {
+          if (newValue === 'ref') {
+            this._imageOptEmbed.checked = false
+            this._imageOptRef.checked = true
+          } else {
+            this._imageOptEmbed.checked = true
+            this._imageOptRef.checked = false
+          }
+        })
         break
       case 'embed':
-        if (newValue.includes('one')) {
-          const data = newValue.split('|')
-          if (data.length > 1 && data[1] !== undefined) {
-            const embedEl = this._shadowRoot.querySelector<HTMLElement>('#image_opt_embed')
-            if (embedEl) {
-              embedEl.setAttribute('title', data[1])
-              embedEl.setAttribute('disabled', 'disabled')
-              embedEl.style.color = '#666'
+        void this.updateComplete.then(() => {
+          if (newValue && newValue.includes('one')) {
+            const data = newValue.split('|')
+            if (data.length > 1 && data[1] !== undefined) {
+              const embedEl = this.renderRoot.querySelector<HTMLElement>('#image_opt_embed')
+              if (embedEl) {
+                embedEl.setAttribute('title', data[1])
+                embedEl.setAttribute('disabled', 'disabled')
+                embedEl.style.color = '#666'
+              }
             }
           }
-        }
+        })
         break
       case 'common-ok':
-        this.$saveBtn.textContent = newValue
+        this._labelOk = newValue ?? ''
         break
       case 'common-cancel':
-        this.$cancelBtn.textContent = newValue
+        this._labelCancel = newValue ?? ''
         break
       case 'config-image_props':
-        node = this._shadowRoot.querySelector('#svginfo_image_props')
-        if (node) node.textContent = newValue
+        this._labelImageProps = newValue ?? ''
         break
       case 'config-doc_title':
-        node = this._shadowRoot.querySelector('#svginfo_title')
-        if (node) node.textContent = newValue
+        this._labelDocTitle = newValue ?? ''
         break
       case 'config-doc_dims':
-        node = this._shadowRoot.querySelector('#svginfo_dim')
-        if (node) node.textContent = newValue
+        this._labelDocDims = newValue ?? ''
         break
       case 'common-width':
-        node = this._shadowRoot.querySelector('#svginfo_width')
-        if (node) node.textContent = newValue
+        this._labelWidth = newValue ?? ''
         break
       case 'common-height':
-        node = this._shadowRoot.querySelector('#svginfo_height')
-        if (node) node.textContent = newValue
+        this._labelHeight = newValue ?? ''
         break
       case 'config-select_predefined':
-        node = this._shadowRoot.querySelector('#selectedPredefined')
-        if (node) node.textContent = newValue
+        this._labelSelectPredefined = newValue ?? ''
         break
       case 'tools-fit-to-content':
-        node = this._shadowRoot.querySelector('#fitToContent')
-        if (node) node.textContent = newValue
+        this._labelFitToContent = newValue ?? ''
         break
       case 'config-included_images':
-        node = this._shadowRoot.querySelector('#includedImages')
-        if (node) node.textContent = newValue
+        this._labelIncludedImages = newValue ?? ''
         break
       case 'config-image_opt_embed':
-        node = this._shadowRoot.querySelector('#image_opt_embed')
-        if (node) node.textContent = newValue
+        this._labelImageOptEmbed = newValue ?? ''
         break
       case 'config-image_opt_ref':
-        node = this._shadowRoot.querySelector('#image_opt_ref')
-        if (node) node.textContent = newValue
+        this._labelImageOptRef = newValue ?? ''
         break
       default:
-        // TODO: see todo #10 — super.attributeChangedCallback may throw if HTMLElement doesn't implement it
-        // @ts-expect-error: pre-existing null-misuse, see todo #10
-        super.attributeChangedCallback(name, oldValue, newValue)
         break
     }
   }
 
-  /**
-   * @function get
-   */
   get title (): string {
     return this.getAttribute('title') ?? ''
   }
 
-  /**
-   * @function set
-   */
   set title (value: string) {
     this.setAttribute('title', value)
   }
 
-  /**
-   * @function get
-   */
   get width (): string | null {
     return this.getAttribute('width')
   }
 
-  /**
-   * @function set
-   */
   set width (value: string) {
     this.setAttribute('width', value)
   }
 
-  /**
-   * @function get
-   */
   get height (): string | null {
     return this.getAttribute('height')
   }
 
-  /**
-   * @function set
-   */
   set height (value: string) {
     this.setAttribute('height', value)
   }
 
-  /**
-   * @function get
-   */
   get save (): string | null {
     return this.getAttribute('save')
   }
 
-  /**
-   * @function set
-   */
   set save (value: string) {
     this.setAttribute('save', value)
   }
 
-  /**
-   * @function get
-   */
-  get dialog (): string | null {
-    return this.getAttribute('dialog')
+  @property({ reflect: true }) accessor dialog = ''
+
+  protected updated (changed: Map<string, unknown>): void {
+    if (changed.has('dialog')) {
+      if (this.dialog === 'open') {
+        if (this._dialog && !this._dialog.open) this._dialog.showModal()
+      } else {
+        if (this._dialog?.open) this._dialog.close()
+      }
+    }
   }
 
-  /**
-   * @function set
-   */
-  set dialog (value: string) {
-    this.setAttribute('dialog', value)
-  }
-
-  /**
-   * @function get
-   */
   get embed (): string | null {
     return this.getAttribute('embed')
   }
 
-  /**
-   * @function set
-   */
   set embed (value: string) {
     this.setAttribute('embed', value)
   }
 
-  /**
-   * @function connectedCallback
-   */
-  connectedCallback (): void {
-     
-    const onChangeHandler = (ev: any): void => {
-      if (!ev.target.selectedIndex) {
-        if (this.$canvasWidth.value === 'fit') {
-          this.$canvasWidth.removeAttribute('disabled')
-          this.$canvasWidth.value = 100
-          this.$canvasHeight.removeAttribute('disabled')
-          this.$canvasHeight.value = 100
-        }
-      } else if (ev.target.value === 'content') {
-        this.$canvasWidth.setAttribute('disabled', 'disabled')
-        this.$canvasWidth.value = 'fit'
-        this.$canvasHeight.setAttribute('disabled', 'disabled')
-        this.$canvasHeight.value = 'fit'
-      } else {
-        const dims = ev.target.value.split('x')
-        this.$canvasWidth.value = dims[0]
-        this.$canvasWidth.removeAttribute('disabled')
-        this.$canvasHeight.value = dims[1]
-        this.$canvasHeight.removeAttribute('disabled')
+  private _onResolutionChange = (ev: Event): void => {
+    const target = ev.target as HTMLSelectElement
+    if (!target.selectedIndex) {
+      if (this._canvasWidth.value === 'fit') {
+        this._canvasWidth.removeAttribute('disabled')
+        this._canvasWidth.value = '100'
+        this._canvasHeight.removeAttribute('disabled')
+        this._canvasHeight.value = '100'
       }
+    } else if (target.value === 'content') {
+      this._canvasWidth.setAttribute('disabled', 'disabled')
+      this._canvasWidth.value = 'fit'
+      this._canvasHeight.setAttribute('disabled', 'disabled')
+      this._canvasHeight.value = 'fit'
+    } else {
+      const dims = target.value.split('x')
+      this._canvasWidth.value = dims[0] ?? ''
+      this._canvasWidth.removeAttribute('disabled')
+      this._canvasHeight.value = dims[1] ?? ''
+      this._canvasHeight.removeAttribute('disabled')
     }
-    const onSaveHandler = () => {
-      let saveOpt = ''
-      const w = this.$canvasWidth.value
-      const h = this.$canvasHeight.value
-      // @ts-expect-error: pre-existing null-misuse, see todo #10 — isValidUnit called with 2 args (missing selectedElement)
-      if (w !== 'fit' && !isValidUnit('width', w)) {
-        this.$canvasWidth.parentElement.classList.add('error')
-      } else {
-        this.$canvasWidth.parentElement.classList.remove('error')
-      }
-      // @ts-expect-error: pre-existing null-misuse, see todo #10 — isValidUnit called with 2 args (missing selectedElement)
-      if (h !== 'fit' && !isValidUnit('height', w)) {
-        this.$canvasHeight.parentElement.classList.add('error')
-      } else {
-        this.$canvasHeight.parentElement.classList.remove('error')
-      }
-      if (this.$imageOptEmbed.getAttribute('checked') === 'true') {
-        saveOpt = 'embed'
-      }
-      if (this.$imageOptRef.getAttribute('checked') === 'true') {
-        saveOpt = 'ref'
-      }
-      const closeEvent = new CustomEvent('change', {
-        detail: {
-          title: this.$canvasTitle.value,
-          w: this.$canvasWidth.value,
-          h: this.$canvasHeight.value,
-          save: saveOpt,
-          dialog: 'close'
-        }
-      })
-      this.$canvasWidth.removeAttribute('disabled')
-      this.$canvasHeight.removeAttribute('disabled')
-      this.$resolution.selectedIndex = 0
-      this.dispatchEvent(closeEvent)
+  }
+
+  private _onSave = (): void => {
+    let saveOpt = ''
+    const w = this._canvasWidth.value
+    const h = this._canvasHeight.value
+    // @ts-expect-error: pre-existing null-misuse, see todo #10 — isValidUnit called with 2 args (missing selectedElement)
+    if (w !== 'fit' && !isValidUnit('width', w)) {
+      this._canvasWidth.parentElement?.classList.add('error')
+    } else {
+      this._canvasWidth.parentElement?.classList.remove('error')
     }
-    const onCancelHandler = () => {
-      const closeEvent = new CustomEvent('change', {
-        detail: {
-          dialog: 'closed'
-        }
-      })
-      this.$canvasWidth.removeAttribute('disabled')
-      this.$canvasHeight.removeAttribute('disabled')
-      this.$resolution.selectedIndex = 0
-      this.dispatchEvent(closeEvent)
+    // @ts-expect-error: pre-existing null-misuse, see todo #10 — isValidUnit called with 2 args (missing selectedElement)
+    if (h !== 'fit' && !isValidUnit('height', w)) {
+      this._canvasHeight.parentElement?.classList.add('error')
+    } else {
+      this._canvasHeight.parentElement?.classList.remove('error')
     }
-    this.$resolution.addEventListener('change', onChangeHandler)
-    svgEditor.$click(this.$saveBtn, onSaveHandler)
-    svgEditor.$click(this.$cancelBtn, onCancelHandler)
-    this.$dialog.addEventListener('close', onCancelHandler)
-    this.eventlisten = true
+    if (this._imageOptEmbed.checked) {
+      saveOpt = 'embed'
+    }
+    if (this._imageOptRef.checked) {
+      saveOpt = 'ref'
+    }
+    const closeEvent = new CustomEvent('change', {
+      detail: {
+        title: this._canvasTitle.value,
+        w: this._canvasWidth.value,
+        h: this._canvasHeight.value,
+        save: saveOpt,
+        dialog: 'close'
+      }
+    })
+    this._canvasWidth.removeAttribute('disabled')
+    this._canvasHeight.removeAttribute('disabled')
+    this._resolution.selectedIndex = 0
+    this.dispatchEvent(closeEvent)
+  }
+
+  private _onCancel = (): void => {
+    const closeEvent = new CustomEvent('change', {
+      detail: {
+        dialog: 'closed'
+      }
+    })
+    this._canvasWidth.removeAttribute('disabled')
+    this._canvasHeight.removeAttribute('disabled')
+    this._resolution.selectedIndex = 0
+    this.dispatchEvent(closeEvent)
+  }
+
+  render () {
+    return html`
+      <dialog id="svg_docprops" aria-label="Image properties" @close=${this._onCancel}>
+        <div id="svg_docprops_container">
+          <div id="tool_docprops_back" class="toolbar_button">
+            <button id="tool_docprops_save" @click=${this._onSave}>${this._labelOk}</button>
+            <button id="tool_docprops_cancel" @click=${this._onCancel}>${this._labelCancel}</button>
+          </div>
+          <fieldset id="svg_docprops_docprops">
+            <legend id="svginfo_image_props">${this._labelImageProps}</legend>
+            <label>
+              <span id="svginfo_title">${this._labelDocTitle}</span>
+              <input type="text" id="canvas_title" />
+            </label>
+            <fieldset id="change_resolution">
+              <legend id="svginfo_dim">${this._labelDocDims}</legend>
+              <label>
+                <span id="svginfo_width">${this._labelWidth}</span>
+                <input type="text" id="canvas_width" size="6" />
+              </label>
+              <label>
+                <span id="svginfo_height">${this._labelHeight}</span>
+                <input type="text" id="canvas_height" size="6" />
+              </label>
+              <label>
+                <select id="resolution" @change=${this._onResolutionChange}>
+                  <option id="selectedPredefined" selected>${this._labelSelectPredefined}</option>
+                  <option>640x480</option>
+                  <option>800x600</option>
+                  <option>1024x768</option>
+                  <option>1280x960</option>
+                  <option>1600x1200</option>
+                  <option id="fitToContent" value="content">${this._labelFitToContent}</option>
+                </select>
+              </label>
+            </fieldset>
+            <fieldset id="image_save_opts">
+              <legend id="includedImages">${this._labelIncludedImages}</legend>
+              <label>
+                <input type="radio" id="image_embed" name="image_opt" value="embed" checked />
+                <span id="image_opt_embed">${this._labelImageOptEmbed}</span>
+              </label>
+              <label>
+                <input type="radio" id="image_ref" name="image_opt" value="ref" />
+                <span id="image_opt_ref">${this._labelImageOptRef}</span>
+              </label>
+            </fieldset>
+          </fieldset>
+        </div>
+      </dialog>
+    `
   }
 }
-
-// Register
-customElements.define('se-img-prop-dialog', SeImgPropDialog)

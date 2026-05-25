@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (#3 PR-3c — 5 elix-dialog HTML-bound dialogs Lit-converted + elix dependency removed — 2026-05-24)
+
+Third and final sub-PR under todo item #3 PR-3. **ZERO elix imports remain across `src/`; `elix` npm dependency removed from `package.json`.**
+
+**Conversions (5 dialogs, native HTML5 `<dialog>` + inline HTML):** exportDialog (159 LOC, pilot), svgSourceDialog (230 LOC), imagePropertiesDialog (374 LOC), editorPreferencesDialog (406 LOC), storageDialog (155 LOC). Each inlines its HTML template into Lit's `render()` method, replaces `<elix-dialog>` with native `<dialog>`, and uses `@property({ reflect: true }) + updated()` for the dialog open/close lifecycle.
+
+**Deleted (8 files, ~845 LOC):** 5 HTML template files (content inlined), 3 vendored se-elix overrides (`se-elix/define/NumberSpinBox.ts` + `se-elix/src/base/NumberSpinBox.ts` + `se-elix/src/plain/PlainNumberSpinBox.ts`).
+
+**Infrastructure:** `scripts/build-extensions.ts` gains the SWC plugin (TC39 decorator support for extension bundles — storageDialog lives in ext-storage/). Test helper `tests/e2e/helpers.js` updated for native-dialog visibility timing (waitFor visible + fallback dispatchEvent).
+
+**Verification:** tsc 0 / lint 0e+23w / vitest 640/640 / e2e 250/250.
+
 ### Changed (#3 PR-3b — 2 plain-alert/status dialogs Lit-converted + sePromptDialog → seStatusDialog rename — 2026-05-24)
 
 Second of 3 sub-PRs under todo item #3 PR-3 (5-PR elix → Lit migration). Closes audit input #4 (misnamed dialog — `sePromptDialog` was misleading since it's a cancel-only status display, not a prompt-with-input).

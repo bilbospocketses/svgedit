@@ -3,6 +3,7 @@ import { join, resolve } from 'node:path'
 import { build, type Plugin, type ResolvedConfig } from 'vite'
 import dynamicImportVars from '@rollup/plugin-dynamic-import-vars'
 import string from 'vite-plugin-string'
+import swc from 'unplugin-swc'
 
 const root = process.cwd()
 const extensionsRoot = resolve(root, 'src/editor/extensions')
@@ -49,6 +50,16 @@ await build({
   base: './',
   logLevel: 'info',
   plugins: [
+    swc.vite({
+      tsconfigFile: false,
+      jsc: {
+        parser: { syntax: 'typescript', decorators: true },
+        transform: { decoratorVersion: '2022-03' },
+        target: 'es2022',
+        keepClassNames: true
+      },
+      sourceMaps: true
+    }),
     {
       name: 'svgedit-skip-vite-build-html',
       apply: 'build',

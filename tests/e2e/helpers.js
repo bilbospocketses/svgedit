@@ -52,12 +52,18 @@ export async function dismissStorageDialog (page) {
   if (isOpen !== 'open') return
 
   const okButton = storageDialog.locator('button#storage_ok')
-  if (await okButton.count()) {
-    await okButton.click({ force: true })
-  } else {
+  try {
+    await okButton.waitFor({ state: 'visible', timeout: 5000 })
+    await okButton.click()
+  } catch {
     await page.evaluate(() => {
       const dialog = document.querySelector('se-storage-dialog')
-      dialog?.setAttribute('dialog', 'close')
+      if (dialog) {
+        dialog.dispatchEvent(new CustomEvent('change', {
+          detail: { trigger: 'ok', select: 'prefsAndContent', checkbox: false }
+        }))
+        dialog.setAttribute('dialog', 'close')
+      }
     })
   }
 
