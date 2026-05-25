@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-non-null-assertion */
 // editor / panel API surface is loosely typed; full typing deferred to follow-up
 import SvgCanvas from '@svgedit/svgcanvas'
-import { jGraduate } from '../components/jgraduate/jQuery.jGraduate.js'
 // @ts-expect-error: BottomPanel.html imported as string via vite-plugin-string; no ambient module declaration
 import BottomPanelHtml from './BottomPanel.html'
 
@@ -160,8 +159,8 @@ class BottomPanel {
     // Webkit-based browsers returned 'initial' here for no stroke
     const paint =
       color === 'none'
-        ? new jGraduate.Paint()
-        : new jGraduate.Paint({ alpha: 100, solidColor: color.substr(1) })
+        ? new SvgCanvas.Paint()
+        : new SvgCanvas.Paint({ alpha: 100, solidColor: color.substr(1) })
     if (picker === 'fill') {
       ;($id('fill_color') as any).setPaint(paint)
     } else {
@@ -190,10 +189,10 @@ class BottomPanel {
     ;($id('palette') as any).init(i18next)
     const { curConfig } = this.editor.configObj
     ;($id('fill_color') as any).setPaint(
-      new jGraduate.Paint({ alpha: 100, solidColor: curConfig.initFill.color })
+      new SvgCanvas.Paint({ alpha: 100, solidColor: curConfig.initFill.color })
     )
     ;($id('stroke_color') as any).setPaint(
-      new jGraduate.Paint({
+      new SvgCanvas.Paint({
         alpha: 100,
         solidColor: curConfig.initStroke.color
       })
@@ -228,12 +227,12 @@ class BottomPanel {
   /**
    */
   updateColorpickers (apply: any): void {
-    ;($id('fill_color') as any).update(
+    ;($id('fill_color') as any).updatePaint(
       this.editor.svgCanvas,
       this.editor.selectedElement,
       apply
     )
-    ;($id('stroke_color') as any).update(
+    ;($id('stroke_color') as any).updatePaint(
       this.editor.svgCanvas,
       this.editor.selectedElement,
       apply

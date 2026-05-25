@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
-// jGraduate (legacy jQuery plugin) ships as 'any'; cleanup deferred to #3 (Lit migration)
-import { jGraduate } from './jgraduate/jQuery.jGraduate.js'
+import SvgCanvas from '@svgedit/svgcanvas'
 /**
  *
  */
@@ -92,7 +91,7 @@ class PaintBox {
     } else if (color.startsWith('#')) {
       opts.solidColor = color.substr(1)
     }
-    return new (jGraduate as any).Paint(opts)
+    return new (SvgCanvas as any).Paint(opts)
   }
 
   /**
