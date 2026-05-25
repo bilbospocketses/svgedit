@@ -19,7 +19,7 @@
  * @example $.jGraduate.Paint({hex: '#rrggbb', linearGradient: o}); // throws an exception?
 */
 import SvgCanvas from '@svgedit/svgcanvas'
-import { jPickerDefaults, jPickerMethod } from './jQuery.jPicker.js'
+import { jPickerDefaults, jPickerMethod } from './jPickerShim.js'
 import { findPos } from '@svgedit/svgcanvas/common/util.js'
 
 /**
