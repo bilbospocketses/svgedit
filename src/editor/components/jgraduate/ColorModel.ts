@@ -170,7 +170,7 @@ function intToHex (dec: number): string {
 /** Detail payload carried by the ColorModel 'change' CustomEvent. */
 export interface ColorChangeDetail {
   channel: ColorChannel | 'rgb' | 'hsv' | 'hex' | 'ahex'
-  source?: string
+  source?: string | undefined
 }
 
 /** Clamp a number to [min, max]. */
@@ -267,7 +267,7 @@ export class ColorModel extends EventTarget {
     if (this[`_${channel}` as `_${ColorChannel}`] === clamped) return
 
     // Apply the new value
-    ;(this as Record<string, number>)[`_${channel}`] = clamped
+    ;(this as unknown as Record<string, number>)[`_${channel}`] = clamped
 
     // Sync complementary space
     if (channel === 'r' || channel === 'g' || channel === 'b') {
