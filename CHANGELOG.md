@@ -19,6 +19,16 @@ Five design-level fixes (companion to Step 9's mechanical fixes):
 
 **Verification:** tsc 0 / lint 0e+0w / vitest 701/701 / e2e 250/250.
 
+### Fixed (Step 9 — SVG import/export + element correctness — 2026-05-25)
+
+Three mechanical fixes:
+
+- `uniquifyElems` symbol-not-removed — query `<use>` by specific symbol href, not all `<use>` globally (unused symbols now correctly removed)
+- `convertToPath` attribute handling — use element's own fill/stroke/opacity with curShape as fallback (converted paths now preserve the original element's appearance)
+- `importSvgString` viewBox non-zero origin — apply `translate(-minX,-minY)` for imported SVGs with `viewBox="100 100 ..."` (correct positioning)
+
+**Verification:** tsc 0 / lint 0e+0w / vitest 701/701 / e2e 250/250.
+
 ### Fixed (Step 8 — geometry/bbox bug bundle — 2026-05-25)
 
 Four correctness fixes in `packages/svgcanvas/core/utilities.ts`:

@@ -1377,15 +1377,15 @@ class SvgCanvas {
       )
     }
     const attrs = {
-      fill: this.curShape.fill,
-      'fill-opacity': this.curShape.fill_opacity,
-      stroke: this.curShape.stroke,
-      'stroke-width': this.curShape.stroke_width,
-      'stroke-dasharray': this.curShape.stroke_dasharray,
-      'stroke-linejoin': this.curShape.stroke_linejoin,
-      'stroke-linecap': this.curShape.stroke_linecap,
-      'stroke-opacity': this.curShape.stroke_opacity,
-      opacity: this.curShape.opacity,
+      fill: elem.getAttribute('fill') ?? this.curShape.fill,
+      'fill-opacity': elem.getAttribute('fill-opacity') ?? this.curShape.fill_opacity,
+      stroke: elem.getAttribute('stroke') ?? this.curShape.stroke,
+      'stroke-width': elem.getAttribute('stroke-width') ?? this.curShape.stroke_width,
+      'stroke-dasharray': elem.getAttribute('stroke-dasharray') ?? this.curShape.stroke_dasharray,
+      'stroke-linejoin': elem.getAttribute('stroke-linejoin') ?? this.curShape.stroke_linejoin,
+      'stroke-linecap': elem.getAttribute('stroke-linecap') ?? this.curShape.stroke_linecap,
+      'stroke-opacity': elem.getAttribute('stroke-opacity') ?? this.curShape.stroke_opacity,
+      opacity: elem.getAttribute('opacity') ?? this.curShape.opacity,
       visibility: 'hidden'
     }
     return utilitiesConvertToPath(elem, attrs as Record<string, unknown>, this)
