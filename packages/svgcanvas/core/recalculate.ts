@@ -236,7 +236,7 @@ export const recalculateDimensions = (selected: Element): InstanceType<typeof Ba
 
   // Grouped SVG element (special handling for 'gsvg')
   const gsvg: Element | undefined = dataStorage.has(selected, 'gsvg')
-    ? dataStorage.get(selected, 'gsvg')
+    ? dataStorage.get(selected, 'gsvg') as Element
     : undefined
 
   // Store initial values affected by reducing the transform list
@@ -374,7 +374,7 @@ export const recalculateDimensions = (selected: Element): InstanceType<typeof Ba
         const m = transformListToTransform(childTlist).matrix
 
         const angle = getRotationAngle(child as SVGElement)
-        oldStartTransform = svgCanvas.getStartTransform()
+        oldStartTransform = svgCanvas.getStartTransform() ?? undefined
         svgCanvas.setStartTransform(child.getAttribute('transform'))
 
         if (angle || hasMatrixTransform(childTlist)) {
@@ -413,7 +413,7 @@ export const recalculateDimensions = (selected: Element): InstanceType<typeof Ba
         if (recalculatedDimensions) {
           batchCmd.addSubCommand(recalculatedDimensions)
         }
-        svgCanvas.setStartTransform(oldStartTransform)
+        svgCanvas.setStartTransform(oldStartTransform ?? null)
       }
 
       tlist.removeItem(N - 1)
@@ -463,7 +463,7 @@ export const recalculateDimensions = (selected: Element): InstanceType<typeof Ba
           const childTlist = getTransformList(child)
           if (!childTlist) continue
 
-          oldStartTransform = svgCanvas.getStartTransform()
+          oldStartTransform = svgCanvas.getStartTransform() ?? undefined
           svgCanvas.setStartTransform(child.getAttribute('transform'))
 
           const newxlate = svgroot.createSVGTransform()
@@ -495,7 +495,7 @@ export const recalculateDimensions = (selected: Element): InstanceType<typeof Ba
             }
           }
 
-          svgCanvas.setStartTransform(oldStartTransform)
+          svgCanvas.setStartTransform(oldStartTransform ?? null)
         }
       }
     } else if (
@@ -514,7 +514,7 @@ export const recalculateDimensions = (selected: Element): InstanceType<typeof Ba
         const childTlist = getTransformList(child)
         if (!childTlist) continue
 
-        oldStartTransform = svgCanvas.getStartTransform()
+        oldStartTransform = svgCanvas.getStartTransform() ?? undefined
         svgCanvas.setStartTransform(child.getAttribute('transform'))
 
         const em = matrixMultiply(m, transformListToTransform(childTlist).matrix)
@@ -527,7 +527,7 @@ export const recalculateDimensions = (selected: Element): InstanceType<typeof Ba
         if (recalculatedDimensions) {
           batchCmd.addSubCommand(recalculatedDimensions)
         }
-        svgCanvas.setStartTransform(oldStartTransform)
+        svgCanvas.setStartTransform(oldStartTransform ?? null)
 
         const sw = child.getAttribute('stroke-width')
         if (child.getAttribute('stroke') !== 'none' && !Number.isNaN(Number(sw))) {
@@ -591,7 +591,7 @@ export const recalculateDimensions = (selected: Element): InstanceType<typeof Ba
           const childTlist = getTransformList(child)
           if (!childTlist) continue
 
-          oldStartTransform = svgCanvas.getStartTransform()
+          oldStartTransform = svgCanvas.getStartTransform() ?? undefined
           svgCanvas.setStartTransform(child.getAttribute('transform'))
 
           const newxlate = svgroot.createSVGTransform()
@@ -606,7 +606,7 @@ export const recalculateDimensions = (selected: Element): InstanceType<typeof Ba
           if (recalculatedDimensions) {
             batchCmd.addSubCommand(recalculatedDimensions)
           }
-          svgCanvas.setStartTransform(oldStartTransform)
+          svgCanvas.setStartTransform(oldStartTransform ?? null)
         }
       }
 

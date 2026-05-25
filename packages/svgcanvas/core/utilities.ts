@@ -716,7 +716,7 @@ export const convertToPath = (elem: Element, attrs: Record<string, unknown>, svg
 
   const path = svgCanvas.addSVGElementsFromJson({
     element: 'path',
-    attr: attrs
+    attr: attrs as Record<string, string | number>
   })
 
   const eltrans = elem.getAttribute('transform')
@@ -751,7 +751,7 @@ export const convertToPath = (elem: Element, attrs: Record<string, unknown>, svg
       new svgCanvas.history.RemoveElementCommand(
         elem,
         nextSibling,
-        elem.parentNode
+        elem.parentNode as Node
       )
     )
     svgCanvas.clearSelection()
@@ -764,7 +764,7 @@ export const convertToPath = (elem: Element, attrs: Record<string, unknown>, svg
 
     svgCanvas.addCommandToHistory(batchCmd)
 
-    return path
+    return path as unknown as SVGPathElement
   }
   // the elem.tagName was not recognized, so no "d" attribute. Remove it, so we've haven't changed anything.
   path.remove()
@@ -1193,7 +1193,7 @@ export const cleanupElement = (element: Element): void => {
  */
 export const snapToGrid = (value: number): number => {
   const unit: string = svgCanvas.getBaseUnit()
-  let stepSize: number = svgCanvas.getSnappingStep()
+  let stepSize: number = Number(svgCanvas.getSnappingStep())
   if (unit !== 'px') {
     stepSize *= getTypeMap()[unit] ?? 1
   }

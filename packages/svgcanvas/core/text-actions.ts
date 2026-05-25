@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 /**
  * @module text-actions Tools for Text edit functions
  * @license MIT
@@ -361,7 +362,7 @@ class TextActions {
       return
     }
     const zoom: number = svgCanvas.getZoom()
-    const ept: XYObject = transformPoint(evt.pageX, evt.pageY, svgCanvas.getRootSctm())
+    const ept: XYObject = transformPoint(evt.pageX, evt.pageY, svgCanvas.getRootSctm()!)
     const mouseX = ept.x * zoom
     const mouseY = ept.y * zoom
     const pt = this.#screenToPt(mouseX, mouseY)
@@ -374,7 +375,7 @@ class TextActions {
     this.#setSelection(first, last)
 
     // Set tripleclick
-    svgCanvas.$click(evt.target, this.#selectAll)
+    svgCanvas.$click(evt.target!, this.#selectAll)
 
     setTimeout(() => {
       ;(evt.target as EventTarget & { removeEventListener: (type: string, listener: EventListener) => void }).removeEventListener('click', this.#selectAll)
@@ -455,7 +456,7 @@ class TextActions {
   /**
    * @param index
    */
-  setCursor (index: number): void {
+  setCursor (index?: number): void {
     this.#setCursor(index)
   }
 
@@ -466,9 +467,9 @@ class TextActions {
   toEditMode (x?: number, y?: number): void {
     this.#allowDbl = false
     svgCanvas.setCurrentMode('textedit')
-    svgCanvas.selectorManager.requestSelector(this.#curtext).showGrips(false)
+    svgCanvas.selectorManager.requestSelector(this.#curtext as Element)!.showGrips(false)
     // Make selector group accept clicks
-    /* const selector = */ svgCanvas.selectorManager.requestSelector(this.#curtext) // Do we need this? Has side effect of setting lock, so keeping for now, but next line wasn't being used
+    /* const selector = */ svgCanvas.selectorManager.requestSelector(this.#curtext as Element) // Do we need this? Has side effect of setting lock, so keeping for now, but next line wasn't being used
     // const sel = selector.selectorRect;
 
     svgCanvas.textActions.init()
@@ -514,8 +515,8 @@ class TextActions {
       svgCanvas.clearSelection()
       ;(this.#curtext as SVGTextElement).style.cursor = 'move'
 
-      svgCanvas.call('selected', [this.#curtext])
-      svgCanvas.addToSelection([this.#curtext], true)
+      svgCanvas.call('selected', [this.#curtext as Element])
+      svgCanvas.addToSelection([this.#curtext as Element], true)
     }
     if (!(this.#curtext as SVGTextElement | null)?.textContent?.length) {
       // No content, so delete
@@ -549,7 +550,7 @@ class TextActions {
   /**
    * @param [_inputElem] Not in use
    */
-  init (_inputElem?: Element): void {
+  init (_inputElem?: Element | string): void {
     if (!this.#curtext) {
       return
     }
@@ -562,10 +563,10 @@ class TextActions {
 
     if (!curtext.parentNode) {
       // Result of the ffClone, need to get correct element
-      const selectedElements: SVGTextElement[] = svgCanvas.getSelectedElements()
-      this.#curtext = selectedElements[0] ?? null
+      const selectedElements = svgCanvas.getSelectedElements()
+      this.#curtext = (selectedElements[0] as SVGTextElement | null | undefined) ?? null
       if (!this.#curtext) return
-      svgCanvas.selectorManager.requestSelector(this.#curtext).showGrips(false)
+      svgCanvas.selectorManager.requestSelector(this.#curtext)!.showGrips(false)
     }
 
     const textElem = this.#curtext

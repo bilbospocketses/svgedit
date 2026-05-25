@@ -5,7 +5,7 @@
  * @copyright 2011 Jeff Schiller
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-non-null-assertion */
 
 import { NS } from './namespaces.js'
 import {
@@ -96,7 +96,7 @@ const addToSelectionMethod = (elemsToAdd: Element[], showGrips?: boolean): void 
       const sel = svgCanvas.selectorManager.requestSelector(elem)
 
       if (selectedElements.length > 1) {
-        sel.showGrips(false)
+        sel!.showGrips(false)
       }
     }
   }
@@ -107,8 +107,8 @@ const addToSelectionMethod = (elemsToAdd: Element[], showGrips?: boolean): void 
 
   if (selectedElements.length === 1) {
     svgCanvas.selectorManager
-      .requestSelector(selectedElements[0])
-      .showGrips(showGrips)
+      .requestSelector(selectedElements[0] ?? null)!
+      .showGrips(showGrips ?? false)
   }
 
   selectedElements.sort((a: Element | null, b: Element | null) => {
@@ -241,13 +241,14 @@ const getIntersectionListMethod = (rect?: { x: number; y: number; width: number;
     return null
   }
 
-  const parent: Element =
+  const parent: Element = (
     svgCanvas.getCurrentGroup() ??
     svgCanvas.getCurrentDrawing().getCurrentLayer()
+  )!
 
   let rubberBBox: SVGRect
   if (!rect) {
-    const rawBBox = getBBox(svgCanvas.getRubberBox()) as { x: number; y: number; width: number; height: number; top: number; right: number; bottom: number; left: number }
+    const rawBBox = getBBox(svgCanvas.getRubberBox()!) as { x: number; y: number; width: number; height: number; top: number; right: number; bottom: number; left: number }
     const bb: SVGRect = svgCanvas.getSvgContent().createSVGRect();
 
     ['x', 'y', 'width', 'height', 'top', 'right', 'bottom', 'left'].forEach(
@@ -373,13 +374,13 @@ const setRotationAngle = (val: string | number, preventUndo?: boolean): void => 
     }
     svgCanvas.changeSelectedAttribute(
       'transform',
-      newTransform,
+      newTransform as string | number,
       selectedElements
     )
     svgCanvas.call('changed', selectedElements)
   }
   const selector = svgCanvas.selectorManager.requestSelector(
-    selectedElements[0]
+    selectedElements[0] ?? null
   )
   if (selector) { selector.resize() }
   svgCanvas.getSelector().updateGripCursors(val)

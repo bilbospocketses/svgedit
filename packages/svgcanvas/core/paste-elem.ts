@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any */
 import {
   getStrokedBBoxDefaultVisible,
   getUrlFromAttr
@@ -93,7 +93,8 @@ export const pasteElementsMethod = (type?: 'in_place' | 'point', x?: number, y?:
   svgCanvas.runExtensions({
     action: 'IDsUpdated',
     vars: { elems: clipb, changes: changedIDs }
-  }).forEach(function (extChanges: { remove?: string[] } | null) {
+  }).forEach(function (result: unknown) {
+    const extChanges = result as { remove?: string[] } | null
     if (!extChanges || !('remove' in extChanges)) return
 
     extChanges.remove?.forEach(function (removeID: string) {
@@ -110,7 +111,7 @@ export const pasteElementsMethod = (type?: 'in_place' | 'point', x?: number, y?:
     const elem = clipb[len]
     if (!elem) { continue }
 
-    const copy: Element = svgCanvas.addSVGElementsFromJson(elem)
+    const copy: Element = svgCanvas.addSVGElementsFromJson(elem as any)
     pasted.push(copy)
     batchCmd.addSubCommand(new InsertElementCommand(copy))
 

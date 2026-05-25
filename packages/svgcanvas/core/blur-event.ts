@@ -31,7 +31,7 @@ const getFeGaussianBlurElem = (filterElem: Element): Element | null => {
 * @param val - The new `stdDeviation` value
 */
 export const setBlurNoUndo = (val: number): void => {
-  const selectedElements: Element[] = svgCanvas.getSelectedElements()
+  const selectedElements = svgCanvas.getSelectedElements()
   const elem = selectedElements[0]
   if (!elem) return
 
@@ -145,7 +145,7 @@ export const setBlur = (val: number, complete: boolean): void => {
     InsertElementCommand, ChangeElementCommand, BatchCommand
   } = svgCanvas.history
 
-  const selectedElements: Element[] = svgCanvas.getSelectedElements()
+  const selectedElements = svgCanvas.getSelectedElements()
   if (svgCanvas.getCurCommand()) {
     finishChange()
     return
@@ -203,7 +203,7 @@ export const setBlur = (val: number, complete: boolean): void => {
     batchCmd.addSubCommand(new InsertElementCommand(filter))
   }
 
-  const changes = { filter: (elem).getAttribute('filter') }
+  const changes: Record<string, string | null> = { filter: (elem).getAttribute('filter') }
   svgCanvas.changeSelectedAttributeNoUndo('filter', `url(#${filter.id})`)
   batchCmd.addSubCommand(new ChangeElementCommand(elem, changes))
   svgCanvas.setBlurOffsets(filter, blurVal)

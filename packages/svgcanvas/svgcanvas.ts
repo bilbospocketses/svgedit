@@ -156,6 +156,7 @@ class SvgCanvas implements ISvgCanvas {
   idPrefix: string
   encodableImages: Record<string, string | false>
   curConfig: Record<string, any>
+  get configObj (): { curConfig: Record<string, any> } { return this }
   lastGoodImgUrl: string
   svgdoc: HTMLDocument
   container: HTMLElement
@@ -186,7 +187,7 @@ class SvgCanvas implements ISvgCanvas {
   // spaceKey is set by the editor (editorInit.ts) key handlers
   declare spaceKey: boolean
   // canvas is a self-reference set via setCanvas('canvas', this)
-  declare canvas: this
+  declare canvas: ISvgCanvas
 
   // ── Instance fields: wired on by core/*.ts init() calls ──────────────────
   // These are augmented via svgcanvas.augment.d.ts for external consumers.
@@ -455,8 +456,8 @@ class SvgCanvas implements ISvgCanvas {
     this.svgroot = svgRootElement(this.svgdoc, dimensions)
     container.append(this.svgroot)
     this.svgContent = this.svgdoc.createElementNS(NS.SVG, 'svg') as SVGSVGElement
-    touchInit(this)
-    clearInit(this)
+    touchInit(this as any)
+    clearInit(this as any)
     this.clearSvgContentElement()
     this.currentDrawing = new draw.Drawing(this.svgContent, this.idPrefix)
     this.zoom = 1
@@ -496,18 +497,18 @@ class SvgCanvas implements ISvgCanvas {
     this.selectedElements = []
 
     jsonInit(this as any)
-    utilsInit(this)
-    coordsInit(this)
-    recalculateInit(this)
-    selectInit(this)
-    undoInit(this)
-    selectionInit(this)
+    utilsInit(this as any)
+    coordsInit(this as any)
+    recalculateInit(this as any)
+    selectInit(this as any)
+    undoInit(this as any)
+    selectionInit(this as any)
 
     this.nsMap = getReverseNS()
     this.selectorManager = getSelectorManager()
 
     this.pathActions = pathActions
-    pathModule.init(this)
+    pathModule.init(this as any)
     this.uiStrings = {}
 
     this.opacAni = document.createElementNS(NS.SVG, 'animate') as SVGAnimateElement
@@ -517,11 +518,11 @@ class SvgCanvas implements ISvgCanvas {
     this.opacAni.setAttribute('fill', 'freeze')
     this.svgroot.appendChild(this.opacAni)
 
-    eventInit(this)
-    textActionsInit(this)
-    svgInit(this)
-    draw.init(this)
-    elemGetSet.init(this)
+    eventInit(this as any)
+    textActionsInit(this as any)
+    svgInit(this as any)
+    draw.init(this as any)
+    elemGetSet.init(this as any)
 
     const handleLinkInCanvas = (e: Event): false => {
       e.preventDefault()
@@ -542,8 +543,8 @@ class SvgCanvas implements ISvgCanvas {
     this.filterHidden = false
     this.modeEvent = null
 
-    blurInit(this)
-    selectedElemInit(this)
+    blurInit(this as any)
+    selectedElemInit(this as any)
 
     const storageChange = (ev: StorageEvent): void => {
       if (!ev.newValue) return
@@ -558,7 +559,7 @@ class SvgCanvas implements ISvgCanvas {
     window.addEventListener('storage', storageChange, false)
     localStorage.setItem(`${CLIPBOARD_ID}_startup`, String(Math.random()))
 
-    pasteInit(this)
+    pasteInit(this as any)
 
     this.contentW = this.getResolution().w
     this.contentH = this.getResolution().h
@@ -1498,7 +1499,7 @@ class SvgCanvas implements ISvgCanvas {
       opacity: elem.getAttribute('opacity') ?? this.curShape.opacity,
       visibility: 'hidden'
     }
-    return utilitiesConvertToPath(elem, attrs as Record<string, unknown>, this)
+    return utilitiesConvertToPath(elem, attrs as Record<string, unknown>, this as any)
   }
 
   /**

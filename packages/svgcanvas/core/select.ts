@@ -66,7 +66,7 @@ export class Selector {
     this.selectorGroup = svgCanvas.createSVGElement({
       element: 'g',
       attr: { id: `selectorGroup${this.id}` }
-    })
+    }) as SVGElement
 
     this.selectorRect = svgCanvas.createSVGElement({
       element: 'path',
@@ -78,7 +78,7 @@ export class Selector {
         'stroke-dasharray': '5,5',
         style: 'pointer-events:none'
       }
-    })
+    }) as SVGElement
     this.selectorGroup.append(this.selectorRect)
 
     this.gripCoords = {
@@ -325,11 +325,11 @@ export class SelectorManager {
     this.selectorParentGroup = svgCanvas.createSVGElement({
       element: 'g',
       attr: { id: 'selectorParentGroup' }
-    })
+    }) as SVGElement
     this.selectorGripsGroup = svgCanvas.createSVGElement({
       element: 'g',
       attr: { display: 'none' }
-    })
+    }) as SVGElement
     this.selectorParentGroup?.append(this.selectorGripsGroup)
     svgCanvas.getSvgRoot().append(this.selectorParentGroup)
 
@@ -338,7 +338,7 @@ export class SelectorManager {
     this.rubberBandBox = null
 
     Object.keys(this.selectorGrips).forEach((dir) => {
-      const grip: SVGCircleElement = svgCanvas.createSVGElement({
+      const grip = svgCanvas.createSVGElement({
         element: 'circle',
         attr: {
           id: `selectorGrip_resize_${dir}`,
@@ -348,7 +348,7 @@ export class SelectorManager {
           'stroke-width': 2,
           'pointer-events': 'all'
         }
-      })
+      }) as SVGCircleElement
 
       dataStorage.put(grip, 'dir', dir)
       dataStorage.put(grip, 'type', 'resize')
@@ -356,19 +356,17 @@ export class SelectorManager {
       this.selectorGripsGroup.append(grip)
     })
 
-    this.rotateGripConnector =
-      svgCanvas.createSVGElement({
+    this.rotateGripConnector = svgCanvas.createSVGElement({
         element: 'line',
         attr: {
           id: ('selectorGrip_rotateconnector'),
           stroke: '#22C',
           'stroke-width': '1'
         }
-      })
+      }) as SVGElement
     this.selectorGripsGroup.append(this.rotateGripConnector)
 
-    this.rotateGrip =
-      svgCanvas.createSVGElement({
+    this.rotateGrip = svgCanvas.createSVGElement({
         element: 'circle',
         attr: {
           id: 'selectorGrip_rotate',
@@ -378,14 +376,14 @@ export class SelectorManager {
           'stroke-width': 2,
           style: `cursor:url(${svgCanvas.curConfig.imgPath}/rotate.svg) 12 12, auto;`
         }
-      })
+      }) as SVGCircleElement
     this.selectorGripsGroup.append(this.rotateGrip)
     dataStorage.put(this.rotateGrip, 'type', 'rotate')
 
     if (document.getElementById('canvasBackground')) { return }
 
     const [width, height] = svgCanvas.curConfig.dimensions as [number, number]
-    const canvasbg: SVGElement = svgCanvas.createSVGElement({
+    const canvasbg = svgCanvas.createSVGElement({
       element: 'svg',
       attr: {
         id: 'canvasBackground',
@@ -398,7 +396,7 @@ export class SelectorManager {
       }
     })
 
-    const rect: SVGElement = svgCanvas.createSVGElement({
+    const rect = svgCanvas.createSVGElement({
       element: 'rect',
       attr: {
         width: '100%',
@@ -474,8 +472,7 @@ export class SelectorManager {
   */
   getRubberBandBox (): SVGRectElement | null {
     if (!this.rubberBandBox) {
-      this.rubberBandBox =
-        svgCanvas.createSVGElement({
+      this.rubberBandBox = svgCanvas.createSVGElement({
           element: 'rect',
           attr: {
             id: 'selectorRubberBand',
@@ -486,7 +483,7 @@ export class SelectorManager {
             display: 'none',
             style: 'pointer-events:none'
           }
-        })
+        }) as SVGRectElement
       if (this.rubberBandBox) {
         this.selectorParentGroup?.append(this.rubberBandBox)
       }

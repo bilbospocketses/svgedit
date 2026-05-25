@@ -75,8 +75,8 @@ export const init = (canvas: ISvgCanvas): void => {
 */
 const getResolutionMethod = (): { w: number; h: number; zoom: number } => {
   const zoom: number = svgCanvas.getZoom()
-  const w: number = svgCanvas.getSvgContent().getAttribute('width') / zoom
-  const h: number = svgCanvas.getSvgContent().getAttribute('height') / zoom
+  const w: number = Number(svgCanvas.getSvgContent().getAttribute('width')) / zoom
+  const h: number = Number(svgCanvas.getSvgContent().getAttribute('height')) / zoom
 
   return {
     w,
@@ -90,9 +90,9 @@ const getResolutionMethod = (): { w: number; h: number; zoom: number } => {
 * @param [elem]
 */
 const getTitleMethod = (elem?: Element): string | undefined => {
-  const selectedElements: Element[] = svgCanvas.getSelectedElements()
+  const selectedElements = svgCanvas.getSelectedElements()
   const dataStorage = svgCanvas.getDataStorage()
-  elem = elem ?? selectedElements[0]
+  elem = elem ?? selectedElements[0] ?? undefined
   if (!elem) { return undefined }
   if (dataStorage.has(elem, 'gsvg')) {
     elem = dataStorage.get(elem, 'gsvg') as Element
@@ -119,14 +119,14 @@ const setGroupTitleMethod = (val: string): void => {
     InsertElementCommand, RemoveElementCommand,
     ChangeElementCommand, BatchCommand
   } = svgCanvas.history
-  const selectedElements: Element[] = svgCanvas.getSelectedElements()
+  const selectedElements = svgCanvas.getSelectedElements()
   const dataStorage = svgCanvas.getDataStorage()
   let elem: Element | null = selectedElements[0] ?? null
   if (!elem) { return }
   if (dataStorage.has(elem, 'gsvg')) {
-    elem = dataStorage.get(elem, 'gsvg')
+    elem = dataStorage.get(elem, 'gsvg') as Element | null
   } else if (dataStorage.has(elem, 'symbol')) {
-    elem = dataStorage.get(elem, 'symbol')
+    elem = dataStorage.get(elem, 'symbol') as Element | null
   }
   if (!elem) { return }
 
@@ -144,12 +144,12 @@ const setGroupTitleMethod = (val: string): void => {
     if (!title) { return }
     const { nextSibling } = title
     title.remove()
-    batchCmd.addSubCommand(new RemoveElementCommand(title, nextSibling, elem))
+    batchCmd.addSubCommand(new RemoveElementCommand(title as unknown as Element, nextSibling, elem))
   } else if (title) {
     const oldText = title.textContent
     if (oldText === val) { return }
     title.textContent = val
-    batchCmd.addSubCommand(new ChangeElementCommand(title, { '#text': oldText }))
+    batchCmd.addSubCommand(new ChangeElementCommand(title as unknown as Element, { '#text': oldText }))
   } else {
     const newTitle = svgCanvas.getDOMDocument().createElementNS(NS.SVG, 'title')
     newTitle.textContent = val
@@ -194,11 +194,11 @@ const setDocumentTitleMethod = (newTitle: string): void => {
     const oldTitle = docTitle.textContent
     if (oldTitle === newTitle) { return }
     docTitle.textContent = newTitle
-    batchCmd.addSubCommand(new ChangeElementCommand(docTitle, { '#text': oldTitle }))
+    batchCmd.addSubCommand(new ChangeElementCommand(docTitle as unknown as Element, { '#text': oldTitle }))
   } else {
     const { nextSibling } = docTitle
     docTitle.remove()
-    batchCmd.addSubCommand(new RemoveElementCommand(docTitle, nextSibling, svgContent))
+    batchCmd.addSubCommand(new RemoveElementCommand(docTitle as unknown as Element, nextSibling, svgContent))
   }
 
   if (!batchCmd.isEmpty()) {
@@ -216,7 +216,8 @@ const setResolutionMethod = (x: number | 'fit', y: number): boolean => {
   const { ChangeElementCommand, BatchCommand } = svgCanvas.history
   const res: { w: number; h: number } = svgCanvas.getResolution()
   const { w, h } = res
-  let batchCmd: { addSubCommand: (c: unknown) => void; isEmpty: () => boolean } | undefined
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let batchCmd: any
 
   if (x === 'fit') {
     const bbox = getStrokedBBoxDefaultVisible()
@@ -259,7 +260,7 @@ const setResolutionMethod = (x: number | 'fit', y: number): boolean => {
     svgCanvas.contentW = newW
     svgCanvas.contentH = newH
     svgContent.setAttribute('viewBox', [0, 0, newW, newH].join(' '));
-    (batchCmd as { addSubCommand: (c: unknown) => void }).addSubCommand(new ChangeElementCommand(svgContent, { width: w, height: h, viewBox: oldViewBox }))
+    batchCmd.addSubCommand(new ChangeElementCommand(svgContent, { width: String(w), height: String(h), viewBox: oldViewBox }))
 
     svgCanvas.addCommandToHistory(batchCmd)
     svgCanvas.call('changed', [svgContent])

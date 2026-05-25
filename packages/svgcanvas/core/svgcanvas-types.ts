@@ -72,7 +72,11 @@ import type {
 } from '../common/util.js'
 
 export interface ISvgCanvas {
+  // ── Escape-hatch for dynamic property access ──────────────────────────
+  [key: string]: any
+
   // ── Instance fields: primitive / simple state ──────────────────────────
+  configObj: { curConfig: Record<string, any> }
   saveOptions: { round_digits: number; apply?: boolean; images?: string }
   importIds: Record<string, any>
   extensions: Record<string, any>

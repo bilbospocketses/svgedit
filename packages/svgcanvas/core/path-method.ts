@@ -1225,7 +1225,7 @@ export class Path {
     }
 
     const closedSubpath = Path.subpathIsClosed(this.selected_pts[0] ?? 0)
-    svgCanvas.addPtsToSelection({ grips, closedSubpath })
+    svgCanvas.addPtsToSelection({ grips: grips.filter((g): g is SVGCircleElement => g !== null), closedSubpath })
   }
 
   // STATIC
