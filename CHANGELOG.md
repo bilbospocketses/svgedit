@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (Step 12b — Editor + EditorStartup class unification — 2026-05-25)
+
+**Commit 1 (`ae711453`): merge EditorStartup into Editor.**
+- Collapsed `EditorStartup` base class (784 LOC) into `Editor`, eliminating the two-class inheritance
+- Removed the `[key: string]: any` index signature — the last type-safety escape hatch in the editor layer
+- Removed 30 `declare` forward-declarations (now real property declarations on the single class)
+- Merged imports, deduplicated SvgCanvas destructuring (`$id`, `$click`, `decode64`, `convertUnit`)
+- Inlined `readySignal()` at its single call site (6-line body, module-level function eliminated)
+- Inlined `getWidth()`/`getHeight()` as unified `getMaxDimension()` helper
+
+**4 real bugs the index signature was hiding (fixed in same commit):**
+- `this.changeZoom(0.1)` → `this.bottomPanel.changeZoom(0.1)` (wrong receiver — method lives on BottomPanel)
+- `this.localStorage` → `this.storage` (wrong property name — actual property is `storage`)
+- `this.setTitles()` → removed (dead code — method never existed; call was silently a no-op)
+- `EmbedServer` constructor — added necessary cast now that index signature no longer satisfies type constraint
+
+**Commit 2 (`f71292af`): extract init() into standalone function.**
+- Created `editorInit.ts` (591 LOC) with `initEditor(editor: Editor)` function
+- `Editor.init()` reduced to one-liner: `await initEditor(this)`
+- Init-only imports moved to `editorInit.ts`; `Rulers` changed to type-only import in `Editor.ts`
+- Type-only import of `Editor` in `editorInit.ts` avoids circular runtime dependency
+
+**Resulting file structure:** `Editor.ts` (1,430 LOC) + `editorInit.ts` (591 LOC). `EditorStartup.ts` deleted.
+
+**Verification:** tsc 0 / lint 0e+0w / vitest 701/701 / e2e 250/250.
+
 ### Fixed (Step 10 + 10b — UI/UX correctness — 2026-05-25)
 
 Four fixes across two PRs:
