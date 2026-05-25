@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (#3 PR-4b — se-gradient-editor + se-paint-picker complete jQuery elimination — 2026-05-25)
+
+Second and final sub-PR under todo item #3 PR-4 (jGraduate + jPicker Lit-rewrite). Replaces the jQuery-based gradient editor and wires everything into the editor.
+
+**New files (3):**
+- **se-gradient-stop.ts** — individual draggable gradient stop marker with Pointer Events, SVG teardrop shape, stop-select/move/edit/delete events
+- **se-gradient-editor.ts** (931 LOC) — full gradient editor: 3-tab interface (solid/linear/radial), live SVG gradient preview (256x256), draggable coordinate markers, stop track with add/delete/reorder, inline se-color-picker for stop color editing, parameter sliders (radius/ellipticity/angle/opacity), spread method selection, Paint construction on Ok
+- **se-paint-picker.ts** — top-level host registered as `<se-colorpicker>` (same tag name, zero consumer HTML changes). Wraps se-gradient-editor with trigger/popup pattern. `update()` renamed to `updatePaint()` to avoid LitElement lifecycle collision.
+
+**Consumer rewiring (3 files):**
+- `BottomPanel.ts` — `jGraduate.Paint` → `SvgCanvas.Paint` (4 sites), `.update()` → `.updatePaint()` (2 sites)
+- `PaintBox.ts` — `jGraduate.Paint` → `SvgCanvas.Paint`
+- `components/index.ts` — import path updated
+
+**Deleted (7 files, ~2,312 LOC removed):**
+- jQuery.jGraduate.ts (1,290 LOC), seColorPicker.ts (843 LOC), jPickerShim.ts (transitional from PR-4a)
+- 4 image assets: rangearrows2.gif, NoColor.png, mappoint_c.png, mappoint_f.png
+
+**Combined PR-4 totals (4a + 4b):** ~4,953 LOC deleted, ~2,100 LOC added. **jQuery fully eliminated** from the editor component tree. **ESLint: 23 warnings → 0.**
+
+**Verification:** tsc 0 / lint 0e+0w / vitest 695/695.
+
 ### Changed (#3 PR-4a — se-color-picker replaces jQuery.jPicker — 2026-05-24)
 
 First of 2 sub-PRs under todo item #3 PR-4 (jGraduate + jPicker Lit-rewrite). Replaces the jQuery-based Photoshop-style color picker with a Lit component using Canvas 2D rendering.
