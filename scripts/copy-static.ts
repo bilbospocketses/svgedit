@@ -13,7 +13,6 @@ const targets: Array<[string, string]> = [
   ['src/editor/iife-index.html', 'iife-index.html'],
   ['src/editor/svgedit.css', 'svgedit.css'],
   ['src/editor/images', 'images'],
-  ['src/editor/components/jgraduate/images', 'components/jgraduate/images'],
   ['src/editor/extensions', 'extensions'],
   // Test harness assets for Playwright (unit-style tests in browser)
   ['src/editor/tests', 'tests'],
