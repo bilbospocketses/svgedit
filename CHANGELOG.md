@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (PR-6 — triage sweep + mechanical fixes — 2026-05-25)
+
+Backlog-clearing PR: correctness fixes, dead code removal, i18n completeness, and code-quality improvements from todo #10 and #2 TS migration follow-ups.
+
+**Correctness fixes (2):**
+- `cmenuDialog.ts` — `screen.width/height` replaced with `window.innerWidth/Height` (context menu viewport positioning)
+- `contextmenu.ts` — `appendChild(string)` replaced with `insertAdjacentHTML` (extension menu items were silently failing to render)
+
+**Dead code removal (1):**
+- `NS.MATH` namespace definition + sole consumer in `selection.ts` removed (no MathML authoring support)
+
+**i18n (1):**
+- 12 missing ext-markers tooltip keys added to `lang.en.ts` (`tools.mkr_*` + `tools.*_marker_list_opts`)
+
+**Code quality (4):**
+- `path.ts` mutable export refactored to `getPath()`/`setPath()` accessors
+- `locale.ts` compound conditional split into two clear early returns
+- `seAlert`/`seConfirm`/`seSelect` consolidated from 3 files + 5 scattered `declare function` sites into `globalDialogs.ts` + one ambient `.d.ts`
+- Two pre-existing un-awaited `seConfirm` calls fixed (`Editor.ts` cancelOverlays + `EditorStartup.ts` layer-move confirmation)
+
+**Closed as moot/intentional (4):** jQuery.jPicker DOM bugs (file deleted), `super.attributeChangedCallback()` (correct in Lit), `getVersion()` (doesn't exist), `document.getElementById` inline scripts (intentional).
+
+**Deferred to PR-12 (2):** EditorStartup `[key: string]: any` (SelectModule refactor), SVGPathSegment cast sites (type unification design).
+
+**Verification:** tsc 0 / lint 0e+0w / vitest 695/695 / e2e 250/250.
+
 ### Changed (#3 PR-5 — jamilih dependency removed — 2026-05-25)
 
 Final sub-PR under todo item #3 (elix → Lit migration). Removes the `jamilih` devDependency (0.63.1) from package.json. All jamilih usage was already eliminated during earlier PRs (TS migration + Lit component conversions replaced jamilih's declarative-DOM role with Lit's `html\`\`` template literals). This was the last third-party dependency from the original elix/jQuery/jamilih stack.
