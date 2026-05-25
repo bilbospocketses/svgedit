@@ -812,10 +812,6 @@ export const getBBoxWithTransform = (
   addSVGElementsFromJson: AddSVGElementsFromJsonFn,
   pathActions: PathActions
 ): BBoxObject | null => {
-  // TODO: Fix issue with rotated groups. Currently they work
-  // fine in FF, but not in other browsers (same problem mentioned
-  // in Issue 339 comment #2). audit-flagged at :941-942 — see todo #10
-
   let bb = getBBox(elem)
   if (!bb) return null
 
