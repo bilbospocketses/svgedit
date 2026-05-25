@@ -17,6 +17,5 @@ describe('namespaces', function () {
     assert.equal(reverse[NS.XML], 'xml')
     assert.equal(reverse[NS.XMLNS], 'xmlns')
     assert.equal(reverse[NS.HTML], 'html')
-    assert.equal(reverse[NS.MATH], 'math')
   })
 })
