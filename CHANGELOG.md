@@ -7,14 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed (Step 10 — UI/UX correctness — 2026-05-25)
+### Fixed (Step 10 + 10b — UI/UX correctness — 2026-05-25)
 
-Two mechanical fixes:
+Four fixes across two PRs:
 
 - `event.ts` — parent walk after click now traverses `<a>` alongside `<g>` (links already implemented; stale TODO removed)
 - `TopPanel.ts` — added `polyline`/`polygon` to panels lookup (contextual tools now show when selected)
-
-**Deferred (2 design items):** `canDeleteNodes` unconditional set (path node deletion rules), cursor reset after text creation (mode-change lifecycle hook).
+- `svgcanvas.ts` — removed dead `canDeleteNodes = true` assignment (getter already returns correct value dynamically)
+- `svgcanvas.ts` — `setCurrentMode()` now dispatches `modeChange` event (fixes stale cursor after text creation — root cause was `setCursorStyle` never firing on internal mode transitions)
 
 **Verification:** tsc 0 / lint 0e+0w / vitest 701/701 / e2e 250/250.
 
