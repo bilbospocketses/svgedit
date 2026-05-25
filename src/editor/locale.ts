@@ -100,7 +100,7 @@ const i18nextFacade = {
 
 /**
  * No-op stand-in for the old i18next-based loader. Kept on the same
- * signature so `EditorStartup.js` and friends don't need to change.
+ * signature so `Editor.ts` and friends don't need to change.
  *
  */
 export const putLocale = function (

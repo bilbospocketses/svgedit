@@ -21,7 +21,8 @@ import { isMac } from '@svgedit/svgcanvas/common/browser'
 
 import SvgCanvas from '@svgedit/svgcanvas'
 import ConfigObj from './ConfigObj.js'
-import EditorStartup from './EditorStartup.js'
+import type Rulers from './Rulers.js'
+import { initEditor } from './editorInit.js'
 import LeftPanel from './panels/LeftPanel.js'
 import TopPanel from './panels/TopPanel.js'
 import BottomPanel from './panels/BottomPanel.js'
@@ -43,7 +44,8 @@ const { $id, $click, decode64 } = SvgCanvas
 /**
  *
  */
-class Editor extends EditorStartup {
+class Editor {
+  // --- Properties from Editor ---
   langChanged: boolean
   showSaveWarning: boolean
   storagePromptState: 'ignore' | 'waiting' | 'closed'
@@ -56,14 +58,48 @@ class Editor extends EditorStartup {
   exportWindowName: string | null
   docprops: boolean
   shortcuts: any[]
-  /** Embed-API server instance; accessible to EditorStartup for calling .ready() and wiring canvas events. */
+  /** Embed-API server instance; accessible for calling .ready() and wiring canvas events. */
   public readonly _embedServer!: EmbedServer
+
+  // --- Properties (startup own) ---
+  extensionsAdded: boolean
+  messageQueue: any[]
+  $container: HTMLElement
+
+  // --- Properties (startup forward-declared) ---
+  configObj!: any
+  svgCanvas!: any
+  i18next!: any
+  $svgEditor!: HTMLElement
+  workarea!: HTMLElement
+  leftPanel!: any
+  bottomPanel!: any
+  topPanel!: any
+  layersPanel!: any
+  mainMenu!: any
+  rulers!: Rulers
+  canvMenu!: HTMLElement | null
+  exportWindow!: Window | null
+  defaultImageURL!: string
+  uiContext!: string
+  selectedElement!: Element | null
+  multiselected!: boolean
+  enableToolCancel!: boolean
+  modeEvent!: any
+  exportWindowCt!: number
+  goodLangs!: string[]
+  storage!: Storage | null
+  isReady!: boolean
+  setPanning!: (active: boolean) => void
+  setConfig!: (...args: any[]) => any
 
   /**
    *
    */
   constructor (div: HTMLElement | null = null) {
-    super(div)
+    this.extensionsAdded = false
+    this.messageQueue = []
+    this.$container = (div ?? $id('svg_editor')) as HTMLElement
     /**
      */
     this.langChanged = false
@@ -323,8 +359,8 @@ class Editor extends EditorStartup {
 
     // Embed-API wire-in (Task 11). Activates only when ?embed=1 OR window.parent !== window.
     // Default dialog handlers wrap existing window.seAlert / window.seConfirm (see ambient declarations above).
-    // svgCanvas event binding is deferred to EditorStartup.init() where svgCanvas is actually created.
-    ;(this as { _embedServer: EmbedServer })._embedServer = new EmbedServer(this, {
+    // svgCanvas event binding is deferred to init() where svgCanvas is actually created.
+    ;(this as { _embedServer: EmbedServer })._embedServer = new EmbedServer(this as any, {
       version: SVGEDIT_VERSION,
       defaultDialogHandlers: {
         alert: (msg) => { seAlert(msg); return Promise.resolve() },
@@ -337,6 +373,140 @@ class Editor extends EditorStartup {
       }
     })
   } // end Constructor
+
+  /**
+  * Auto-run after a Promise microtask.
+  * @function module:SVGthis.init
+  */
+  async init () {
+    await initEditor(this)
+  }
+
+  /**
+   * @fires module:svgcanvas.SvgCanvas#event:ext_addLangData
+   * @fires module:svgcanvas.SvgCanvas#event:ext_langReady
+   * @fires module:svgcanvas.SvgCanvas#event:ext_langChanged
+   * @fires module:svgcanvas.SvgCanvas#event:extensions_added
+   * @returns Resolves to result of {@link module:locale.readLang}
+   */
+  async extAndLocaleFunc () {
+    this.$svgEditor.style.visibility = 'visible'
+    try {
+      // load standard extensions
+      await Promise.all(
+        this.configObj.curConfig.extensions.map(async (extname: string) => {
+          try {
+            // Vite cannot statically analyze these dynamic extension imports.
+            const imported = await import(/* @vite-ignore */ `${this.configObj.curConfig.extPath}/${encodeURIComponent(extname)}/${encodeURIComponent(extname)}.js`)
+            const { name = extname, init: initfn } = imported.default
+            return this.addExtension(name, (initfn && initfn.bind(this)), { langParam: 'en' }) /** @todo  change to current lng */
+          } catch (err) {
+            // Todo: Add config to alert any errors
+            console.error('Extension failed to load: ' + extname + '; ', err)
+            return undefined
+          }
+        })
+      )
+      // load user extensions (given as pathNames)
+      await Promise.all(
+        this.configObj.curConfig.userExtensions.map(async ({ pathName, config }: { pathName: string; config: unknown }) => {
+          try {
+            const imported = await import(/* @vite-ignore */ encodeURI(pathName))
+            const { name, init: initfn } = imported.default
+            return this.addExtension(name, (initfn && initfn.bind(this, config)), {})
+          } catch (err) {
+            // Todo: Add config to alert any errors
+            console.error('Extension failed to load: ' + pathName + '; ', err)
+            return undefined
+          }
+        })
+      )
+      this.svgCanvas.bind(
+        'extensions_added',
+        /**
+        * @param _win
+        * @param _data
+        * @listens module:SvgCanvas#event:extensions_added
+        */
+        (_win: any, _data: any) => {
+          this.extensionsAdded = true
+          this.setAll()
+
+          if (this.storagePromptState === 'ignore') {
+            this.updateCanvas(true)
+          }
+
+          this.messageQueue.forEach(
+            /**
+             * @param messageObj
+             * @fires module:svgcanvas.SvgCanvas#event:message
+             */
+            (messageObj) => {
+              this.svgCanvas.call('message', messageObj)
+            }
+          )
+        }
+      )
+      this.svgCanvas.call('extensions_added')
+    } catch (err) {
+      // Todo: Report errors through the UI
+      console.error(err)
+    }
+  }
+
+  /**
+ * Listens to the mode change, listener is to be added on document
+* @param evt custom modeChange event
+*/
+  modeListener (_evt: Event): void {
+    const mode = this.svgCanvas.getMode()
+
+    this.setCursorStyle(mode)
+  }
+
+  /**
+   * sets cursor styling for workarea depending on the current mode
+   * @param mode
+   */
+  setCursorStyle (mode: string): void {
+    let cs = 'auto'
+    switch (mode) {
+      case 'ext-panning':
+        cs = 'grab'
+        break
+      case 'zoom':
+      case 'shapelib':
+        cs = 'crosshair'
+        break
+      case 'circle':
+      case 'ellipse':
+      case 'rect':
+      case 'square':
+      case 'star':
+      case 'polygon':
+        cs = `url("./images/cursors/${mode}_cursor.svg"), crosshair`
+        break
+      case 'text':
+        cs = 'text'
+        break
+      default:
+        cs = 'auto'
+    }
+
+    this.workarea.style.cursor = cs
+  }
+
+  /**
+   * Listens for Esc key to be pressed to cancel active mode, sets mode to Select
+   */
+  cancelTool () {
+    const mode = this.svgCanvas.getMode()
+    // list of modes that are currently save to cancel
+    const modesToCancel = ['zoom', 'rect', 'square', 'circle', 'ellipse', 'line', 'text', 'star', 'polygon', 'shapelib', 'image']
+    if (modesToCancel.includes(mode)) {
+      this.leftPanel.clickSelect()
+    }
+  }
 
   /**
    *
@@ -825,7 +995,7 @@ class Editor extends EditorStartup {
     const bb = zInfo.bbox
 
     if (zoomlevel < 0.001) {
-      this.changeZoom(0.1)
+      this.bottomPanel.changeZoom(0.1)
       return
     }
 
@@ -1127,7 +1297,7 @@ class Editor extends EditorStartup {
   enableOrDisableClipboard () {
     let svgeditClipboard
     try {
-      svgeditClipboard = this.localStorage.getItem('svgedit_clipboard')
+      svgeditClipboard = this.storage?.getItem('svgedit_clipboard')
     } catch {
       /* empty fn */
     }
@@ -1197,7 +1367,7 @@ class Editor extends EditorStartup {
     const renameLayer =
       oldLayerName === this.i18next.t('notification.common.layer') + ' 1'
 
-    this.setTitles()
+    // setTitles() — removed: method never existed; the index signature masked the TS error
 
     if (renameLayer) {
       this.svgCanvas.renameCurrentLayer(
