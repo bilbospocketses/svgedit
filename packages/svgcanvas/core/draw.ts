@@ -75,14 +75,14 @@ const getNewLayerName = (existingLayerNames: string[]): string => {
  * This class encapsulates the concept of a SVG-edit drawing.
  */
 export class Drawing {
-  svgElem_: SVGSVGElement
+  #svgElem: SVGSVGElement
   obj_num: number
   idPrefix: string
   releasedNums: number[]
   all_layers: Layer[]
   layer_map: Record<string, Layer>
   current_layer: Layer | null
-  nonce_: string | number
+  #nonce: string | number
 
   /**
    * @param svgElem - The SVG DOM Element that this JS object
@@ -107,7 +107,7 @@ export class Drawing {
     /**
      * The SVG DOM Element that represents this drawing.
      */
-    this.svgElem_ = svgElem
+    this.#svgElem = svgElem
 
     /**
      * The latest object number used in this drawing.
@@ -147,12 +147,12 @@ export class Drawing {
     /**
      * The nonce to use to uniquely identify elements across drawings.
      */
-    this.nonce_ = ''
-    const n = this.svgElem_.getAttributeNS(NS.SE, 'nonce')
+    this.#nonce = ''
+    const n = this.#svgElem.getAttributeNS(NS.SE, 'nonce')
     // If already set in the DOM, use the nonce throughout the document
     // else, if randomizeIds(true) has been called, create and set the nonce.
     if (n && randIds !== RandomizeModes.NEVER_RANDOMIZE) {
-      this.nonce_ = n
+      this.#nonce = n
     } else if (randIds === RandomizeModes.ALWAYS_RANDOMIZE) {
       this.setNonce(Math.floor(Math.random() * 100001))
     }
@@ -162,35 +162,35 @@ export class Drawing {
    * @param id Element ID to retrieve
    * @returns SVG element within the root SVGSVGElement
    */
-  getElem_ (id: string): Element | null {
-    if (this.svgElem_.querySelector) {
+  #getElem (id: string): Element | null {
+    if (this.#svgElem.querySelector) {
       // querySelector lookup
-      return this.svgElem_.querySelector(`#${id}`)
+      return this.#svgElem.querySelector(`#${id}`)
     }
     // jQuery lookup: twice as slow as xpath in FF
-    return this.svgElem_.querySelector(`[id=${id}]`)
+    return this.#svgElem.querySelector(`[id=${id}]`)
   }
 
   /**
    */
   getSvgElem (): SVGSVGElement {
-    return this.svgElem_
+    return this.#svgElem
   }
 
   /**
    * @returns The previously set nonce
    */
   getNonce (): string | number {
-    return this.nonce_
+    return this.#nonce
   }
 
   /**
    * @param n The nonce to set
    */
   setNonce (n: string | number): void {
-    this.svgElem_.setAttributeNS(NS.XMLNS, 'xmlns:se', NS.SE)
-    this.svgElem_.setAttributeNS(NS.SE, 'se:nonce', String(n))
-    this.nonce_ = n
+    this.#svgElem.setAttributeNS(NS.XMLNS, 'xmlns:se', NS.SE)
+    this.#svgElem.setAttributeNS(NS.SE, 'se:nonce', String(n))
+    this.#nonce = n
   }
 
   /**
@@ -199,7 +199,7 @@ export class Drawing {
   clearNonce (): void {
     // We deliberately leave any se:nonce attributes alone,
     // we just don't use it to randomize ids.
-    this.nonce_ = ''
+    this.#nonce = ''
   }
 
   /**
@@ -207,8 +207,8 @@ export class Drawing {
    * @returns The latest object Id.
    */
   getId (): string {
-    return this.nonce_
-      ? `${this.idPrefix}${this.nonce_}_${this.obj_num}`
+    return this.#nonce
+      ? `${this.idPrefix}${this.#nonce}_${this.obj_num}`
       : this.idPrefix + this.obj_num
   }
 
@@ -236,7 +236,7 @@ export class Drawing {
 
     // Ensure the ID does not exist.
     let id = this.getId()
-    while (this.getElem_(id)) {
+    while (this.#getElem(id)) {
       if (restoreOldObjNum) {
         this.obj_num = oldObjNum
         restoreOldObjNum = false
@@ -260,7 +260,7 @@ export class Drawing {
    */
   releaseId (id: string): boolean {
     // confirm if this is a valid id for this Document, else return false
-    const front = `${this.idPrefix}${this.nonce_ ? `${this.nonce_}_` : ''}`
+    const front = `${this.idPrefix}${this.#nonce ? `${this.#nonce}_` : ''}`
     if (typeof id !== 'string' || !id.startsWith(front)) {
       return false
     }
@@ -386,7 +386,7 @@ export class Drawing {
     } else {
       refGroup = this.all_layers[newpos]?.getGroup() ?? null
     }
-    this.svgElem_.insertBefore(currentGroup, refGroup) // Ok to replace with `refGroup.before(currentGroup);`?
+    this.#svgElem.insertBefore(currentGroup, refGroup) // Ok to replace with `refGroup.before(currentGroup);`?
 
     this.identifyLayers()
     this.setCurrentLayer(this.getLayerName(newpos))
@@ -411,7 +411,7 @@ export class Drawing {
     hrService.startBatchCommand('Merge Layer')
 
     const layerNextSibling = currentGroup.nextSibling
-    hrService.removeElement(currentGroup, layerNextSibling, this.svgElem_)
+    hrService.removeElement(currentGroup, layerNextSibling, this.#svgElem)
 
     while (currentGroup.firstChild) {
       const child = currentGroup.firstChild
@@ -503,14 +503,14 @@ export class Drawing {
   identifyLayers (): void {
     this.all_layers = []
     this.layer_map = {}
-    const numchildren = this.svgElem_.childNodes.length
+    const numchildren = this.#svgElem.childNodes.length
     // loop through all children of SVG element
     const orphans: Element[] = []
     const layernames: string[] = []
     let layer: Layer | null = null
     let childgroups = false
     for (let i = 0; i < numchildren; ++i) {
-      const child = this.svgElem_.childNodes.item(i)
+      const child = this.#svgElem.childNodes.item(i)
       // for each g, find its layer name
       if (child?.nodeType === 1) {
         const childEl = child as Element
@@ -536,7 +536,7 @@ export class Drawing {
     // If orphans or no layers found, create a new layer and add all the orphans to it
     if (orphans.length > 0 || !childgroups) {
       const name = getNewLayerName(layernames)
-      layer = new Layer(name, null, this.svgElem_)
+      layer = new Layer(name, null, this.#svgElem)
       layer.appendChildren(orphans)
       this.all_layers.push(layer)
       this.layer_map[name] = layer
@@ -569,7 +569,7 @@ export class Drawing {
     }
 
     // Crate new layer and add to DOM as last layer
-    const layer = new Layer(name, null, this.svgElem_)
+    const layer = new Layer(name, null, this.#svgElem)
     // Like to assume hrService exists, but this is backwards compatible with old version of createLayer.
     if (hrService) {
       hrService.startBatchCommand('Create Layer')
@@ -607,7 +607,7 @@ export class Drawing {
 
     // Create new group and add to DOM just after current_layer
     const currentGroup = this.current_layer.getGroup()
-    const layer = new Layer(name, currentGroup, this.svgElem_)
+    const layer = new Layer(name, currentGroup, this.#svgElem)
     const group = layer.getGroup()
 
     // Clone children
