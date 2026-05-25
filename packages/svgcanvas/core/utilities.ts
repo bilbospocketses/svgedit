@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument */
 /**
  * Miscellaneous utilities.
  * @module utilities
@@ -39,14 +39,15 @@ const visElems =
   'a,circle,ellipse,foreignObject,g,image,line,path,polygon,polyline,rect,svg,text,tspan,use,clipPath'
 const visElemsArr = visElems.split(',')
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let svgCanvas: any = null
+import type { ISvgCanvas } from './svgcanvas-types.js'
+
+let svgCanvas = null as unknown as ISvgCanvas
 let svgroot_: SVGSVGElement | null = null
 
 /**
  * Initializes this module with the canvas context.
  */
-export const init = (canvas: { getSvgRoot(): SVGSVGElement }): void => {
+export const init = (canvas: ISvgCanvas): void => {
   svgCanvas = canvas
   svgroot_ = canvas.getSvgRoot()
 }
@@ -707,8 +708,7 @@ export const getBBoxOfElementAsPath = (
  * @param addCommandToHistory - see [canvas.addCommandToHistory]{@link module:svgcanvas~addCommandToHistory}
  * @returns The converted path element or null if the DOM element was not recognized.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const convertToPath = (elem: Element, attrs: Record<string, unknown>, svgCanvas: any): SVGPathElement | null => {
+export const convertToPath = (elem: Element, attrs: Record<string, unknown>, svgCanvas: ISvgCanvas): SVGPathElement | null => {
   const batchCmd = new svgCanvas.history.BatchCommand('Convert element to Path')
 
   // Any attribute on the element not covered by the passed-in attributes
@@ -716,7 +716,7 @@ export const convertToPath = (elem: Element, attrs: Record<string, unknown>, svg
 
   const path = svgCanvas.addSVGElementsFromJson({
     element: 'path',
-    attr: attrs
+    attr: attrs as Record<string, string | number>
   })
 
   const eltrans = elem.getAttribute('transform')
@@ -751,7 +751,7 @@ export const convertToPath = (elem: Element, attrs: Record<string, unknown>, svg
       new svgCanvas.history.RemoveElementCommand(
         elem,
         nextSibling,
-        elem.parentNode
+        elem.parentNode as Node
       )
     )
     svgCanvas.clearSelection()
@@ -764,7 +764,7 @@ export const convertToPath = (elem: Element, attrs: Record<string, unknown>, svg
 
     svgCanvas.addCommandToHistory(batchCmd)
 
-    return path
+    return path as unknown as SVGPathElement
   }
   // the elem.tagName was not recognized, so no "d" attribute. Remove it, so we've haven't changed anything.
   path.remove()
@@ -1193,7 +1193,7 @@ export const cleanupElement = (element: Element): void => {
  */
 export const snapToGrid = (value: number): number => {
   const unit: string = svgCanvas.getBaseUnit()
-  let stepSize: number = svgCanvas.getSnappingStep()
+  let stepSize: number = Number(svgCanvas.getSnappingStep())
   if (unit !== 'px') {
     stepSize *= getTypeMap()[unit] ?? 1
   }

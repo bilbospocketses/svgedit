@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Module augmentation declaring methods that core/*.ts init() functions
 // attach to the SvgCanvas instance at runtime. Hand-maintained.
 //
@@ -19,46 +20,44 @@ import type {} from './svgcanvas'
 declare module './svgcanvas' {
   interface SvgCanvas {
     // From core/elem-get-set.js (init wires these on)
-    getBold: (...args: unknown[]) => unknown
-    setBold: (...args: unknown[]) => unknown
-    getItalic: (...args: unknown[]) => unknown
-    setItalic: (...args: unknown[]) => unknown
-    hasTextDecoration: (...args: unknown[]) => unknown
-    addTextDecoration: (...args: unknown[]) => unknown
-    removeTextDecoration: (...args: unknown[]) => unknown
-    setTextAnchor: (...args: unknown[]) => unknown
-    setLetterSpacing: (...args: unknown[]) => unknown
-    setWordSpacing: (...args: unknown[]) => unknown
-    setTextLength: (...args: unknown[]) => unknown
-    setLengthAdjust: (...args: unknown[]) => unknown
-    getFontFamily: (...args: unknown[]) => unknown
-    setFontFamily: (...args: unknown[]) => unknown
-    setFontColor: (...args: unknown[]) => unknown
-    getFontColor: (...args: unknown[]) => unknown
-    getFontSize: (...args: unknown[]) => unknown
-    setFontSize: (...args: unknown[]) => unknown
-    getText: (...args: unknown[]) => unknown
-    setTextContent: (...args: unknown[]) => unknown
-    setImageURL: (...args: unknown[]) => unknown
-    setLinkURL: (...args: unknown[]) => unknown
-    setRectRadius: (...args: unknown[]) => unknown
-    makeHyperlink: (...args: unknown[]) => unknown
-    removeHyperlink: (...args: unknown[]) => unknown
-    // setSegType is wired top-level here, separate from shim's pathActions.setSegType
-    // (the nested one is a path-actions module method; this one delegates to it)
-    setSegType: (...args: unknown[]) => unknown
-    setStrokeWidth: (...args: unknown[]) => unknown
-    getTitle: (...args: unknown[]) => unknown
-    setGroupTitle: (...args: unknown[]) => unknown
-    setStrokeAttr: (...args: unknown[]) => unknown
-    setBackground: (...args: unknown[]) => unknown
-    setDocumentTitle: (...args: unknown[]) => unknown
-    getEditorNS: (...args: unknown[]) => unknown
-    setBBoxZoom: (...args: unknown[]) => unknown
-    setCurrentZoom: (...args: unknown[]) => unknown
-    setColor: (...args: unknown[]) => unknown
-    setGradient: (...args: unknown[]) => unknown
-    setPaint: (...args: unknown[]) => unknown
+    getBold: () => boolean
+    setBold: (b: boolean) => void
+    getItalic: () => boolean
+    setItalic: (i: boolean) => void
+    hasTextDecoration: (value: string) => boolean
+    addTextDecoration: (value: string) => void
+    removeTextDecoration: (value: string) => void
+    setTextAnchor: (value: string) => void
+    setLetterSpacing: (value: string) => void
+    setWordSpacing: (value: string) => void
+    setTextLength: (value: string) => void
+    setLengthAdjust: (value: string) => void
+    getFontFamily: () => string
+    setFontFamily: (val: string) => void
+    setFontColor: (val: string) => void
+    getFontColor: () => string
+    getFontSize: () => number
+    setFontSize: (val: number) => void
+    getText: () => string
+    setTextContent: (val: string) => void
+    setImageURL: (val: string) => void
+    setLinkURL: (val: string) => void
+    setRectRadius: (val: string | number) => void
+    makeHyperlink: (url: string) => void
+    removeHyperlink: () => void
+    setSegType: (newType: number) => void
+    setStrokeWidth: (val: number) => void
+    getTitle: (elem?: Element) => string | undefined
+    setGroupTitle: (val: string) => void
+    setStrokeAttr: (attr: string, val: string | number) => void
+    setBackground: (color: string, url: string) => void
+    setDocumentTitle: (newTitle: string) => void
+    getEditorNS: (add?: boolean) => string
+    setBBoxZoom: (val: unknown, editorW: number, editorH: number) => { zoom: number; bbox: unknown } | undefined
+    setCurrentZoom: (zoomLevel: number) => void
+    setColor: (type: string, val: string, preventUndo?: boolean) => void
+    setGradient: (type: string) => void
+    setPaint: (type: string, paint: any) => void
     // getResolution / setResolution are wired by elem-get-set init()
     getResolution: () => { w: number; h: number; zoom: number }
     setResolution: (x: number | 'fit', y: number) => boolean
@@ -79,50 +78,50 @@ declare module './svgcanvas' {
     addedNew?: boolean
 
     // From core/path.ts (init wires these on)
-    replacePathSeg: (...args: unknown[]) => unknown
-    addPointGrip: (...args: unknown[]) => unknown
+    replacePathSeg: (type: number, index: number, pts: number[], elem?: SVGPathElement | SVGElement | null) => void
+    addPointGrip: (index: number, x?: number, y?: number) => SVGCircleElement
     removePath_: (id: string) => void
-    getPath_: (elem: SVGPathElement) => unknown
-    addCtrlGrip: (...args: unknown[]) => unknown
-    getCtrlLine: (...args: unknown[]) => unknown
-    getGripPt: (...args: unknown[]) => unknown
-    getPointFromGrip: (...args: unknown[]) => unknown
+    getPath_: (elem: SVGPathElement) => any
+    addCtrlGrip: (id: string) => SVGCircleElement
+    getCtrlLine: (id: string) => SVGLineElement
+    getGripPt: (seg: any, altPt?: { x: number; y: number } | null) => { x: number; y: number }
+    getPointFromGrip: (pt: { x: number; y: number }, pth: any) => { x: number; y: number }
     setLinkControlPoints: (lcp: boolean) => void
     reorientGrads: (elem: Element, m: SVGMatrix) => void
     recalcRotatedPath: () => void
     getSegData: () => Record<number, string[]>
     getUIStrings: () => Record<string, string>
-    getPathObj: () => unknown
-    setPathObj: (obj: unknown) => void
+    getPathObj: () => any
+    setPathObj: (obj: any) => void
     getPathFuncs: () => (string | number)[]
     getLinkControlPts: () => boolean
 
     // From core/selected-elem.js (init wires these on)
-    pushGroupProperties: (...args: unknown[]) => unknown
-    flipSelectedElements: (...args: unknown[]) => unknown
-    alignSelectedElements: (...args: unknown[]) => unknown
-    updateCanvas: (...args: unknown[]) => unknown
-    cycleElement: (...args: unknown[]) => unknown
-    cloneSelectedElements: (...args: unknown[]) => unknown
+    pushGroupProperties: (g: Element, undoable: boolean) => any
+    flipSelectedElements: (scaleX: number, scaleY: number) => void
+    alignSelectedElements: (type: string, relativeTo: string) => void
+    updateCanvas: (w: number, h: number) => { x: number; y: number; old_x: number; old_y: number; d_x: number; d_y: number }
+    cycleElement: (next: boolean | number) => void
+    cloneSelectedElements: (x: number, y: number) => void
     copySelectedElements: () => void
     groupSelectedElements: (type?: string, urlArg?: string) => void
     ungroupSelectedElement: () => void
     moveToTopSelectedElement: () => void
     moveToBottomSelectedElement: () => void
     moveUpDownSelected: (dir: 'Up' | 'Down') => void
-    moveSelectedElements: (dx: number | number[], dy: number | number[], undoable?: boolean) => unknown
+    moveSelectedElements: (dx: number | number[], dy: number | number[], undoable?: boolean) => any
     deleteSelectedElements: () => void
 
     // From core/selection.js (init wires these on)
     clearSelection: (noCall?: boolean) => void
-    getMouseTarget: (...args: unknown[]) => unknown
+    getMouseTarget: (evt: MouseEvent | null) => Element | null
     addToSelection: (elemsToAdd: Element[], showGrips?: boolean) => void
-    getIntersectionList: (...args: unknown[]) => unknown
+    getIntersectionList: (rect?: { x: number; y: number; width: number; height: number }) => Element[] | null
     runExtensions: (opts: { action: string; vars?: unknown }) => unknown[]
-    groupSvgElem: (...args: unknown[]) => unknown
-    prepareSvg: (...args: unknown[]) => unknown
-    recalculateAllSelectedDimensions: (...args: unknown[]) => unknown
-    setRotationAngle: (...args: unknown[]) => unknown
+    groupSvgElem: (elem: Element) => void
+    prepareSvg: (newDoc: XMLDocument) => void
+    recalculateAllSelectedDimensions: () => void
+    setRotationAngle: (val: string | number, preventUndo?: boolean) => void
 
     // From core/undo.js (init wires these on)
     // undoMgr is attached by undo.init() — typed via the history module's UndoManager class

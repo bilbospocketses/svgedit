@@ -19,6 +19,7 @@
 // core/path-method.js to install pathSegList delegation, which core/path-actions.js
 // relies on.
 import 'path-data-polyfill'
+import type { ISvgCanvas } from './core/svgcanvas-types.js'
 import Paint from './core/paint.js'
 import * as pathModule from './core/path.js'
 import * as history from './core/history.js'
@@ -121,7 +122,7 @@ const CLIPBOARD_ID = 'svgedit_clipboard'
  * @memberof module:svgcanvas
  *
  */
-class SvgCanvas {
+class SvgCanvas implements ISvgCanvas {
   // ── Instance fields: primitive / simple state ──────────────────────────
   saveOptions: { round_digits: number; apply?: boolean; images?: string }
   importIds: Record<string, any>
@@ -155,6 +156,7 @@ class SvgCanvas {
   idPrefix: string
   encodableImages: Record<string, string | false>
   curConfig: Record<string, any>
+  get configObj (): { curConfig: Record<string, any> } { return this }
   lastGoodImgUrl: string
   svgdoc: HTMLDocument
   container: HTMLElement
@@ -174,7 +176,7 @@ class SvgCanvas {
   opacAni: SVGAnimateElement
   linkControlPoints: typeof pathModule.pathActions.linkControlPoints
   curCommand: history.BatchCommand | null
-  filter: any
+  filter: Element | null
   filterHidden: boolean
   modeEvent: CustomEvent | null
   contentW: number
@@ -182,26 +184,132 @@ class SvgCanvas {
   // parameter / nextParameter are set dynamically by event handlers
   parameter?: any
   nextParameter?: any
+  // spaceKey is set by the editor (editorInit.ts) key handlers
+  declare spaceKey: boolean
+  // canvas is a self-reference set via setCanvas('canvas', this)
+  declare canvas: ISvgCanvas
 
   // ── Instance fields: wired on by core/*.ts init() calls ──────────────────
   // These are augmented via svgcanvas.augment.d.ts for external consumers.
   // Declared here with `declare` so the class body can reference them without
   // TS2339 (property does not exist) errors inside this file.
-  declare clearSelection: (noCall?: boolean) => void
-  declare addToSelection: (elemsToAdd: Element[], showGrips?: boolean) => void
-  declare undoMgr: import('./core/history.js').UndoManager
+
+  // From core/elem-get-set.js (init wires these on)
+  declare getBold: () => boolean
+  declare setBold: (b: boolean) => void
+  declare getItalic: () => boolean
+  declare setItalic: (i: boolean) => void
+  declare hasTextDecoration: (value: string) => boolean
+  declare addTextDecoration: (value: string) => void
+  declare removeTextDecoration: (value: string) => void
+  declare setTextAnchor: (value: string) => void
+  declare setLetterSpacing: (value: string) => void
+  declare setWordSpacing: (value: string) => void
+  declare setTextLength: (value: string) => void
+  declare setLengthAdjust: (value: string) => void
+  declare getFontFamily: () => string
+  declare setFontFamily: (val: string) => void
+  declare setFontColor: (val: string) => void
+  declare getFontColor: () => string
+  declare getFontSize: () => number
+  declare setFontSize: (val: number) => void
+  declare getText: () => string
+  declare setTextContent: (val: string) => void
+  declare setImageURL: (val: string) => void
+  declare setLinkURL: (val: string) => void
+  declare setRectRadius: (val: string | number) => void
+  declare makeHyperlink: (url: string) => void
+  declare removeHyperlink: () => void
+  declare setSegType: (newType: number) => void
+  declare setStrokeWidth: (val: number) => void
+  declare getTitle: (elem?: Element) => string | undefined
+  declare setGroupTitle: (val: string) => void
+  declare setStrokeAttr: (attr: string, val: string | number) => void
+  declare setBackground: (color: string, url: string) => void
+  declare setDocumentTitle: (newTitle: string) => void
+  declare getEditorNS: (add?: boolean) => string
+  declare setBBoxZoom: (val: unknown, editorW: number, editorH: number) => { zoom: number; bbox: unknown } | undefined
+  declare setCurrentZoom: (zoomLevel: number) => void
+  declare setColor: (type: string, val: string, preventUndo?: boolean) => void
+  declare setGradient: (type: string) => void
+  declare setPaint: (type: string, paint: any) => void
   declare getResolution: () => { w: number; h: number; zoom: number }
+  declare setResolution: (x: number | 'fit', y: number) => boolean
+
+  // From core/event.ts (init wires these on)
   declare mouseDownEvent: (evt: MouseEvent) => void
   declare mouseMoveEvent: (evt: MouseEvent) => void
   declare dblClickEvent: (evt: MouseEvent) => void
   declare mouseUpEvent: (evt: MouseEvent) => void
   declare mouseOutEvent: (evt: MouseEvent) => void
   declare DOMMouseScrollEvent: (e: WheelEvent) => void
-  declare getTitle: (...args: unknown[]) => unknown
-  declare setPaint: (...args: unknown[]) => unknown
-  declare svgCanvasToString: () => string
+  declare dragStartTransforms?: Map<Element, string>
+  declare hasDragStartTransform?: boolean
+  declare addedNew?: boolean
+
+  // From core/path.ts (init wires these on)
+  declare replacePathSeg: (type: number, index: number, pts: number[], elem?: SVGPathElement | SVGElement | null) => void
+  declare addPointGrip: (index: number, x?: number, y?: number) => SVGCircleElement
+  declare removePath_: (id: string) => void
+  declare getPath_: (elem: SVGPathElement) => any
+  declare addCtrlGrip: (id: string) => SVGCircleElement
+  declare getCtrlLine: (id: string) => SVGLineElement
+  declare getGripPt: (seg: any, altPt?: { x: number; y: number } | null) => { x: number; y: number }
+  declare getPointFromGrip: (pt: { x: number; y: number }, pth: any) => { x: number; y: number }
+  declare setLinkControlPoints: (lcp: boolean) => void
+  declare reorientGrads: (elem: Element, m: SVGMatrix) => void
+  declare recalcRotatedPath: () => void
+  declare getSegData: () => Record<number, string[]>
+  // Note: getUIStrings is also defined as a class method below — the path.ts
+  // init() overwrites it at runtime.  The `declare` is removed to avoid a
+  // TS duplicate-declaration error; the class method signature is authoritative.
+  declare getPathObj: () => any
+  declare setPathObj: (obj: any) => void
+  declare getPathFuncs: () => (string | number)[]
+  declare getLinkControlPts: () => boolean
+
+  // From core/selected-elem.ts (init wires these on)
+  declare pushGroupProperties: (g: Element, undoable: boolean) => any
+  declare flipSelectedElements: (scaleX: number, scaleY: number) => void
+  declare alignSelectedElements: (type: string, relativeTo: string) => void
+  declare updateCanvas: (w: number, h: number) => { x: number; y: number; old_x: number; old_y: number; d_x: number; d_y: number }
+  declare cycleElement: (next: boolean | number) => void
+  declare cloneSelectedElements: (x: number, y: number) => void
   declare copySelectedElements: () => void
+  declare groupSelectedElements: (type?: string, urlArg?: string) => void
+  declare ungroupSelectedElement: () => void
+  declare moveToTopSelectedElement: () => void
+  declare moveToBottomSelectedElement: () => void
+  declare moveUpDownSelected: (dir: 'Up' | 'Down') => void
+  declare moveSelectedElements: (dx: number | number[], dy: number | number[], undoable?: boolean) => any
   declare deleteSelectedElements: () => void
+
+  // From core/selection.js (init wires these on)
+  declare clearSelection: (noCall?: boolean) => void
+  declare getMouseTarget: (evt: MouseEvent | null) => Element | null
+  declare addToSelection: (elemsToAdd: Element[], showGrips?: boolean) => void
+  declare getIntersectionList: (rect?: { x: number; y: number; width: number; height: number }) => Element[] | null
+  declare runExtensions: (opts: { action: string; vars?: unknown }) => unknown[]
+  declare groupSvgElem: (elem: Element) => void
+  declare prepareSvg: (newDoc: XMLDocument) => void
+  declare recalculateAllSelectedDimensions: () => void
+  declare setRotationAngle: (val: string | number, preventUndo?: boolean) => void
+
+  // From core/undo.js (init wires these on)
+  declare undoMgr: import('./core/history.js').UndoManager
+
+  // From core/svg-exec.ts (init wires these on)
+  declare importSvgString: (xmlString: string, preserveDimension?: boolean) => Element | null
+  declare uniquifyElems: (g: Element) => void
+  declare setUseData: (parent: Element) => void
+  declare convertGradients: (elem: Element) => void
+  declare removeUnusedDefElems: () => number
+  declare svgCanvasToString: () => string
+  declare svgToString: (elem: Element, indent: number) => string
+  declare rasterExport: (imgType?: string, quality?: number, windowName?: string, opts?: Record<string, unknown>) => Promise<Record<string, unknown>>
+  declare exportPDF: (windowName?: string, outputType?: string) => Promise<Record<string, unknown>>
+  declare setSvgString: (xmlString: string, preventUndo?: boolean) => boolean
+  declare embedImage: (src: string) => Promise<string | false>
 
   // ── Instance fields: set in initializeSvgCanvasMethods() ───────────────
   // `declare` tells TS "these are definitely assigned (via initializeSvgCanvasMethods)
@@ -348,8 +456,8 @@ class SvgCanvas {
     this.svgroot = svgRootElement(this.svgdoc, dimensions)
     container.append(this.svgroot)
     this.svgContent = this.svgdoc.createElementNS(NS.SVG, 'svg') as SVGSVGElement
-    touchInit(this)
-    clearInit(this)
+    touchInit(this as any)
+    clearInit(this as any)
     this.clearSvgContentElement()
     this.currentDrawing = new draw.Drawing(this.svgContent, this.idPrefix)
     this.zoom = 1
@@ -389,18 +497,18 @@ class SvgCanvas {
     this.selectedElements = []
 
     jsonInit(this as any)
-    utilsInit(this)
-    coordsInit(this)
-    recalculateInit(this)
-    selectInit(this)
-    undoInit(this)
-    selectionInit(this)
+    utilsInit(this as any)
+    coordsInit(this as any)
+    recalculateInit(this as any)
+    selectInit(this as any)
+    undoInit(this as any)
+    selectionInit(this as any)
 
     this.nsMap = getReverseNS()
     this.selectorManager = getSelectorManager()
 
     this.pathActions = pathActions
-    pathModule.init(this)
+    pathModule.init(this as any)
     this.uiStrings = {}
 
     this.opacAni = document.createElementNS(NS.SVG, 'animate') as SVGAnimateElement
@@ -410,11 +518,11 @@ class SvgCanvas {
     this.opacAni.setAttribute('fill', 'freeze')
     this.svgroot.appendChild(this.opacAni)
 
-    eventInit(this)
-    textActionsInit(this)
-    svgInit(this)
-    draw.init(this)
-    elemGetSet.init(this)
+    eventInit(this as any)
+    textActionsInit(this as any)
+    svgInit(this as any)
+    draw.init(this as any)
+    elemGetSet.init(this as any)
 
     const handleLinkInCanvas = (e: Event): false => {
       e.preventDefault()
@@ -435,8 +543,8 @@ class SvgCanvas {
     this.filterHidden = false
     this.modeEvent = null
 
-    blurInit(this)
-    selectedElemInit(this)
+    blurInit(this as any)
+    selectedElemInit(this as any)
 
     const storageChange = (ev: StorageEvent): void => {
       if (!ev.newValue) return
@@ -451,7 +559,7 @@ class SvgCanvas {
     window.addEventListener('storage', storageChange, false)
     localStorage.setItem(`${CLIPBOARD_ID}_startup`, String(Math.random()))
 
-    pasteInit(this)
+    pasteInit(this as any)
 
     this.contentW = this.getResolution().w
     this.contentH = this.getResolution().h
@@ -962,11 +1070,11 @@ class SvgCanvas {
     this.curCommand = value
   }
 
-  getFilter (): any {
+  getFilter (): Element | null {
     return this.filter
   }
 
-  setFilter (value: any): void {
+  setFilter (value: Element | null): void {
     this.filter = value
   }
 
@@ -1391,7 +1499,7 @@ class SvgCanvas {
       opacity: elem.getAttribute('opacity') ?? this.curShape.opacity,
       visibility: 'hidden'
     }
-    return utilitiesConvertToPath(elem, attrs as Record<string, unknown>, this)
+    return utilitiesConvertToPath(elem, attrs as Record<string, unknown>, this as any)
   }
 
   /**
@@ -1495,6 +1603,7 @@ SvgCanvas.isValidUnit = isValidUnit
 SvgCanvas.convertUnit = convertUnit
 
 export default SvgCanvas
+export type { ISvgCanvas } from './core/svgcanvas-types.js'
 
 // Re-export additional utilities (previously in svgcanvas.d.ts shim).
 // Both units.js and utilities.js export an internal `init` symbol;

@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument */
-// svgCanvas is opaquely typed (typed in Task 10 C6); file-level disable matches clear.ts pattern
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any */
 import {
   getStrokedBBoxDefaultVisible,
   getUrlFromAttr
@@ -10,14 +9,15 @@ const {
   InsertElementCommand, BatchCommand
 } = hstry
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let svgCanvas: any = null
+import type { ISvgCanvas } from './svgcanvas-types.js'
+
+let svgCanvas = null as unknown as ISvgCanvas
 
 /**
 * @function module:paste-elem.init
 * @param canvas
 */
-export const init = (canvas: unknown): void => {
+export const init = (canvas: ISvgCanvas): void => {
   svgCanvas = canvas
 }
 
@@ -58,7 +58,7 @@ export const pasteElementsMethod = (type?: 'in_place' | 'point', x?: number, y?:
     if (elem.attr?.id) {
       const oldId = elem.attr.id
       changedIDs[oldId] = svgCanvas.getNextId()
-      elem.attr.id = changedIDs[oldId] as string
+      elem.attr.id = changedIDs[oldId]
     }
     if (elem.children) elem.children.forEach((child) => checkIDs(child))
   }
@@ -93,7 +93,8 @@ export const pasteElementsMethod = (type?: 'in_place' | 'point', x?: number, y?:
   svgCanvas.runExtensions({
     action: 'IDsUpdated',
     vars: { elems: clipb, changes: changedIDs }
-  }).forEach(function (extChanges: { remove?: string[] } | null) {
+  }).forEach(function (result: unknown) {
+    const extChanges = result as { remove?: string[] } | null
     if (!extChanges || !('remove' in extChanges)) return
 
     extChanges.remove?.forEach(function (removeID: string) {
@@ -110,7 +111,7 @@ export const pasteElementsMethod = (type?: 'in_place' | 'point', x?: number, y?:
     const elem = clipb[len]
     if (!elem) { continue }
 
-    const copy: Element = svgCanvas.addSVGElementsFromJson(elem)
+    const copy: Element = svgCanvas.addSVGElementsFromJson(elem as any)
     pasted.push(copy)
     batchCmd.addSubCommand(new InsertElementCommand(copy))
 
@@ -125,8 +126,8 @@ export const pasteElementsMethod = (type?: 'in_place' | 'point', x?: number, y?:
     let ctrY: number | undefined
 
     if (!type) {
-      ctrX = svgCanvas.getLastClickPoint('x') as number
-      ctrY = svgCanvas.getLastClickPoint('y') as number
+      ctrX = svgCanvas.getLastClickPoint('x')
+      ctrY = svgCanvas.getLastClickPoint('y')
     } else if (type === 'point') {
       ctrX = x
       ctrY = y

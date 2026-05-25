@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return */
-// svgCanvas is opaquely typed (typed in Task 10 C6); file-level disable matches utilities.ts pattern
+/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
 /**
  * Tools for drawing.
  * @module draw
@@ -739,13 +738,14 @@ export const randomizeIds = (enableRandomization: boolean, currentDrawing: Drawi
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let svgCanvas: any
+import type { ISvgCanvas } from './svgcanvas-types.js'
+
+let svgCanvas = null as unknown as ISvgCanvas
 /**
  * @function module:draw.init
  * @param canvas
  */
-export const init = (canvas: unknown): void => {
+export const init = (canvas: ISvgCanvas): void => {
   svgCanvas = canvas
 }
 
@@ -1009,6 +1009,7 @@ export const leaveContext = (): void => {
       if (orig === null || orig === undefined) {
         elem.removeAttribute('opacity')
       } else {
+        // eslint-disable-next-line @typescript-eslint/no-base-to-string -- dataStorage returns unknown; orig is a stored opacity string/number
         elem.setAttribute('opacity', String(orig))
       }
       elem.setAttribute('style', 'pointer-events: inherit')

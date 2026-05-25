@@ -44,14 +44,15 @@ const {
   BatchCommand
 } = history
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let svgCanvas: any = null
+import type { ISvgCanvas } from './svgcanvas-types.js'
+
+let svgCanvas = null as unknown as ISvgCanvas
 
 /**
  * @function module:svg-exec.init
  * @param svgContext
  */
-export const init = (canvas: unknown): void => {
+export const init = (canvas: ISvgCanvas): void => {
   svgCanvas = canvas
   svgCanvas.setSvgString = setSvgString
   svgCanvas.importSvgString = importSvgString
@@ -81,14 +82,14 @@ const svgCanvasToString = (): string => {
   const childNodesElems = svgCanvas.getSvgContent().childNodes as NodeList
   childNodesElems.forEach((node: Node, i: number) => {
     if (i && node.nodeType === 8 && (node as Comment).data.includes('Created with')) {
-      svgCanvas.getSvgContent().firstChild.before(node)
+      svgCanvas.getSvgContent().firstChild!.before(node)
     }
   })
 
   // Move out of in-group editing mode
   if (svgCanvas.getCurrentGroup()) {
     draw.leaveContext()
-    svgCanvas.selectOnly([svgCanvas.getCurrentGroup()])
+    svgCanvas.selectOnly([svgCanvas.getCurrentGroup()!])
   }
 
   const nakedSvgs: Element[] = []
@@ -401,11 +402,11 @@ const setSvgString = (xmlString: string, preventUndo?: boolean): boolean => {
     // set new svg document
     if (svgCanvas.getDOMDocument().adoptNode) {
       svgCanvas.setSvgContent(
-        svgCanvas.getDOMDocument().adoptNode(newDoc.documentElement)
+        svgCanvas.getDOMDocument().adoptNode(newDoc.documentElement) as unknown as SVGSVGElement
       )
     } else {
       svgCanvas.setSvgContent(
-        svgCanvas.getDOMDocument().importNode(newDoc.documentElement, true)
+        svgCanvas.getDOMDocument().importNode(newDoc.documentElement, true) as unknown as SVGSVGElement
       )
     }
 
@@ -443,7 +444,7 @@ const setSvgString = (xmlString: string, preventUndo?: boolean): boolean => {
           }
         }
         // Add to encodableImages if it loads
-        svgCanvas.embedImage(val)
+        void svgCanvas.embedImage(val)
       }
     })
     // Duplicate id replace changes
@@ -567,8 +568,8 @@ const setSvgString = (xmlString: string, preventUndo?: boolean): boolean => {
     for (const [key, value] of Object.entries(attrs)) {
       content.setAttribute(key, String(value))
     }
-    svgCanvas.contentW = attrs.width
-    svgCanvas.contentH = attrs.height
+    svgCanvas.contentW = Number(attrs.width)
+    svgCanvas.contentH = Number(attrs.height)
 
     batchCmd.addSubCommand(new InsertElementCommand(svgCanvas.getSvgContent()))
     // update root to the correct size
@@ -584,7 +585,7 @@ const setSvgString = (xmlString: string, preventUndo?: boolean): boolean => {
 
     svgCanvas.clearSelection()
     pathModule.clearData()
-    svgCanvas.getSvgRoot().append(svgCanvas.selectorManager.selectorParentGroup)
+    svgCanvas.getSvgRoot().append(svgCanvas.selectorManager.selectorParentGroup!)
 
     if (!preventUndo) svgCanvas.addCommandToHistory(batchCmd)
     svgCanvas.call('sourcechanged', [svgCanvas.getSvgContent()])
@@ -612,7 +613,7 @@ const importSvgString = (xmlString: string, preserveDimension?: boolean): Elemen
   let useEl: Element | undefined
   try {
     // Get unique ID
-    const uid = hashCode(xmlString)
+    const uid = String(hashCode(xmlString))
 
     let useExisting = false
     // Look for symbol and make sure symbol exists in image
@@ -703,7 +704,7 @@ const importSvgString = (xmlString: string, preserveDimension?: boolean): Elemen
     ;(
       svgCanvas.getCurrentGroup() ||
       svgCanvas.getCurrentDrawing().getCurrentLayer()
-    ).append(useEl)
+    )!.append(useEl)
     batchCmd.addSubCommand(new InsertElementCommand(useEl))
     svgCanvas.clearSelection()
 

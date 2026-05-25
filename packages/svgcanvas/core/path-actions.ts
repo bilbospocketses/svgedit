@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 /**
  * Path functionality.
  * @module path
@@ -21,8 +22,9 @@ import {
 } from './utilities.js'
 import type { PathSeg, Segment } from './path-method.js'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let svgCanvas: any = null
+import type { ISvgCanvas } from './svgcanvas-types.js'
+
+let svgCanvas = null as unknown as ISvgCanvas
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let path: any = null
 
@@ -30,7 +32,7 @@ let path: any = null
 * @function module:path-actions.init
 * @param pathActionsContext
 */
-export const init = (canvas: unknown): void => {
+export const init = (canvas: ISvgCanvas): void => {
   svgCanvas = canvas
   document.addEventListener('keydown', (e: KeyboardEvent) => {
     if (svgCanvas.getCurrentMode() !== 'path') return
@@ -287,10 +289,10 @@ class PathActions {
           const newpts = svgCanvas.smoothControlPoints(prevCtlPt, ct1, curpos)
           if (newpts?.length === 2) {
             const prevArr = (d[d.length - 1] ?? '').split(',')
-            prevArr[2] = newpts[0].x
-            prevArr[3] = newpts[0].y
+            prevArr[2] = String(newpts[0]!.x)
+            prevArr[3] = String(newpts[0]!.y)
             d[d.length - 1] = prevArr.join(',')
-            ct1 = newpts[1]
+            ct1 = newpts[1]!
           }
         }
 
@@ -371,7 +373,7 @@ class PathActions {
             id: svgCanvas.getNextId(),
             opacity: svgCanvas.getOpacity() / 2
           }
-        }))
+        }) as SVGPathElement)
         stretchy.setAttribute('d', `M${mouseX} ${mouseY} ${mouseX} ${mouseY}`)
         index = this.#subpath ? path.segs.length : 0
         svgCanvas.addPointGrip(index, mouseX, mouseY)
@@ -515,7 +517,7 @@ class PathActions {
         )
       }
       const zoom = svgCanvas.getZoom() as number
-      assignAttributes(rubberBox, {
+      assignAttributes(rubberBox!, {
         x: startX * zoom,
         y: startY * zoom,
         width: 0,
@@ -559,7 +561,7 @@ class PathActions {
         pointGrip2.setAttribute('cy', String(altY * zoom))
         pointGrip2.setAttribute('display', 'inline')
 
-        const ctrlLine = svgCanvas.getCtrlLine(1) as SVGLineElement
+        const ctrlLine = svgCanvas.getCtrlLine('1') as SVGLineElement
         assignAttributes(ctrlLine, {
           x1: mouseX,
           y1: mouseY,
@@ -632,7 +634,7 @@ class PathActions {
         if (!seg.next && !seg.prev) return
 
         const rubberBox = svgCanvas.getRubberBox()
-        const rbb = getBBox(rubberBox)
+        const rbb = getBBox(rubberBox!)
         if (!rbb) return
 
         const pt = svgCanvas.getGripPt(seg)
@@ -689,9 +691,9 @@ class PathActions {
         path.selectPt(lastPt)
       }
     } else if (rubberBox?.getAttribute('display') !== 'none') {
-      rubberBox.setAttribute('display', 'none')
+      rubberBox!.setAttribute('display', 'none')
 
-      if (Number(rubberBox.getAttribute('width')) <= 2 && Number(rubberBox.getAttribute('height')) <= 2) {
+      if (Number(rubberBox!.getAttribute('width')) <= 2 && Number(rubberBox!.getAttribute('height')) <= 2) {
         pathActionsMethod.toSelectMode(evt.target as Element)
       }
     } else {
@@ -705,7 +707,7 @@ class PathActions {
     * @param element
     */
   toEditMode (element: Element): void {
-    path = svgCanvas.getPath_(element)
+    path = svgCanvas.getPath_(element as SVGPathElement)
     svgCanvas.setCurrentMode('pathedit')
     svgCanvas.clearSelection()
     path.setPathContext()
@@ -731,8 +733,8 @@ class PathActions {
     }
 
     if (selPath) {
-      svgCanvas.call('selected', [elem])
-      svgCanvas.addToSelection([elem], true)
+      svgCanvas.call('selected', [elem!])
+      svgCanvas.addToSelection([elem!], true)
     }
   }
 
@@ -782,7 +784,7 @@ class PathActions {
 
     svgCanvas.addCommandToHistory(batchCmd)
 
-    svgCanvas.getPath_(elem).show(false).matrix = null
+    svgCanvas.getPath_(elem as SVGPathElement).show(false).matrix = null
 
     this.clear()
 

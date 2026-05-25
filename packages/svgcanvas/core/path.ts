@@ -6,7 +6,7 @@
  * @copyright 2011 Alexis Deveria, 2011 Jeff Schiller
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
 
 import { shortFloat } from './units.js'
 import { transformPoint, getTransformList } from './math.js'
@@ -46,8 +46,9 @@ const segData: Record<number, string[]> = {
   18: ['x', 'y'] // PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let svgCanvas: any = null
+import type { ISvgCanvas } from './svgcanvas-types.js'
+
+let svgCanvas = null as unknown as ISvgCanvas
 const uiStrings: Record<string, string> = {}
 /**
 * @function module:path.setUiStrings
@@ -205,8 +206,7 @@ export function setPath (p: Path | null): void {
 * @function module:path.init
 * @param editorContext
 */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const init = (canvas: any): void => {
+export const init = (canvas: ISvgCanvas): void => {
   svgCanvas = canvas
   svgCanvas.replacePathSeg = replacePathSegMethod
   svgCanvas.addPointGrip = addPointGripMethod

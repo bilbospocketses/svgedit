@@ -5,7 +5,7 @@
  * @copyright 2011 Jeff Schiller
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unnecessary-type-assertion */
+/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unnecessary-type-assertion, @typescript-eslint/no-explicit-any */
 
 import {
   assignAttributes, cleanupElement, getElement, getRotationAngle, snapToGrid, walkTree,
@@ -28,16 +28,16 @@ const {
   ChangeElementCommand
 } = hstry
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let svgCanvas: any = null
+import type { ISvgCanvas } from './svgcanvas-types.js'
+
+let svgCanvas = null as unknown as ISvgCanvas
 let moveSelectionThresholdReached = false
 
 /**
 * @function module:undo.init
 * @param eventContext
 */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const init = (canvas: any): void => {
+export const init = (canvas: ISvgCanvas): void => {
   svgCanvas = canvas
   svgCanvas.mouseDownEvent = mouseDownEvent
   svgCanvas.mouseMoveEvent = mouseMoveEvent
@@ -140,7 +140,7 @@ const mouseMoveEvent = (evt: MouseEvent): void => {
   let angle: number
   let box: { x: number; y: number; width: number; height: number } | null
 
-  const pt = transformPoint(evt.clientX, evt.clientY, svgCanvas.getRootSctm())
+  const pt = transformPoint(evt.clientX, evt.clientY, svgCanvas.getRootSctm()!)
   const mouseX = pt.x * zoom
   const mouseY = pt.y * zoom
   // shape may be null during certain creation modes; pre-existing code
@@ -183,8 +183,8 @@ const mouseMoveEvent = (evt: MouseEvent): void => {
       // this transform is removed upon mousing up and the element is
       // relocated to the new location
       if (selected) {
-        dx = x - svgCanvas.getStartX()
-        dy = y - svgCanvas.getStartY()
+        dx = x - svgCanvas.getStartX()!
+        dy = y - svgCanvas.getStartY()!
         if (svgCanvas.getCurConfig().gridSnapping) {
           dx = snapToGrid(dx)
           dy = snapToGrid(dy)
@@ -197,11 +197,11 @@ const mouseMoveEvent = (evt: MouseEvent): void => {
         moveSelectionThresholdReached = moveSelectionThresholdReached || deltaThresholdReached
 
         if (moveSelectionThresholdReached) {
-          selectedElements.forEach((el: Element) => {
+          selectedElements.forEach((el) => {
             if (el) {
               updateTransformList(svgRoot, el, dx as number, dy as number)
               // update our internal bbox that we're tracking while dragging
-              svgCanvas.selectorManager.requestSelector(el).resize()
+              svgCanvas.selectorManager!.requestSelector(el)!.resize()
             }
           })
           svgCanvas.call('transition', selectedElements)
@@ -212,11 +212,11 @@ const mouseMoveEvent = (evt: MouseEvent): void => {
     case 'multiselect': {
       realX *= zoom
       realY *= zoom
-      assignAttributes(svgCanvas.getRubberBox(), {
-        x: Math.min(svgCanvas.getRStartX(), realX),
-        y: Math.min(svgCanvas.getRStartY(), realY),
-        width: Math.abs(realX - svgCanvas.getRStartX()),
-        height: Math.abs(realY - svgCanvas.getRStartY())
+      assignAttributes(svgCanvas.getRubberBox()!, {
+        x: Math.min(svgCanvas.getRStartX()!, realX),
+        y: Math.min(svgCanvas.getRStartY()!, realY),
+        width: Math.abs(realX - svgCanvas.getRStartX()!),
+        height: Math.abs(realY - svgCanvas.getRStartY()!)
       }, 100)
 
       // for each selected:
@@ -224,12 +224,13 @@ const mouseMoveEvent = (evt: MouseEvent): void => {
       // - if newList doesn't contain selected, remove it from selected
       // - for any newList that was not in selectedElements, add it to selected
       const elemsToRemove = selectedElements.slice(); const elemsToAdd: Element[] = []
-      const newList = svgCanvas.getIntersectionList()
+      const newList = svgCanvas.getIntersectionList() ?? []
 
       // For every element in the intersection, add if not present in selectedElements.
       len = newList.length
       for (i = 0; i < len; ++i) {
         const intElem = newList[i]
+        if (!intElem) continue
         // Found an element that was not selected before, so we should add it.
         if (!selectedElements.includes(intElem)) {
           elemsToAdd.push(intElem)
@@ -242,7 +243,7 @@ const mouseMoveEvent = (evt: MouseEvent): void => {
       }
 
       if (elemsToRemove.length > 0) {
-        svgCanvas.removeFromSelection(elemsToRemove)
+        svgCanvas.removeFromSelection(elemsToRemove as Element[])
       }
 
       if (elemsToAdd.length > 0) {
@@ -255,16 +256,16 @@ const mouseMoveEvent = (evt: MouseEvent): void => {
       // we track the resize bounding box and translate/scale the selected element
       // while the mouse is down, when mouse goes up, we use this to recalculate
       // the shape's coordinates
-      tlist = getTransformList(selected)
+      tlist = getTransformList(selected!)
       if (!tlist) { break }
       const hasMatrix = hasMatrixTransform(tlist)
-      box = hasMatrix ? svgCanvas.getInitBbox() : getBBox(selected)
+      box = hasMatrix ? svgCanvas.getInitBbox() as { x: number; y: number; width: number; height: number } : getBBox(selected!) as { x: number; y: number; width: number; height: number } | null
       if (!box) { break }
       let left = box.x
       let top = box.y
       let { width, height } = box
-      dx = (x - svgCanvas.getStartX())
-      dy = (y - svgCanvas.getStartY())
+      dx = (x - svgCanvas.getStartX()!)
+      dy = (y - svgCanvas.getStartY()!)
 
       if (svgCanvas.getCurConfig().gridSnapping) {
         dx = snapToGrid(dx)
@@ -274,7 +275,7 @@ const mouseMoveEvent = (evt: MouseEvent): void => {
       }
 
       // if rotated, adjust the dx,dy values
-      angle = getRotationAngle(selected)
+      angle = getRotationAngle(selected!)
       if (angle) {
         const r = Math.sqrt(dx * dx + dy * dy)
         const theta = Math.atan2(dy, dx) - angle * Math.PI / 180.0
@@ -321,7 +322,7 @@ const mouseMoveEvent = (evt: MouseEvent): void => {
 
       translateOrigin.setTranslate(-(left + tx), -(top + ty))
       // For images, we maintain aspect ratio by default and relax when shift pressed
-      const maintainAspectRatio = (selected.tagName !== 'image' && evt.shiftKey) || (selected.tagName === 'image' && !evt.shiftKey)
+      const maintainAspectRatio = (selected!.tagName !== 'image' && evt.shiftKey) || (selected!.tagName === 'image' && !evt.shiftKey)
       if (maintainAspectRatio) {
         if (sx === 1) {
           sx = sy
@@ -342,7 +343,7 @@ const mouseMoveEvent = (evt: MouseEvent): void => {
         tlist.replaceItem(translateOrigin, N - 1)
       }
 
-      svgCanvas.selectorManager.requestSelector(selected).resize()
+      svgCanvas.selectorManager.requestSelector(selected!)!.resize()
       svgCanvas.call('transition', selectedElements)
 
       break
@@ -350,11 +351,11 @@ const mouseMoveEvent = (evt: MouseEvent): void => {
     case 'zoom': {
       realX *= zoom
       realY *= zoom
-      assignAttributes(svgCanvas.getRubberBox(), {
-        x: Math.min(svgCanvas.getRStartX() * zoom, realX),
-        y: Math.min(svgCanvas.getRStartY() * zoom, realY),
-        width: Math.abs(realX - svgCanvas.getRStartX() * zoom),
-        height: Math.abs(realY - svgCanvas.getRStartY() * zoom)
+      assignAttributes(svgCanvas.getRubberBox()!, {
+        x: Math.min(svgCanvas.getRStartX()! * zoom, realX),
+        y: Math.min(svgCanvas.getRStartY()! * zoom, realY),
+        width: Math.abs(realX - svgCanvas.getRStartX()! * zoom),
+        height: Math.abs(realY - svgCanvas.getRStartY()! * zoom)
       }, 100)
       break
     }
@@ -375,7 +376,7 @@ const mouseMoveEvent = (evt: MouseEvent): void => {
       let y2 = y
 
       if (evt.shiftKey) {
-        xya = snapToAngle(svgCanvas.getStartX(), svgCanvas.getStartY(), x2, y2)
+        xya = snapToAngle(svgCanvas.getStartX()!, svgCanvas.getStartY()!, x2, y2)
         x2 = xya.x
         y2 = xya.y
       }
@@ -394,16 +395,16 @@ const mouseMoveEvent = (evt: MouseEvent): void => {
         (svgCanvas.getCurrentMode() !== 'image' && evt.shiftKey)
 
       let
-        w = Math.abs(x - svgCanvas.getStartX())
-      let h = Math.abs(y - svgCanvas.getStartY())
+        w = Math.abs(x - svgCanvas.getStartX()!)
+      let h = Math.abs(y - svgCanvas.getStartY()!)
       let newX: number; let newY: number
       if (maintainAspectRatio) {
         w = h = Math.max(w, h)
-        newX = svgCanvas.getStartX() < x ? svgCanvas.getStartX() : svgCanvas.getStartX() - w
-        newY = svgCanvas.getStartY() < y ? svgCanvas.getStartY() : svgCanvas.getStartY() - h
+        newX = svgCanvas.getStartX()! < x ? svgCanvas.getStartX()! : svgCanvas.getStartX()! - w
+        newY = svgCanvas.getStartY()! < y ? svgCanvas.getStartY()! : svgCanvas.getStartY()! - h
       } else {
-        newX = Math.min(svgCanvas.getStartX(), x)
-        newY = Math.min(svgCanvas.getStartY(), y)
+        newX = Math.min(svgCanvas.getStartX()!, x)
+        newY = Math.min(svgCanvas.getStartY()!, y)
       }
 
       if (svgCanvas.getCurConfig().gridSnapping) {
@@ -449,10 +450,10 @@ const mouseMoveEvent = (evt: MouseEvent): void => {
     case 'fhellipse':
     // @ts-expect-error: intentional fallthrough — fhrect shares fhpath code path
     case 'fhrect':
-      svgCanvas.setFreehand('minx', Math.min(realX, svgCanvas.getFreehand('minx')))
-      svgCanvas.setFreehand('maxx', Math.max(realX, svgCanvas.getFreehand('maxx')))
-      svgCanvas.setFreehand('miny', Math.min(realY, svgCanvas.getFreehand('miny')))
-      svgCanvas.setFreehand('maxy', Math.max(realY, svgCanvas.getFreehand('maxy')))
+      svgCanvas.setFreehand('minx', Math.min(realX, svgCanvas.getFreehand('minx')!))
+      svgCanvas.setFreehand('maxx', Math.max(realX, svgCanvas.getFreehand('maxx')!))
+      svgCanvas.setFreehand('miny', Math.min(realY, svgCanvas.getFreehand('miny')!))
+      svgCanvas.setFreehand('maxy', Math.max(realY, svgCanvas.getFreehand('maxy')!))
     case 'fhpath': {
       // dAttr += + realX + ',' + realY + ' ';
       // shape.setAttribute('points', dAttr);
@@ -475,9 +476,7 @@ const mouseMoveEvent = (evt: MouseEvent): void => {
             svgCanvas.setSumDistance(svgCanvas.getSumDistance() - svgCanvas.getThreSholdDist())
 
             // Faster than completely re-writing the points attribute.
-            const point = svgCanvas.getSvgContent().createSVGPoint()
-            point.x = svgCanvas.getBSpline('x')
-            point.y = svgCanvas.getBSpline('y')
+            const point = new DOMPoint(svgCanvas.getBSpline('x'), svgCanvas.getBSpline('y'));
             (shape as SVGPolylineElement).points.appendItem(point)
           }
         }
@@ -498,32 +497,31 @@ const mouseMoveEvent = (evt: MouseEvent): void => {
       if (svgCanvas.getCurConfig().gridSnapping) {
         x = snapToGrid(x)
         y = snapToGrid(y)
-        svgCanvas.setStartX(snapToGrid(svgCanvas.getStartX()))
-        svgCanvas.setStartY(snapToGrid(svgCanvas.getStartY()))
+        svgCanvas.setStartX(snapToGrid(svgCanvas.getStartX()!))
+        svgCanvas.setStartY(snapToGrid(svgCanvas.getStartY()!))
       }
       if (evt.shiftKey) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const path = pathModule.getPath() as any
         let x1: number; let y1: number
         if (path) {
-          x1 = path.dragging ? path.dragging[0] : svgCanvas.getStartX()
-          y1 = path.dragging ? path.dragging[1] : svgCanvas.getStartY()
+          x1 = path.dragging ? path.dragging[0] : svgCanvas.getStartX()!
+          y1 = path.dragging ? path.dragging[1] : svgCanvas.getStartY()!
         } else {
-          x1 = svgCanvas.getStartX()
-          y1 = svgCanvas.getStartY()
+          x1 = svgCanvas.getStartX()!
+          y1 = svgCanvas.getStartY()!
         }
         xya = snapToAngle(x1, y1, x, y);
         ({ x, y } = xya)
       }
 
-      if (svgCanvas.getRubberBox()?.getAttribute('display') !== 'none') {
+      if (svgCanvas.getRubberBox()!.getAttribute('display') !== 'none') {
         realX *= zoom
         realY *= zoom
-        assignAttributes(svgCanvas.getRubberBox(), {
-          x: Math.min(svgCanvas.getRStartX() * zoom, realX),
-          y: Math.min(svgCanvas.getRStartY() * zoom, realY),
-          width: Math.abs(realX - svgCanvas.getRStartX() * zoom),
-          height: Math.abs(realY - svgCanvas.getRStartY() * zoom)
+        assignAttributes(svgCanvas.getRubberBox()!, {
+          x: Math.min(svgCanvas.getRStartX()! * zoom, realX),
+          y: Math.min(svgCanvas.getRStartY()! * zoom, realY),
+          width: Math.abs(realX - svgCanvas.getRStartX()! * zoom),
+          height: Math.abs(realY - svgCanvas.getRStartY()! * zoom)
         }, 100)
       }
       svgCanvas.pathActions.mouseMove(x, y)
@@ -538,11 +536,11 @@ const mouseMoveEvent = (evt: MouseEvent): void => {
       break
     }
     case 'rotate': {
-      box = getBBox(selected)
+      box = getBBox(selected!) as { x: number; y: number; width: number; height: number } | null
       if (!box) { break }
       cx = box.x + box.width / 2
       cy = box.y + box.height / 2
-      const m = getMatrix(selected)
+      const m = getMatrix(selected!)
       const center = transformPoint(cx, cy, m)
       cx = center.x
       cy = center.y
@@ -596,7 +594,7 @@ const mouseOutEvent = (evt: MouseEvent): void => {
       metaKey: evt?.metaKey ?? false,
       shiftKey: evt?.shiftKey ?? false
     })
-    $id('svgcanvas').dispatchEvent(event)
+    $id('svgcanvas')?.dispatchEvent(event)
   }
 }
 
@@ -626,7 +624,7 @@ const mouseUpEvent = (evt: MouseEvent): void => {
   const tempJustSelected = svgCanvas.getJustSelected()
   svgCanvas.setJustSelected(null)
 
-  const pt = transformPoint(evt.clientX, evt.clientY, svgCanvas.getRootSctm())
+  const pt = transformPoint(evt.clientX, evt.clientY, svgCanvas.getRootSctm()!)
   const mouseX = pt.x * zoom
   const mouseY = pt.y * zoom
   const x = mouseX / zoom
@@ -648,7 +646,7 @@ const mouseUpEvent = (evt: MouseEvent): void => {
     // @ts-expect-error: intentional fallthrough — multiselect falls through to select cleanup
     case 'multiselect':
       if (svgCanvas.getRubberBox()) {
-        svgCanvas.getRubberBox().setAttribute('display', 'none')
+        svgCanvas.getRubberBox()!.setAttribute('display', 'none')
         svgCanvas.setCurBBoxes([])
       }
       svgCanvas.setCurrentMode('select')
@@ -678,17 +676,17 @@ const mouseUpEvent = (evt: MouseEvent): void => {
               svgCanvas.setCurProperties('stroke_linejoin', selected.getAttribute('stroke-linejoin'))
               svgCanvas.setCurProperties('stroke_linecap', selected.getAttribute('stroke-linecap'))
           }
-          svgCanvas.selectorManager.requestSelector(selected).showGrips(true)
+          svgCanvas.selectorManager.requestSelector(selected!)!.showGrips(true)
         }
         // if it was being dragged/resized
-        if (realX !== svgCanvas.getRStartX() || realY !== svgCanvas.getRStartY()) {
+        if (realX !== svgCanvas.getRStartX()! || realY !== svgCanvas.getRStartY()!) {
           // Only recalculate dimensions after actual dragging/resizing to avoid
           // unwanted transform flattening on simple clicks
 
           // Create a single batch command for all moved elements
           const batchCmd = new BatchCommand('position')
 
-          selectedElements.forEach((elem: Element) => {
+          selectedElements.forEach((elem) => {
             if (!elem) return
 
             const tlist = getTransformList(elem)
@@ -742,23 +740,23 @@ const mouseUpEvent = (evt: MouseEvent): void => {
           }
 
           // Clear the stored transforms AND reset the flag together
-          svgCanvas.dragStartTransforms = null
+          svgCanvas.dragStartTransforms = null as any as any
           svgCanvas.hasDragStartTransform = false
 
           const len = selectedElements.length
           for (let i = 0; i < len; ++i) {
             if (!selectedElements[i]) { break }
-            svgCanvas.selectorManager.requestSelector(selectedElements[i]).resize()
+            svgCanvas.selectorManager.requestSelector(selectedElements[i]!)!.resize()
           }
           // no change in position/size, so maybe we should move to pathedit
         } else {
           t = evt.target
-          if (selectedElements[0].nodeName === 'path' && !selectedElements[1]) {
-            svgCanvas.pathActions.select(selectedElements[0])
+          if (selectedElements[0]!.nodeName === 'path' && !selectedElements[1]) {
+            svgCanvas.pathActions.select(selectedElements[0]!)
             // if it was a path
             // else, if it was selected and this is a shift-click, remove it from selection
           } else if (evt.shiftKey && tempJustSelected !== t) {
-            svgCanvas.removeFromSelection([t])
+            svgCanvas.removeFromSelection([t as Element])
           }
         } // no change in mouse position
 
@@ -782,13 +780,13 @@ const mouseUpEvent = (evt: MouseEvent): void => {
       }
       return
     case 'zoom': {
-      svgCanvas.getRubberBox()?.setAttribute('display', 'none')
+      svgCanvas.getRubberBox()!.setAttribute('display', 'none')
       const factor = evt.shiftKey ? 0.5 : 2
       svgCanvas.call('zoomed', {
-        x: Math.min(svgCanvas.getRStartX(), realX),
-        y: Math.min(svgCanvas.getRStartY(), realY),
-        width: Math.abs(realX - svgCanvas.getRStartX()),
-        height: Math.abs(realY - svgCanvas.getRStartY()),
+        x: Math.min(svgCanvas.getRStartX()!, realX),
+        y: Math.min(svgCanvas.getRStartY()!, realY),
+        width: Math.abs(realX - svgCanvas.getRStartX()!),
+        height: Math.abs(realY - svgCanvas.getRStartY()!),
         factor
       })
       return
@@ -844,16 +842,16 @@ const mouseUpEvent = (evt: MouseEvent): void => {
     }
       break
     case 'fhellipse':
-      if ((svgCanvas.getFreehand('maxx') - svgCanvas.getFreehand('minx')) > 0 &&
-        (svgCanvas.getFreehand('maxy') - svgCanvas.getFreehand('miny')) > 0) {
+      if ((svgCanvas.getFreehand('maxx')! - svgCanvas.getFreehand('minx')!) > 0 &&
+        (svgCanvas.getFreehand('maxy')! - svgCanvas.getFreehand('miny')!) > 0) {
         element = svgCanvas.addSVGElementsFromJson({
           element: 'ellipse',
           curStyles: true,
           attr: {
-            cx: (svgCanvas.getFreehand('minx') + svgCanvas.getFreehand('maxx')) / 2,
-            cy: (svgCanvas.getFreehand('miny') + svgCanvas.getFreehand('maxy')) / 2,
-            rx: (svgCanvas.getFreehand('maxx') - svgCanvas.getFreehand('minx')) / 2,
-            ry: (svgCanvas.getFreehand('maxy') - svgCanvas.getFreehand('miny')) / 2,
+            cx: (svgCanvas.getFreehand('minx')! + svgCanvas.getFreehand('maxx')!) / 2,
+            cy: (svgCanvas.getFreehand('miny')! + svgCanvas.getFreehand('maxy')!) / 2,
+            rx: (svgCanvas.getFreehand('maxx')! - svgCanvas.getFreehand('minx')!) / 2,
+            ry: (svgCanvas.getFreehand('maxy')! - svgCanvas.getFreehand('miny')!) / 2,
             id: svgCanvas.getId()
           }
         })
@@ -862,16 +860,16 @@ const mouseUpEvent = (evt: MouseEvent): void => {
       }
       break
     case 'fhrect':
-      if ((svgCanvas.getFreehand('maxx') - svgCanvas.getFreehand('minx')) > 0 &&
-        (svgCanvas.getFreehand('maxy') - svgCanvas.getFreehand('miny')) > 0) {
+      if ((svgCanvas.getFreehand('maxx')! - svgCanvas.getFreehand('minx')!) > 0 &&
+        (svgCanvas.getFreehand('maxy')! - svgCanvas.getFreehand('miny')!) > 0) {
         element = svgCanvas.addSVGElementsFromJson({
           element: 'rect',
           curStyles: true,
           attr: {
-            x: svgCanvas.getFreehand('minx'),
-            y: svgCanvas.getFreehand('miny'),
-            width: (svgCanvas.getFreehand('maxx') - svgCanvas.getFreehand('minx')),
-            height: (svgCanvas.getFreehand('maxy') - svgCanvas.getFreehand('miny')),
+            x: svgCanvas.getFreehand('minx')!,
+            y: svgCanvas.getFreehand('miny')!,
+            width: (svgCanvas.getFreehand('maxx')! - svgCanvas.getFreehand('minx')!),
+            height: (svgCanvas.getFreehand('maxy')! - svgCanvas.getFreehand('miny')!),
             id: svgCanvas.getId()
           }
         })
@@ -881,8 +879,8 @@ const mouseUpEvent = (evt: MouseEvent): void => {
       break
     case 'text':
       keep = true
-      svgCanvas.selectOnly([element])
-      svgCanvas.textActions.start(element)
+      svgCanvas.selectOnly([element!])
+      svgCanvas.textActions.start(element as SVGTextElement)
       break
     case 'path': {
       // set element to null here so that it is not removed nor finalized
@@ -906,7 +904,7 @@ const mouseUpEvent = (evt: MouseEvent): void => {
       break
     case 'rotate': {
       svgCanvas.hasDragStartTransform = false
-      svgCanvas.dragStartTransforms = null
+      svgCanvas.dragStartTransforms = null as any
       keep = true
       element = null
       svgCanvas.setCurrentMode('select')
@@ -921,12 +919,12 @@ const mouseUpEvent = (evt: MouseEvent): void => {
     } default:
       // This could occur in an extension
       svgCanvas.hasDragStartTransform = false
-      svgCanvas.dragStartTransforms = null
+      svgCanvas.dragStartTransforms = null as any
       break
   }
   // Reset drag flag after any mouseUp
   svgCanvas.hasDragStartTransform = false
-  svgCanvas.dragStartTransforms = null
+  svgCanvas.dragStartTransforms = null as any
 
   /**
 * The main (left) mouse button is released (anywhere).
@@ -940,7 +938,8 @@ const mouseUpEvent = (evt: MouseEvent): void => {
     vars: { event: evt, mouse_x: mouseX, mouse_y: mouseY }
   })
 
-  extResult.forEach((r: { keep?: boolean; element?: Element; started?: boolean } | null) => {
+  extResult.forEach((result: unknown) => {
+    const r = result as { keep?: boolean; element?: Element; started?: boolean } | null
     if (r) {
       keep = r.keep || keep
       element = r.element ?? null
@@ -969,7 +968,7 @@ const mouseUpEvent = (evt: MouseEvent): void => {
     ) {
       // switch into "select" mode if we've clicked on an element
       svgCanvas.setMode('select')
-      svgCanvas.selectOnly([t], true)
+      svgCanvas.selectOnly([t as Element], true)
     }
   } else if (element) {
     /**
@@ -980,11 +979,10 @@ const mouseUpEvent = (evt: MouseEvent): void => {
     if (useUnit) { convertAttrs(element) }
 
     let aniDur = 0.2
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let cAni: any
     const curShape = svgCanvas.getStyle()
     const opacAni = svgCanvas.getOpacAni()
-    if (opacAni.beginElement && Number.parseFloat(element!.getAttribute('opacity') ?? '0') !== curShape.opacity) {
+    if (typeof opacAni.beginElement === 'function' && Number.parseFloat(element!.getAttribute('opacity') ?? '0') !== curShape.opacity) {
       cAni = opacAni.cloneNode(true)
       cAni.setAttribute('to', curShape.opacity)
       cAni.setAttribute('dur', String(aniDur))
@@ -1030,23 +1028,23 @@ const dblClickEvent = (evt: MouseEvent): void => {
   const parent = (evtTarget as Element).parentNode as Element | null
 
   let mouseTarget = svgCanvas.getMouseTarget(evt)
-  const { tagName } = mouseTarget
+  const tagName = mouseTarget?.tagName
 
   if (tagName === 'text' && svgCanvas.getCurrentMode() !== 'textedit') {
-    const pt = transformPoint(evt.clientX, evt.clientY, svgCanvas.getRootSctm())
-    svgCanvas.textActions.select(mouseTarget, pt.x, pt.y)
+    const pt = transformPoint(evt.clientX, evt.clientY, svgCanvas.getRootSctm()!)
+    svgCanvas.textActions.select(mouseTarget as SVGTextElement, pt.x, pt.y)
   }
 
   // Do nothing if already in current group
   if (parent === svgCanvas.getCurrentGroup()) { return }
 
-  if ((tagName === 'g' || tagName === 'a') && getRotationAngle(mouseTarget)) {
+  if ((tagName === 'g' || tagName === 'a') && getRotationAngle(mouseTarget!)) {
     // TODO: Allow method of in-group editing without having to do
     // this (similar to editing rotated paths)
 
     // Ungroup and regroup
-    svgCanvas.pushGroupProperties(mouseTarget)
-    mouseTarget = selectedElements[0]
+    svgCanvas.pushGroupProperties(mouseTarget!, false)
+    mouseTarget = selectedElements[0] ?? null
     svgCanvas.clearSelection(true)
   }
   // Reset context
@@ -1097,7 +1095,7 @@ const mouseDownEvent = (evt: MouseEvent): void => {
   if (!screenCTM) { return }
   svgCanvas.setRootSctm(screenCTM.inverse())
 
-  const pt = transformPoint(evt.clientX, evt.clientY, svgCanvas.getRootSctm())
+  const pt = transformPoint(evt.clientX, evt.clientY, svgCanvas.getRootSctm()!)
   const mouseX = pt.x * zoom
   const mouseY = pt.y * zoom
 
@@ -1113,10 +1111,10 @@ const mouseDownEvent = (evt: MouseEvent): void => {
 
   let x = mouseX / zoom
   let y = mouseY / zoom
-  let mouseTarget = svgCanvas.getMouseTarget(evt)
+  let mouseTarget: Element | null = svgCanvas.getMouseTarget(evt)
 
-  if (mouseTarget.tagName === 'a' && mouseTarget.childNodes.length === 1) {
-    mouseTarget = mouseTarget.firstChild
+  if (mouseTarget?.tagName === 'a' && mouseTarget.childNodes.length === 1) {
+    mouseTarget = mouseTarget.firstElementChild
   }
 
   // realX/y ignores grid-snap value
@@ -1130,8 +1128,8 @@ const mouseDownEvent = (evt: MouseEvent): void => {
   if (svgCanvas.getCurConfig().gridSnapping) {
     x = snapToGrid(x)
     y = snapToGrid(y)
-    svgCanvas.setStartX(snapToGrid(svgCanvas.getStartX()))
-    svgCanvas.setStartY(snapToGrid(svgCanvas.getStartY()))
+    svgCanvas.setStartX(snapToGrid(svgCanvas.getStartX()!))
+    svgCanvas.setStartY(snapToGrid(svgCanvas.getStartY()!))
   }
 
   // if it is a selector grip, then it must be a single element selected,
@@ -1139,7 +1137,7 @@ const mouseDownEvent = (evt: MouseEvent): void => {
 
   if (mouseTarget === svgCanvas.selectorManager.selectorParentGroup && selectedElements[0]) {
     const grip = evt.target
-    const griptype = dataStorage.get(grip, 'type')
+    const griptype = dataStorage.get(grip, 'type') as string
     // rotating
     if (griptype === 'rotate') {
       svgCanvas.setCurrentMode('rotate')
@@ -1147,19 +1145,19 @@ const mouseDownEvent = (evt: MouseEvent): void => {
       // resizing
     } else if (griptype === 'resize') {
       svgCanvas.setCurrentMode('resize')
-      svgCanvas.setCurrentResizeMode(dataStorage.get(grip, 'dir'))
+      svgCanvas.setCurrentResizeMode(dataStorage.get(grip, 'dir') as string)
     }
-    mouseTarget = selectedElements[0]
+    mouseTarget = selectedElements[0]!
   }
 
-  svgCanvas.setStartTransform(mouseTarget.getAttribute('transform'))
+  svgCanvas.setStartTransform(mouseTarget?.getAttribute('transform') ?? null)
 
-  const tlist = getTransformList(mouseTarget)
+  const tlist = getTransformList(mouseTarget!)
 
   // Consolidate transforms for non-group elements to simplify dragging
   // For elements with multiple transforms (e.g., after ungrouping), consolidate them
   // into a single matrix so the dummy translate can be properly applied during drag
-  if (tlist && tlist.numberOfItems > 1 && mouseTarget.tagName !== 'g' && mouseTarget.tagName !== 'a') {
+  if (tlist && tlist.numberOfItems > 1 && mouseTarget!.tagName !== 'g' && mouseTarget!.tagName !== 'a') {
     // Compute the consolidated matrix from all transforms
     const consolidatedMatrix = transformListToTransform(tlist).matrix
 
@@ -1180,15 +1178,15 @@ const mouseDownEvent = (evt: MouseEvent): void => {
 
       if (mouseTarget !== svgRoot) {
         // if this element is not yet selected, clear selection and select it
-        if (!selectedElements.includes(mouseTarget)) {
+        if (!selectedElements.includes(mouseTarget!)) {
           // only clear selection if shift is not pressed (otherwise, add
           // element to selection)
           if (!evt.shiftKey) {
             // No need to do the call here as it will be done on addToSelection
             svgCanvas.clearSelection(true)
           }
-          svgCanvas.addToSelection([mouseTarget])
-          svgCanvas.setJustSelected(mouseTarget)
+          svgCanvas.addToSelection([mouseTarget!])
+          svgCanvas.setJustSelected(mouseTarget!)
           svgCanvas.pathActions.clear()
         }
         // else if it's a path, go into pathedit mode in mouseup
@@ -1199,15 +1197,15 @@ const mouseDownEvent = (evt: MouseEvent): void => {
       } else if (!rightClick) {
         svgCanvas.clearSelection()
         svgCanvas.setCurrentMode('multiselect')
-        if (!svgCanvas.getRubberBox()) {
+        if (!svgCanvas.getRubberBox()!) {
           svgCanvas.setRubberBox(svgCanvas.selectorManager.getRubberBandBox())
         }
-        svgCanvas.setRStartX(svgCanvas.getRStartX() * zoom)
-        svgCanvas.setRStartY(svgCanvas.getRStartY() * zoom)
+        svgCanvas.setRStartX(svgCanvas.getRStartX()! * zoom)
+        svgCanvas.setRStartY(svgCanvas.getRStartY()! * zoom)
 
-        assignAttributes(svgCanvas.getRubberBox(), {
-          x: svgCanvas.getRStartX(),
-          y: svgCanvas.getRStartY(),
+        assignAttributes(svgCanvas.getRubberBox()!, {
+          x: svgCanvas.getRStartX()!,
+          y: svgCanvas.getRStartY()!,
           width: 0,
           height: 0,
           display: 'inline'
@@ -1216,10 +1214,10 @@ const mouseDownEvent = (evt: MouseEvent): void => {
       break
     case 'zoom':
       svgCanvas.setStarted(true)
-      if (!svgCanvas.getRubberBox()) {
+      if (!svgCanvas.getRubberBox()!) {
         svgCanvas.setRubberBox(svgCanvas.selectorManager.getRubberBandBox())
       }
-      assignAttributes(svgCanvas.getRubberBox(), {
+      assignAttributes(svgCanvas.getRubberBox()!, {
         x: realX * zoom,
         y: realY * zoom,
         width: 0,
@@ -1235,7 +1233,7 @@ const mouseDownEvent = (evt: MouseEvent): void => {
 
       // Getting the BBox from the selection box, since we know we
       // want to orient around it
-      svgCanvas.setInitBbox(getBBox($id('selectedBox0')))
+      svgCanvas.setInitBbox(getBBox($id('selectedBox0')!) as unknown as Record<string, number>)
       const bb: Record<string, number> = {}
       for (const [key, val] of Object.entries(svgCanvas.getInitBbox())) {
         bb[key] = (val as number) / zoom
@@ -1244,7 +1242,7 @@ const mouseDownEvent = (evt: MouseEvent): void => {
 
       // append three dummy transforms to the tlist so that
       // we can translate,scale,translate in mousemove
-      const pos = getRotationAngle(mouseTarget) ? 1 : 0
+      const pos = getRotationAngle(mouseTarget!) ? 1 : 0
 
       if (hasMatrixTransform(tlist)) {
         tlist.insertItemBefore(svgRoot.createSVGTransform(), pos)
@@ -1273,7 +1271,7 @@ const mouseDownEvent = (evt: MouseEvent): void => {
         element: 'polyline',
         curStyles: true,
         attr: {
-          points: svgCanvas.getDAttr(),
+          points: svgCanvas.getDAttr() ?? '',
           id: svgCanvas.getNextId(),
           fill: 'none',
           opacity: curShape.opacity / 2,
@@ -1400,15 +1398,15 @@ const mouseDownEvent = (evt: MouseEvent): void => {
     case 'path':
     // Fall through
     case 'pathedit':
-      svgCanvas.setStartX(svgCanvas.getStartX() * zoom)
-      svgCanvas.setStartY(svgCanvas.getStartY() * zoom)
-      svgCanvas.pathActions.mouseDown(evt, mouseTarget, svgCanvas.getStartX(), svgCanvas.getStartY())
+      svgCanvas.setStartX(svgCanvas.getStartX()! * zoom)
+      svgCanvas.setStartY(svgCanvas.getStartY()! * zoom)
+      svgCanvas.pathActions.mouseDown(evt, mouseTarget!, svgCanvas.getStartX()!, svgCanvas.getStartY()!)
       svgCanvas.setStarted(true)
       break
     case 'textedit':
-      svgCanvas.setStartX(svgCanvas.getStartX() * zoom)
-      svgCanvas.setStartY(svgCanvas.getStartY() * zoom)
-      svgCanvas.textActions.mouseDown(evt, mouseTarget, svgCanvas.getStartX(), svgCanvas.getStartY())
+      svgCanvas.setStartX(svgCanvas.getStartX()! * zoom)
+      svgCanvas.setStartY(svgCanvas.getStartY()! * zoom)
+      svgCanvas.textActions.mouseDown(evt, mouseTarget!, svgCanvas.getStartX()!, svgCanvas.getStartY()!)
       svgCanvas.setStarted(true)
       break
     case 'rotate':
@@ -1433,13 +1431,14 @@ const mouseDownEvent = (evt: MouseEvent): void => {
     action: 'mouseDown',
     vars: {
       event: evt,
-      start_x: svgCanvas.getStartX(),
-      start_y: svgCanvas.getStartY(),
+      start_x: svgCanvas.getStartX()!,
+      start_y: svgCanvas.getStartY()!,
       selectedElements
     }
   })
 
-  extResult.forEach((r: { started?: boolean } | null) => {
+  extResult.forEach((result: unknown) => {
+    const r = result as { started?: boolean } | null
     if (r?.started) {
       svgCanvas.setStarted(true)
     }
@@ -1470,7 +1469,7 @@ const DOMMouseScrollEvent = (e: WheelEvent): void => {
   const rulerwidth = svgCanvas.getCurConfig().showRulers ? 16 : 0
 
   // mouse relative to content area in content pixels
-  const pt = transformPoint(e.clientX, e.clientY, svgCanvas.getRootSctm())
+  const pt = transformPoint(e.clientX, e.clientY, svgCanvas.getRootSctm()!)
 
   // full work area width in screen pixels
   const editorFullW = parseFloat(getComputedStyle(workarea!, null).width.replace('px', ''))
@@ -1481,8 +1480,8 @@ const DOMMouseScrollEvent = (e: WheelEvent): void => {
   const editorH = editorFullH - scrbar - rulerwidth
 
   // work area width in content pixels
-  const workareaViewW = editorW * svgCanvas.getRootSctm().a
-  const workareaViewH = editorH * svgCanvas.getRootSctm().d
+  const workareaViewW = editorW * svgCanvas.getRootSctm()!.a
+  const workareaViewH = editorH * svgCanvas.getRootSctm()!.d
 
   // content offset from canvas in screen pixels
   const wOffset = findPos(workarea!)
@@ -1490,7 +1489,6 @@ const DOMMouseScrollEvent = (e: WheelEvent): void => {
   const wOffsetTop = wOffset.top + rulerwidth
 
   // The `wheelDelta` and `detail` properties are non-standard/legacy.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const eAny = e as any
   const delta = (eAny.wheelDelta) ? eAny.wheelDelta : (eAny.detail) ? -eAny.detail : 0
   if (!delta) { return }
@@ -1513,7 +1511,7 @@ const DOMMouseScrollEvent = (e: WheelEvent): void => {
   factor = zoomlevel / zoom
 
   // top left of workarea in content pixels before zoom
-  const topLeftOld = transformPoint(wOffsetLeft, wOffsetTop, svgCanvas.getRootSctm())
+  const topLeftOld = transformPoint(wOffsetLeft, wOffsetTop, svgCanvas.getRootSctm()!)
 
   // top left of workarea in content pixels after zoom
   const topLeftNew = {

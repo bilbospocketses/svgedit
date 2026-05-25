@@ -1,9 +1,6 @@
 // http://ross.posterous.com/2008/08/19/iphone-touch-events-in-javascript/
 
-/** Minimal shape of the canvas context needed by touch.ts init(). */
-interface TouchCanvasContext {
-  svgroot: EventTarget & { addEventListener: EventTarget['addEventListener'] }
-}
+import type { ISvgCanvas } from './svgcanvas-types.js'
 
 const touchHandler = (ev: TouchEvent): void => {
   ev.preventDefault()
@@ -45,7 +42,7 @@ const touchHandler = (ev: TouchEvent): void => {
   }
 }
 
-export const init = (svgCanvas: TouchCanvasContext): void => {
+export const init = (svgCanvas: ISvgCanvas): void => {
   svgCanvas.svgroot.addEventListener('touchstart', touchHandler as EventListener)
   svgCanvas.svgroot.addEventListener('touchmove', touchHandler as EventListener)
   svgCanvas.svgroot.addEventListener('touchend', touchHandler as EventListener)

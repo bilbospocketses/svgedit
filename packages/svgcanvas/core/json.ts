@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
 /**
  * Tools for SVG handle on JSON format.
  * @module svgcanvas
@@ -9,22 +8,13 @@
 import { getElement, assignAttributes, cleanupElement, type SVGElementJSON } from './utilities.js'
 import { NS } from './namespaces.js'
 
-/** Minimal canvas context shape for json.ts init(). */
-interface JsonCanvasContext {
-  getDOMDocument?(): Document
-  getSvgRoot?(): SVGSVGElement
-  getDrawing?(): { getCurrentLayer?(): Element | null } | null
-  getCurrentGroup?(): Element | null
-  getCurShape?(): Record<string, unknown>
-  addSVGElementsFromJson?(data: SVGElementJSON): Element
-}
+import type { ISvgCanvas } from './svgcanvas-types.js'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let svgCanvas: any = null
+let svgCanvas = null as unknown as ISvgCanvas
 let svgdoc_: Document | null = null
 
 /** Initializes this module with the canvas context. */
-export const init = (canvas: JsonCanvasContext): void => {
+export const init = (canvas: ISvgCanvas): void => {
   svgCanvas = canvas
   svgdoc_ = canvas.getDOMDocument?.() ?? (typeof document !== 'undefined' ? document : null)
 }

@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument */
-// svgCanvas is opaquely typed (typed in Task 10 C6); file-level disable matches utilities.ts pattern
+/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-non-null-assertion */
 /**
  * Tools for undo.
  * @module undo
@@ -19,14 +18,15 @@ import {
   transformPoint, transformListToTransform, getTransformList
 } from './math.js'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let svgCanvas: any = null
+import type { ISvgCanvas } from './svgcanvas-types.js'
+
+let svgCanvas = null as unknown as ISvgCanvas
 
 /**
 * @function module:undo.init
 * @param canvas
 */
-export const init = (canvas: unknown): void => {
+export const init = (canvas: ISvgCanvas): void => {
   svgCanvas = canvas
    
   svgCanvas.undoMgr = getUndoManager()
@@ -94,7 +94,7 @@ export const getUndoManager = (): InstanceType<typeof UndoManager> => {
           const values = isApply ? (cmd as hstry.ChangeElementCommand).newValues : (cmd as hstry.ChangeElementCommand).oldValues
           // If stdDeviation was changed, update the blur.
           if (values.stdDeviation) {
-            svgCanvas.setBlurOffsets(cmd.elem.parentNode, values.stdDeviation)
+            svgCanvas.setBlurOffsets(cmd.elem.parentNode as Element, Number(values.stdDeviation))
           }
           if (cmd.elem.tagName === 'text') {
             const dx = Number(values.x) - Number((cmd as hstry.ChangeElementCommand).oldValues.x)
@@ -138,8 +138,8 @@ export const ffClone = (elem: Element): Element => {
   elem.before(clone)
   elem.remove()
   svgCanvas.selectorManager.releaseSelector(elem)
-  svgCanvas.setSelectedElements(0, clone)
-  svgCanvas.selectorManager.requestSelector(clone).showGrips(true)
+  svgCanvas.setSelectedElements(0, clone as Element)
+  svgCanvas.selectorManager.requestSelector(clone as Element)!.showGrips(true)
   return clone as Element
 }
 
@@ -150,12 +150,12 @@ export const ffClone = (elem: Element): Element => {
 * @param newValue - String or number with the new attribute value
 * @param elems - The DOM elements to apply the change to
 */
-export const changeSelectedAttributeNoUndoMethod = (attr: string, newValue: string | number, elems: (Element | null)[]): void => {
+export const changeSelectedAttributeNoUndoMethod = (attr: string, newValue: string | number, elems?: (Element | null)[]): void => {
   if (attr === 'id') {
     // if the user is changing the id, then de-select the element first
     // change the ID, then re-select it with the new ID
     // as this change can impact other extensions, a 'renamedElement' event is thrown
-    const elem = elems[0]
+    const elem = elems![0]
     if (!elem) return
     const oldId = elem.id
     if (oldId !== newValue) {
@@ -240,7 +240,7 @@ export const changeSelectedAttributeNoUndoMethod = (attr: string, newValue: stri
           // Due to element replacement, this element may no longer
           // be part of the DOM
           if (!currentElem.parentNode) { return }
-          svgCanvas.selectorManager.requestSelector(currentElem).resize()
+          svgCanvas.selectorManager.requestSelector(currentElem)!.resize()
         }, 0)
       }
       // Only recalculate rotation center for attributes that change element geometry.

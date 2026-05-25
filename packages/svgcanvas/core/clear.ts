@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
-// svgCanvas is opaquely typed (typed in Task 10 C6); file-level disable matches utilities.ts pattern
 /**
  * Tools for clear.
  * @module clear
@@ -8,26 +6,27 @@
  */
 import { NS } from './namespaces.js'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let svgCanvas: any = null
+import type { ISvgCanvas } from './svgcanvas-types.js'
+
+let svgCanvas = null as unknown as ISvgCanvas
 
 /**
 * @function module:clear.init
 * @param canvas
 */
-export const init = (canvas: unknown): void => {
+export const init = (canvas: ISvgCanvas): void => {
   svgCanvas = canvas
 }
 
 export const clearSvgContentElementInit = (): void => {
   const curConfig = svgCanvas.getCurConfig()
-  const { dimensions } = curConfig
+  const dimensions = curConfig.dimensions as [string, string]
   const el = svgCanvas.getSvgContent()
   // empty
   while (el.firstChild) { el.removeChild(el.firstChild) }
 
   // Reset any stale attributes from the previous document.
-  const attrs: Attr[] = Array.from(el.attributes as NamedNodeMap)
+  const attrs: Attr[] = Array.from(el.attributes)
   for (const attr of attrs) {
     if (attr.namespaceURI) {
       el.removeAttributeNS(attr.namespaceURI, attr.localName)

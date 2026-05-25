@@ -6,7 +6,7 @@
  * @copyright 2010 Alexis Deveria, 2010 Jeff Schiller
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unnecessary-type-assertion */
 
 import { NS } from './namespaces.js'
 import type { CommandAttributes } from './history.js'
@@ -49,14 +49,14 @@ const {
   ChangeElementCommand
 } = hstry
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let svgCanvas: any = null
+import type { ISvgCanvas } from './svgcanvas-types.js'
+
+let svgCanvas = null as unknown as ISvgCanvas
 
 /**
  * @function module:selected-elem.init
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const init = (canvas: any): void => {
+export const init = (canvas: ISvgCanvas): void => {
   svgCanvas = canvas
   svgCanvas.copySelectedElements = copySelectedElements
   svgCanvas.groupSelectedElements = groupSelectedElements
@@ -69,7 +69,7 @@ export const init = (canvas: any): void => {
   svgCanvas.cloneSelectedElements = cloneSelectedElements
   svgCanvas.alignSelectedElements = alignSelectedElements
   svgCanvas.updateCanvas = updateCanvas
-  svgCanvas.cycleElement = cycleElement
+  svgCanvas.cycleElement = cycleElement as any
   svgCanvas.deleteSelectedElements = deleteSelectedElements
   svgCanvas.flipSelectedElements = flipSelectedElements
 }
@@ -78,7 +78,7 @@ export const init = (canvas: any): void => {
  * Repositions the selected element to the bottom in the DOM to appear on top.
  */
 const moveToTopSelectedElem = (): void => {
-  const [selected] = svgCanvas.getSelectedElements() as (Element | null)[]
+  const [selected] = svgCanvas.getSelectedElements()
   if (selected) {
     const t = selected
     const oldParent = t.parentNode
@@ -97,7 +97,7 @@ const moveToTopSelectedElem = (): void => {
  * Repositions the selected element to the top in the DOM to appear under other elements.
  */
 const moveToBottomSelectedElem = (): void => {
-  const [selected] = svgCanvas.getSelectedElements() as (Element | null)[]
+  const [selected] = svgCanvas.getSelectedElements()
   if (selected) {
     let t: Element = selected
     const oldParent = t.parentNode
@@ -135,9 +135,9 @@ const moveUpDownSelected = (dir: 'Up' | 'Down'): void => {
   svgCanvas.setCurBBoxes([])
   let closest: Element | undefined
   let foundCur: boolean | undefined
-  const list: Element[] = svgCanvas.getIntersectionList(
-    getStrokedBBoxDefaultVisible([selected])
-  )
+  const list: Element[] = (svgCanvas.getIntersectionList(
+    getStrokedBBoxDefaultVisible([selected]) as any
+  ) ?? []) as Element[]
   if (dir === 'Down') {
     list.reverse()
   }
@@ -197,7 +197,7 @@ const moveSelectedElements = (dx: number | number[], dy: number | number[], undo
       if (Array.isArray(dx)) {
         xform.setTranslate(dx[i] ?? 0, (dy as number[])[i] ?? 0)
       } else {
-        xform.setTranslate(dx, dy)
+        xform.setTranslate(dx as number, dy as number)
       }
 
       if (tlist) {
@@ -219,7 +219,7 @@ const moveSelectedElements = (dx: number | number[], dy: number | number[], undo
 
       svgCanvas
         .getSelectorManager()
-        .requestSelector(selected)
+        .requestSelector(selected)!
         .resize()
     }
   })
@@ -240,7 +240,7 @@ const moveSelectedElements = (dx: number | number[], dy: number | number[], undo
  */
 const cloneSelectedElements = (x: number, y: number): void => {
   const selectedElements: (Element | null)[] = svgCanvas.getSelectedElements()
-  const currentGroup = svgCanvas.getCurrentGroup() as Element | null
+  const currentGroup = svgCanvas.getCurrentGroup()
   let i: number
   let elem: Element | null | undefined
   const batchCmd = new BatchCommand('Clone Elements')
@@ -272,9 +272,9 @@ const cloneSelectedElements = (x: number, y: number): void => {
   const drawing = svgCanvas.getDrawing()
   let j = copiedElements.length
   while (j--) {
-    const cloned: Element = drawing.copyElem(copiedElements[j])
+    const cloned: Element = drawing.copyElem(copiedElements[j]!)
     copiedElements[j] = cloned
-    ;(currentGroup ?? drawing.getCurrentLayer()).append(cloned)
+    ;(currentGroup ?? drawing.getCurrentLayer())!.append(cloned)
     batchCmd.addSubCommand(new InsertElementCommand(cloned))
   }
 
@@ -584,7 +584,7 @@ const deleteSelectedElements = (): void => {
 const flipSelectedElements = (scaleX: number, scaleY: number): void => {
   const selectedElements: (Element | null)[] = svgCanvas.getSelectedElements()
   const batchCmd = new BatchCommand('Flip Elements')
-  const svgRoot = svgCanvas.getSvgRoot() as SVGSVGElement
+  const svgRoot = svgCanvas.getSvgRoot()
 
   selectedElements.forEach(selected => {
     if (!selected) { return }
@@ -638,7 +638,7 @@ const flipSelectedElements = (scaleX: number, scaleY: number): void => {
 
     svgCanvas
       .getSelectorManager()
-      .requestSelector(selected)
+      .requestSelector(selected)!
       .resize()
   })
 
@@ -652,7 +652,7 @@ const flipSelectedElements = (scaleX: number, scaleY: number): void => {
  * Remembers the current selected elements on the clipboard.
  */
 const copySelectedElements = (): void => {
-  const selectedElements = (svgCanvas.getSelectedElements() as (Element | null)[]).filter((e): e is Element => e !== null)
+  const selectedElements = svgCanvas.getSelectedElements().filter((e): e is Element => e !== null)
   const data = JSON.stringify(
     selectedElements.map((x: Element) => svgCanvas.getJsonFromSvgElements(x) as unknown)
   )
@@ -819,7 +819,7 @@ const pushGroupProperty = (g: Element, undoable: boolean): hstry.BatchCommand | 
 
       if (cblur) {
         svgCanvas.changeSelectedAttribute('stdDeviation', cblur, [blurElem])
-        svgCanvas.setBlurOffsets(gfilter, cblur)
+        svgCanvas.setBlurOffsets(gfilter!, Number(cblur))
       }
     }
 
@@ -1160,7 +1160,7 @@ const ungroupSelectedElement = (): void => {
       svgCanvas.addCommandToHistory(batchCmd)
     }
 
-    svgCanvas.addToSelection(children)
+    svgCanvas.addToSelection(children as Element[])
   }
 }
 
@@ -1187,8 +1187,8 @@ const updateCanvas = (w: number, h: number): { x: number; y: number; old_x: numb
 
   if (bg) {
     assignAttributes(bg, {
-      width: svgCanvas.getSvgContent().getAttribute('width'),
-      height: svgCanvas.getSvgContent().getAttribute('height'),
+      width: svgCanvas.getSvgContent().getAttribute('width') ?? undefined,
+      height: svgCanvas.getSvgContent().getAttribute('height') ?? undefined,
       x,
       y
     })
@@ -1202,7 +1202,7 @@ const updateCanvas = (w: number, h: number): { x: number; y: number; old_x: numb
     })
   }
 
-  svgCanvas.selectorManager.selectorParentGroup.setAttribute(
+  svgCanvas.selectorManager.selectorParentGroup!.setAttribute(
     'transform',
     `translate(${x},${y})`
   )
@@ -1254,6 +1254,6 @@ const cycleElement = (next: boolean): void => {
       }
     }
   }
-  svgCanvas.selectOnly([elem], true)
+  svgCanvas.selectOnly([elem as Element], true)
   svgCanvas.call('selected', selectedElements)
 }

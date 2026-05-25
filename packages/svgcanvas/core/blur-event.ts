@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
-// svgCanvas is opaquely typed (typed in Task 10 C6); file-level disable matches clear.ts pattern
 /**
  * Tools for blur event.
  * @module blur
@@ -7,14 +5,15 @@
  * @copyright 2011 Jeff Schiller
  */
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let svgCanvas: any = null
+import type { ISvgCanvas } from './svgcanvas-types.js'
+
+let svgCanvas = null as unknown as ISvgCanvas
 
 /**
 * @function module:blur.init
 * @param canvas
 */
-export const init = (canvas: unknown): void => {
+export const init = (canvas: ISvgCanvas): void => {
   svgCanvas = canvas
 }
 
@@ -32,7 +31,7 @@ const getFeGaussianBlurElem = (filterElem: Element): Element | null => {
 * @param val - The new `stdDeviation` value
 */
 export const setBlurNoUndo = (val: number): void => {
-  const selectedElements: Element[] = svgCanvas.getSelectedElements()
+  const selectedElements = svgCanvas.getSelectedElements()
   const elem = selectedElements[0]
   if (!elem) return
 
@@ -67,11 +66,11 @@ export const setBlurNoUndo = (val: number): void => {
     }
 
     if (svgCanvas.getFilterHidden() || !(elem).getAttribute('filter')) {
-      svgCanvas.changeSelectedAttributeNoUndo('filter', `url(#${(filter as Element).id})`)
+      svgCanvas.changeSelectedAttributeNoUndo('filter', `url(#${filter.id})`)
       svgCanvas.setFilterHidden(false)
     }
 
-    const blurElem = getFeGaussianBlurElem(filter as Element)
+    const blurElem = getFeGaussianBlurElem(filter)
     if (!blurElem) {
       return
     }
@@ -146,7 +145,7 @@ export const setBlur = (val: number, complete: boolean): void => {
     InsertElementCommand, ChangeElementCommand, BatchCommand
   } = svgCanvas.history
 
-  const selectedElements: Element[] = svgCanvas.getSelectedElements()
+  const selectedElements = svgCanvas.getSelectedElements()
   if (svgCanvas.getCurCommand()) {
     finishChange()
     return
@@ -204,13 +203,13 @@ export const setBlur = (val: number, complete: boolean): void => {
     batchCmd.addSubCommand(new InsertElementCommand(filter))
   }
 
-  const changes = { filter: (elem).getAttribute('filter') }
-  svgCanvas.changeSelectedAttributeNoUndo('filter', `url(#${(filter as Element).id})`)
+  const changes: Record<string, string | null> = { filter: (elem).getAttribute('filter') }
+  svgCanvas.changeSelectedAttributeNoUndo('filter', `url(#${filter.id})`)
   batchCmd.addSubCommand(new ChangeElementCommand(elem, changes))
   svgCanvas.setBlurOffsets(filter, blurVal)
   svgCanvas.setCurCommand(batchCmd)
 
-  const blurElem = getFeGaussianBlurElem(filter as Element)
+  const blurElem = getFeGaussianBlurElem(filter)
   svgCanvas.undoMgr.beginUndoableChange('stdDeviation', [blurElem])
   if (complete) {
     svgCanvas.setBlurNoUndo(blurVal)

@@ -226,14 +226,15 @@ if (
   })
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let svgCanvas: any = null
+import type { ISvgCanvas } from './svgcanvas-types.js'
+
+let svgCanvas = null as unknown as ISvgCanvas
 
 /**
 * @function module:path-actions.init
 * @param pathMethodsContext
 */
-export const init = (canvas: unknown): void => {
+export const init = (canvas: ISvgCanvas): void => {
   svgCanvas = canvas
 }
 
@@ -1224,7 +1225,7 @@ export class Path {
     }
 
     const closedSubpath = Path.subpathIsClosed(this.selected_pts[0] ?? 0)
-    svgCanvas.addPtsToSelection({ grips, closedSubpath })
+    svgCanvas.addPtsToSelection({ grips: grips.filter((g): g is SVGCircleElement => g !== null), closedSubpath })
   }
 
   // STATIC
