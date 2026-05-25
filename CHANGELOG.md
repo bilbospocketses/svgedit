@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (Step 8 — geometry/bbox bug bundle — 2026-05-25)
+
+Four correctness fixes in `packages/svgcanvas/core/utilities.ts`:
+
+- `getExtraAttributesForConvertToPath` — added `transform`, `fill-rule`, `clip-rule` to preserved attributes (were silently dropped on convert-to-path)
+- `getStrokeOffsetForBBox` — `parseFloat()` the stroke-width string instead of implicit coercion (removed `@ts-expect-error`)
+- `getStrokedBBox` — apply `nodeType === 1` filter symmetrically to both min and max (asymmetric filtering caused skewed bounding boxes)
+- `getBBoxWithTransform` — added `'circle'` to bbox-optimization element list (rotated circles now get path-based bbox like ellipses)
+
+**Deferred:** Rotated-groups bbox cross-browser (Issue #339) — requires algorithmic investigation.
+
+**Verification:** tsc 0 / lint 0e+0w / vitest 701/701 / e2e 250/250.
+
 ### Changed (Step 7 — history/undo compression + stack limit — 2026-05-25)
 
 **Typing-undo compression:** Consecutive text-editing keystrokes now collapse into a single undo entry. Previously every keystroke pushed a separate command with the full `textContent`. A single undo now reverts to the text before the typing session began.
