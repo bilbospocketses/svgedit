@@ -174,7 +174,7 @@ export async function initEditor (editor: Editor): Promise<void> {
   editor.svgCanvas.bind('beforeClear', editor.beforeClear.bind(editor))
   editor.svgCanvas.bind('afterClear', editor.afterClear.bind(editor))
 
-  editor.svgCanvas.textActions.setInputElem($id('text'))
+  editor.svgCanvas.textActions.setInputElem($id('text') as HTMLInputElement)
 
   editor.setBackground(String(editor.configObj.pref('bkgd_color') ?? ''), String(editor.configObj.pref('bkgd_url') ?? ''))
 
@@ -185,7 +185,7 @@ export async function initEditor (editor: Editor): Promise<void> {
     res.h = convertUnit(res.h) + editor.configObj.curConfig.baseUnit
   }
   $id('se-img-prop')?.setAttribute('dialog', 'close')
-  $id('se-img-prop')?.setAttribute('title', editor.svgCanvas.getDocumentTitle())
+  $id('se-img-prop')?.setAttribute('title', editor.svgCanvas.getDocumentTitle() ?? '')
   $id('se-img-prop')?.setAttribute('width', String(res.w))
   $id('se-img-prop')?.setAttribute('height', String(res.h))
   $id('se-img-prop')?.setAttribute('save', String(editor.configObj.pref('img_save') ?? ''))
@@ -329,7 +329,7 @@ export async function initEditor (editor: Editor): Promise<void> {
   editor.workarea.addEventListener('wheel', (e) => {
     if (e.altKey) {
       e.preventDefault()
-      editor.svgCanvas.setZoom(e.deltaY > 0 ? editor.svgCanvas.getZoom() * 0.9 : editor.svgCanvas.getZoom() * 1.1, true)
+      editor.svgCanvas.setZoom(e.deltaY > 0 ? editor.svgCanvas.getZoom() * 0.9 : editor.svgCanvas.getZoom() * 1.1)
       editor.updateCanvas(true)
       ;($id('zoom') as HTMLInputElement | null)?.setAttribute('value', (editor.svgCanvas.getZoom() * 100).toFixed(1))
     }

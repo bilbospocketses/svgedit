@@ -190,9 +190,8 @@ class SvgCanvas implements ISvgCanvas {
   declare canvas: ISvgCanvas
 
   // ── Instance fields: wired on by core/*.ts init() calls ──────────────────
-  // These are augmented via svgcanvas.augment.d.ts for external consumers.
-  // Declared here with `declare` so the class body can reference them without
-  // TS2339 (property does not exist) errors inside this file.
+  // Declared here with `declare` so the class body + ISvgCanvas interface
+  // provide full type coverage. No separate augment file needed.
 
   // From core/elem-get-set.js (init wires these on)
   declare getBold: () => boolean

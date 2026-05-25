@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any */
 /**
  * @file se-paint-picker — Lit-based replacement for the legacy seColorPicker.
  *
@@ -10,6 +10,7 @@
 import { LitElement, html, css, nothing } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import PaintBox from './PaintBox.js'
+import type { ISvgCanvas } from '@svgedit/svgcanvas'
 import './jgraduate/se-gradient-editor.js'
 import { t } from '../locale.js'
 
@@ -84,7 +85,7 @@ export class SePaintPicker extends LitElement {
   /**
    * Update paint from current canvas selection (called by BottomPanel.updateColorpickers).
    */
-  updatePaint (svgCanvas: any, selectedElement: any, apply?: boolean): void {
+  updatePaint (svgCanvas: ISvgCanvas, selectedElement: Element | null, apply?: boolean): void {
     if (!this._paintBox) return
     const paint = this._paintBox.update(svgCanvas, selectedElement)
 

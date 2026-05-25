@@ -55,12 +55,10 @@ class MainMenu {
     // set document title
     this.editor.svgCanvas.setDocumentTitle(title)
 
-    // @ts-expect-error: isValidUnit called with 2 args; pre-existing pattern — selectedElement optional in practice
     if (w !== 'fit' && !isValidUnit('width', w)) {
       seAlert(this.editor.i18next.t('notification.invalidAttrValGiven'))
       return false
     }
-    // @ts-expect-error: isValidUnit called with 2 args; pre-existing pattern — selectedElement optional in practice
     if (h !== 'fit' && !isValidUnit('height', h)) {
       seAlert(this.editor.i18next.t('notification.invalidAttrValGiven'))
       return false

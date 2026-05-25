@@ -18,6 +18,7 @@ import './dialogs/index.js'
 import { normalizeShortcut } from './common/shortcut.js'
 
 import { isMac } from '@svgedit/svgcanvas/common/browser'
+import type { ISvgCanvas } from '@svgedit/svgcanvas'
 
 import SvgCanvas from '@svgedit/svgcanvas'
 import ConfigObj from './ConfigObj.js'
@@ -68,7 +69,7 @@ class Editor {
 
   // --- Properties (startup forward-declared) ---
   configObj!: any
-  svgCanvas!: any
+  svgCanvas!: ISvgCanvas
   i18next!: any
   $svgEditor!: HTMLElement
   workarea!: HTMLElement
@@ -115,7 +116,7 @@ class Editor {
      */
     this.title = 'untitled.svg'
 
-    this.svgCanvas = null
+    this.svgCanvas = null as unknown as ISvgCanvas
     this.$click = $click
     this.isReady = false
     this.customExportImage = false
@@ -964,7 +965,7 @@ class Editor {
    */
   zoomDone () {
     for (const el of this.svgCanvas.selectedElements) {
-      this.svgCanvas.selectorManager.requestSelector(el).resize()
+      if (el) this.svgCanvas.selectorManager.requestSelector(el)?.resize()
     }
     this.updateWireFrame()
   }
@@ -992,7 +993,7 @@ class Editor {
       return
     }
     const zoomlevel = zInfo.zoom
-    const bb = zInfo.bbox
+    const bb = zInfo.bbox as { x: number; y: number; width: number; height: number }
 
     if (zoomlevel < 0.001) {
       this.bottomPanel.changeZoom(0.1)
