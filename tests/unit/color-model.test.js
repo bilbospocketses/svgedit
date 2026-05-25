@@ -4,7 +4,8 @@ import {
   rgbToHsv,
   hexToRgba,
   rgbaToHex,
-  validateHex
+  validateHex,
+  ColorModel
 } from '../../src/editor/components/jgraduate/ColorModel.ts'
 
 // ---------------------------------------------------------------------------
@@ -185,5 +186,80 @@ describe('validateHex', () => {
 
   it('leaves a valid 6-char hex unchanged', () => {
     expect(validateHex('abc123')).toBe('abc123')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// ColorModel class
+// ---------------------------------------------------------------------------
+
+describe('ColorModel class', () => {
+  it('initializes from ahex string', () => {
+    const m = new ColorModel('ff0000ff')
+    expect(m.r).toBe(255)
+    expect(m.g).toBe(0)
+    expect(m.b).toBe(0)
+    expect(m.a).toBe(255)
+    expect(m.h).toBe(0)
+    expect(m.s).toBe(100)
+    expect(m.v).toBe(100)
+  })
+  it('setRgb updates HSV', () => {
+    const m = new ColorModel('000000ff')
+    m.setRgb(0, 255, 0)
+    expect(m.h).toBe(120)
+    expect(m.s).toBe(100)
+    expect(m.v).toBe(100)
+  })
+  it('setHsv updates RGB', () => {
+    const m = new ColorModel('000000ff')
+    m.setHsv(240, 100, 100)
+    expect(m.r).toBe(0)
+    expect(m.g).toBe(0)
+    expect(m.b).toBe(255)
+  })
+  it('setHex updates all channels', () => {
+    const m = new ColorModel('000000ff')
+    m.setHex('00ff00')
+    expect(m.r).toBe(0)
+    expect(m.g).toBe(255)
+    expect(m.b).toBe(0)
+    expect(m.hex).toBe('00ff00')
+  })
+  it('fires change event on set', () => {
+    const m = new ColorModel('ff0000ff')
+    let fired = false
+    m.addEventListener('change', () => { fired = true })
+    m.set('r', 128)
+    expect(fired).toBe(true)
+  })
+  it('does not fire change when value unchanged', () => {
+    const m = new ColorModel('ff0000ff')
+    let count = 0
+    m.addEventListener('change', () => { count++ })
+    m.set('r', 255)
+    expect(count).toBe(0)
+  })
+  it('change event includes source token', () => {
+    const m = new ColorModel('ff0000ff')
+    let source = null
+    m.addEventListener('change', (e) => { source = e.detail.source })
+    m.set('r', 128, 'slider')
+    expect(source).toBe('slider')
+  })
+  it('batch setRgb fires single event', () => {
+    const m = new ColorModel('000000ff')
+    let count = 0
+    m.addEventListener('change', () => { count++ })
+    m.setRgb(100, 150, 200)
+    expect(count).toBe(1)
+  })
+  it('hex getter returns 6-char lowercase', () => {
+    const m = new ColorModel('ff8800ff')
+    expect(m.hex).toBe('ff8800')
+  })
+  it('ahex getter returns 8-char lowercase', () => {
+    const m = new ColorModel('ff880080')
+    expect(m.ahex).toBe('ff880080')
   })
 })

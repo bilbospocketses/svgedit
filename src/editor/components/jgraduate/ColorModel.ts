@@ -162,3 +162,204 @@ function intToHex (dec: number): string {
   if (result.length === 1) result = '0' + result
   return result.toLowerCase()
 }
+
+// ---------------------------------------------------------------------------
+// ColorModel class
+// ---------------------------------------------------------------------------
+
+/** Detail payload carried by the ColorModel 'change' CustomEvent. */
+export interface ColorChangeDetail {
+  channel: ColorChannel | 'rgb' | 'hsv' | 'hex' | 'ahex'
+  source?: string
+}
+
+/** Clamp a number to [min, max]. */
+function clamp (v: number, min: number, max: number): number {
+  return v < min ? min : v > max ? max : v
+}
+
+/**
+ * Stateful color model that stores an RGBA color and fires a `change`
+ * CustomEvent whenever any channel is mutated.
+ *
+ * Extends `EventTarget` so callers can use `addEventListener` /
+ * `removeEventListener` directly.
+ *
+ * @example
+ * ```ts
+ * const m = new ColorModel('ff0000ff')
+ * m.addEventListener('change', (e) => console.log(e.detail))
+ * m.set('r', 128)
+ * ```
+ */
+export class ColorModel extends EventTarget {
+  private _r: number = 0
+  private _g: number = 0
+  private _b: number = 0
+  private _h: number = 0
+  private _s: number = 0
+  private _v: number = 0
+  private _a: number = 255
+
+  /** Construct a ColorModel, optionally initialised from an 8-char ahex string. */
+  constructor (ahex?: string) {
+    super()
+    if (ahex) {
+      this._initFromAhex(ahex)
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Getters
+  // -------------------------------------------------------------------------
+
+  get r (): number { return this._r }
+  get g (): number { return this._g }
+  get b (): number { return this._b }
+  get h (): number { return this._h }
+  get s (): number { return this._s }
+  get v (): number { return this._v }
+  get a (): number { return this._a }
+
+  /** 6-char lowercase hex string (RRGGBB, no alpha). */
+  get hex (): string {
+    return intToHex(this._r) + intToHex(this._g) + intToHex(this._b)
+  }
+
+  /** 8-char lowercase hex string (RRGGBBAA). */
+  get ahex (): string {
+    return this.hex + intToHex(this._a)
+  }
+
+  /** CSS `rgba(r, g, b, a)` string where a is normalised to 0–1. */
+  get cssColor (): string {
+    return `rgba(${this._r}, ${this._g}, ${this._b}, ${(this._a / 255).toFixed(3)})`
+  }
+
+  // -------------------------------------------------------------------------
+  // Single-channel setter
+  // -------------------------------------------------------------------------
+
+  /**
+   * Set a single color channel.  Automatically syncs the complementary color
+   * space (RGB ↔ HSV) and fires a `change` event unless the value is already
+   * equal to the current value.
+   *
+   * @param channel - Which channel to set.
+   * @param value   - New value (clamped to the channel's valid range).
+   * @param source  - Optional caller token for feedback-loop prevention.
+   */
+  set (channel: ColorChannel, value: number, source?: string): void {
+    let clamped: number
+    switch (channel) {
+      case 'r': case 'g': case 'b': case 'a':
+        clamped = clamp(value | 0, 0, 255)
+        break
+      case 'h':
+        clamped = clamp(value | 0, 0, 360)
+        break
+      case 's': case 'v':
+        clamped = clamp(value | 0, 0, 100)
+        break
+    }
+
+    // No-op if unchanged
+    if (this[`_${channel}` as `_${ColorChannel}`] === clamped) return
+
+    // Apply the new value
+    ;(this as Record<string, number>)[`_${channel}`] = clamped
+
+    // Sync complementary space
+    if (channel === 'r' || channel === 'g' || channel === 'b') {
+      this._syncHsvFromRgb()
+    } else if (channel === 'h' || channel === 's' || channel === 'v') {
+      this._syncRgbFromHsv()
+    }
+
+    this._fire(channel, source)
+  }
+
+  // -------------------------------------------------------------------------
+  // Batch setters
+  // -------------------------------------------------------------------------
+
+  /**
+   * Set all three RGB channels atomically.  Fires a single `change` event
+   * with `channel: 'rgb'`.
+   */
+  setRgb (r: number, g: number, b: number, source?: string): void {
+    this._r = clamp(r | 0, 0, 255)
+    this._g = clamp(g | 0, 0, 255)
+    this._b = clamp(b | 0, 0, 255)
+    this._syncHsvFromRgb()
+    this._fire('rgb', source)
+  }
+
+  /**
+   * Set all three HSV channels atomically.  Fires a single `change` event
+   * with `channel: 'hsv'`.
+   */
+  setHsv (h: number, s: number, v: number, source?: string): void {
+    this._h = clamp(h | 0, 0, 360)
+    this._s = clamp(s | 0, 0, 100)
+    this._v = clamp(v | 0, 0, 100)
+    this._syncRgbFromHsv()
+    this._fire('hsv', source)
+  }
+
+  /**
+   * Set color from a 6-char hex string (RRGGBB).  Alpha is preserved.
+   * Fires a single `change` event with `channel: 'hex'`.
+   */
+  setHex (hex: string, source?: string): void {
+    const clean = validateHex(hex).substring(0, 6)
+    if (clean.length < 6) return
+    this._r = parseInt(clean.substring(0, 2), 16)
+    this._g = parseInt(clean.substring(2, 4), 16)
+    this._b = parseInt(clean.substring(4, 6), 16)
+    this._syncHsvFromRgb()
+    this._fire('hex', source)
+  }
+
+  /**
+   * Set color (including alpha) from an 8-char hex string (RRGGBBAA).
+   * Fires a single `change` event with `channel: 'ahex'`.
+   */
+  setAhex (ahex: string, source?: string): void {
+    this._initFromAhex(ahex)
+    this._fire('ahex', source)
+  }
+
+  // -------------------------------------------------------------------------
+  // Private helpers
+  // -------------------------------------------------------------------------
+
+  private _initFromAhex (ahex: string): void {
+    const clean = validateHex(ahex)
+    if (clean.length < 8) return
+    this._r = parseInt(clean.substring(0, 2), 16)
+    this._g = parseInt(clean.substring(2, 4), 16)
+    this._b = parseInt(clean.substring(4, 6), 16)
+    this._a = parseInt(clean.substring(6, 8), 16)
+    this._syncHsvFromRgb()
+  }
+
+  private _syncHsvFromRgb (): void {
+    const [h, s, v] = rgbToHsv(this._r, this._g, this._b)
+    this._h = h
+    this._s = s
+    this._v = v
+  }
+
+  private _syncRgbFromHsv (): void {
+    const [r, g, b] = hsvToRgb(this._h, this._s, this._v)
+    this._r = r
+    this._g = g
+    this._b = b
+  }
+
+  private _fire (channel: ColorChangeDetail['channel'], source?: string): void {
+    const detail: ColorChangeDetail = { channel, source }
+    this.dispatchEvent(new CustomEvent<ColorChangeDetail>('change', { detail }))
+  }
+}
