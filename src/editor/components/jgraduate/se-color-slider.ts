@@ -111,6 +111,7 @@ export class SeColorSlider extends LitElement {
   }
 
   private _updateFromPointer(e: PointerEvent): void {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- Lit guarantees shadowRoot
     const el = this.shadowRoot!.querySelector('div') as HTMLElement
     const rect = el.getBoundingClientRect()
     const px = Math.max(0, Math.min(this.width, e.clientX - rect.left))

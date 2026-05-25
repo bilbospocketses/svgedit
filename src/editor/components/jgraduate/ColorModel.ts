@@ -264,7 +264,7 @@ export class ColorModel extends EventTarget {
     }
 
     // No-op if unchanged
-    if (this[`_${channel}` as `_${ColorChannel}`] === clamped) return
+    if ((this as unknown as Record<string, number>)[`_${channel}`] === clamped) return
 
     // Apply the new value
     ;(this as unknown as Record<string, number>)[`_${channel}`] = clamped

@@ -180,10 +180,16 @@ export class SeColorPicker extends LitElement {
   }
 
   protected firstUpdated (): void {
-    this._mapCanvas = this.shadowRoot!.querySelector('#map-canvas') as HTMLCanvasElement
-    this._barCanvas = this.shadowRoot!.querySelector('#bar-canvas') as HTMLCanvasElement
-    this._mapCtx = this._mapCanvas.getContext('2d')!
-    this._barCtx = this._barCanvas.getContext('2d')!
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- Lit guarantees shadowRoot after firstUpdated
+    const root = this.shadowRoot!
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- querySelector returns Element, we need HTMLCanvasElement
+    this._mapCanvas = root.querySelector('#map-canvas') as HTMLCanvasElement
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- querySelector returns Element, we need HTMLCanvasElement
+    this._barCanvas = root.querySelector('#bar-canvas') as HTMLCanvasElement
+    const mapCtx = this._mapCanvas.getContext('2d')
+    const barCtx = this._barCanvas.getContext('2d')
+    if (mapCtx) this._mapCtx = mapCtx
+    if (barCtx) this._barCtx = barCtx
     this._scheduleMapRender()
     this._scheduleBarRender()
     this._syncSliderPositions()
@@ -690,6 +696,7 @@ export class SeColorPicker extends LitElement {
   }
 
   private _applyHexInput (): void {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- Lit guarantees shadowRoot
     const input = this.shadowRoot!.querySelector('#hex-input') as HTMLInputElement
     if (!input) return
     const hex = input.value.trim()
