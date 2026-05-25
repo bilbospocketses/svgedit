@@ -406,14 +406,12 @@ class PathActions {
             const absY = seglist.getItem(0)?.y ?? 0
 
             sSeg = stretchy.pathSegList.getItem(1)
-            const newEntry = sSeg?.pathSegType === 4
+            const newEntry: SVGPathSegment = sSeg?.pathSegType === 4
               ? { type: 'L', values: [absX, absY] }
               : { type: 'C', values: [(sSeg?.x1 ?? 0) / zoom, (sSeg?.y1 ?? 0) / zoom, absX, absY, absX, absY] }
 
             const data = drawnPath.getPathData()
-            // TODO(post-migration #10): SVGPathSegment type unification — internal {type, values}
-            // shape doesn't match path-data-polyfill's SVGPathDataCommand union. See todo #10 backlog.
-            data.push(newEntry as SVGPathSegment, { type: 'Z' as const, values: [] })
+            data.push(newEntry, { type: 'Z', values: [] })
             drawnPath.setPathData(data)
           } else if (len < 3) {
             keep = false
@@ -459,13 +457,11 @@ class PathActions {
           sSeg = stretchy.pathSegList.getItem(1)
           const rx = svgCanvas.round(x) as number
           const ry = svgCanvas.round(y) as number
-          const nextEntry = sSeg?.pathSegType === 4
+          const nextEntry: SVGPathSegment = sSeg?.pathSegType === 4
             ? { type: 'L', values: [rx, ry] }
             : { type: 'C', values: [(sSeg?.x1 ?? 0) / zoom, (sSeg?.y1 ?? 0) / zoom, (sSeg?.x2 ?? 0) / zoom, (sSeg?.y2 ?? 0) / zoom, rx, ry] }
           const data = drawnPath.getPathData()
-          // TODO(post-migration #10): SVGPathSegment type unification — internal {type, values}
-          // shape doesn't match path-data-polyfill's SVGPathDataCommand union. See todo #10 backlog.
-          data.push(nextEntry as SVGPathSegment)
+          data.push(nextEntry)
           drawnPath.setPathData(data)
 
           x *= zoom
