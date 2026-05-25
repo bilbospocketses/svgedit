@@ -26,7 +26,8 @@ const lookup = (obj: Bundle | null | undefined, dotted: string): unknown => {
 }
 
 const interpolate = (str: unknown, vars?: Record<string, unknown>): string => {
-  if (typeof str !== 'string' || !vars) return typeof str === 'string' ? str : ''
+  if (typeof str !== 'string') return ''
+  if (!vars) return str
   return str.replace(/\{\{(\w+)\}\}/g, (_match, key: string) => (key in vars ? String(vars[key]) : `{{${key}}}`))
 }
 
