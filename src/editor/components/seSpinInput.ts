@@ -22,7 +22,7 @@ import { t } from '../locale.js'
  *     both work because Shadow DOM retargets `e.target` to the host on
  *     composed-bubbled events.
  *   - `.value` property setter+getter used by callers
- *     (Editor.ts, EditorStartup.ts, TopPanel.ts, ext-polystar.ts) — backed by
+ *     (Editor.ts, TopPanel.ts, ext-polystar.ts) — backed by
  *     the Lit `accessor` which mirrors to the inner `<input>`.
  *   - CSS variable `--global-se-spin-input-width` preserved verbatim
  *     (svgedit.css:12 → consumed here in `div.imginside` rule).
