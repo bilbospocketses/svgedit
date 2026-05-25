@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (Step 10 — UI/UX correctness — 2026-05-25)
+
+Two mechanical fixes:
+
+- `event.ts` — parent walk after click now traverses `<a>` alongside `<g>` (links already implemented; stale TODO removed)
+- `TopPanel.ts` — added `polyline`/`polygon` to panels lookup (contextual tools now show when selected)
+
+**Deferred (2 design items):** `canDeleteNodes` unconditional set (path node deletion rules), cursor reset after text creation (mode-change lifecycle hook).
+
+**Verification:** tsc 0 / lint 0e+0w / vitest 701/701 / e2e 250/250.
+
 ### Fixed (Step 9b — SVG correctness design fixes — 2026-05-25)
 
 Five design-level fixes (companion to Step 9's mechanical fixes):
