@@ -444,7 +444,7 @@ const setSvgString = (xmlString: string, preventUndo?: boolean): boolean => {
           }
         }
         // Add to encodableImages if it loads
-        svgCanvas.embedImage(val)
+        void svgCanvas.embedImage(val)
       }
     })
     // Duplicate id replace changes

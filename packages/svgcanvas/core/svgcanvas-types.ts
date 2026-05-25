@@ -124,7 +124,7 @@ export interface ISvgCanvas {
   opacAni: SVGAnimateElement
   linkControlPoints: typeof pathModule.pathActions.linkControlPoints
   curCommand: BatchCommand | null
-  filter: any
+  filter: Element | null
   filterHidden: boolean
   modeEvent: CustomEvent | null
   contentW: number
@@ -432,8 +432,8 @@ export interface ISvgCanvas {
   getNextId (): string
   getCurCommand (): BatchCommand | null
   setCurCommand (value: BatchCommand | null): void
-  getFilter (): any
-  setFilter (value: any): void
+  getFilter (): Element | null
+  setFilter (value: Element | null): void
   getFilterHidden (): boolean
   setFilterHidden (value: boolean): void
   setMode (name: string): void

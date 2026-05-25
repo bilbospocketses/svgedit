@@ -175,7 +175,7 @@ class SvgCanvas implements ISvgCanvas {
   opacAni: SVGAnimateElement
   linkControlPoints: typeof pathModule.pathActions.linkControlPoints
   curCommand: history.BatchCommand | null
-  filter: any
+  filter: Element | null
   filterHidden: boolean
   modeEvent: CustomEvent | null
   contentW: number
@@ -1069,11 +1069,11 @@ class SvgCanvas implements ISvgCanvas {
     this.curCommand = value
   }
 
-  getFilter (): any {
+  getFilter (): Element | null {
     return this.filter
   }
 
-  setFilter (value: any): void {
+  setFilter (value: Element | null): void {
     this.filter = value
   }
 

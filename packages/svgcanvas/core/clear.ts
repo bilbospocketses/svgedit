@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /**
  * Tools for clear.
  * @module clear
@@ -21,7 +20,7 @@ export const init = (canvas: ISvgCanvas): void => {
 
 export const clearSvgContentElementInit = (): void => {
   const curConfig = svgCanvas.getCurConfig()
-  const { dimensions } = curConfig
+  const dimensions = curConfig.dimensions as [string, string]
   const el = svgCanvas.getSvgContent()
   // empty
   while (el.firstChild) { el.removeChild(el.firstChild) }

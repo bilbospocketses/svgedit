@@ -1009,6 +1009,7 @@ export const leaveContext = (): void => {
       if (orig === null || orig === undefined) {
         elem.removeAttribute('opacity')
       } else {
+        // eslint-disable-next-line @typescript-eslint/no-base-to-string -- dataStorage returns unknown; orig is a stored opacity string/number
         elem.setAttribute('opacity', String(orig))
       }
       elem.setAttribute('style', 'pointer-events: inherit')

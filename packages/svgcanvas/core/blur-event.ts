@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
-// svgCanvas is opaquely typed (typed in Task 10 C6); file-level disable matches clear.ts pattern
 /**
  * Tools for blur event.
  * @module blur
@@ -68,11 +66,11 @@ export const setBlurNoUndo = (val: number): void => {
     }
 
     if (svgCanvas.getFilterHidden() || !(elem).getAttribute('filter')) {
-      svgCanvas.changeSelectedAttributeNoUndo('filter', `url(#${(filter as Element).id})`)
+      svgCanvas.changeSelectedAttributeNoUndo('filter', `url(#${filter.id})`)
       svgCanvas.setFilterHidden(false)
     }
 
-    const blurElem = getFeGaussianBlurElem(filter as Element)
+    const blurElem = getFeGaussianBlurElem(filter)
     if (!blurElem) {
       return
     }
