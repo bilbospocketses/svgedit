@@ -56,6 +56,7 @@ interface Config {
   avoidClientSideDownload: boolean
   avoidClientSideOpen: boolean
   layerView: boolean
+  maxUndoHistory: number
   extensions: string[]
   userExtensions: { pathName: string; config: unknown }[]
   allowedOrigins: string[]
@@ -240,7 +241,8 @@ export default class ConfigObj {
       avoidClientSide: false, // Deprecated in favor of `avoidClientSideDownload`
       avoidClientSideDownload: false,
       avoidClientSideOpen: false,
-      layerView: false
+      layerView: false,
+      maxUndoHistory: 100
     }
 
     this.curPrefs = {}
