@@ -975,10 +975,10 @@ const convertToGroup = (elem: Element): void => {
     )
     $elem.remove()
 
-    // See if other elements reference this symbol
     const svgContent: Element = svgCanvas.getSvgContent()
-    // @preserve audit-flagged:1111 — uniquifyElems hasMore bug: querySelectorAll('use') counts all, not just refs to this symbol
-    const hasMore = svgContent.querySelectorAll('use').length
+    const hasMore = elem.id
+      ? svgContent.querySelectorAll(`use[href="#${elem.id}"], use[*|href="#${elem.id}"]`).length
+      : 0
 
     const g = svgCanvas.getDOMDocument().createElementNS(NS.SVG, 'g') as Element
     const childs = elem.childNodes

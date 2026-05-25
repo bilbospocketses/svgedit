@@ -651,26 +651,29 @@ const importSvgString = (xmlString: string, preserveDimension?: boolean): Elemen
         vb[j] = Number(vb[j] ?? 0)
       }
 
-      // Audit-flagged: importSvgString interop edge cases (svg-exec.ts:763-766) — preserve
       const rawCanvash = Number(svgCanvas.getSvgContent().getAttribute('height'))
       const canvash =
         Number.isFinite(rawCanvash) && rawCanvash > 0
           ? rawCanvash
           : (Number(svgCanvas.getCurConfig().dimensions?.[1]) || 100)
 
+      const vbMinX = vb[0] ?? 0
+      const vbMinY = vb[1] ?? 0
       const vbWidth = vb[2] ?? 0
       const vbHeight = vb[3] ?? 0
       const importW = Number.isFinite(vbWidth) && vbWidth > 0 ? vbWidth : (innerw > 0 ? innerw : 100)
       const importH = Number.isFinite(vbHeight) && vbHeight > 0 ? vbHeight : (innerh > 0 ? innerh : 100)
       const safeImportW = Number.isFinite(importW) && importW > 0 ? importW : 100
       const safeImportH = Number.isFinite(importH) && importH > 0 ? importH : 100
-      ts =
-        safeImportH > safeImportW
-          ? 'scale(' + canvash / 3 / safeImportH + ')'
-          : 'scale(' + canvash / 3 / safeImportW + ')'
+      const scale = safeImportH > safeImportW
+        ? canvash / 3 / safeImportH
+        : canvash / 3 / safeImportW
 
-      // Hack to make recalculateDimensions understand how to scale
-      ts = `translate(0) ${ts} translate(0)`
+      // Account for non-zero viewBox origin + scale
+      const originOffset = (vbMinX !== 0 || vbMinY !== 0)
+        ? `translate(${-vbMinX},${-vbMinY}) `
+        : ''
+      ts = `translate(0) scale(${scale}) ${originOffset}translate(0)`
 
       symbol = svgCanvas.getDOMDocument().createElementNS(NS.SVG, 'symbol') as Element
       while (svg.firstChild) {
