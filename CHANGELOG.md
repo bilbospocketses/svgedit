@@ -7,12 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed (Step 14a + 14b — svgcanvas type-safety pass — 2026-05-25)
+### Changed (Step 14 — svgcanvas type-safety pass — 2026-05-25)
 
-- `svgcanvas.ts` — `curCommand: any` field, `getCurCommand()`, and `setCurCommand()` typed as `history.BatchCommand | null` (PR #53)
-- `json.ts` — `addSVGElementsFromJson` converted from arrow to function declaration with overload signatures; callers passing `SVGElementJSON` now get `Element` return type instead of `Element | Text | null` (PR #54)
-- `svgcanvas.ts` — removed `as Element` cast from `createSVGElement()`, narrowed its `jsonMap` param from `any` to `SVGElementJSON` (PR #54)
-- `svgcanvas.ts` — removed `as any` cast when passing `addSVGElementsFromJson` to `getBBoxOfElementAsPath()` (PR #54)
+**Step 14a** (PR #53): `curCommand: any` → `history.BatchCommand | null` on field, getter, setter.
+
+**Step 14b** (PR #54): `addSVGElementsFromJson` converted from arrow to function declaration with overload signatures; `as Element` and `as any` casts removed; `createSVGElement` param narrowed `any` → `SVGElementJSON`.
+
+**Step 14c** (PR #56): `SVGPathSegment` cast elimination — `TYPE_TO_CMD` narrowed to `SVGPathDataCommand`; `_segToEntry` return typed as `SVGPathSegment`; 5 casts + 5 TODO comments removed from path-method.ts and path-actions.ts.
+
+**Step 14d** (PR #57): ISvgCanvas interface extraction — the major refactor:
+- New `packages/svgcanvas/core/svgcanvas-types.ts` with ~200-member ISvgCanvas interface
+- `SvgCanvas implements ISvgCanvas` with compiler-enforced contract
+- All 20 `core/*.ts` files: `let svgCanvas: any` → `ISvgCanvas`; 3 per-file mini-interfaces deleted
+- 89 dynamically-wired methods audited from `(...args: unknown[]) => unknown` → real signatures
+- ~260 pre-existing type errors (null-safety, Element/Node mismatches, optional params) fixed
+- `filter: any` → `Element | null` (field + getter + setter)
+- 22 unnecessary type assertions + 21 unused eslint-disable directives cleaned up
+- `SelectModule.#selectorManager: any` → `SelectorManager | null`
+
+**Step 14e** (PR #58): Added `typecheck` script (`tsc --build packages/svgcanvas`) and wired it as the first step of `npm run build` — type errors now fail the build before vite runs.
 
 ### Changed (Step 12b — Editor + EditorStartup class unification — 2026-05-25)
 
