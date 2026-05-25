@@ -172,7 +172,7 @@ class SvgCanvas {
   uiStrings: Record<string, string>
   opacAni: SVGAnimateElement
   linkControlPoints: typeof pathModule.pathActions.linkControlPoints
-  curCommand: any
+  curCommand: history.BatchCommand | null
   filter: any
   filterHidden: boolean
   modeEvent: CustomEvent | null
@@ -953,11 +953,11 @@ class SvgCanvas {
     return this.getCurrentDrawing().getNextId()
   }
 
-  getCurCommand (): any {
+  getCurCommand (): history.BatchCommand | null {
     return this.curCommand
   }
 
-  setCurCommand (value: any): void {
+  setCurCommand (value: history.BatchCommand | null): void {
     this.curCommand = value
   }
 
