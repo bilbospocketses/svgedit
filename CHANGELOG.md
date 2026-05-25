@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (Step 9b — SVG correctness design fixes — 2026-05-25)
+
+Five design-level fixes (companion to Step 9's mechanical fixes):
+
+- `convertGradients` — clone gradient per-element when multiple shapes share a userSpaceOnUse gradient (each clone converted relative to its element's bbox)
+- `uniquifyElems` — add `<a>` and `<image>` to refElems for internal href update on ID rename
+- `setUseData` on undo/redo — remove `tagName === 'use'` guard so nested `<use>` inside groups get dataStorage refs re-established
+- `pushGroupProperty` — push group `fill`/`stroke` to children on ungroup when child has no explicit attribute
+- `importSvgString` — clear stale `importIds` cache entry when cached symbol is no longer in the DOM
+
+**Verification:** tsc 0 / lint 0e+0w / vitest 701/701 / e2e 250/250.
+
 ### Fixed (Step 9 — SVG import/export + element correctness — 2026-05-25)
 
 Three mechanical fixes:
@@ -14,8 +26,6 @@ Three mechanical fixes:
 - `uniquifyElems` symbol-not-removed — query `<use>` by specific symbol href, not all `<use>` globally (unused symbols now correctly removed)
 - `convertToPath` attribute handling — use element's own fill/stroke/opacity with curShape as fallback (converted paths now preserve the original element's appearance)
 - `importSvgString` viewBox non-zero origin — apply `translate(-minX,-minY)` for imported SVGs with `viewBox="100 100 ..."` (correct positioning)
-
-**Deferred (5 design items):** multi-element gradient duplication, image/a internal refs, setUseData on undo/redo, fill/stroke pushdown on ungroup, importSvgString namespace caching.
 
 **Verification:** tsc 0 / lint 0e+0w / vitest 701/701 / e2e 250/250.
 

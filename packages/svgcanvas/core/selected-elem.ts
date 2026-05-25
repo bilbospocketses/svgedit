@@ -750,7 +750,9 @@ const pushGroupProperty = (g: Element, undoable: boolean): hstry.BatchCommand | 
 
   const gattrs = {
     filter: g.getAttribute('filter'),
-    opacity: g.getAttribute('opacity')
+    opacity: g.getAttribute('opacity'),
+    fill: g.getAttribute('fill'),
+    stroke: g.getAttribute('stroke')
   }
   let gfilter: Element | null = null
   let gblur: string | number | null = null
@@ -769,6 +771,14 @@ const pushGroupProperty = (g: Element, undoable: boolean): hstry.BatchCommand | 
         Math.round((Number(elem.getAttribute('opacity') ?? 1)) * Number(gattrs.opacity) * 100) /
         100
       svgCanvas.changeSelectedAttribute('opacity', newOpac, [elem])
+    }
+
+    if (gattrs.fill && !elem.getAttribute('fill')) {
+      svgCanvas.changeSelectedAttribute('fill', gattrs.fill, [elem])
+    }
+
+    if (gattrs.stroke && !elem.getAttribute('stroke')) {
+      svgCanvas.changeSelectedAttribute('stroke', gattrs.stroke, [elem])
     }
 
     if (gattrs.filter) {
