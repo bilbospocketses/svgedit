@@ -37,7 +37,6 @@ class PaintBox {
     this.grad = this.defs.firstElementChild as Element
     this._paintColor = null
     this._paintOpacity = 1
-    // this.paint = new $.jGraduate.Paint({solidColor: color});
     this.type = type
   }
 
