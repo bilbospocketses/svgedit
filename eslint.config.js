@@ -86,7 +86,16 @@ export default defineConfig([
   },
   // Disable type-checked rules for test files and config files
   {
-    files: ['tests/**/*.js', '*.config.{js,mjs,ts}'],
+    files: ['tests/**/*.{js,ts}', '*.config.{js,mjs,ts}'],
     extends: [tseslint.configs.disableTypeChecked]
+  },
+  // Test files: relax strict rules (tests use assert globals, loose types, etc.)
+  {
+    files: ['tests/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off',
+      '@typescript-eslint/no-unused-vars': 'off'
+    }
   }
 ])
