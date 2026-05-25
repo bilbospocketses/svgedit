@@ -1,5 +1,5 @@
 import { LitElement, html, css } from 'lit'
-import { customElement, state } from 'lit/decorators.js'
+import { customElement, property, state } from 'lit/decorators.js'
 
 declare const svgEditor: SvgEditorGlobal
 
@@ -87,8 +87,10 @@ export class SeSvgSourceEditorDialog extends LitElement {
     }
   `
 
+  @property({ reflect: true }) accessor dialog = ''
+
   static get observedAttributes (): string[] {
-    return ['dialog', 'value', 'applysec', 'copysec']
+    return [...super.observedAttributes, 'value', 'applysec', 'copysec']
   }
 
   @state() accessor _saveLabel = ''
@@ -111,12 +113,17 @@ export class SeSvgSourceEditorDialog extends LitElement {
 
   // --- Property accessors (external API preserved) ---
 
-  get dialog (): string | null {
-    return this.getAttribute('dialog')
-  }
-
-  set dialog (value: string) {
-    this.setAttribute('dialog', value)
+  protected updated (changed: Map<string, unknown>): void {
+    if (changed.has('dialog')) {
+      const dlg = this.shadowRoot?.querySelector('dialog')
+      if (this.dialog === 'open') {
+        if (dlg && !dlg.open) dlg.showModal()
+        this.shadowRoot?.querySelector('textarea')?.focus()
+      } else {
+        if (dlg?.open) dlg.close()
+        this.shadowRoot?.querySelector('textarea')?.blur()
+      }
+    }
   }
 
   get value (): string | null {
@@ -150,21 +157,6 @@ export class SeSvgSourceEditorDialog extends LitElement {
   attributeChangedCallback (name: string, oldValue: string | null, newValue: string | null): void {
     super.attributeChangedCallback(name, oldValue, newValue)
     switch (name) {
-      case 'dialog':
-        if (newValue === 'open') {
-          void this.updateComplete.then(() => {
-            const dlg = this.shadowRoot?.querySelector('dialog')
-            if (dlg && !dlg.open) dlg.showModal()
-            const ta = this.shadowRoot?.querySelector('textarea')
-            ta?.focus()
-          })
-        } else {
-          const dlg = this.shadowRoot?.querySelector('dialog')
-          if (dlg?.open) dlg.close()
-          const ta = this.shadowRoot?.querySelector('textarea')
-          ta?.blur()
-        }
-        break
       case 'value':
         this._textareaValue = newValue ?? ''
         break

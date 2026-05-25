@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
 // i18next is passed as `any` from the editor; typing deferred to #3 (full i18n type pass)
 import { LitElement, html, css } from 'lit'
-import { customElement, state } from 'lit/decorators.js'
+import { customElement, property, state } from 'lit/decorators.js'
 import { map } from 'lit/directives/map.js'
 import { classMap } from 'lit/directives/class-map.js'
 
@@ -195,7 +195,7 @@ export class SeEditPrefsDialog extends LitElement {
   @state() accessor _baseUnit = 'px'
 
   static get observedAttributes (): string[] {
-    return ['dialog', 'lang', 'canvasbg', 'bgurl', 'gridsnappingon', 'gridsnappingstep', 'gridcolor', 'showrulers', 'baseunit']
+    return [...super.observedAttributes, 'lang', 'canvasbg', 'bgurl', 'gridsnappingon', 'gridsnappingstep', 'gridcolor', 'showrulers', 'baseunit']
   }
 
   /**
@@ -223,17 +223,6 @@ export class SeEditPrefsDialog extends LitElement {
     super.attributeChangedCallback(name, oldValue, newValue)
     if (oldValue === newValue) return
     switch (name) {
-      case 'dialog':
-        if (newValue === 'open') {
-          void this.updateComplete.then(() => {
-            const dlg = this.shadowRoot?.querySelector('dialog')
-            if (dlg && !dlg.open) dlg.showModal()
-          })
-        } else {
-          const dlg = this.shadowRoot?.querySelector('dialog')
-          if (dlg?.open) dlg.close()
-        }
-        break
       case 'lang':
         this._lang = newValue ?? 'en'
         break
@@ -277,8 +266,18 @@ export class SeEditPrefsDialog extends LitElement {
   get bgurl (): string | null { return this.getAttribute('bgurl') }
   set bgurl (value: string) { this.setAttribute('bgurl', value) }
 
-  get dialog (): string | null { return this.getAttribute('dialog') }
-  set dialog (value: string) { this.setAttribute('dialog', value) }
+  @property({ reflect: true }) accessor dialog = ''
+
+  protected updated (changed: Map<string, unknown>): void {
+    if (changed.has('dialog')) {
+      const dlg = this.shadowRoot?.querySelector('dialog')
+      if (this.dialog === 'open') {
+        if (dlg && !dlg.open) dlg.showModal()
+      } else {
+        if (dlg?.open) dlg.close()
+      }
+    }
+  }
 
   get gridsnappingon (): string | null { return this.getAttribute('gridsnappingon') }
   set gridsnappingon (value: string) { this.setAttribute('gridsnappingon', value) }

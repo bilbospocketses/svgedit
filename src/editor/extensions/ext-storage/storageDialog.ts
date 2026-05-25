@@ -1,5 +1,5 @@
 import { LitElement, html, css } from 'lit'
-import { customElement, state } from 'lit/decorators.js'
+import { customElement, property, state } from 'lit/decorators.js'
 
 /**
  * Storage-preferences dialog (formerly elix-backed).
@@ -64,9 +64,8 @@ export class SeStorageDialog extends LitElement {
   @state() accessor _rememberTitle = ''
   @state() accessor _storageEnabled = false
 
-  static get observedAttributes (): string[] {
-    return ['dialog', 'storage']
-  }
+  @property({ reflect: true }) accessor dialog = ''
+  @property({ reflect: true }) accessor storage = ''
 
   init (i18next: { t: (key: string) => string }): void {
     this._okLabel = i18next.t('common.ok')
@@ -79,31 +78,17 @@ export class SeStorageDialog extends LitElement {
     this._rememberTitle = i18next.t('tools.remember_this_choice_title')
   }
 
-  get dialog (): string | null {
-    return this.getAttribute('dialog')
-  }
-
-  set dialog (value: string | null) {
-    this.setAttribute('dialog', value ?? '')
-  }
-
-  attributeChangedCallback (name: string, oldValue: string | null, newValue: string | null): void {
-    super.attributeChangedCallback(name, oldValue, newValue)
-    switch (name) {
-      case 'dialog':
-        if (newValue === 'open') {
-          void this.updateComplete.then(() => {
-            const dlg = this.shadowRoot?.querySelector('dialog')
-            if (dlg && !dlg.open) dlg.showModal()
-          })
-        } else {
-          const dlg = this.shadowRoot?.querySelector('dialog')
-          if (dlg?.open) dlg.close()
-        }
-        break
-      case 'storage':
-        this._storageEnabled = newValue === 'true'
-        break
+  protected updated (changed: Map<string, unknown>): void {
+    if (changed.has('dialog')) {
+      const dlg = this.shadowRoot?.querySelector('dialog')
+      if (this.dialog === 'open') {
+        if (dlg && !dlg.open) dlg.showModal()
+      } else {
+        if (dlg?.open) dlg.close()
+      }
+    }
+    if (changed.has('storage')) {
+      this._storageEnabled = this.storage === 'true'
     }
   }
 

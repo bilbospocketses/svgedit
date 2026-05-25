@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
 import { LitElement, html, css } from 'lit'
-import { customElement, state, query } from 'lit/decorators.js'
+import { customElement, property, state, query } from 'lit/decorators.js'
 import SvgCanvas from '@svgedit/svgcanvas'
 
 const { isValidUnit } = SvgCanvas
@@ -109,7 +109,7 @@ export class SeImgPropDialog extends LitElement {
   @query('#image_ref') accessor _imageOptRef!: HTMLInputElement
 
   static get observedAttributes (): string[] {
-    return ['title', 'width', 'height', 'save', 'dialog', 'embed', 'common-ok',
+    return [...super.observedAttributes, 'title', 'width', 'height', 'save', 'embed', 'common-ok',
       'common-cancel', 'config-image_props', 'config-doc_title', 'config-doc_dims',
       'common-width', 'common-height', 'config-select_predefined',
       'tools-fit-to-content', 'config-included_images', 'config-image_opt_embed',
@@ -168,13 +168,6 @@ export class SeImgPropDialog extends LitElement {
         })
         break
       case 'dialog':
-        void this.updateComplete.then(() => {
-          if (newValue === 'open') {
-            if (this._dialog && !this._dialog.open) this._dialog.showModal()
-          } else {
-            if (this._dialog?.open) this._dialog.close()
-          }
-        })
         break
       case 'save':
         void this.updateComplete.then(() => {
@@ -275,12 +268,16 @@ export class SeImgPropDialog extends LitElement {
     this.setAttribute('save', value)
   }
 
-  get dialog (): string | null {
-    return this.getAttribute('dialog')
-  }
+  @property({ reflect: true }) accessor dialog = ''
 
-  set dialog (value: string) {
-    this.setAttribute('dialog', value)
+  protected updated (changed: Map<string, unknown>): void {
+    if (changed.has('dialog')) {
+      if (this.dialog === 'open') {
+        if (this._dialog && !this._dialog.open) this._dialog.showModal()
+      } else {
+        if (this._dialog?.open) this._dialog.close()
+      }
+    }
   }
 
   get embed (): string | null {
