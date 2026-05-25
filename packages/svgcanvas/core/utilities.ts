@@ -39,14 +39,15 @@ const visElems =
   'a,circle,ellipse,foreignObject,g,image,line,path,polygon,polyline,rect,svg,text,tspan,use,clipPath'
 const visElemsArr = visElems.split(',')
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let svgCanvas: any = null
+import type { ISvgCanvas } from './svgcanvas-types.js'
+
+let svgCanvas: ISvgCanvas | null = null
 let svgroot_: SVGSVGElement | null = null
 
 /**
  * Initializes this module with the canvas context.
  */
-export const init = (canvas: { getSvgRoot(): SVGSVGElement }): void => {
+export const init = (canvas: ISvgCanvas): void => {
   svgCanvas = canvas
   svgroot_ = canvas.getSvgRoot()
 }
@@ -707,8 +708,7 @@ export const getBBoxOfElementAsPath = (
  * @param addCommandToHistory - see [canvas.addCommandToHistory]{@link module:svgcanvas~addCommandToHistory}
  * @returns The converted path element or null if the DOM element was not recognized.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const convertToPath = (elem: Element, attrs: Record<string, unknown>, svgCanvas: any): SVGPathElement | null => {
+export const convertToPath = (elem: Element, attrs: Record<string, unknown>, svgCanvas: ISvgCanvas): SVGPathElement | null => {
   const batchCmd = new svgCanvas.history.BatchCommand('Convert element to Path')
 
   // Any attribute on the element not covered by the passed-in attributes

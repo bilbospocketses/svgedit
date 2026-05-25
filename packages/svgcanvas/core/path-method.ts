@@ -226,14 +226,15 @@ if (
   })
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let svgCanvas: any = null
+import type { ISvgCanvas } from './svgcanvas-types.js'
+
+let svgCanvas: ISvgCanvas | null = null
 
 /**
 * @function module:path-actions.init
 * @param pathMethodsContext
 */
-export const init = (canvas: unknown): void => {
+export const init = (canvas: ISvgCanvas): void => {
   svgCanvas = canvas
 }
 

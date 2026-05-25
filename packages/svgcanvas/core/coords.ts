@@ -23,17 +23,9 @@ import {
 } from './math.js'
 import { convertToNum } from './units.js'
 
-/** Minimal canvas context shape for coords.ts init(). */
-interface CoordsCanvasContext {
-  getGridSnapping?(): boolean
-  getSvgRoot?(): SVGSVGElement
-  getCurrentDrawing?(): { getNextId?(): string } | null
-  getDrawing?(): { getNextId?(): string } | null
-  getDataStorage?(): { get(elem: unknown, key: string): unknown }
-}
+import type { ISvgCanvas } from './svgcanvas-types.js'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let svgCanvas: any = null
+let svgCanvas: ISvgCanvas | null = null
 
 /** A path segment entry with type + optional coordinate fields. */
 interface PathSegEntry {
@@ -99,7 +91,7 @@ const flipAttributeInBoxUnits = (elem: Element, attr: string): void => {
 /**
  * Initialize the coords module with the SVG canvas.
  */
-export const init = (canvas: CoordsCanvasContext): void => {
+export const init = (canvas: ISvgCanvas): void => {
   svgCanvas = canvas
 }
 

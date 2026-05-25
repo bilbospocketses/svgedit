@@ -739,13 +739,14 @@ export const randomizeIds = (enableRandomization: boolean, currentDrawing: Drawi
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let svgCanvas: any
+import type { ISvgCanvas } from './svgcanvas-types.js'
+
+let svgCanvas: ISvgCanvas | null
 /**
  * @function module:draw.init
  * @param canvas
  */
-export const init = (canvas: unknown): void => {
+export const init = (canvas: ISvgCanvas): void => {
   svgCanvas = canvas
 }
 

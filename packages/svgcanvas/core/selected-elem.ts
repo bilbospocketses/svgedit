@@ -49,14 +49,14 @@ const {
   ChangeElementCommand
 } = hstry
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let svgCanvas: any = null
+import type { ISvgCanvas } from './svgcanvas-types.js'
+
+let svgCanvas: ISvgCanvas | null = null
 
 /**
  * @function module:selected-elem.init
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const init = (canvas: any): void => {
+export const init = (canvas: ISvgCanvas): void => {
   svgCanvas = canvas
   svgCanvas.copySelectedElements = copySelectedElements
   svgCanvas.groupSelectedElements = groupSelectedElements

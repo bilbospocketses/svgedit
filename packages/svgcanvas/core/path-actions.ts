@@ -21,8 +21,9 @@ import {
 } from './utilities.js'
 import type { PathSeg, Segment } from './path-method.js'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let svgCanvas: any = null
+import type { ISvgCanvas } from './svgcanvas-types.js'
+
+let svgCanvas: ISvgCanvas | null = null
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let path: any = null
 
@@ -30,7 +31,7 @@ let path: any = null
 * @function module:path-actions.init
 * @param pathActionsContext
 */
-export const init = (canvas: unknown): void => {
+export const init = (canvas: ISvgCanvas): void => {
   svgCanvas = canvas
   document.addEventListener('keydown', (e: KeyboardEvent) => {
     if (svgCanvas.getCurrentMode() !== 'path') return

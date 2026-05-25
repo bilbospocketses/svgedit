@@ -13,8 +13,9 @@ import { transformListToTransform, transformBox, transformPoint, matrixMultiply,
 import { NS } from './namespaces'
 import { warn } from '../common/logger.js'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let svgCanvas: any
+import type { ISvgCanvas } from './svgcanvas-types.js'
+
+let svgCanvas: ISvgCanvas | null
 // change radius if touch screen
 const gripRadius = window.ontouchstart ? 10 : 4
 
@@ -22,14 +23,12 @@ const gripRadius = window.ontouchstart ? 10 : 4
  * Private singleton manager for selector state
  */
 class SelectModule {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  #selectorManager: any = null
+  #selectorManager: SelectorManager | null = null
 
   /**
    * Initialize the select module with canvas
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  init (canvas: any): void {
+  init (canvas: ISvgCanvas): void {
     svgCanvas = canvas
     this.#selectorManager = new SelectorManager()
   }

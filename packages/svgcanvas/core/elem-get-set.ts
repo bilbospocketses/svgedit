@@ -17,15 +17,15 @@ import {
 } from './units.js'
 import { getParents } from '../common/util.js'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let svgCanvas: any = null
+import type { ISvgCanvas } from './svgcanvas-types.js'
+
+let svgCanvas: ISvgCanvas | null = null
 
 /**
 * @function module:elem-get-set.init
 * @param elemContext
 */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const init = (canvas: any): void => {
+export const init = (canvas: ISvgCanvas): void => {
   svgCanvas = canvas
   svgCanvas.getBold = getBoldMethod
   svgCanvas.setBold = setBoldMethod

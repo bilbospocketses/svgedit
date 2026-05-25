@@ -19,14 +19,15 @@ import {
   transformPoint, transformListToTransform, getTransformList
 } from './math.js'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let svgCanvas: any = null
+import type { ISvgCanvas } from './svgcanvas-types.js'
+
+let svgCanvas: ISvgCanvas | null = null
 
 /**
 * @function module:undo.init
 * @param canvas
 */
-export const init = (canvas: unknown): void => {
+export const init = (canvas: ISvgCanvas): void => {
   svgCanvas = canvas
    
   svgCanvas.undoMgr = getUndoManager()
