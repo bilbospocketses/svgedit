@@ -206,12 +206,12 @@ export const setBlur = (val: number, complete: boolean): void => {
   }
 
   const changes = { filter: (elem).getAttribute('filter') }
-  svgCanvas.changeSelectedAttributeNoUndo('filter', `url(#${(filter as Element).id})`)
+  svgCanvas.changeSelectedAttributeNoUndo('filter', `url(#${filter.id})`)
   batchCmd.addSubCommand(new ChangeElementCommand(elem, changes))
   svgCanvas.setBlurOffsets(filter, blurVal)
   svgCanvas.setCurCommand(batchCmd)
 
-  const blurElem = getFeGaussianBlurElem(filter as Element)
+  const blurElem = getFeGaussianBlurElem(filter)
   svgCanvas.undoMgr.beginUndoableChange('stdDeviation', [blurElem])
   if (complete) {
     svgCanvas.setBlurNoUndo(blurVal)

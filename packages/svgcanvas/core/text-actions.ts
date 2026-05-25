@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument */
-// svgCanvas is opaquely typed (typed in Task 10 C6); file-level disable matches clear.ts pattern
 /**
  * @module text-actions Tools for Text edit functions
  * @license MIT
@@ -237,7 +235,7 @@ class TextActions {
    */
   #getIndexFromPoint = (mouseX: number, mouseY: number): number => {
     // Position cursor here
-    const pt: SVGPoint = (svgCanvas.getSvgRoot() as SVGSVGElement).createSVGPoint()
+    const pt: SVGPoint = svgCanvas.getSvgRoot().createSVGPoint()
     pt.x = mouseX
     pt.y = mouseY
 
@@ -602,7 +600,7 @@ class TextActions {
 
       if (!supportsGoodTextCharPos()) {
         const zoom: number = svgCanvas.getZoom()
-        const offset: number = (svgCanvas.contentW as number) * zoom
+        const offset: number = svgCanvas.contentW * zoom
         start.x -= offset
         end.x -= offset
 

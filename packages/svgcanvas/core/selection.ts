@@ -5,7 +5,7 @@
  * @copyright 2011 Jeff Schiller
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
 
 import { NS } from './namespaces.js'
 import {
@@ -146,21 +146,21 @@ const getMouseTargetMethod = (evt: MouseEvent | null): Element | null => {
     while (mouseTarget.nodeName !== 'foreignObject') {
       mouseTarget = mouseTarget.parentNode as Element & { correspondingUseElement?: Element; namespaceURI?: string }
       if (!mouseTarget) {
-        return svgCanvas.getSvgRoot() as Element
+        return svgCanvas.getSvgRoot()
       }
     }
   }
 
   const currentLayer: Element = svgCanvas.getCurrentDrawing().getCurrentLayer() as Element
-  const svgRoot: Element = svgCanvas.getSvgRoot() as Element
-  const container: Element = svgCanvas.getDOMContainer() as Element
-  const content: Element = svgCanvas.getSvgContent() as Element
+  const svgRoot = svgCanvas.getSvgRoot()
+  const container = svgCanvas.getDOMContainer()
+  const content = svgCanvas.getSvgContent()
   if ([svgRoot, container, content, currentLayer].includes(mouseTarget)) {
-    return svgCanvas.getSvgRoot() as Element
+    return svgCanvas.getSvgRoot()
   }
 
   if (getClosest(mouseTarget.parentNode as Element | null, '#selectorParentGroup')) {
-    return svgCanvas.selectorManager.selectorParentGroup as Element
+    return svgCanvas.selectorManager.selectorParentGroup
   }
 
   while (

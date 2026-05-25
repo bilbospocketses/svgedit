@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Module augmentation declaring methods that core/*.ts init() functions
 // attach to the SvgCanvas instance at runtime. Hand-maintained.
 //

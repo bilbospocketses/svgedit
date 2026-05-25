@@ -600,7 +600,7 @@ const setStrokeAttrMethod = (attr: string, val: string | number): void => {
 }
 
 const getSelectedTextElements = (): Element[] => {
-  return (svgCanvas.getSelectedElements() as (Element | null)[]).filter((el): el is Element => el?.tagName === 'text')
+  return svgCanvas.getSelectedElements().filter((el): el is Element => el?.tagName === 'text')
 }
 
 const getChangedTextElements = (textElements: Element[], attr: string, newValue: string | number): Element[] => {
@@ -1066,8 +1066,8 @@ const setBackgroundMethod = (color: string, url: string): void => {
         style: 'pointer-events:none'
       })
     }
-    setHref(bgImg as Element, url)
-    bg.append(bgImg as Node)
+    setHref(bgImg, url)
+    bg.append(bgImg)
   } else if (bgImg) {
     bgImg.remove()
   }

@@ -6,7 +6,7 @@
  * @copyright 2010 Alexis Deveria, 2010 Jeff Schiller
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 import { NS } from './namespaces.js'
 import type { CommandAttributes } from './history.js'
@@ -78,7 +78,7 @@ export const init = (canvas: ISvgCanvas): void => {
  * Repositions the selected element to the bottom in the DOM to appear on top.
  */
 const moveToTopSelectedElem = (): void => {
-  const [selected] = svgCanvas.getSelectedElements() as (Element | null)[]
+  const [selected] = svgCanvas.getSelectedElements()
   if (selected) {
     const t = selected
     const oldParent = t.parentNode
@@ -97,7 +97,7 @@ const moveToTopSelectedElem = (): void => {
  * Repositions the selected element to the top in the DOM to appear under other elements.
  */
 const moveToBottomSelectedElem = (): void => {
-  const [selected] = svgCanvas.getSelectedElements() as (Element | null)[]
+  const [selected] = svgCanvas.getSelectedElements()
   if (selected) {
     let t: Element = selected
     const oldParent = t.parentNode
@@ -240,7 +240,7 @@ const moveSelectedElements = (dx: number | number[], dy: number | number[], undo
  */
 const cloneSelectedElements = (x: number, y: number): void => {
   const selectedElements: (Element | null)[] = svgCanvas.getSelectedElements()
-  const currentGroup = svgCanvas.getCurrentGroup() as Element | null
+  const currentGroup = svgCanvas.getCurrentGroup()
   let i: number
   let elem: Element | null | undefined
   const batchCmd = new BatchCommand('Clone Elements')
@@ -584,7 +584,7 @@ const deleteSelectedElements = (): void => {
 const flipSelectedElements = (scaleX: number, scaleY: number): void => {
   const selectedElements: (Element | null)[] = svgCanvas.getSelectedElements()
   const batchCmd = new BatchCommand('Flip Elements')
-  const svgRoot = svgCanvas.getSvgRoot() as SVGSVGElement
+  const svgRoot = svgCanvas.getSvgRoot()
 
   selectedElements.forEach(selected => {
     if (!selected) { return }
@@ -652,7 +652,7 @@ const flipSelectedElements = (scaleX: number, scaleY: number): void => {
  * Remembers the current selected elements on the clipboard.
  */
 const copySelectedElements = (): void => {
-  const selectedElements = (svgCanvas.getSelectedElements() as (Element | null)[]).filter((e): e is Element => e !== null)
+  const selectedElements = svgCanvas.getSelectedElements().filter((e): e is Element => e !== null)
   const data = JSON.stringify(
     selectedElements.map((x: Element) => svgCanvas.getJsonFromSvgElements(x) as unknown)
   )
