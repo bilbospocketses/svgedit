@@ -842,7 +842,6 @@ class EditorStartup {
         cs = `url("./images/cursors/${mode}_cursor.svg"), crosshair`
         break
       case 'text':
-        // #TODO: Cursor should be changed back to default after text element was created
         cs = 'text'
         break
       default:
