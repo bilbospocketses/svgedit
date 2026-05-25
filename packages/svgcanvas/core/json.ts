@@ -78,7 +78,10 @@ export const getJsonFromSvgElements = (data: Node | null | undefined): JsonEleme
 }
 
 /** Create/update DOM elements from a JSON representation. */
-export const addSVGElementsFromJson = (data: SVGElementJSON | string | null | undefined): Element | Text | null => {
+export function addSVGElementsFromJson (data: SVGElementJSON): Element
+export function addSVGElementsFromJson (data: string | null | undefined): Text | null
+export function addSVGElementsFromJson (data: SVGElementJSON | string | null | undefined): Element | Text | null
+export function addSVGElementsFromJson (data: SVGElementJSON | string | null | undefined): Element | Text | null {
   if (!svgdoc_) { return null }
   if (data === null || data === undefined) return svgdoc_.createTextNode('')
   if (typeof data === 'string') return svgdoc_.createTextNode(data)

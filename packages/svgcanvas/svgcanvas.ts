@@ -74,7 +74,8 @@ import {
   $click,
   getFeGaussianBlur,
   stringToHTML,
-  insertChildAtIndex
+  insertChildAtIndex,
+  type SVGElementJSON
 } from './core/utilities.js'
 import {
   matrixMultiply,
@@ -551,8 +552,8 @@ class SvgCanvas {
     return Number.parseInt(String(val * this.zoom)) / this.zoom
   }
 
-  createSVGElement (jsonMap: any): Element {
-    return this.addSVGElementsFromJson(jsonMap) as Element
+  createSVGElement (jsonMap: SVGElementJSON): Element {
+    return this.addSVGElementsFromJson(jsonMap)
   }
 
   getContainer (): HTMLElement {
@@ -1374,7 +1375,7 @@ class SvgCanvas {
     if (getBBox) {
       return getBBoxOfElementAsPath(
         elem,
-        this.addSVGElementsFromJson as any,
+        this.addSVGElementsFromJson,
         this.pathActions
       )
     }
