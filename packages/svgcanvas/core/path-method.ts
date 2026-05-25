@@ -44,7 +44,7 @@ export interface PathSeg {
   [key: string]: number | boolean | string | undefined
 }
 
-const TYPE_TO_CMD: Record<number, string> = {
+const TYPE_TO_CMD: Record<number, SVGPathDataCommand> = {
   1: 'Z',
   2: 'M',
   3: 'm',
@@ -77,14 +77,12 @@ export class PathDataListShim {
     this.elem = elem
   }
 
-  private _getData (): Array<{ type: string; values: number[] }> {
+  private _getData (): SVGPathSegment[] {
     return this.elem.getPathData()
   }
 
-  private _setData (data: Array<{ type: string; values: number[] }>): void {
-    // TODO(post-migration #10): SVGPathSegment type unification — internal {type, values}
-    // shape doesn't match path-data-polyfill's SVGPathDataCommand union. See todo #10 backlog.
-    this.elem.setPathData(data as SVGPathSegment[])
+  private _setData (data: SVGPathSegment[]): void {
+    this.elem.setPathData(data)
   }
 
   get numberOfItems (): number {
@@ -128,8 +126,8 @@ export class PathDataListShim {
     return seg
   }
 
-  private _segToEntry (seg: PathSeg): { type: string; values: number[] } {
-    const type = TYPE_TO_CMD[seg.pathSegType] ?? (seg as unknown as { type?: string }).type
+  private _segToEntry (seg: PathSeg): SVGPathSegment {
+    const type: SVGPathDataCommand | undefined = TYPE_TO_CMD[seg.pathSegType] ?? (seg as unknown as { type?: SVGPathDataCommand }).type
     if (!type) {
       return { type: 'Z', values: [] }
     }
@@ -954,7 +952,7 @@ export class Path {
     if (!seg?.prev) { return }
 
     const { prev } = seg
-    let newEntry: { type: string; values: number[] } | undefined
+    let newEntry: SVGPathSegment | undefined
     let newX: number
     let newY: number
     switch (seg.item.pathSegType) {
@@ -985,12 +983,8 @@ export class Path {
     }
     if (!newEntry) return
     const data = this.elem.getPathData()
-    // TODO(post-migration #10): SVGPathSegment type unification — internal {type, values}
-    // shape doesn't match path-data-polyfill's SVGPathDataCommand union. See todo #10 backlog.
-    data.splice(index, 0, newEntry as SVGPathSegment)
-    // TODO(post-migration #10): SVGPathSegment type unification — internal {type, values}
-    // shape doesn't match path-data-polyfill's SVGPathDataCommand union. See todo #10 backlog.
-    this.elem.setPathData(data as SVGPathSegment[])
+    data.splice(index, 0, newEntry)
+    this.elem.setPathData(data)
   }
 
   /**
