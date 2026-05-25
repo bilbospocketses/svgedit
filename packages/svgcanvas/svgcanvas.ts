@@ -98,6 +98,7 @@ import {
 } from './common/util.js'
 
 import dataStorage from './core/dataStorage.js'
+import type { ISvgCanvas } from './core/svgcanvas-types.js'
 
 const visElems =
   'a,circle,ellipse,foreignObject,g,image,line,path,polygon,polyline,rect,svg,text,tspan,use'
@@ -121,7 +122,7 @@ const CLIPBOARD_ID = 'svgedit_clipboard'
  * @memberof module:svgcanvas
  *
  */
-class SvgCanvas {
+class SvgCanvas implements ISvgCanvas {
   // ── Instance fields: primitive / simple state ──────────────────────────
   saveOptions: { round_digits: number; apply?: boolean; images?: string }
   importIds: Record<string, any>
