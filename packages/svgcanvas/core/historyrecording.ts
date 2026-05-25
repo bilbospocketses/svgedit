@@ -44,9 +44,9 @@ import type { UndoManager } from './history.js'
  * @memberof module:history
  */
 class HistoryRecordingService {
-  undoManager_: UndoManager | null
-  currentBatchCommand_: BatchCommand | null
-  batchCommandStack_: BatchCommand[]
+  #undoManager: UndoManager | null
+  #currentBatchCommand: BatchCommand | null
+  #batchCommandStack: BatchCommand[]
 
   /**
   * @param undoManager - The undo manager.
@@ -54,9 +54,9 @@ class HistoryRecordingService {
   *     See singleton: {@link HistoryRecordingService.NO_HISTORY}
   */
   constructor (undoManager: UndoManager | null) {
-    this.undoManager_ = undoManager
-    this.currentBatchCommand_ = null
-    this.batchCommandStack_ = []
+    this.#undoManager = undoManager
+    this.#currentBatchCommand = null
+    this.#batchCommandStack = []
   }
 
   /**
@@ -66,9 +66,9 @@ class HistoryRecordingService {
    * @param text - Optional string describing the batch command.
    */
   startBatchCommand (text?: string): this {
-    if (!this.undoManager_) { return this }
-    this.currentBatchCommand_ = new BatchCommand(text)
-    this.batchCommandStack_.push(this.currentBatchCommand_)
+    if (!this.#undoManager) { return this }
+    this.#currentBatchCommand = new BatchCommand(text)
+    this.#batchCommandStack.push(this.#currentBatchCommand)
     return this
   }
 
@@ -76,14 +76,14 @@ class HistoryRecordingService {
    * End a batch command and add it to the history or a parent batch command.
    */
   endBatchCommand (): this {
-    if (!this.undoManager_) { return this }
-    if (this.currentBatchCommand_) {
-      const batchCommand = this.currentBatchCommand_
-      this.batchCommandStack_.pop()
-      const { length: len } = this.batchCommandStack_
-      this.currentBatchCommand_ = len ? (this.batchCommandStack_[len - 1] ?? null) : null
+    if (!this.#undoManager) { return this }
+    if (this.#currentBatchCommand) {
+      const batchCommand = this.#currentBatchCommand
+      this.#batchCommandStack.pop()
+      const { length: len } = this.#batchCommandStack
+      this.#currentBatchCommand = len ? (this.#batchCommandStack[len - 1] ?? null) : null
       if (!batchCommand.isEmpty()) {
-        this.addCommand_(batchCommand)
+        this.#addCommand(batchCommand)
       }
     }
     return this
@@ -97,8 +97,8 @@ class HistoryRecordingService {
    * @param [text] - An optional string visible to user related to this change
    */
   moveElement (elem: Element, oldNextSibling: Node | null, oldParent: Node, text?: string): this {
-    if (!this.undoManager_) { return this }
-    this.addCommand_(new MoveElementCommand(elem, oldNextSibling, oldParent, text))
+    if (!this.#undoManager) { return this }
+    this.#addCommand(new MoveElementCommand(elem, oldNextSibling, oldParent, text))
     return this
   }
 
@@ -108,8 +108,8 @@ class HistoryRecordingService {
    * @param [text] - An optional string visible to user related to this change
    */
   insertElement (elem: Element, text?: string): this {
-    if (!this.undoManager_) { return this }
-    this.addCommand_(new InsertElementCommand(elem, text))
+    if (!this.#undoManager) { return this }
+    this.#addCommand(new InsertElementCommand(elem, text))
     return this
   }
 
@@ -121,8 +121,8 @@ class HistoryRecordingService {
    * @param [text] - An optional string visible to user related to this change
    */
   removeElement (elem: Element, oldNextSibling: Node | null, oldParent: Node, text?: string): this {
-    if (!this.undoManager_) { return this }
-    this.addCommand_(new RemoveElementCommand(elem, oldNextSibling, oldParent, text))
+    if (!this.#undoManager) { return this }
+    this.#addCommand(new RemoveElementCommand(elem, oldNextSibling, oldParent, text))
     return this
   }
 
@@ -133,8 +133,8 @@ class HistoryRecordingService {
    * @param [text] - An optional string visible to user related to this change
    */
   changeElement (elem: Element, attrs: CommandAttributes, text?: string): this {
-    if (!this.undoManager_) { return this }
-    this.addCommand_(new ChangeElementCommand(elem, attrs, text))
+    if (!this.#undoManager) { return this }
+    this.#addCommand(new ChangeElementCommand(elem, attrs, text))
     return this
   }
 
@@ -143,12 +143,12 @@ class HistoryRecordingService {
    * @private
    * @param cmd
    */
-  private addCommand_ (cmd: BatchCommand | MoveElementCommand | InsertElementCommand | RemoveElementCommand | ChangeElementCommand): undefined {
-    if (!this.undoManager_) { return undefined }
-    if (this.currentBatchCommand_) {
-      this.currentBatchCommand_.addSubCommand(cmd)
+  #addCommand (cmd: BatchCommand | MoveElementCommand | InsertElementCommand | RemoveElementCommand | ChangeElementCommand): undefined {
+    if (!this.#undoManager) { return undefined }
+    if (this.#currentBatchCommand) {
+      this.#currentBatchCommand.addSubCommand(cmd)
     } else {
-      this.undoManager_.addCommandToHistory(cmd)
+      this.#undoManager.addCommandToHistory(cmd)
     }
     return undefined
   }

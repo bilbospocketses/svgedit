@@ -21,8 +21,8 @@ import type HistoryRecordingService from './historyrecording.js'
  * @memberof module:layer
  */
 class Layer {
-  name_: string
-  group_: SVGGElement
+  #name: string
+  #group: SVGGElement
 
   /** @property {string} CLASS_NAME - class attribute assigned to all layer groups. */
   static CLASS_NAME: string = 'layer'
@@ -40,30 +40,30 @@ class Layer {
   *     a new layer to the document.
   */
   constructor (name: string, group: SVGGElement | null, svgElem?: SVGSVGElement) {
-    this.name_ = name
-    this.group_ = svgElem ? null as unknown as SVGGElement : (group as SVGGElement)
+    this.#name = name
+    this.#group = svgElem ? null as unknown as SVGGElement : (group as SVGGElement)
 
     if (svgElem) {
       // Create a group element with title and add it to the DOM.
       const svgdoc = svgElem.ownerDocument
-      this.group_ = svgdoc.createElementNS(NS.SVG, 'g')
+      this.#group = svgdoc.createElementNS(NS.SVG, 'g')
       const layerTitle = svgdoc.createElementNS(NS.SVG, 'title')
       layerTitle.textContent = name
-      this.group_.append(layerTitle)
+      this.#group.append(layerTitle)
 
       if (group) {
-        group.insertAdjacentElement('afterend', this.group_)
+        group.insertAdjacentElement('afterend', this.#group)
       } else {
-        svgElem.append(this.group_)
+        svgElem.append(this.#group)
       }
     }
 
-    addLayerClass(this.group_)
-    walkTree(this.group_, function (e: Element) {
+    addLayerClass(this.#group)
+    walkTree(this.#group, function (e: Element) {
       (e as HTMLElement).style.pointerEvents = 'inherit'
     })
 
-    this.group_.style.pointerEvents = svgElem ? 'all' : 'none'
+    this.#group.style.pointerEvents = svgElem ? 'all' : 'none'
   }
 
   /**
@@ -71,7 +71,7 @@ class Layer {
    * @returns The layer name
    */
   getName (): string {
-    return this.name_
+    return this.#name
   }
 
   /**
@@ -79,21 +79,21 @@ class Layer {
    * @returns The layer SVG group
    */
   getGroup (): SVGGElement {
-    return this.group_
+    return this.#group
   }
 
   /**
    * Active this layer so it takes pointer events.
    */
   activate (): void {
-    this.group_.style.pointerEvents = 'all'
+    this.#group.style.pointerEvents = 'all'
   }
 
   /**
    * Deactive this layer so it does NOT take pointer events.
    */
   deactivate (): void {
-    this.group_.style.pointerEvents = 'none'
+    this.#group.style.pointerEvents = 'none'
   }
 
   /**
@@ -102,9 +102,9 @@ class Layer {
    */
   setVisible (visible?: boolean): void {
     const expected = (visible === undefined || visible) ? 'inline' : 'none'
-    const oldDisplay = this.group_.getAttribute('display')
+    const oldDisplay = this.#group.getAttribute('display')
     if (oldDisplay !== expected) {
-      this.group_.setAttribute('display', expected)
+      this.#group.setAttribute('display', expected)
     }
   }
 
@@ -113,7 +113,7 @@ class Layer {
    * @returns True if visible.
    */
   isVisible (): boolean {
-    return this.group_.getAttribute('display') !== 'none'
+    return this.#group.getAttribute('display') !== 'none'
   }
 
   /**
@@ -121,7 +121,7 @@ class Layer {
    * @returns Opacity value.
    */
   getOpacity (): number {
-    const opacity = this.group_.getAttribute('opacity')
+    const opacity = this.#group.getAttribute('opacity')
     return opacity ? Number.parseFloat(opacity) : 1
   }
 
@@ -132,7 +132,7 @@ class Layer {
    */
   setOpacity (opacity: number): void {
     if (typeof opacity === 'number' && opacity >= 0.0 && opacity <= 1.0) {
-      this.group_.setAttribute('opacity', String(opacity))
+      this.#group.setAttribute('opacity', String(opacity))
     }
   }
 
@@ -142,16 +142,16 @@ class Layer {
    */
   appendChildren (children: Element[]): void {
     for (const child of children) {
-      this.group_.append(child)
+      this.#group.append(child)
     }
   }
 
   /**
   */
   getTitleElement (): SVGTitleElement | null {
-    const len = this.group_.childNodes.length
+    const len = this.#group.childNodes.length
     for (let i = 0; i < len; ++i) {
-      const child = this.group_.childNodes.item(i)
+      const child = this.#group.childNodes.item(i)
       if ((child as Element)?.tagName === 'title') {
         return child as SVGTitleElement
       }
@@ -166,18 +166,18 @@ class Layer {
    * @returns The new name if changed; otherwise, null.
    */
   setName (name: string, hrService?: HistoryRecordingService): string | null {
-    const previousName = this.name_
+    const previousName = this.#name
     name = toXml(name)
     // now change the underlying title element contents
     const title = this.getTitleElement()
     if (title) {
       while (title.firstChild) { title.removeChild(title.firstChild) }
       title.textContent = name
-      this.name_ = name
+      this.#name = name
       if (hrService) {
         hrService.changeElement(title, { '#text': previousName })
       }
-      return this.name_
+      return this.#name
     }
     return null
   }
@@ -187,9 +187,9 @@ class Layer {
    * @returns The layer SVG group that was just removed.
    */
   removeGroup (): SVGGElement {
-    const group = this.group_
-    this.group_.remove()
-    this.group_ = undefined as unknown as SVGGElement
+    const group = this.#group
+    this.#group.remove()
+    this.#group = undefined as unknown as SVGGElement
     return group
   }
 
