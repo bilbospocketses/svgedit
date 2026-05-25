@@ -118,12 +118,14 @@ export const setBlurOffsets = (filterElem: Element, stdDev: number): void => {
   const dev = Number(stdDev) || 0
 
   if (dev > 3) {
-    // TODO: Create algorithm here where size is based on expected blur
+    // Gaussian blur: 99.7% of energy within ±3σ. Scale filter region accordingly.
+    const offset = Math.max(50, dev * 3)
+    const size = 100 + offset * 2
     svgCanvas.assignAttributes(filterElem, {
-      x: '-50%',
-      y: '-50%',
-      width: '200%',
-      height: '200%'
+      x: `-${offset}%`,
+      y: `-${offset}%`,
+      width: `${size}%`,
+      height: `${size}%`
     }, 100)
   } else {
     filterElem.removeAttribute('x')

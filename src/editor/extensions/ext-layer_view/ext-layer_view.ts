@@ -76,7 +76,7 @@ export default {
       callback () {
         const buttonTemplate = document.createElement('template')
         const title = `${name}:buttons.0.title`
-        const key = `${name}:buttons.0.key`
+        const key = svgEditor.i18next.t(`${name}:buttons.0.key`)
         buttonTemplate.innerHTML = `
       <se-button id="tool_layerView" title="${title}" shortcut="${key}" src="layer_view.svg"></se-button>`
         $id('editor_panel').append(buttonTemplate.content.cloneNode(true))

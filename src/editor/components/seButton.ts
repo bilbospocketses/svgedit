@@ -87,7 +87,8 @@ export class SeButton extends LitElement {
     ].filter(Boolean).join(' ')
 
     const shortcut = this.getAttribute('shortcut') ?? ''
-    const divTitle = `${t(this.title)} ${shortcut ? '[' + t(shortcut) + ']' : ''}`.trim()
+    const shortcutLabel = this.getAttribute('shortcut-label') ?? (shortcut ? t(shortcut) : '')
+    const divTitle = `${t(this.title)} ${shortcutLabel ? '[' + shortcutLabel + ']' : ''}`.trim()
 
     let imgSrc: string | undefined
     if (this.src) {
