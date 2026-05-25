@@ -72,18 +72,14 @@ export const getCustomHandler = function (handlerKey: string): MenuItemAction {
 * @param menuItem
 */
 const injectExtendedContextMenuItemIntoDom = function (menuItem: MenuItem): void {
+  const host = $id('cmenu_canvas')
+  if (!host) return
   if (!Object.keys(contextMenuExtensions).length) {
-    // all menuItems appear at the bottom of the menu in their own container.
-    // if this is the first extension menu we need to add the separator.
-    // TODO: see todo #10 — appendChild with string arg is a pre-existing bug (should be a Node)
-    // @ts-expect-error: pre-existing bug — appendChild expects Node not string; preserved verbatim
-    $id('cmenu_canvas').appendChild('<li class=\'separator\'>')
+    host.insertAdjacentHTML('beforeend', '<li class="separator"></li>')
   }
   const shortcut = menuItem.shortcut || ''
-  // TODO: see todo #10 — appendChild with string arg is a pre-existing bug (should be a Node)
-  // @ts-expect-error: pre-existing bug — appendChild expects Node not string; preserved verbatim
-  $id('cmenu_canvas').appendChild(`
-    <li class='disabled'><a href='#${menuItem.id}'>${menuItem.label}<span class='shortcut'>${shortcut}</span></a></li>`)
+  host.insertAdjacentHTML('beforeend',
+    `<li class="disabled"><a href="#${menuItem.id}">${menuItem.label}<span class="shortcut">${shortcut}</span></a></li>`)
 }
 
 /**

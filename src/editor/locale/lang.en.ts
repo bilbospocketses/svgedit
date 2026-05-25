@@ -197,7 +197,19 @@ export default {
     ellipse_circle_tool: 'Ellipse/Circle Tool',
     square_rect_tool: 'Square/Rect Tool',
     remember_this_choice: 'Remember this choice?',
-    remember_this_choice_title: 'If you choose to opt out of storage while remembering this choice, the URL will change so as to avoid asking again.'
+    remember_this_choice_title: 'If you choose to opt out of storage while remembering this choice, the URL will change so as to avoid asking again.',
+    start_marker_list_opts: 'Start marker',
+    mid_marker_list_opts: 'Mid marker',
+    end_marker_list_opts: 'End marker',
+    mkr_nomarker: 'No marker',
+    mkr_leftarrow: 'Left arrow',
+    mkr_rightarrow: 'Right arrow',
+    mkr_box: 'Box',
+    mkr_mcircle: 'Circle',
+    mkr_leftarrow_o: 'Left arrow (open)',
+    mkr_rightarrow_o: 'Right arrow (open)',
+    mkr_box_o: 'Box (open)',
+    mkr_mcircle_o: 'Circle (open)'
   },
   layers: {
     layer: 'Layer',

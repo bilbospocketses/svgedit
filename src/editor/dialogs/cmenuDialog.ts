@@ -117,9 +117,8 @@ export class SeCMenuCanvasDialog extends LitElement {
     let x = e.pageX
     let y = e.pageY
 
-    // TODO: see todo #10 — uses screen.* instead of window.inner* (UX bug, fix deferred)
-    const xOff = screen.width - 250 // menu width
-    const yOff = screen.height - (276 + 150) // menu height + bottom panel height and scroll bar
+    const xOff = window.innerWidth - 250
+    const yOff = window.innerHeight - (276 + 150)
 
     if (x > xOff) {
       x = xOff

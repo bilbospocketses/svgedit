@@ -502,10 +502,8 @@ const mouseMoveEvent = (evt: MouseEvent): void => {
         svgCanvas.setStartY(snapToGrid(svgCanvas.getStartY()))
       }
       if (evt.shiftKey) {
-        // pathModule.path is typed null until path.ts conversion fully propagates;
-        // cast to any to access .dragging (a runtime property set by path-method.js).
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const path = pathModule.path as any
+        const path = pathModule.getPath() as any
         let x1: number; let y1: number
         if (path) {
           x1 = path.dragging ? path.dragging[0] : svgCanvas.getStartX()

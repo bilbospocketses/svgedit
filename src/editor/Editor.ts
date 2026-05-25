@@ -31,10 +31,6 @@ import { getParentsUntil } from '@svgedit/svgcanvas/common/util.js'
 import { EmbedServer } from '../embed/server.js'
 const SVGEDIT_VERSION = '7.4.1'
 
-/** `seAlert` / `seConfirm` are custom element dialogs registered globally at runtime. */
-declare function seAlert (msg: string): void
-declare function seConfirm (msg: string): boolean | Promise<boolean | string>
-
 /** Make window.svgEditor accessible */
 declare global {
   interface Window {
@@ -1075,7 +1071,7 @@ class Editor extends EditorStartup {
       const ok = await seConfirm(
         this.i18next.t('notification.QerrorsRevertToSource')
       )
-      if (ok === false || ok === 'Cancel') {
+      if (ok === 'Cancel') {
         return
       }
       saveChanges()
@@ -1089,7 +1085,7 @@ class Editor extends EditorStartup {
    * @param e
    * @returns Resolves to `undefined`
    */
-  cancelOverlays (e: CustomEvent): void {
+  async cancelOverlays (e: CustomEvent): Promise<void> {
     if ($id('dialog_box') != null) $id('dialog_box')!.style.display = 'none'
     const $editorDialog = $id('se-svg-editor-dialog')
     const editingsource = $editorDialog?.getAttribute('dialog') === 'open'
@@ -1103,10 +1099,10 @@ class Editor extends EditorStartup {
     if (editingsource) {
       const origSource = this.svgCanvas.getSvgString()
       if (origSource !== e.detail.value) {
-        const ok = seConfirm(
+        const ok = await seConfirm(
           this.i18next.t('notification.QignoreSourceChanges')
         )
-        if (ok) {
+        if (ok !== 'Cancel') {
           this.hideSourceEditor()
         }
       } else {

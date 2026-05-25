@@ -140,7 +140,7 @@ const getMouseTargetMethod = (evt: MouseEvent | null): Element | null => {
   }
 
   if (
-    ([NS.MATH, NS.HTML] as string[]).includes(mouseTarget.namespaceURI ?? '') &&
+    mouseTarget.namespaceURI === NS.HTML &&
     mouseTarget.id !== 'svgcanvas'
   ) {
     while (mouseTarget.nodeName !== 'foreignObject') {

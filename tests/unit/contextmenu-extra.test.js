@@ -26,19 +26,18 @@ describe('contextmenu helpers', () => {
 
   it('injects extensions into the context menu DOM', () => {
     const host = document.getElementById('cmenu_canvas')
-    const appended = []
-    host.appendChild = vi.fn((value) => {
-      appended.push(value)
-      return value
+    const inserted = []
+    host.insertAdjacentHTML = vi.fn((_position, html) => {
+      inserted.push(html)
     })
     add({ id: 'alpha', label: 'Alpha', action: () => {}, shortcut: 'Ctrl+A' })
     add({ id: 'beta', label: 'Beta', action: () => {} })
 
     injectExtendedContextMenuItemsIntoDom()
 
-    expect(host.appendChild).toHaveBeenCalledTimes(2)
-    expect(appended[0]).toContain('#alpha')
-    expect(appended[0]).toContain('Ctrl+A')
-    expect(appended[1]).toContain('#beta')
+    expect(host.insertAdjacentHTML).toHaveBeenCalledTimes(2)
+    expect(inserted[0]).toContain('#alpha')
+    expect(inserted[0]).toContain('Ctrl+A')
+    expect(inserted[1]).toContain('#beta')
   })
 })

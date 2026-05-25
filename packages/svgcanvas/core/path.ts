@@ -74,11 +74,15 @@ export const setLinkControlPoints = (lcp: boolean): void => {
   linkControlPts = lcp
 }
 
-/**
- * @name module:path.path
- * @memberof module:path
-*/
-export let path: Path | null = null
+let activePath: Path | null = null
+
+export function getPath (): Path | null {
+  return activePath
+}
+
+export function setPath (p: Path | null): void {
+  activePath = p
+}
 
 /**
 * @external MouseEvent
@@ -217,9 +221,9 @@ export const init = (canvas: any): void => {
   svgCanvas.recalcRotatedPath = recalcRotatedPath
   svgCanvas.getSegData = () => { return segData }
   svgCanvas.getUIStrings = () => { return uiStrings }
-  svgCanvas.getPathObj = () => { return path }
+  svgCanvas.getPathObj = () => { return activePath }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  svgCanvas.setPathObj = (obj: any) => { path = obj }
+  svgCanvas.setPathObj = (obj: any) => { activePath = obj }
   svgCanvas.getPathFuncs = () => { return pathFuncs }
   svgCanvas.getLinkControlPts = () => { return linkControlPts }
   pathFuncs = [0, 'ClosePath']
@@ -446,16 +450,16 @@ const getRotVals = (x: number, y: number): XYPoint => {
 * be optimized or even taken care of by `recalculateDimensions`
 */
 export const recalcRotatedPath = (): void => {
-  const currentPath = path?.elem
-  if (!currentPath || !path) { return }
-  angle = getRotationAngle(currentPath, true)
+  const p = getPath()
+  const pathElem = p?.elem
+  if (!pathElem || !p) { return }
+  angle = getRotationAngle(pathElem, true)
   if (!angle) { return }
-  // selectedBBoxes[0] = path.oldbbox;
-  const oldbox = path.oldbbox // selectedBBoxes[0],
+  const oldbox = p.oldbbox
   if (!oldbox) { return }
   oldcx = oldbox.x + oldbox.width / 2
   oldcy = oldbox.y + oldbox.height / 2
-  const box = getBBox(currentPath)
+  const box = getBBox(pathElem)
   if (!box) { return }
   newcx = box.x + box.width / 2
   newcy = box.y + box.height / 2
@@ -469,7 +473,7 @@ export const recalcRotatedPath = (): void => {
   newcx = r * Math.cos(theta) + oldcx
   newcy = r * Math.sin(theta) + oldcy
 
-  const list = currentPath.pathSegList
+  const list = pathElem.pathSegList
   if (!list) { return }
 
   let i = list.numberOfItems
@@ -510,13 +514,13 @@ export const recalcRotatedPath = (): void => {
     replacePathSeg(type, i, points)
   } // loop for each point
 
-  /* box = */ getBBox(currentPath)
+  /* box = */ getBBox(pathElem)
   // selectedBBoxes[0].x = box.x; selectedBBoxes[0].y = box.y;
   // selectedBBoxes[0].width = box.width; selectedBBoxes[0].height = box.height;
 
   // now we must set the new transform to be rotated around the new center
   const Rnc = svgCanvas.getSvgRoot().createSVGTransform()
-  const tlist = getTransformList(currentPath)
+  const tlist = getTransformList(pathElem)
   if (!tlist) { return }
   Rnc.setRotate((angle * 180.0 / Math.PI), newcx, newcy)
   if (tlist.numberOfItems) {
