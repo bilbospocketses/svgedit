@@ -19,6 +19,7 @@
 // core/path-method.js to install pathSegList delegation, which core/path-actions.js
 // relies on.
 import 'path-data-polyfill'
+import type { ISvgCanvas } from './core/svgcanvas-types.js'
 import Paint from './core/paint.js'
 import * as pathModule from './core/path.js'
 import * as history from './core/history.js'
@@ -98,7 +99,6 @@ import {
 } from './common/util.js'
 
 import dataStorage from './core/dataStorage.js'
-import type { ISvgCanvas } from './core/svgcanvas-types.js'
 
 const visElems =
   'a,circle,ellipse,foreignObject,g,image,line,path,polygon,polyline,rect,svg,text,tspan,use'
@@ -188,21 +188,121 @@ class SvgCanvas implements ISvgCanvas {
   // These are augmented via svgcanvas.augment.d.ts for external consumers.
   // Declared here with `declare` so the class body can reference them without
   // TS2339 (property does not exist) errors inside this file.
-  declare clearSelection: (noCall?: boolean) => void
-  declare addToSelection: (elemsToAdd: Element[], showGrips?: boolean) => void
-  declare undoMgr: import('./core/history.js').UndoManager
+
+  // From core/elem-get-set.js (init wires these on)
+  declare getBold: (...args: unknown[]) => unknown
+  declare setBold: (...args: unknown[]) => unknown
+  declare getItalic: (...args: unknown[]) => unknown
+  declare setItalic: (...args: unknown[]) => unknown
+  declare hasTextDecoration: (...args: unknown[]) => unknown
+  declare addTextDecoration: (...args: unknown[]) => unknown
+  declare removeTextDecoration: (...args: unknown[]) => unknown
+  declare setTextAnchor: (...args: unknown[]) => unknown
+  declare setLetterSpacing: (...args: unknown[]) => unknown
+  declare setWordSpacing: (...args: unknown[]) => unknown
+  declare setTextLength: (...args: unknown[]) => unknown
+  declare setLengthAdjust: (...args: unknown[]) => unknown
+  declare getFontFamily: (...args: unknown[]) => unknown
+  declare setFontFamily: (...args: unknown[]) => unknown
+  declare setFontColor: (...args: unknown[]) => unknown
+  declare getFontColor: (...args: unknown[]) => unknown
+  declare getFontSize: (...args: unknown[]) => unknown
+  declare setFontSize: (...args: unknown[]) => unknown
+  declare getText: (...args: unknown[]) => unknown
+  declare setTextContent: (...args: unknown[]) => unknown
+  declare setImageURL: (...args: unknown[]) => unknown
+  declare setLinkURL: (...args: unknown[]) => unknown
+  declare setRectRadius: (...args: unknown[]) => unknown
+  declare makeHyperlink: (...args: unknown[]) => unknown
+  declare removeHyperlink: (...args: unknown[]) => unknown
+  declare setSegType: (...args: unknown[]) => unknown
+  declare setStrokeWidth: (...args: unknown[]) => unknown
+  declare getTitle: (...args: unknown[]) => unknown
+  declare setGroupTitle: (...args: unknown[]) => unknown
+  declare setStrokeAttr: (...args: unknown[]) => unknown
+  declare setBackground: (...args: unknown[]) => unknown
+  declare setDocumentTitle: (...args: unknown[]) => unknown
+  declare getEditorNS: (...args: unknown[]) => unknown
+  declare setBBoxZoom: (...args: unknown[]) => unknown
+  declare setCurrentZoom: (...args: unknown[]) => unknown
+  declare setColor: (...args: unknown[]) => unknown
+  declare setGradient: (...args: unknown[]) => unknown
+  declare setPaint: (...args: unknown[]) => unknown
   declare getResolution: () => { w: number; h: number; zoom: number }
+  declare setResolution: (x: number | 'fit', y: number) => boolean
+
+  // From core/event.ts (init wires these on)
   declare mouseDownEvent: (evt: MouseEvent) => void
   declare mouseMoveEvent: (evt: MouseEvent) => void
   declare dblClickEvent: (evt: MouseEvent) => void
   declare mouseUpEvent: (evt: MouseEvent) => void
   declare mouseOutEvent: (evt: MouseEvent) => void
   declare DOMMouseScrollEvent: (e: WheelEvent) => void
-  declare getTitle: (...args: unknown[]) => unknown
-  declare setPaint: (...args: unknown[]) => unknown
-  declare svgCanvasToString: () => string
+  declare dragStartTransforms?: Map<Element, string>
+  declare hasDragStartTransform?: boolean
+  declare addedNew?: boolean
+
+  // From core/path.ts (init wires these on)
+  declare replacePathSeg: (...args: unknown[]) => unknown
+  declare addPointGrip: (...args: unknown[]) => unknown
+  declare removePath_: (id: string) => void
+  declare getPath_: (elem: SVGPathElement) => unknown
+  declare addCtrlGrip: (...args: unknown[]) => unknown
+  declare getCtrlLine: (...args: unknown[]) => unknown
+  declare getGripPt: (...args: unknown[]) => unknown
+  declare getPointFromGrip: (...args: unknown[]) => unknown
+  declare setLinkControlPoints: (lcp: boolean) => void
+  declare reorientGrads: (elem: Element, m: SVGMatrix) => void
+  declare recalcRotatedPath: () => void
+  declare getSegData: () => Record<number, string[]>
+  declare getUIStrings: () => Record<string, string>
+  declare getPathObj: () => unknown
+  declare setPathObj: (obj: unknown) => void
+  declare getPathFuncs: () => (string | number)[]
+  declare getLinkControlPts: () => boolean
+
+  // From core/selected-elem.ts (init wires these on)
+  declare pushGroupProperties: (...args: unknown[]) => unknown
+  declare flipSelectedElements: (...args: unknown[]) => unknown
+  declare alignSelectedElements: (...args: unknown[]) => unknown
+  declare updateCanvas: (...args: unknown[]) => unknown
+  declare cycleElement: (...args: unknown[]) => unknown
+  declare cloneSelectedElements: (...args: unknown[]) => unknown
   declare copySelectedElements: () => void
+  declare groupSelectedElements: (type?: string, urlArg?: string) => void
+  declare ungroupSelectedElement: () => void
+  declare moveToTopSelectedElement: () => void
+  declare moveToBottomSelectedElement: () => void
+  declare moveUpDownSelected: (dir: 'Up' | 'Down') => void
+  declare moveSelectedElements: (dx: number | number[], dy: number | number[], undoable?: boolean) => unknown
   declare deleteSelectedElements: () => void
+
+  // From core/selection.js (init wires these on)
+  declare clearSelection: (noCall?: boolean) => void
+  declare getMouseTarget: (...args: unknown[]) => unknown
+  declare addToSelection: (elemsToAdd: Element[], showGrips?: boolean) => void
+  declare getIntersectionList: (...args: unknown[]) => unknown
+  declare runExtensions: (opts: { action: string; vars?: unknown }) => unknown[]
+  declare groupSvgElem: (...args: unknown[]) => unknown
+  declare prepareSvg: (...args: unknown[]) => unknown
+  declare recalculateAllSelectedDimensions: (...args: unknown[]) => unknown
+  declare setRotationAngle: (...args: unknown[]) => unknown
+
+  // From core/undo.js (init wires these on)
+  declare undoMgr: import('./core/history.js').UndoManager
+
+  // From core/svg-exec.ts (init wires these on)
+  declare importSvgString: (xmlString: string, preserveDimension?: boolean) => Element | null
+  declare uniquifyElems: (g: Element) => void
+  declare setUseData: (parent: Element) => void
+  declare convertGradients: (elem: Element) => void
+  declare removeUnusedDefElems: () => number
+  declare svgCanvasToString: () => string
+  declare svgToString: (elem: Element, indent: number) => string
+  declare rasterExport: (imgType?: string, quality?: number, windowName?: string, opts?: Record<string, unknown>) => Promise<Record<string, unknown>>
+  declare exportPDF: (windowName?: string, outputType?: string) => Promise<Record<string, unknown>>
+  declare setSvgString: (xmlString: string, preventUndo?: boolean) => boolean
+  declare embedImage: (src: string) => Promise<string | false>
 
   // ── Instance fields: set in initializeSvgCanvasMethods() ───────────────
   // `declare` tells TS "these are definitely assigned (via initializeSvgCanvasMethods)
