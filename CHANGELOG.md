@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (#3 PR-4a — se-color-picker replaces jQuery.jPicker — 2026-05-24)
+
+First of 2 sub-PRs under todo item #3 PR-4 (jGraduate + jPicker Lit-rewrite). Replaces the jQuery-based Photoshop-style color picker with a Lit component using Canvas 2D rendering.
+
+**New files (4):**
+- **ColorModel.ts** — standalone color data model (r/g/b/h/s/v/a) extending EventTarget with bidirectional HSV↔RGB sync, typed change events, and pure conversion functions (hsvToRgb, rgbToHsv, hexToRgba, rgbaToHex, validateHex). 44 unit tests.
+- **se-color-slider.ts** — generic 2D/1D drag surface using Pointer Events + setPointerCapture (replaces Slider.ts mouse-event approach). rAF-throttled. Reusable by both color picker and gradient editor.
+- **se-color-picker.ts** — full 7-mode color picker (H/S/V/R/G/B/A) with Canvas 2D per-pixel rendering for the 256×256 map and 20×256 bar. Text inputs with arrow-key increment. Preview swatches with CSS checker-pattern alpha. Ok/Cancel/live events. 11 unit tests.
+- **jPickerShim.ts** — transitional adapter bridging jGraduate's internal `jPickerMethod` calls to the new `se-color-picker` component. Wraps `ColorModel` in a `.val(name)` proxy matching the legacy API. Deleted in PR-4b.
+
+**Deleted (14 files, ~2,641 LOC removed):**
+- jQuery.jPicker.ts (1,837 LOC), ColorValuePicker.ts, Slider.ts
+- 9 image assets: Maps.png (61KB sprite sheet), Bars.png, AlphaBar.png, bar-opacity.png, map-opacity.png, preview-opacity.png, mappoint.gif, rangearrows.gif, picker.gif — all replaced by Canvas 2D rendering + CSS arrows/checker patterns
+
+**Design decisions:** Canvas 2D chosen over image sprites (professional standard — Adobe/Chrome DevTools approach; exact HSV math for all 7 modes; eliminates 62KB of precomputed sprites). Pointer Events chosen over mouse events (uniform mouse/touch/pen; setPointerCapture scopes drag to element; no window listener leaks). Standalone ColorModel class chosen over Lit-absorbed state (testable, decoupled, shared between picker and gradient editor).
+
+**Verification:** tsc 0 / lint 0e+1w (pre-existing jGraduate.ts warning) / vitest 695/695 / e2e deferred to PR-4b (shim preserves full jGraduate compatibility).
+
 ### Changed (#3 PR-3c — 5 elix-dialog HTML-bound dialogs Lit-converted + elix dependency removed — 2026-05-24)
 
 Third and final sub-PR under todo item #3 PR-3. **ZERO elix imports remain across `src/`; `elix` npm dependency removed from `package.json`.**
