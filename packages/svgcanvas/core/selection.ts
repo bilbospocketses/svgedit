@@ -24,7 +24,7 @@ import { getClosest } from '../common/util.js'
 const { BatchCommand } = hstry
 import type { ISvgCanvas } from './svgcanvas-types.js'
 
-let svgCanvas: ISvgCanvas | null = null
+let svgCanvas = null as unknown as ISvgCanvas
 
 /**
  * @function module:selection.init

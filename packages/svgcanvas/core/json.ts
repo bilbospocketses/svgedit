@@ -11,7 +11,7 @@ import { NS } from './namespaces.js'
 
 import type { ISvgCanvas } from './svgcanvas-types.js'
 
-let svgCanvas: ISvgCanvas | null = null
+let svgCanvas = null as unknown as ISvgCanvas
 let svgdoc_: Document | null = null
 
 /** Initializes this module with the canvas context. */

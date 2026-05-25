@@ -23,7 +23,7 @@ import type { PathSeg, Segment } from './path-method.js'
 
 import type { ISvgCanvas } from './svgcanvas-types.js'
 
-let svgCanvas: ISvgCanvas | null = null
+let svgCanvas = null as unknown as ISvgCanvas
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let path: any = null
 

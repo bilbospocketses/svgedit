@@ -15,7 +15,7 @@ import { warn } from '../common/logger.js'
 
 import type { ISvgCanvas } from './svgcanvas-types.js'
 
-let svgCanvas: ISvgCanvas | null
+let svgCanvas = null as unknown as ISvgCanvas
 // change radius if touch screen
 const gripRadius = window.ontouchstart ? 10 : 4
 

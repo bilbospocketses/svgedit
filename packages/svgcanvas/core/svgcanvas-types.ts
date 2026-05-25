@@ -133,21 +133,120 @@ export interface ISvgCanvas {
   nextParameter?: any
 
   // ── Instance fields: wired on by core/*.ts init() calls ────────────────
-  clearSelection: (noCall?: boolean) => void
-  addToSelection: (elemsToAdd: Element[], showGrips?: boolean) => void
-  undoMgr: UndoManager
+
+  // From core/elem-get-set (init wires these on)
+  getBold: (...args: unknown[]) => unknown
+  setBold: (...args: unknown[]) => unknown
+  getItalic: (...args: unknown[]) => unknown
+  setItalic: (...args: unknown[]) => unknown
+  hasTextDecoration: (...args: unknown[]) => unknown
+  addTextDecoration: (...args: unknown[]) => unknown
+  removeTextDecoration: (...args: unknown[]) => unknown
+  setTextAnchor: (...args: unknown[]) => unknown
+  setLetterSpacing: (...args: unknown[]) => unknown
+  setWordSpacing: (...args: unknown[]) => unknown
+  setTextLength: (...args: unknown[]) => unknown
+  setLengthAdjust: (...args: unknown[]) => unknown
+  getFontFamily: (...args: unknown[]) => unknown
+  setFontFamily: (...args: unknown[]) => unknown
+  setFontColor: (...args: unknown[]) => unknown
+  getFontColor: (...args: unknown[]) => unknown
+  getFontSize: (...args: unknown[]) => unknown
+  setFontSize: (...args: unknown[]) => unknown
+  getText: (...args: unknown[]) => unknown
+  setTextContent: (...args: unknown[]) => unknown
+  setImageURL: (...args: unknown[]) => unknown
+  setLinkURL: (...args: unknown[]) => unknown
+  setRectRadius: (...args: unknown[]) => unknown
+  makeHyperlink: (...args: unknown[]) => unknown
+  removeHyperlink: (...args: unknown[]) => unknown
+  setSegType: (...args: unknown[]) => unknown
+  setStrokeWidth: (...args: unknown[]) => unknown
+  getTitle: (...args: unknown[]) => unknown
+  setGroupTitle: (...args: unknown[]) => unknown
+  setStrokeAttr: (...args: unknown[]) => unknown
+  setBackground: (...args: unknown[]) => unknown
+  setDocumentTitle: (...args: unknown[]) => unknown
+  getEditorNS: (...args: unknown[]) => unknown
+  setBBoxZoom: (...args: unknown[]) => unknown
+  setCurrentZoom: (...args: unknown[]) => unknown
+  setColor: (...args: unknown[]) => unknown
+  setGradient: (...args: unknown[]) => unknown
+  setPaint: (...args: unknown[]) => unknown
   getResolution: () => { w: number; h: number; zoom: number }
+  setResolution: (x: number | 'fit', y: number) => boolean
+
+  // From core/event (init wires these on)
   mouseDownEvent: (evt: MouseEvent) => void
   mouseMoveEvent: (evt: MouseEvent) => void
   dblClickEvent: (evt: MouseEvent) => void
   mouseUpEvent: (evt: MouseEvent) => void
   mouseOutEvent: (evt: MouseEvent) => void
   DOMMouseScrollEvent: (e: WheelEvent) => void
-  getTitle: (...args: unknown[]) => unknown
-  setPaint: (...args: unknown[]) => unknown
-  svgCanvasToString: () => string
+  dragStartTransforms?: Map<Element, string>
+  hasDragStartTransform?: boolean
+  addedNew?: boolean
+
+  // From core/path (init wires these on)
+  replacePathSeg: (...args: unknown[]) => unknown
+  addPointGrip: (...args: unknown[]) => unknown
+  removePath_: (id: string) => void
+  getPath_: (elem: SVGPathElement) => unknown
+  addCtrlGrip: (...args: unknown[]) => unknown
+  getCtrlLine: (...args: unknown[]) => unknown
+  getGripPt: (...args: unknown[]) => unknown
+  getPointFromGrip: (...args: unknown[]) => unknown
+  setLinkControlPoints: (lcp: boolean) => void
+  reorientGrads: (elem: Element, m: SVGMatrix) => void
+  recalcRotatedPath: () => void
+  getSegData: () => Record<number, string[]>
+  getPathObj: () => unknown
+  setPathObj: (obj: unknown) => void
+  getPathFuncs: () => (string | number)[]
+  getLinkControlPts: () => boolean
+
+  // From core/selected-elem (init wires these on)
+  pushGroupProperties: (...args: unknown[]) => unknown
+  flipSelectedElements: (...args: unknown[]) => unknown
+  alignSelectedElements: (...args: unknown[]) => unknown
+  updateCanvas: (...args: unknown[]) => unknown
+  cycleElement: (...args: unknown[]) => unknown
+  cloneSelectedElements: (...args: unknown[]) => unknown
   copySelectedElements: () => void
+  groupSelectedElements: (type?: string, urlArg?: string) => void
+  ungroupSelectedElement: () => void
+  moveToTopSelectedElement: () => void
+  moveToBottomSelectedElement: () => void
+  moveUpDownSelected: (dir: 'Up' | 'Down') => void
+  moveSelectedElements: (dx: number | number[], dy: number | number[], undoable?: boolean) => unknown
   deleteSelectedElements: () => void
+
+  // From core/selection (init wires these on)
+  clearSelection: (noCall?: boolean) => void
+  getMouseTarget: (...args: unknown[]) => unknown
+  addToSelection: (elemsToAdd: Element[], showGrips?: boolean) => void
+  getIntersectionList: (...args: unknown[]) => unknown
+  runExtensions: (opts: { action: string; vars?: unknown }) => unknown[]
+  groupSvgElem: (...args: unknown[]) => unknown
+  prepareSvg: (...args: unknown[]) => unknown
+  recalculateAllSelectedDimensions: (...args: unknown[]) => unknown
+  setRotationAngle: (...args: unknown[]) => unknown
+
+  // From core/undo (init wires these on)
+  undoMgr: UndoManager
+
+  // From core/svg-exec (init wires these on)
+  importSvgString: (xmlString: string, preserveDimension?: boolean) => Element | null
+  uniquifyElems: (g: Element) => void
+  setUseData: (parent: Element) => void
+  convertGradients: (elem: Element) => void
+  removeUnusedDefElems: () => number
+  svgCanvasToString: () => string
+  svgToString: (elem: Element, indent: number) => string
+  rasterExport: (imgType?: string, quality?: number, windowName?: string, opts?: Record<string, unknown>) => Promise<Record<string, unknown>>
+  exportPDF: (windowName?: string, outputType?: string) => Promise<Record<string, unknown>>
+  setSvgString: (xmlString: string, preventUndo?: boolean) => boolean
+  embedImage: (src: string) => Promise<string | false>
 
   // ── Instance fields: set in initializeSvgCanvasMethods() ───────────────
   getJsonFromSvgElements: typeof getJsonFromSvgElements

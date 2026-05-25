@@ -25,7 +25,7 @@ import { convertToNum } from './units.js'
 
 import type { ISvgCanvas } from './svgcanvas-types.js'
 
-let svgCanvas: ISvgCanvas | null = null
+let svgCanvas = null as unknown as ISvgCanvas
 
 /** A path segment entry with type + optional coordinate fields. */
 interface PathSegEntry {

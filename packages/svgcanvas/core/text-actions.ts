@@ -20,7 +20,7 @@ import { supportsGoodTextCharPos } from '../common/browser.js'
 
 import type { ISvgCanvas } from './svgcanvas-types.js'
 
-let svgCanvas: ISvgCanvas | null = null
+let svgCanvas = null as unknown as ISvgCanvas
 
 /**
  * @function module:text-actions.init

@@ -51,7 +51,7 @@ const {
 
 import type { ISvgCanvas } from './svgcanvas-types.js'
 
-let svgCanvas: ISvgCanvas | null = null
+let svgCanvas = null as unknown as ISvgCanvas
 
 /**
  * @function module:selected-elem.init

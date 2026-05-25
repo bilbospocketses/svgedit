@@ -741,7 +741,7 @@ export const randomizeIds = (enableRandomization: boolean, currentDrawing: Drawi
 
 import type { ISvgCanvas } from './svgcanvas-types.js'
 
-let svgCanvas: ISvgCanvas | null
+let svgCanvas = null as unknown as ISvgCanvas
 /**
  * @function module:draw.init
  * @param canvas

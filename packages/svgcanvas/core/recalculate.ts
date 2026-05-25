@@ -29,7 +29,7 @@ import { mergeDeep } from '../common/util.js'
 
 import type { ISvgCanvas } from './svgcanvas-types.js'
 
-let svgCanvas: ISvgCanvas | null
+let svgCanvas = null as unknown as ISvgCanvas
 
 /**
  * Initialize the recalculate module with the SVG canvas.

@@ -48,7 +48,7 @@ const segData: Record<number, string[]> = {
 
 import type { ISvgCanvas } from './svgcanvas-types.js'
 
-let svgCanvas: ISvgCanvas | null = null
+let svgCanvas = null as unknown as ISvgCanvas
 const uiStrings: Record<string, string> = {}
 /**
 * @function module:path.setUiStrings
