@@ -15,7 +15,6 @@ import {
 import {
   hasCustomHandler, getCustomHandler, injectExtendedContextMenuItemsIntoDom
 } from './contextmenu.js'
-// @ts-expect-error: *.html imported as string via vite-plugin-string; no ambient module declaration exists yet
 import editorTemplate from './templates/editorTemplate.html'
 import Rulers from './Rulers.js'
 import SvgCanvas from '@svgedit/svgcanvas'

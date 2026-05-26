@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
-// @ts-expect-error: *.html imported as string via vite-plugin-string; no ambient module declaration exists yet
 import rulersTemplate from './templates/rulersTemplate.html'
 import SvgCanvas from '@svgedit/svgcanvas'
 import type { ISvgCanvas } from '@svgedit/svgcanvas'
