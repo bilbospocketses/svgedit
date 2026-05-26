@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (TODO #19 PR-3 — components + dialogs type-safety sweep — 2026-05-26)
+
+- Removed all `eslint-disable` banners + all `as any` casts from 10 component/dialog files + 8 stale inline directives from prior PRs
+- Typed `Paint` class properly across PaintBox, se-paint-picker, se-gradient-editor
+- Typed jPickerShim internals (`ValProxy`, `JPickerOptions` interfaces)
+- Typed globalDialogs.ts dialog element access (7 casts eliminated)
+- Typed dialog `init()` i18next parameter as `{ t: (key: string) => string }`
+
+**Test counts (verified 2026-05-26):** vitest 701/701, lint 0 errors + 0 warnings.
+
 ### Changed (TODO #19 PR-2 — panels type-safety sweep — 2026-05-26)
 
 - Removed all `eslint-disable` banners + all 90 `as any` casts from `TopPanel.ts` (68), `BottomPanel.ts` (15), `LayersPanel.ts` (5), `LeftPanel.ts` (2)
