@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any */
 /**
  * @file se-paint-picker — Lit-based replacement for the legacy seColorPicker.
  *
@@ -14,7 +14,7 @@ import type { ISvgCanvas } from '@svgedit/svgcanvas'
 import './jgraduate/se-gradient-editor.js'
 import { t } from '../locale.js'
 
-declare const svgEditor: any
+declare const svgEditor: SvgEditorGlobal
 
 @customElement('se-colorpicker')
 export class SePaintPicker extends LitElement {
