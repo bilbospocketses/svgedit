@@ -1,11 +1,10 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unsafe-assignment -- DOM traversal uses non-null assertions; ISvgCanvas any-typed API */
 /**
  * Tools for selection.
  * @module selection
  * @license MIT
  * @copyright 2011 Jeff Schiller
  */
-
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-non-null-assertion */
 
 import { NS } from './namespaces.js'
 import {
@@ -305,9 +304,10 @@ const prepareSvg = (newDoc: XMLDocument): void => {
 
   const paths = [...newDoc.getElementsByTagNameNS(NS.SVG, 'path')]
   paths.forEach((path) => {
-    const convertedPath: string = svgCanvas.pathActions.convertPath(path)
-    path.setAttribute('d', convertedPath)
-    svgCanvas.pathActions.fixEnd(path)
+    const pathEl = path as unknown as SVGPathElement
+    const convertedPath: string = svgCanvas.pathActions.convertPath(pathEl, true)
+    pathEl.setAttribute('d', convertedPath)
+    svgCanvas.pathActions.fixEnd(pathEl)
   })
 }
 

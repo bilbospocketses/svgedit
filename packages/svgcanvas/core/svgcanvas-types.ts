@@ -8,7 +8,7 @@
  * @module svgcanvas-types
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any -- ISvgCanvas models a legacy JS class with dynamic property access; typing all 200+ members is tracked separately */
 
 // ── type-only imports (safe — no runtime cycle) ─────────────────────────
 import type { BatchCommand, UndoManager } from './history.js'

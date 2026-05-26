@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-non-null-assertion */
+/* eslint-disable @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unsafe-assignment -- DOM traversal uses non-null assertions; ISvgCanvas any-typed API */
 /**
  * Tools for undo.
  * @module undo
@@ -170,7 +170,7 @@ export const changeSelectedAttributeNoUndoMethod = (attr: string, newValue: stri
   const zoom: number = svgCanvas.getZoom()
   if (svgCanvas.getCurrentMode() === 'pathedit') {
     // Editing node
-    svgCanvas.pathActions.moveNode(attr, newValue)
+    svgCanvas.pathActions.moveNode(attr, Number(newValue))
   }
   elems = elems ?? selectedElements
   let i = elems.length

@@ -1,11 +1,12 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unsafe-assignment,
+   @typescript-eslint/no-unsafe-member-access,
+   @typescript-eslint/no-unsafe-argument -- ISvgCanvas any-typed API; DOM traversal uses non-null assertions */
 /**
  * Tools for svg.
  * @module svg
  * @license MIT
  * @copyright 2011 Jeff Schiller
  */
-
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unnecessary-type-assertion */
 
 import { jsPDF as JsPDF } from 'jspdf'
 import 'svg2pdf.js'
@@ -95,7 +96,7 @@ const svgCanvasToString = (): string => {
   const nakedSvgs: Element[] = []
 
   // Unwrap gsvg if it has no special attributes (only id and style)
-  const gsvgElems = svgCanvas.getSvgContent().querySelectorAll('g[data-gsvg]') as NodeListOf<Element>
+  const gsvgElems = svgCanvas.getSvgContent().querySelectorAll('g[data-gsvg]')
   Array.prototype.forEach.call(gsvgElems, (element: Element) => {
     const attrs = element.attributes
     let len = attrs.length
@@ -111,7 +112,7 @@ const svgCanvasToString = (): string => {
       element.replaceWith(svg)
     }
   })
-  const output = svgCanvas.svgToString(svgCanvas.getSvgContent(), 0) as string
+  const output = svgCanvas.svgToString(svgCanvas.getSvgContent(), 0)
 
   // Rewrap gsvg
   if (nakedSvgs.length) {
@@ -132,7 +133,7 @@ const svgCanvasToString = (): string => {
  */
 const svgToString = (elem: Element, indent: number): string => {
   const curConfig = svgCanvas.getCurConfig() as { baseUnit: string; dynamicOutput?: boolean }
-  const nsMap = svgCanvas.getNsMap() as Record<string, string>
+  const nsMap = svgCanvas.getNsMap()
   const out: string[] = []
   const unit = curConfig.baseUnit
   const unitRe = new RegExp(`^-?[\\d\\.]+${unit}$`)
@@ -191,7 +192,7 @@ const svgToString = (elem: Element, indent: number): string => {
         }
         if (el.attributes.length > 0) {
           for (const [, attr] of Object.entries(el.attributes)) {
-            const u = (attr as Attr).namespaceURI
+            const u = (attr).namespaceURI
             if (u && !nsuris[u] && nsMap[u] !== 'xmlns' && nsMap[u] !== 'xml') {
               nsuris[u] = true
               out.push(` xmlns:${nsMap[u]}="${u}"`)
@@ -254,8 +255,7 @@ const svgToString = (elem: Element, indent: number): string => {
           const styleName = attr.localName.replace(/-[a-z]/g, (s: string) =>
             (s[1] ?? '').toUpperCase()
           )
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          if (Object.prototype.hasOwnProperty.call((elem as any).style, styleName)) {
+          if (Object.prototype.hasOwnProperty.call((elem as HTMLElement).style, styleName)) {
             continue
           }
         }
@@ -268,12 +268,12 @@ const svgToString = (elem: Element, indent: number): string => {
           }
           out.push(' ')
           if (attr.localName === 'd') {
-            attrVal = svgCanvas.pathActions.convertPath(elem, true) as string
+            attrVal = svgCanvas.pathActions.convertPath(elem as SVGPathElement, true)
           }
           if (!isNaN(Number(attrVal))) {
-            attrVal = String(shortFloat(attrVal as unknown as [number, number]))
+            attrVal = String(shortFloat(attrVal))
           } else if (unitRe.test(attrVal)) {
-            attrVal = String(shortFloat(attrVal as unknown as [number, number])) + unit
+            attrVal = String(shortFloat(attrVal)) + unit
           }
 
           // Embed images when saving
@@ -316,7 +316,7 @@ const svgToString = (elem: Element, indent: number): string => {
         switch (child.nodeType) {
           case 1: // element node
             out.push('\n')
-            out.push(svgCanvas.svgToString(child as Element, indent) as string)
+            out.push(svgCanvas.svgToString(child as Element, indent))
             break
           case 3: {
             // text node
@@ -430,7 +430,7 @@ const setSvgString = (xmlString: string, preventUndo?: boolean): boolean => {
     const elements = content.querySelectorAll('image')
     Array.prototype.forEach.call(elements, (image: Element) => {
       preventClickDefault(image)
-      const val = svgCanvas.getHref(image) as string | null
+      const val = svgCanvas.getHref(image)
       if (val) {
         if (val.startsWith('data:')) {
           const m = val.match(/svgedit_url=(.*?);/)
@@ -532,7 +532,7 @@ const setSvgString = (xmlString: string, preventUndo?: boolean): boolean => {
     // Give ID for any visible layer children missing one
     const chiElems = content.children
     Array.prototype.forEach.call(chiElems, (chiElem: Element) => {
-      const visElems = chiElem.querySelectorAll(svgCanvas.getVisElems() as string)
+      const visElems = chiElem.querySelectorAll(svgCanvas.getVisElems())
       Array.prototype.forEach.call(visElems, (elem: Element) => {
         if (!elem.id) {
           elem.id = svgCanvas.getNextId()
@@ -677,7 +677,7 @@ const importSvgString = (xmlString: string, preserveDimension?: boolean): Elemen
         : ''
       ts = `translate(0) scale(${scale}) ${originOffset}translate(0)`
 
-      symbol = svgCanvas.getDOMDocument().createElementNS(NS.SVG, 'symbol') as Element
+      symbol = svgCanvas.getDOMDocument().createElementNS(NS.SVG, 'symbol')
       while (svg.firstChild) {
         const first = svg.firstChild
         symbol.append(first)
@@ -698,7 +698,7 @@ const importSvgString = (xmlString: string, preserveDimension?: boolean): Elemen
       batchCmd.addSubCommand(new InsertElementCommand(symbol))
     }
 
-    useEl = svgCanvas.getDOMDocument().createElementNS(NS.SVG, 'use') as Element
+    useEl = svgCanvas.getDOMDocument().createElementNS(NS.SVG, 'use')
     useEl.id = svgCanvas.getNextId()
     svgCanvas.setHref(useEl, '#' + symbol.id)
     ;(
@@ -768,7 +768,7 @@ const embedImage = (src: string): Promise<string | false> => {
 /**
  */
 const getIssues = (): { issues: string[]; issueCodes: string[] } => {
-  const uiStrings = svgCanvas.getUIStrings() as Record<string, string>
+  const uiStrings = svgCanvas.getUIStrings()
   // remove the selected outline before serializing
   svgCanvas.clearSelection()
 
@@ -783,7 +783,7 @@ const getIssues = (): { issues: string[]; issueCodes: string[] } => {
   const content = svgCanvas.getSvgContent() as Element
 
   // Add font/text check if Canvas Text API is not implemented
-  const canvasEl = document.querySelector('CANVAS') as HTMLCanvasElement | null
+  const canvasEl = document.querySelector('canvas')
   if (canvasEl && !('font' in canvasEl.getContext('2d')!)) {
     issueList.text = uiStrings.NoText ?? ''
   }
@@ -960,8 +960,7 @@ const exportPDF = (
           const { issues, issueCodes } = getIssues()
           const obj: Record<string, unknown> = { issues, issueCodes, windowName, outputType }
 
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          obj.output = (doc.output as any)(
+          obj.output = (doc.output as (type: string, name?: string) => unknown)(
             outputType,
             outputType === 'save' ? windowName : undefined
           )
@@ -1014,7 +1013,7 @@ const uniquifyElemsMethod = (g: Element): void => {
       svgCanvas.getRefAttrs().forEach((attr: string) => {
         const attrnode = el.getAttributeNode(attr)
         if (attrnode) {
-          const url = svgCanvas.getUrlFromAttr(attrnode.value) as string | null
+          const url = svgCanvas.getUrlFromAttr(attrnode.value)
           const refid = url ? url.substr(1) : null
           if (refid) {
             if (!(refid in ids)) {
@@ -1027,7 +1026,7 @@ const uniquifyElemsMethod = (g: Element): void => {
       })
 
       // Audit-flagged: image/a internal refs not handled (svg-exec.ts:1117) — preserve
-      const href = svgCanvas.getHref(el) as string | null
+      const href = svgCanvas.getHref(el)
       if (href && refElems.includes(el.nodeName)) {
         const refid = href.substr(1)
         if (refid) {
@@ -1050,7 +1049,7 @@ const uniquifyElemsMethod = (g: Element): void => {
     if (!idEntry) continue
     const { elem } = idEntry
     if (elem) {
-      const newid = svgCanvas.getNextId() as string
+      const newid = svgCanvas.getNextId()
 
       elem.id = newid
 
@@ -1087,12 +1086,12 @@ const setUseDataMethod = (parent: Element): void => {
   // Audit-flagged: setUseData on undo/redo of object addition (svg-exec.ts:516 real bug) — preserve
   Array.prototype.forEach.call(elems, (el: Element) => {
     const dataStorage = svgCanvas.getDataStorage()
-    const href = svgCanvas.getHref(el) as string | null
+    const href = svgCanvas.getHref(el)
     if (!href || !href.startsWith('#')) {
       return
     }
     const id = href.substr(1)
-    const refElem = svgCanvas.getElement(id) as Element | null
+    const refElem = svgCanvas.getElement(id)
     if (!refElem) {
       return
     }
@@ -1137,7 +1136,7 @@ const removeUnusedDefElemsMethod = (): number => {
     const el = allEls[i]
     if (!el) continue
     for (j = 0; j < alen; j++) {
-      const ref = svgCanvas.getUrlFromAttr(el.getAttribute(attrs[j] ?? '')) as string | null
+      const ref = svgCanvas.getUrlFromAttr(el.getAttribute(attrs[j] ?? ''))
       if (ref) {
         defelemUses.push(ref.substr(1))
       }

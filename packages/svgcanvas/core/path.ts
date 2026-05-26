@@ -6,7 +6,6 @@
  * @copyright 2011 Alexis Deveria, 2011 Jeff Schiller
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
 
 import { shortFloat } from './units.js'
 import { transformPoint, getTransformList } from './math.js'
@@ -64,8 +63,7 @@ let linkControlPts = true
 
 // Stores references to paths via IDs.
 // TODO: Make this cross-document happy.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let pathData: Record<string, any> = {}
+let pathData: Record<string, Path> = {}
 
 /**
 * @function module:path.setLinkControlPoints
@@ -222,8 +220,7 @@ export const init = (canvas: ISvgCanvas): void => {
   svgCanvas.getSegData = () => { return segData }
   svgCanvas.getUIStrings = () => { return uiStrings }
   svgCanvas.getPathObj = () => { return activePath }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  svgCanvas.setPathObj = (obj: any) => { activePath = obj }
+  svgCanvas.setPathObj = (obj: Path | null) => { activePath = obj }
   svgCanvas.getPathFuncs = () => { return pathFuncs }
   svgCanvas.getLinkControlPts = () => { return linkControlPts }
   pathFuncs = [0, 'ClosePath']
@@ -246,24 +243,21 @@ export const init = (canvas: ISvgCanvas): void => {
 * @param type
 * @param segItem
 */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const ptObjToArr: (...args: any[]) => any = ptObjToArrMethod
+export const ptObjToArr: typeof ptObjToArrMethod = ptObjToArrMethod
 
 /**
 * @function module:path.getGripPt
 * @param seg
 * @param altPt
 */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const getGripPt: (...args: any[]) => any = getGripPtMethod
+export const getGripPt: typeof getGripPtMethod = getGripPtMethod
 
 /**
 * @function module:path.getPointFromGrip
 * @param pt
 * @param pth
 */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const getPointFromGrip: (...args: any[]) => any = getPointFromGripMethod
+export const getPointFromGrip: typeof getPointFromGripMethod = getPointFromGripMethod
 
 /**
 * Requires prior call to `setUiStrings` if `xlink:title`
@@ -273,14 +267,12 @@ export const getPointFromGrip: (...args: any[]) => any = getPointFromGripMethod
 * @param x
 * @param y
 */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const addPointGrip: (...args: any[]) => any = addPointGripMethod
+export const addPointGrip: typeof addPointGripMethod = addPointGripMethod
 
 /**
 * @function module:path.getGripContainer
 */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const getGripContainer: () => any = getGripContainerMethod
+export const getGripContainer: typeof getGripContainerMethod = getGripContainerMethod
 
 /**
 * Requires prior call to `setUiStrings` if `xlink:title`
@@ -288,30 +280,26 @@ export const getGripContainer: () => any = getGripContainerMethod
 * @function module:path.addCtrlGrip
 * @param id
 */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const addCtrlGrip: (...args: any[]) => any = addCtrlGripMethod
+export const addCtrlGrip: typeof addCtrlGripMethod = addCtrlGripMethod
 
 /**
 * @function module:path.getCtrlLine
 * @param id
 */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const getCtrlLine: (...args: any[]) => any = getCtrlLineMethod
+export const getCtrlLine: typeof getCtrlLineMethod = getCtrlLineMethod
 
 /**
 * @function module:path.getPointGrip
 * @param seg
 * @param update
 */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const getPointGrip: (...args: any[]) => any = getPointGripMethod
+export const getPointGrip: typeof getPointGripMethod = getPointGripMethod
 
 /**
 * @function module:path.getControlPoints
 * @param seg
 */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const getControlPoints: (...args: any[]) => any = getControlPointsMethod
+export const getControlPoints: typeof getControlPointsMethod = getControlPointsMethod
 
 /**
 * This replaces the segment at the given index. Type is given as number.
@@ -321,16 +309,14 @@ export const getControlPoints: (...args: any[]) => any = getControlPointsMethod
 * @param pts
 * @param elem
 */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const replacePathSeg: (...args: any[]) => any = replacePathSegMethod
+export const replacePathSeg: typeof replacePathSegMethod = replacePathSegMethod
 
 /**
 * @function module:path.getSegSelector
 * @param seg
 * @param update
 */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const getSegSelector: (...args: any[]) => any = getSegSelectorMethod
+export const getSegSelector: typeof getSegSelectorMethod = getSegSelectorMethod
 
 interface XYPoint {
   x: number
@@ -390,8 +376,7 @@ export const smoothControlPoints = (ct1: XYPoint, ct2: XYPoint, pt: XYPoint): SV
 * @function module:path.getPath_
 * @param elem
 */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const getPath_ = (elem: SVGPathElement): any => {
+export const getPath_ = (elem: SVGPathElement): Path => {
   let p = pathData[elem.id]
   if (!p) {
     p = pathData[elem.id] = new Path(elem)
@@ -653,9 +638,20 @@ export const convertPath = (pth: SVGPathElement, toRel: boolean): string => {
           cury = lastM[1]
         }
         break
-      // @ts-expect-error: intentional fallthrough — H adjusts x then shares h path
       case 12: // absolute horizontal line (H)
         x -= curx
+        if (toRel) {
+          y = 0
+          curx += x
+          letter = 'l'
+        } else {
+          y = cury
+          x += curx
+          curx = x
+          letter = 'L'
+        }
+        d += pathDSegment(letter, [[x, y]])
+        break
       case 13: // relative horizontal line (h)
         if (toRel) {
           y = 0
@@ -667,12 +663,22 @@ export const convertPath = (pth: SVGPathElement, toRel: boolean): string => {
           curx = x
           letter = 'L'
         }
-        // Convert to "line" for easier editing
         d += pathDSegment(letter, [[x, y]])
         break
-      // @ts-expect-error: intentional fallthrough — V adjusts y then shares v path
       case 14: // absolute vertical line (V)
         y -= cury
+        if (toRel) {
+          x = 0
+          cury += y
+          letter = 'l'
+        } else {
+          x = curx
+          y += cury
+          cury = y
+          letter = 'L'
+        }
+        d += pathDSegment(letter, [[x, y]])
+        break
       case 15: // relative vertical line (v)
         if (toRel) {
           x = 0
@@ -684,16 +690,26 @@ export const convertPath = (pth: SVGPathElement, toRel: boolean): string => {
           cury = y
           letter = 'L'
         }
-        // Convert to "line" for easier editing
         d += pathDSegment(letter, [[x, y]])
         break
       case 2: // absolute move (M)
       case 4: // absolute line (L)
       case 18: // absolute smooth quad (T)
-      // @ts-expect-error: intentional fallthrough — absolute arc adjusts coords then shares relative path
       case 10: // absolute elliptical arc (A)
         x -= curx
         y -= cury
+        if (toRel) {
+          curx += x
+          cury += y
+        } else {
+          x += curx
+          y += cury
+          curx = x
+          cury = y
+        }
+        if (type === 2) { lastM = [curx, cury] }
+        d += pathDSegment(letter, [[x, y]])
+        break
       case 5: // relative line (l)
       case 3: // relative move (m)
       case 19: // relative smooth quad (t)
@@ -706,14 +722,23 @@ export const convertPath = (pth: SVGPathElement, toRel: boolean): string => {
           curx = x
           cury = y
         }
-        if (type === 2 || type === 3) { lastM = [curx, cury] }
-
+        if (type === 3) { lastM = [curx, cury] }
         d += pathDSegment(letter, [[x, y]])
         break
-      // @ts-expect-error: intentional fallthrough — C adjusts coords then shares c path
       case 6: // absolute cubic (C)
         x -= curx; x1 -= curx; x2 -= curx
         y -= cury; y1 -= cury; y2 -= cury
+        if (toRel) {
+          curx += x
+          cury += y
+        } else {
+          x += curx; x1 += curx; x2 += curx
+          y += cury; y1 += cury; y2 += cury
+          curx = x
+          cury = y
+        }
+        d += pathDSegment(letter, [[x1, y1], [x2, y2], [x, y]])
+        break
       case 7: // relative cubic (c)
         if (toRel) {
           curx += x
@@ -726,10 +751,20 @@ export const convertPath = (pth: SVGPathElement, toRel: boolean): string => {
         }
         d += pathDSegment(letter, [[x1, y1], [x2, y2], [x, y]])
         break
-      // @ts-expect-error: intentional fallthrough — Q adjusts coords then shares q path
       case 8: // absolute quad (Q)
         x -= curx; x1 -= curx
         y -= cury; y1 -= cury
+        if (toRel) {
+          curx += x
+          cury += y
+        } else {
+          x += curx; x1 += curx
+          y += cury; y1 += cury
+          curx = x
+          cury = y
+        }
+        d += pathDSegment(letter, [[x1, y1], [x, y]])
+        break
       case 9: // relative quad (q)
         if (toRel) {
           curx += x
@@ -742,7 +777,6 @@ export const convertPath = (pth: SVGPathElement, toRel: boolean): string => {
         }
         d += pathDSegment(letter, [[x1, y1], [x, y]])
         break
-      // Fallthrough
       case 11: // relative elliptical arc (a)
         if (toRel) {
           curx += x
@@ -759,10 +793,20 @@ export const convertPath = (pth: SVGPathElement, toRel: boolean): string => {
           (seg.sweepFlag ? 1 : 0)
         ], [x, y])
         break
-      // @ts-expect-error: intentional fallthrough — S adjusts coords then shares s path
       case 16: // absolute smooth cubic (S)
         x -= curx; x2 -= curx
         y -= cury; y2 -= cury
+        if (toRel) {
+          curx += x
+          cury += y
+        } else {
+          x += curx; x2 += curx
+          y += cury; y2 += cury
+          curx = x
+          cury = y
+        }
+        d += pathDSegment(letter, [[x2, y2], [x, y]])
+        break
       case 17: // relative smooth cubic (s)
         if (toRel) {
           curx += x
@@ -804,6 +848,5 @@ const pathDSegment = (letter: string, points: number[][], morePoints?: number[],
 * Group: Path edit functions.
 * Functions relating to editing path elements.
 */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const pathActions: any = pathActionsMethod
+export const pathActions: typeof pathActionsMethod = pathActionsMethod
 // end pathActions

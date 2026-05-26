@@ -4,7 +4,8 @@
  * @copyright 2011 Jeff Schiller
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-assignment,
+   @typescript-eslint/no-unsafe-member-access -- ISvgCanvas properties flow `any` into assignments */
 
 import Paint from './paint.js'
 import { NS } from './namespaces.js'
@@ -216,8 +217,7 @@ const setResolutionMethod = (x: number | 'fit', y: number): boolean => {
   const { ChangeElementCommand, BatchCommand } = svgCanvas.history
   const res: { w: number; h: number } = svgCanvas.getResolution()
   const { w, h } = res
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let batchCmd: any
+  let batchCmd: InstanceType<typeof svgCanvas.history.BatchCommand> | undefined
 
   if (x === 'fit') {
     const bbox = getStrokedBBoxDefaultVisible()

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument */
 /**
  * Miscellaneous utilities.
  * @module utilities
@@ -15,7 +14,7 @@ import {
   transformBox,
   getTransformList
 } from './math.js'
-import { getClosest, mergeDeep } from '../common/util.js'
+import { mergeDeep } from '../common/util.js'
 
 /** A plain bounding box object. */
 export interface BBoxObject {
@@ -192,8 +191,8 @@ export const text2xml = (sXML: string): XMLDocument => {
   let parser
   try {
     parser = new DOMParser()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ;(parser as any).async = false
+    // Legacy DOMParser property, not in modern typings but needed for older engines
+    ;(parser as DOMParser & { async: boolean }).async = false
   } catch {
     throw new Error('XML Parser could not be instantiated')
   }
@@ -390,50 +389,41 @@ export const getBBox = (elem: Element): BBoxObject | null => {
 
   const elname = selected.nodeName
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const selectedAny = selected as any
+  const svgElem = selected as SVGGraphicsElement
   let ret: BBoxObject | null = null
   switch (elname) {
     case 'text':
       if (selected.textContent === '') {
         selected.textContent = 'a' // Some character needed for the selector to use.
-        ret = selectedAny.getBBox()
+        ret = svgElem.getBBox()
         selected.textContent = ''
-      } else if (selectedAny.getBBox) {
-        ret = selectedAny.getBBox()
+      } else if (typeof svgElem.getBBox === 'function') {
+        ret = svgElem.getBBox()
       }
       break
     case 'path':
     case 'g':
     case 'a':
-      if (selectedAny.getBBox) {
-        ret = selectedAny.getBBox()
+      if (typeof svgElem.getBBox === 'function') {
+        ret = svgElem.getBBox()
       }
       break
     default:
       if (elname === 'use') {
-        ret = selectedAny.getBBox()
+        ret = svgElem.getBBox()
       } else if (visElemsArr.includes(elname)) {
-        if (selected) {
-          try {
-            ret = selectedAny.getBBox()
-          } catch {
-            // tspan (and textPath apparently) have no `getBBox` in Firefox
-            const extent = selectedAny.getExtentOfChar(0)
-            const width = selectedAny.getComputedTextLength()
-            ret = {
-              x: extent.x,
-              y: extent.y,
-              width,
-              height: extent.height
-            }
-          }
-        } else {
-          // Check if element is child of a foreignObject
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const fo = getClosest((selected as any).parentNode, 'foreignObject') as unknown as Element[]
-          if (fo.length && (fo[0] as SVGGraphicsElement | undefined)?.getBBox) {
-            ret = (fo[0] as SVGGraphicsElement).getBBox()
+        try {
+          ret = svgElem.getBBox()
+        } catch {
+          // tspan (and textPath apparently) have no `getBBox` in Firefox
+          const textElem = selected as SVGTextContentElement
+          const extent = textElem.getExtentOfChar(0)
+          const width = textElem.getComputedTextLength()
+          ret = {
+            x: extent.x,
+            y: extent.y,
+            width,
+            height: extent.height
           }
         }
       }
@@ -717,7 +707,7 @@ export const convertToPath = (elem: Element, attrs: Record<string, unknown>, svg
   const path = svgCanvas.addSVGElementsFromJson({
     element: 'path',
     attr: attrs as Record<string, string | number>
-  })
+  }) as SVGPathElement
 
   const eltrans = elem.getAttribute('transform')
   if (eltrans) {
@@ -764,7 +754,7 @@ export const convertToPath = (elem: Element, attrs: Record<string, unknown>, svg
 
     svgCanvas.addCommandToHistory(batchCmd)
 
-    return path as unknown as SVGPathElement
+    return path
   }
   // the elem.tagName was not recognized, so no "d" attribute. Remove it, so we've haven't changed anything.
   path.remove()
@@ -1077,8 +1067,8 @@ export const getRotationAngleFromTransformList = (tlist: SVGTransformList | unde
 
 /** Get the rotation angle of the given/selected DOM element. */
 export let getRotationAngle = (elem?: Element | null, toRad?: boolean): number => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const selected = (elem ?? (svgCanvas.getSelectedElements() as Element[])[0]) as any as Element
+  const selected = elem ?? (svgCanvas.getSelectedElements() as Element[])[0]
+  if (!selected) return 0
   const tlist = getTransformList(selected)
   return getRotationAngleFromTransformList(tlist, toRad)
 }

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (TODO #19 PR-5 — svgcanvas core type-safety sweep — 2026-05-26)
+
+- Restructured all 16 switch fallthroughs in `path-actions.ts` (7), `path.ts` (6), `event.ts` (3) — extracted helpers / inlined shared logic, zero `@ts-expect-error` remaining
+- Removed all file-level `eslint-disable` blanket banners from 19 svgcanvas files
+- Eliminated all 42 `as any` casts — replaced with `SVGPathElement`, `SVGGraphicsElement`, `ISvgCanvas`, `Path`, proper DOM element types
+- 16 targeted `eslint-disable-next-line` / per-file directives remain (non-null assertions on DOM APIs, ISvgCanvas `any`-typed member flow-through), all with explanatory comments
+- Typed path module variable, `pathData` record, re-exports via `typeof`
+
+**Test counts (verified 2026-05-26):** vitest 701/701, lint 0 errors + 0 warnings.
+
 ### Changed (TODO #19 PR-4 — extensions type-safety sweep — 2026-05-26)
 
 - Removed all `eslint-disable` banners + all `as any` casts from 12 extension files

@@ -8,10 +8,10 @@
  *
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access,
-   @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument,
-   @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return,
-   @typescript-eslint/no-unnecessary-type-assertion, @typescript-eslint/unbound-method */
+
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment,
+   @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument,
+   @typescript-eslint/no-unsafe-return, @typescript-eslint/unbound-method -- ISvgCanvas interface uses `any` pervasively; these flow from the interface contract */
 
 // SVG 2 getPathData/setPathData polyfill. Not yet natively supported in shipping
 // browsers as of this writing -- the polyfill installs on SVGPathElement.prototype
@@ -454,9 +454,9 @@ class SvgCanvas implements ISvgCanvas {
     this.container = container
     this.svgroot = svgRootElement(this.svgdoc, dimensions)
     container.append(this.svgroot)
-    this.svgContent = this.svgdoc.createElementNS(NS.SVG, 'svg') as SVGSVGElement
-    touchInit(this as any)
-    clearInit(this as any)
+    this.svgContent = this.svgdoc.createElementNS(NS.SVG, 'svg')
+    touchInit(this)
+    clearInit(this)
     this.clearSvgContentElement()
     this.currentDrawing = new draw.Drawing(this.svgContent, this.idPrefix)
     this.zoom = 1
@@ -495,33 +495,33 @@ class SvgCanvas implements ISvgCanvas {
 
     this.selectedElements = []
 
-    jsonInit(this as any)
-    utilsInit(this as any)
-    coordsInit(this as any)
-    recalculateInit(this as any)
-    selectInit(this as any)
-    undoInit(this as any)
-    selectionInit(this as any)
+    jsonInit(this)
+    utilsInit(this)
+    coordsInit(this)
+    recalculateInit(this)
+    selectInit(this)
+    undoInit(this)
+    selectionInit(this)
 
     this.nsMap = getReverseNS()
     this.selectorManager = getSelectorManager()
 
     this.pathActions = pathActions
-    pathModule.init(this as any)
+    pathModule.init(this)
     this.uiStrings = {}
 
-    this.opacAni = document.createElementNS(NS.SVG, 'animate') as SVGAnimateElement
+    this.opacAni = document.createElementNS(NS.SVG, 'animate')
     this.opacAni.setAttribute('attributeName', 'opacity')
     this.opacAni.setAttribute('begin', 'indefinite')
     this.opacAni.setAttribute('dur', '1')
     this.opacAni.setAttribute('fill', 'freeze')
     this.svgroot.appendChild(this.opacAni)
 
-    eventInit(this as any)
-    textActionsInit(this as any)
-    svgInit(this as any)
-    draw.init(this as any)
-    elemGetSet.init(this as any)
+    eventInit(this)
+    textActionsInit(this)
+    svgInit(this)
+    draw.init(this)
+    elemGetSet.init(this)
 
     const handleLinkInCanvas = (e: Event): false => {
       e.preventDefault()
@@ -542,8 +542,8 @@ class SvgCanvas implements ISvgCanvas {
     this.filterHidden = false
     this.modeEvent = null
 
-    blurInit(this as any)
-    selectedElemInit(this as any)
+    blurInit(this)
+    selectedElemInit(this)
 
     const storageChange = (ev: StorageEvent): void => {
       if (!ev.newValue) return
@@ -558,7 +558,7 @@ class SvgCanvas implements ISvgCanvas {
     window.addEventListener('storage', storageChange, false)
     localStorage.setItem(`${CLIPBOARD_ID}_startup`, String(Math.random()))
 
-    pasteInit(this as any)
+    pasteInit(this)
 
     this.contentW = this.getResolution().w
     this.contentH = this.getResolution().h
@@ -681,7 +681,7 @@ class SvgCanvas implements ISvgCanvas {
   }
 
   addPtsToSelection ({ closedSubpath, grips }: { closedSubpath: boolean; grips: Element[] }): void {
-    this.pathActions.closed_subpath = closedSubpath
+    ;(this.pathActions as unknown as Record<string, unknown>).closed_subpath = closedSubpath
     this.call('pointsAdded', { closedSubpath, grips })
     this.call('selected', grips)
   }
@@ -923,7 +923,7 @@ class SvgCanvas implements ISvgCanvas {
   }
 
   getLastClickPoint (key: string): number {
-    return (this.lastClickPoint as any)[key]
+    return this.lastClickPoint ? this.lastClickPoint[key as keyof typeof this.lastClickPoint] : 0
   }
 
   setLastClickPoint (value: { x: number; y: number } | null): void {
@@ -1010,7 +1010,7 @@ class SvgCanvas implements ISvgCanvas {
   }
 
   setCanvas (key: string, value: any): void {
-    (this as any)[key] = value
+    (this as ISvgCanvas)[key] = value
   }
 
   setCurProperties (key: string, value: any): void {
@@ -1310,7 +1310,7 @@ class SvgCanvas implements ISvgCanvas {
    * @returns The current document title or an empty string if not found
    */
   getDocumentTitle (): string | undefined {
-    return this.getTitle(this.svgContent) as string | undefined
+    return this.getTitle(this.svgContent)
   }
 
   getOffset (): { x: number; y: number } {
@@ -1390,7 +1390,7 @@ class SvgCanvas implements ISvgCanvas {
     if (!preventUndo) {
       this.changeSelectedAttribute(`${type}-opacity`, val)
     } else {
-      this.changeSelectedAttributeNoUndo(`${type}-opacity`, val, this.selectedElements as Element[])
+      this.changeSelectedAttributeNoUndo(`${type}-opacity`, val, this.selectedElements)
     }
   }
 
@@ -1498,7 +1498,7 @@ class SvgCanvas implements ISvgCanvas {
       opacity: elem.getAttribute('opacity') ?? this.curShape.opacity,
       visibility: 'hidden'
     }
-    return utilitiesConvertToPath(elem, attrs as Record<string, unknown>, this as any)
+    return utilitiesConvertToPath(elem, attrs, this)
   }
 
   /**

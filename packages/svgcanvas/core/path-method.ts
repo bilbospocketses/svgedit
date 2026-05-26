@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion -- pathSegList returns nullable items within iteration bounds */
 /**
  * Path functionality.
  * @module path
@@ -6,7 +7,6 @@
  * @copyright 2011 Alexis Deveria, 2011 Jeff Schiller
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unnecessary-type-assertion */
 
 import { NS } from './namespaces.js'
 import { ChangeElementCommand } from './history.js'
@@ -246,7 +246,7 @@ export const init = (canvas: ISvgCanvas): void => {
 * @param segItem
 */
 export const ptObjToArrMethod = (type: number, segItem: PathSeg): number[] => {
-  const segData = svgCanvas.getSegData() as Record<number, string[]>
+  const segData = svgCanvas.getSegData()
   const props = segData[type] ?? []
   return props.map((prop) => {
     return (segItem[prop] as number) ?? 0
@@ -269,7 +269,7 @@ export const getGripPtMethod = (seg: Segment, altPt?: { x: number; y: number } |
     const pt = transformPoint(out.x, out.y, pth.matrix)
     out = pt
   }
-  const zoom = svgCanvas.getZoom() as number
+  const zoom = svgCanvas.getZoom()
   out.x *= zoom
   out.y *= zoom
 
@@ -292,7 +292,7 @@ export const getPointFromGripMethod = (pt: { x: number; y: number }, pth: Path):
     out.x = transformed.x
     out.y = transformed.y
   }
-  const zoom = svgCanvas.getZoom() as number
+  const zoom = svgCanvas.getZoom()
   out.x /= zoom
   out.y /= zoom
 
@@ -328,7 +328,7 @@ export const addPointGripMethod = (index: number, x?: number, y?: number): SVGCi
   let pointGrip = getElement(`pathpointgrip_${index}`) as SVGCircleElement | null
   // create it
   if (!pointGrip) {
-    pointGrip = document.createElementNS(NS.SVG, 'circle') as SVGCircleElement
+    pointGrip = document.createElementNS(NS.SVG, 'circle')
     const atts: Record<string, string | number> = {
       id: `pathpointgrip_${index}`,
       display: 'none',
@@ -339,7 +339,7 @@ export const addPointGripMethod = (index: number, x?: number, y?: number): SVGCi
       cursor: 'move',
       style: 'pointer-events:all'
     }
-    const uiStrings = svgCanvas.getUIStrings() as Record<string, string>
+    const uiStrings = svgCanvas.getUIStrings()
     if ('pathNodeTooltip' in uiStrings) { // May be empty if running path.js without svg-editor
       atts['xlink:title'] = uiStrings.pathNodeTooltip
     }
@@ -375,7 +375,7 @@ export const addCtrlGripMethod = (id: string): SVGCircleElement => {
   let pointGrip = getElement('ctrlpointgrip_' + id) as SVGCircleElement | null
   if (pointGrip) { return pointGrip }
 
-  pointGrip = document.createElementNS(NS.SVG, 'circle') as SVGCircleElement
+  pointGrip = document.createElementNS(NS.SVG, 'circle')
   const atts: Record<string, string | number> = {
     id: 'ctrlpointgrip_' + id,
     display: 'none',
@@ -386,7 +386,7 @@ export const addCtrlGripMethod = (id: string): SVGCircleElement => {
     cursor: 'move',
     style: 'pointer-events:all'
   }
-  const uiStrings = svgCanvas.getUIStrings() as Record<string, string>
+  const uiStrings = svgCanvas.getUIStrings()
   if ('pathCtrlPtTooltip' in uiStrings) { // May be empty if running path.js without svg-editor
     atts['xlink:title'] = uiStrings.pathCtrlPtTooltip
   }
@@ -403,7 +403,7 @@ export const getCtrlLineMethod = (id: string): SVGLineElement => {
   let ctrlLine = getElement('ctrlLine_' + id) as SVGLineElement | null
   if (ctrlLine) { return ctrlLine }
 
-  ctrlLine = document.createElementNS(NS.SVG, 'line') as SVGLineElement
+  ctrlLine = document.createElementNS(NS.SVG, 'line')
   assignAttributes(ctrlLine, {
     id: 'ctrlLine_' + id,
     stroke: '#555',
@@ -457,8 +457,8 @@ export const getControlPointsMethod = (seg: Segment): Record<string, SVGLineElem
     const ctrlLine = getCtrlLineMethod(id)
     cpt[`c${i}_line`] = ctrlLine
 
-    const pt = getGripPtMethod(seg, { x: (item as PathSeg)['x' + i] as number ?? 0, y: (item as PathSeg)['y' + i] as number ?? 0 })
-    const gpt = getGripPtMethod(seg, { x: (segItems[i - 1] as PathSeg | undefined)?.x ?? 0, y: (segItems[i - 1] as PathSeg | undefined)?.y ?? 0 })
+    const pt = getGripPtMethod(seg, { x: (item)['x' + i] as number ?? 0, y: (item)['y' + i] as number ?? 0 })
+    const gpt = getGripPtMethod(seg, { x: (segItems[i - 1])?.x ?? 0, y: (segItems[i - 1])?.y ?? 0 })
 
     assignAttributes(ctrlLine, {
       x1: pt.x,
@@ -496,21 +496,19 @@ export const replacePathSegMethod = (type: number, index: number, pts: number[],
   const path = svgCanvas.getPathObj() as Path | null
   const pth = (elem as SVGPathElement | null | undefined) ?? path?.elem
   if (!pth) return
-  const pathFuncs = svgCanvas.getPathFuncs() as (string | number)[]
+  const pathFuncs = svgCanvas.getPathFuncs()
   const func = 'createSVGPathSeg' + pathFuncs[type]
   const segData = svgCanvas.getSegData?.() as Record<number, string[]> | undefined
   const props = segData?.[type] ?? segData?.[type - 1]
   if (props && pts.length < props.length) {
-    const currentSeg = (pth as SVGPathElement).pathSegList?.getItem?.(index)
+    const currentSeg = (pth).pathSegList?.getItem?.(index)
     if (currentSeg) {
-      pts = props.map((prop, i) => (pts[i] !== undefined ? (pts[i] as number) : ((currentSeg[prop] as number) ?? 0)))
+      pts = props.map((prop, i) => (pts[i] !== undefined ? (pts[i]) : ((currentSeg[prop] as number) ?? 0)))
     }
   }
   let seg: PathSeg
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if (typeof (pth as any)[func] === 'function') {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    seg = (pth as any)[func](...pts) as PathSeg
+  if (typeof (pth as SVGPathElement & Record<string, unknown>)[func] === 'function') {
+    seg = ((pth as SVGPathElement & Record<string, (...args: number[]) => PathSeg>)[func]!)(...pts)
   } else {
     const safeProps = props ?? []
     seg = { pathSegType: type, pathSegTypeAsLetter: '' }
@@ -519,7 +517,7 @@ export const replacePathSegMethod = (type: number, index: number, pts: number[],
     })
   }
 
-  ;(pth as SVGPathElement).pathSegList.replaceItem(seg, index)
+  ;(pth).pathSegList.replaceItem(seg, index)
 }
 
 /**
@@ -533,7 +531,7 @@ export const getSegSelectorMethod = (seg: Segment, update?: boolean): SVGPathEle
   if (!segLine) {
     const pointGripContainer = getGripContainerMethod()
     // create segline
-    segLine = document.createElementNS(NS.SVG, 'path') as SVGPathElement
+    segLine = document.createElementNS(NS.SVG, 'path')
     assignAttributes(segLine, {
       id: `segline_${index}`,
       display: 'none',
@@ -584,8 +582,7 @@ export class Segment {
   prev?: Segment
   next?: Segment
   mate?: Segment
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  olditem?: any
+  olditem?: PathSeg
 
   /**
   * @param index
@@ -804,13 +801,13 @@ export class Path {
   first_seg: Segment | null = null
   matrix: SVGMatrix | null = null
   imatrix: SVGMatrix | null = null
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  oldbbox?: any
+  oldbbox?: { x: number; y: number; width: number; height: number }
   dragging?: [number, number] | false
   cur_pt?: number
   dragctrl?: number | false
   last_d?: string | null
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // Dynamic property access needed for path segment operations
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Path uses dynamic property access for segment data
   [key: string]: any
 
   /**
@@ -1120,7 +1117,7 @@ export class Path {
       switch (newType) {
         case 6: {
           if (cur.olditem) {
-            const old = cur.olditem as PathSeg
+            const old = cur.olditem
             points = [curX, curY, old.x1 ?? 0, old.y1 ?? 0, old.x2 ?? 0, old.y2 ?? 0]
           } else {
             const diffX = curX - prevX

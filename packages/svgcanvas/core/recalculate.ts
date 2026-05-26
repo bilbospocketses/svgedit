@@ -4,7 +4,6 @@
  * @license MIT
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unnecessary-type-assertion */
 
 import { convertToNum } from './units.js'
 import { NS } from './namespaces.js'
@@ -103,19 +102,18 @@ export const updateClipPath = (attr: string, tx: number, ty: number, elem?: Elem
     return attr
   }
   if (cpXform.numberOfItems) {
-    const translate = svgCanvas.getSvgRoot().createSVGMatrix() as SVGMatrix
+    const translate = svgCanvas.getSvgRoot().createSVGMatrix()
     translate.e = tx
     translate.f = ty
     const combined = matrixMultiply(transformListToTransform(cpXform).matrix, translate)
-    const merged = svgCanvas.getSvgRoot().createSVGTransform() as SVGTransform
+    const merged = svgCanvas.getSvgRoot().createSVGTransform()
     merged.setMatrix(combined)
     cpXform.clear()
     cpXform.appendItem(merged)
     return attr
   }
   const tag = (path.tagName || '').toLowerCase()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if ((tag === 'polyline' || tag === 'polygon') && !(path as any).points?.numberOfItems) {
+  if ((tag === 'polyline' || tag === 'polygon') && !(path as SVGPolygonElement | SVGPolylineElement).points?.numberOfItems) {
     const points = (path.getAttribute('points') ?? '').trim()
     if (points) {
       const updated = points.split(/\s+/).map((pair) => {
@@ -128,7 +126,7 @@ export const updateClipPath = (attr: string, tx: number, ty: number, elem?: Elem
     }
     return attr
   }
-  const newTranslate = svgCanvas.getSvgRoot().createSVGTransform() as SVGTransform
+  const newTranslate = svgCanvas.getSvgRoot().createSVGTransform()
   newTranslate.setTranslate(tx, ty)
 
   cpXform.appendItem(newTranslate)
@@ -158,7 +156,7 @@ export const recalculateDimensions = (selected: Element): InstanceType<typeof Ba
     // Keep transforms when clip-paths are present to avoid mutating defs.
     return null
   }
-  const svgroot = svgCanvas.getSvgRoot() as SVGSVGElement
+  const svgroot = svgCanvas.getSvgRoot()
   const dataStorage = svgCanvas.getDataStorage()
   const tlistMaybe = getTransformList(selected)
 
@@ -193,7 +191,7 @@ export const recalculateDimensions = (selected: Element): InstanceType<typeof Ba
     }
 
     // End here if all it has is a rotation
-    if (tlistCleaning.numberOfItems === 1 && getRotationAngle(selected as SVGElement)) {
+    if (tlistCleaning.numberOfItems === 1 && getRotationAngle(selected)) {
       return null
     }
   }
@@ -268,9 +266,8 @@ export const recalculateDimensions = (selected: Element): InstanceType<typeof Ba
     case 'polyline': {
       initial = {}
       initial.points = selected.getAttribute('points')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const list = (selected as any).points
-      const len = list.numberOfItems as number
+      const list = (selected as SVGPolygonElement | SVGPolylineElement).points
+      const len = list.numberOfItems
       changes.points = new Array(len) as Array<{ x: number; y: number }>
       for (let i = 0; i < len; ++i) {
         const pt = list.getItem(i)
@@ -300,7 +297,7 @@ export const recalculateDimensions = (selected: Element): InstanceType<typeof Ba
 
   // If initial values were not set for polygon/polyline/path, create a copy
   if (!initial) {
-    initial = mergeDeep({}, changes) as Record<string, unknown>
+    initial = mergeDeep({}, changes)
     for (const [attr, val] of Object.entries(initial)) {
       initial[attr] = convertToNum(attr, typeof val === 'string' ? val : (typeof val === 'number' ? String(val) : ''))
     }
@@ -323,7 +320,7 @@ export const recalculateDimensions = (selected: Element): InstanceType<typeof Ba
       transformListToTransform(tlist).matrix
     )
 
-    const gangle = getRotationAngle(selected as SVGElement)
+    const gangle = getRotationAngle(selected)
     if (gangle) {
       const a = gangle * Math.PI / 180
       const s = Math.abs(a) > (1.0e-10) ? Math.sin(a) / (1 - Math.cos(a)) : 2 / a
@@ -373,7 +370,7 @@ export const recalculateDimensions = (selected: Element): InstanceType<typeof Ba
 
         const m = transformListToTransform(childTlist).matrix
 
-        const angle = getRotationAngle(child as SVGElement)
+        const angle = getRotationAngle(child)
         oldStartTransform = svgCanvas.getStartTransform() ?? undefined
         svgCanvas.setStartTransform(child.getAttribute('transform'))
 
@@ -638,7 +635,7 @@ export const recalculateDimensions = (selected: Element): InstanceType<typeof Ba
     }
 
     // Handle rotation transformations
-    const angle = getRotationAngle(selected as SVGElement)
+    const angle = getRotationAngle(selected)
     if (angle) {
       if (selected.localName === 'image') {
         const xAttr = convertToNum('x', selected.getAttribute('x') ?? '0')

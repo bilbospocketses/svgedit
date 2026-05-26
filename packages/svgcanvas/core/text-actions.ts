@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable @typescript-eslint/no-non-null-assertion -- text selection/cursor logic uses non-null assertions on DOM ranges */
 /**
  * @module text-actions Tools for Text edit functions
  * @license MIT
