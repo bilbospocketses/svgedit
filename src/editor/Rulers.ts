@@ -33,7 +33,7 @@ class Rulers {
     this.editor = editor
     // add rulers component to the DOM
     const template = document.createElement('template')
-    template.innerHTML = rulersTemplate as string
+    template.innerHTML = rulersTemplate
     this.editor.$svgEditor.append(template.content.cloneNode(true))
     const { $id: $idInner } = SvgCanvas
     this.rulerX = $idInner('ruler_x')
