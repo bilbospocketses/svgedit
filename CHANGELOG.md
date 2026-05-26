@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replaced ~20 `as any` casts with real types via ISvgCanvas, typed events, and accessor module
 - Extension `init(this: any)` pattern → `init()` + `getSvgEditor()` across all 10 extensions
 
-**Test counts (verified 2026-05-25):** vitest 701/701, e2e 246/250 (4 pre-existing group-transforms drag-precision failures confirmed on master baseline).
+**Test counts (verified 2026-05-26):** vitest 701/701, e2e 250/250. Fixed 4 pre-existing group-transforms e2e failures (arrow-key shortcuts never registered in e2e because extension loading is fire-and-forget; `Ctrl+Shift+G` was never a real ungroup shortcut).
 
 ### Changed (Step 14f — editor type-safety sweep + d.ts cleanup — 2026-05-25)
 
