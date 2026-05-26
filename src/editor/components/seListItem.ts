@@ -47,7 +47,6 @@ export class SeListItem extends LitElement {
   @property() accessor selected = ''
 
   render() {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const imgPath = getSvgEditor().configObj.curConfig.imgPath
     return html`
       <div

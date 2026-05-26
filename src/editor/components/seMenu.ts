@@ -93,7 +93,6 @@ export class SeMenu extends LitElement {
 
   render() {
     const imgSrc = this.src
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       ? getSvgEditor().configObj.curConfig.imgPath + '/' + this.src
       : undefined
     return html`

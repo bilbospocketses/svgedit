@@ -96,7 +96,6 @@ export class SeButton extends LitElement {
       if (this.src.indexOf('data:') !== -1) {
         imgSrc = this.src
       } else {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         imgSrc = getSvgEditor().configObj.curConfig.imgPath + '/' + this.src
       }
     }

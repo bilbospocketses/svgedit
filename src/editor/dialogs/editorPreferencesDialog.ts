@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
-// i18next is passed as `any` from the editor; typing deferred to #3 (full i18n type pass)
 import { LitElement, html, css } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import { map } from 'lit/directives/map.js'
@@ -202,7 +200,7 @@ export class SeEditPrefsDialog extends LitElement {
    * @function init
    * @param i18next - i18next instance
    */
-  init (i18next: any): void {
+  init (i18next: { t: (key: string) => string }): void {
     this._labelOk = i18next.t('common.ok')
     this._labelCancel = i18next.t('common.cancel')
     this._labelEditorPrefs = i18next.t('config.editor_prefs')

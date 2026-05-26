@@ -183,7 +183,6 @@ export class SeZoom extends LitElement {
   }
 
   render() {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const imgPath = getSvgEditor().configObj.curConfig.imgPath
     const iconSrc = this.src ? `${imgPath}/${this.src}` : undefined
     const arrowDownSrc = `${imgPath}/arrow_down.svg`

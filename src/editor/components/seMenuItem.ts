@@ -46,7 +46,6 @@ export class SeMenuItem extends LitElement {
 
   render() {
     const shortcut = this.getAttribute('shortcut') ?? ''
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const imgSrc = this.src ? getSvgEditor().configObj.curConfig.imgPath + '/' + this.src : undefined
     const labelText = `${t(this.label)} ${shortcut ? `(${shortcut})` : ''}`
 

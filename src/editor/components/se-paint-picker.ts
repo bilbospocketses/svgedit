@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any */
 /**
  * @file se-paint-picker — Lit-based replacement for the legacy seColorPicker.
  *
@@ -11,6 +10,7 @@ import { LitElement, html, css, nothing } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import PaintBox from './PaintBox.js'
 import type { ISvgCanvas } from '@svgedit/svgcanvas'
+import type Paint from '@svgedit/svgcanvas/core/paint.js'
 import './jgraduate/se-gradient-editor.js'
 import { t } from '../locale.js'
 import { getSvgEditor } from '../svgEditorInstance.js'
@@ -56,7 +56,7 @@ export class SePaintPicker extends LitElement {
   @property() accessor src = ''
 
   @state() accessor _open = false
-  @state() accessor _paint: any = null
+  @state() accessor _paint: Paint | null = null
 
   private _paintBox: PaintBox | null = null
   private _imgPath = ''
@@ -77,7 +77,7 @@ export class SePaintPicker extends LitElement {
    * Initialise with i18next instance (called by BottomPanel.init).
    * The gradient editor uses t() directly; this method exists for API compat.
    */
-  init (_i18next: any): void {
+  init (_i18next: unknown): void {
     // no-op: se-gradient-editor uses t() directly from locale.js
   }
 
@@ -106,7 +106,7 @@ export class SePaintPicker extends LitElement {
   /**
    * Directly set paint (called by palette handler in BottomPanel).
    */
-  setPaint (paint: any): void {
+  setPaint (paint: Paint): void {
     this._paint = paint
     this._paintBox?.setPaint(paint)
   }
@@ -123,7 +123,7 @@ export class SePaintPicker extends LitElement {
     this._open = true
   }
 
-  private _onOk = (e: CustomEvent<{ paint: any }>): void => {
+  private _onOk = (e: CustomEvent<{ paint: Paint }>): void => {
     const { paint } = e.detail
     this._paint = paint
     this._paintBox?.setPaint(paint)

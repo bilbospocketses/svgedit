@@ -96,7 +96,6 @@ export class SESpinInput extends LitElement {
   render() {
     const shortcut = this.getAttribute('shortcut')
     const divTitle = `${t(this.title)} ${shortcut ? '[' + t(shortcut) + ']' : ''}`
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const imgSrc = this.src ? getSvgEditor().configObj.curConfig.imgPath + '/' + this.src : undefined
     const showImg = !!this.src && !this.label
     const showLabel = !!this.label

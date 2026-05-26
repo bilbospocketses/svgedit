@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
-// i18next is passed as `any` from the editor; typing deferred to #3 (full i18n type pass)
 import { LitElement, html, css } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import { classMap } from 'lit/directives/class-map.js'
@@ -97,7 +95,7 @@ export class SeCMenuCanvasDialog extends LitElement {
   private _workarea: Element | null = null
   private _workareaListenersAttached = false
 
-  init(i18next: any): void {
+  init(i18next: { t: (key: string) => string }): void {
     this.setAttribute('tools-cut', i18next.t('tools.cut'))
     this.setAttribute('tools-copy', i18next.t('tools.copy'))
     this.setAttribute('tools-paste', i18next.t('tools.paste'))

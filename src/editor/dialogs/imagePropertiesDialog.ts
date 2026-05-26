@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
 import { LitElement, html, css } from 'lit'
 import { customElement, property, state, query } from 'lit/decorators.js'
 import SvgCanvas from '@svgedit/svgcanvas'
@@ -119,7 +118,7 @@ export class SeImgPropDialog extends LitElement {
   /**
    * @function init
    */
-  init (i18next: any): void {
+  init (i18next: { t: (key: string) => string }): void {
     this.setAttribute('common-ok', i18next.t('common.ok'))
     this.setAttribute('common-cancel', i18next.t('common.cancel'))
     this.setAttribute('config-image_props', i18next.t('config.image_props'))

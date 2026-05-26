@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument */
 /**
  * @file se-gradient-editor — Full gradient picker built on Lit.
  *
@@ -11,6 +10,8 @@
 import { LitElement, html, svg, css, nothing } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import SvgCanvas from '@svgedit/svgcanvas'
+import type Paint from '@svgedit/svgcanvas/core/paint.js'
+import type { ColorModel } from './ColorModel.js'
 import './se-color-picker.js'
 import './se-color-slider.js'
 import './se-gradient-stop.js'
@@ -221,7 +222,7 @@ export class SeGradientEditor extends LitElement {
   `
 
   // -- Public properties (set via JS, not attributes) --
-  @property() accessor paint: any = null
+  @property() accessor paint: Paint | null = null
   @property() accessor imagesPath = './components/jgraduate/images/'
 
   // -- Internal state --
@@ -246,8 +247,8 @@ export class SeGradientEditor extends LitElement {
     }
   }
 
-  private _initFromPaint (p: any): void {
-    const pType: string = p.type ?? 'solidColor'
+  private _initFromPaint (p: Paint): void {
+    const pType = p.type ?? 'solidColor'
     this._opacity = typeof p.alpha === 'number' ? p.alpha : 100
 
     if (pType === 'solidColor') {
@@ -817,11 +818,11 @@ export class SeGradientEditor extends LitElement {
   // Stop color editing
   // ---------------------------------------------------------------------------
 
-  private _onStopColorCommit = (e: CustomEvent<{ color: any }>): void => {
+  private _onStopColorCommit = (e: CustomEvent<{ color: ColorModel }>): void => {
     const colorModel = e.detail.color
     if (!this._selectedStopId) return
-    const hex = '#' + (colorModel.hex as string)
-    const opacity = (colorModel.a as number) / 255
+    const hex = '#' + colorModel.hex
+    const opacity = colorModel.a / 255
     this._stops = this._stops.map(s =>
       s.id === this._selectedStopId ? { ...s, color: hex, opacity } : s
     )
@@ -847,12 +848,10 @@ export class SeGradientEditor extends LitElement {
   // Solid color commit
   // ---------------------------------------------------------------------------
 
-  private _onSolidCommit = (e: CustomEvent<{ color: any }>): void => {
+  private _onSolidCommit = (e: CustomEvent<{ color: ColorModel }>): void => {
     const colorModel = e.detail.color
     const hex: string = colorModel.hex ?? 'ffffff'
-    const alpha: number = typeof colorModel.a === 'number'
-      ? Math.round((colorModel.a / 255) * 100)
-      : 100
+    const alpha: number = Math.round((colorModel.a / 255) * 100)
 
     const paint = new SvgCanvas.Paint({ solidColor: hex })
     paint.alpha = alpha
@@ -883,7 +882,7 @@ export class SeGradientEditor extends LitElement {
     }))
   }
 
-  private _buildPaint (): any {
+  private _buildPaint (): Paint {
     if (this._type === 'solidColor') {
       const stop = this._stops[0]
       const hex = stop ? stop.color.replace('#', '') : 'ffffff'
@@ -924,7 +923,9 @@ export class SeGradientEditor extends LitElement {
       gradEl.appendChild(stopEl)
     }
 
-    const paint = new SvgCanvas.Paint({ [gradTag]: gradEl })
+    const paint = gradTag === 'linearGradient'
+      ? new SvgCanvas.Paint({ linearGradient: gradEl as SVGLinearGradientElement })
+      : new SvgCanvas.Paint({ radialGradient: gradEl as SVGRadialGradientElement })
     paint.alpha = this._opacity
     return paint
   }

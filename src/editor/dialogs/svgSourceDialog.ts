@@ -206,7 +206,6 @@ export class SeSvgSourceEditorDialog extends LitElement {
   }
 
   render () {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const dynamicChecked = getSvgEditor().configObj.curConfig.dynamicOutput
     return html`
       <dialog @close=${this._onDialogClose}>
