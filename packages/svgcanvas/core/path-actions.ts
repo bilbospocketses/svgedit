@@ -1,4 +1,5 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unsafe-assignment,
+   @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- path module uses nullable pathSegList/segs; ISvgCanvas any-typed API */
 /**
  * Path functionality.
  * @module path
@@ -6,8 +7,6 @@
  *
  * @copyright 2011 Alexis Deveria, 2011 Jeff Schiller
  */
-
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unnecessary-type-assertion */
 
 import { NS } from './namespaces.js'
 import { shortFloat } from './units.js'
@@ -21,12 +20,12 @@ import {
   getBBox
 } from './utilities.js'
 import type { PathSeg, Segment } from './path-method.js'
+import { Path } from './path-method.js'
 
 import type { ISvgCanvas } from './svgcanvas-types.js'
 
 let svgCanvas = null as unknown as ISvgCanvas
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let path: any = null
+let path = null as unknown as Path
 
 /**
 * @function module:path-actions.init
@@ -85,10 +84,20 @@ export const convertPath = (pth: SVGPathElement, toRel: boolean): string => {
           cury = lastM[1]
         }
         break
-      // @ts-expect-error: intentional fallthrough — H adjusts x then shares h path
       case 'H': // absolute horizontal line (H)
         x -= curx
-      // Fallthrough
+        if (toRel) {
+          y = 0
+          curx += x
+          letter = 'l'
+        } else {
+          y = cury
+          x += curx
+          curx = x
+          letter = 'L'
+        }
+        d += pathDSegment(letter, [[x, y]])
+        break
       case 'h': // relative horizontal line (h)
         if (toRel) {
           y = 0
@@ -100,13 +109,22 @@ export const convertPath = (pth: SVGPathElement, toRel: boolean): string => {
           curx = x
           letter = 'L'
         }
-        // Convert to "line" for easier editing
         d += pathDSegment(letter, [[x, y]])
         break
-      // @ts-expect-error: intentional fallthrough — V adjusts y then shares v path
       case 'V': // absolute vertical line (V)
         y -= cury
-      // Fallthrough
+        if (toRel) {
+          x = 0
+          cury += y
+          letter = 'l'
+        } else {
+          x = curx
+          y += cury
+          cury = y
+          letter = 'L'
+        }
+        d += pathDSegment(letter, [[x, y]])
+        break
       case 'v': // relative vertical line (v)
         if (toRel) {
           x = 0
@@ -118,16 +136,27 @@ export const convertPath = (pth: SVGPathElement, toRel: boolean): string => {
           cury = y
           letter = 'L'
         }
-        // Convert to "line" for easier editing
         d += pathDSegment(letter, [[x, y]])
         break
       case 'M': // absolute move (M)
       case 'L': // absolute line (L)
-      // @ts-expect-error: intentional fallthrough — T (and M, L above) adjust coords then share l/m/t path
       case 'T': // absolute smooth quad (T)
         x -= curx
         y -= cury
-      // Fallthrough
+        if (toRel) {
+          curx += x
+          cury += y
+          letter = letter.toLowerCase()
+        } else {
+          x += curx
+          y += cury
+          curx = x
+          cury = y
+          letter = letter.toUpperCase()
+        }
+        if (letter === 'm' || letter === 'M') { lastM = [curx, cury] }
+        d += pathDSegment(letter, [[x, y]])
+        break
       case 'l': // relative line (l)
       case 'm': // relative move (m)
       case 't': // relative smooth quad (t)
@@ -143,14 +172,24 @@ export const convertPath = (pth: SVGPathElement, toRel: boolean): string => {
           letter = letter.toUpperCase()
         }
         if (letter === 'm' || letter === 'M') { lastM = [curx, cury] }
-
         d += pathDSegment(letter, [[x, y]])
         break
-      // @ts-expect-error: intentional fallthrough — C adjusts coords then shares c path
       case 'C': // absolute cubic (C)
         x -= curx; x1 -= curx; x2 -= curx
         y -= cury; y1 -= cury; y2 -= cury
-      // Fallthrough
+        if (toRel) {
+          curx += x
+          cury += y
+          letter = 'c'
+        } else {
+          x += curx; x1 += curx; x2 += curx
+          y += cury; y1 += cury; y2 += cury
+          curx = x
+          cury = y
+          letter = 'C'
+        }
+        d += pathDSegment(letter, [[x1, y1], [x2, y2], [x, y]])
+        break
       case 'c': // relative cubic (c)
         if (toRel) {
           curx += x
@@ -165,11 +204,22 @@ export const convertPath = (pth: SVGPathElement, toRel: boolean): string => {
         }
         d += pathDSegment(letter, [[x1, y1], [x2, y2], [x, y]])
         break
-      // @ts-expect-error: intentional fallthrough — Q adjusts coords then shares q path
       case 'Q': // absolute quad (Q)
         x -= curx; x1 -= curx
         y -= cury; y1 -= cury
-      // Fallthrough
+        if (toRel) {
+          curx += x
+          cury += y
+          letter = 'q'
+        } else {
+          x += curx; x1 += curx
+          y += cury; y1 += cury
+          curx = x
+          cury = y
+          letter = 'Q'
+        }
+        d += pathDSegment(letter, [[x1, y1], [x, y]])
+        break
       case 'q': // relative quad (q)
         if (toRel) {
           curx += x
@@ -184,11 +234,26 @@ export const convertPath = (pth: SVGPathElement, toRel: boolean): string => {
         }
         d += pathDSegment(letter, [[x1, y1], [x, y]])
         break
-      // @ts-expect-error: intentional fallthrough — A adjusts coords then shares a path
-      case 'A':
+      case 'A': // absolute elliptical arc (A)
         x -= curx
         y -= cury
-      // fallthrough
+        if (toRel) {
+          curx += x
+          cury += y
+          letter = 'a'
+        } else {
+          x += curx
+          y += cury
+          curx = x
+          cury = y
+          letter = 'A'
+        }
+        d += pathDSegment(letter, [[seg.r1 ?? 0, seg.r2 ?? 0]], [
+          seg.angle ?? 0,
+          (seg.largeArcFlag ? 1 : 0),
+          (seg.sweepFlag ? 1 : 0)
+        ], [x, y])
+        break
       case 'a': // relative elliptical arc (a)
         if (toRel) {
           curx += x
@@ -207,11 +272,22 @@ export const convertPath = (pth: SVGPathElement, toRel: boolean): string => {
           (seg.sweepFlag ? 1 : 0)
         ], [x, y])
         break
-      // @ts-expect-error: intentional fallthrough — S adjusts coords then shares s path
       case 'S': // absolute smooth cubic (S)
         x -= curx; x2 -= curx
         y -= cury; y2 -= cury
-      // Fallthrough
+        if (toRel) {
+          curx += x
+          cury += y
+          letter = 's'
+        } else {
+          x += curx; x2 += curx
+          y += cury; y2 += cury
+          curx = x
+          cury = y
+          letter = 'S'
+        }
+        d += pathDSegment(letter, [[x2, y2], [x, y]])
+        break
       case 's': // relative smooth cubic (s)
         if (toRel) {
           curx += x
@@ -258,8 +334,7 @@ class PathActions {
   #subpath = false
   #newPoint: [number, number] | null = null
   #firstCtrl: [number, number] | null = null
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  #currentPath: any = false
+  #currentPath: Element | false | null = false
   #hasMoved = false
 
   /**
@@ -270,9 +345,9 @@ class PathActions {
   * @param element
   * @private
   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  #smoothPolylineIntoPath = (element: any): any => {
-    const { points } = element
+  #smoothPolylineIntoPath = (element: SVGPolylineElement | Element): Element => {
+    let el = element
+    const { points } = el as SVGPolylineElement
     const N = points.numberOfItems
     if (N >= 4) {
       let curpos = points.getItem(0)
@@ -309,7 +384,7 @@ class PathActions {
       }
       const dStr = d.join(' ')
 
-      element = svgCanvas.addSVGElementsFromJson({
+      el = svgCanvas.addSVGElementsFromJson({
         element: 'path',
         curStyles: true,
         attr: {
@@ -319,7 +394,7 @@ class PathActions {
         }
       })
     }
-    return element
+    return el
   }
 
   /**
@@ -335,7 +410,7 @@ class PathActions {
       let mouseX = startX
       let mouseY = startY
 
-      const zoom = svgCanvas.getZoom() as number
+      const zoom = svgCanvas.getZoom()
       let x = mouseX / zoom
       let y = mouseY / zoom
       let stretchy = getElement('path_stretch_line') as SVGPathElement | null
@@ -349,7 +424,7 @@ class PathActions {
       }
 
       if (!stretchy) {
-        stretchy = document.createElementNS(NS.SVG, 'path') as SVGPathElement
+        stretchy = document.createElementNS(NS.SVG, 'path')
         assignAttributes(stretchy, {
           id: 'path_stretch_line',
           stroke: '#22C',
@@ -362,7 +437,7 @@ class PathActions {
 
       let keep: boolean | null = null
       let index: number
-      const drawnPath = svgCanvas.getDrawnPath() as SVGPathElement | null
+      const drawnPath = svgCanvas.getDrawnPath()
       if (!drawnPath) {
         const dAttr = `M${x},${y} `
         /* drawnPath = */ svgCanvas.setDrawnPath(svgCanvas.addSVGElementsFromJson({
@@ -395,7 +470,7 @@ class PathActions {
           }
         }
 
-        id = svgCanvas.getId() as string
+        id = svgCanvas.getId()
 
         svgCanvas.removePath_(id)
 
@@ -457,8 +532,8 @@ class PathActions {
           }
 
           sSeg = stretchy.pathSegList.getItem(1)
-          const rx = svgCanvas.round(x) as number
-          const ry = svgCanvas.round(y) as number
+          const rx = svgCanvas.round(x)
+          const ry = svgCanvas.round(y)
           const nextEntry: SVGPathSegment = sSeg?.pathSegType === 4
             ? { type: 'L', values: [rx, ry] }
             : { type: 'C', values: [(sSeg?.x1 ?? 0) / zoom, (sSeg?.y1 ?? 0) / zoom, (sSeg?.x2 ?? 0) / zoom, (sSeg?.y2 ?? 0) / zoom, rx, ry] }
@@ -488,7 +563,7 @@ class PathActions {
     if (id.startsWith('pathpointgrip_')) {
       curPt = path.cur_pt = Number.parseInt(id.slice(14))
       path.dragging = [startX, startY]
-      const seg = path.segs[curPt]
+      const seg = path.segs[curPt]!
 
       if (!evt.shiftKey) {
         if (path.selected_pts.length <= 1 || !seg.selected) {
@@ -516,7 +591,7 @@ class PathActions {
           svgCanvas.selectorManager.getRubberBandBox()
         )
       }
-      const zoom = svgCanvas.getZoom() as number
+      const zoom = svgCanvas.getZoom()
       assignAttributes(rubberBox!, {
         x: startX * zoom,
         y: startY * zoom,
@@ -533,17 +608,17 @@ class PathActions {
     * @param mouseY
     */
   mouseMove (mouseX: number, mouseY: number): void {
-    const zoom = svgCanvas.getZoom() as number
+    const zoom = svgCanvas.getZoom()
     this.#hasMoved = true
-    const drawnPath = svgCanvas.getDrawnPath() as SVGPathElement | null
+    const drawnPath = svgCanvas.getDrawnPath()
     if (svgCanvas.getCurrentMode() === 'path') {
       if (!drawnPath) { return }
       const seglist = drawnPath.pathSegList
       const index = seglist.numberOfItems - 1
 
       if (this.#newPoint) {
-        const pointGrip1 = svgCanvas.addCtrlGrip('1c1') as SVGCircleElement
-        const pointGrip2 = svgCanvas.addCtrlGrip('0c2') as SVGCircleElement
+        const pointGrip1 = svgCanvas.addCtrlGrip('1c1')
+        const pointGrip2 = svgCanvas.addCtrlGrip('0c2')
 
         pointGrip1.setAttribute('cx', String(mouseX))
         pointGrip1.setAttribute('cy', String(mouseY))
@@ -561,7 +636,7 @@ class PathActions {
         pointGrip2.setAttribute('cy', String(altY * zoom))
         pointGrip2.setAttribute('display', 'inline')
 
-        const ctrlLine = svgCanvas.getCtrlLine('1') as SVGLineElement
+        const ctrlLine = svgCanvas.getCtrlLine('1')
         assignAttributes(ctrlLine, {
           x1: mouseX,
           y1: mouseY,
@@ -629,8 +704,7 @@ class PathActions {
     } else {
       path.selected_pts = []
       path.eachSeg(function (this: Segment, _i: number) {
-        // eslint-disable-next-line @typescript-eslint/no-this-alias
-        const seg = this
+        const seg = this // eslint-disable-line @typescript-eslint/no-this-alias -- eachSeg callback binds `this` to the segment
         if (!seg.next && !seg.prev) return
 
         const rubberBox = svgCanvas.getRubberBox()
@@ -660,7 +734,7 @@ class PathActions {
     * @param _mouseY
     */
   mouseUp (evt: MouseEvent, element: Element, _mouseX: number, _mouseY: number): { keep: boolean; element: Element } | undefined {
-    const drawnPath = svgCanvas.getDrawnPath() as SVGPathElement | null
+    const drawnPath = svgCanvas.getDrawnPath()
     if (svgCanvas.getCurrentMode() === 'path') {
       this.#newPoint = null
       if (!drawnPath) {
@@ -712,7 +786,8 @@ class PathActions {
     svgCanvas.clearSelection()
     path.setPathContext()
     path.show(true).update()
-    path.oldbbox = getBBox(path.elem)
+    const bbox = getBBox(path.elem)
+    if (bbox) { path.oldbbox = bbox }
     this.#subpath = false
   }
 
@@ -733,8 +808,8 @@ class PathActions {
     }
 
     if (selPath) {
-      svgCanvas.call('selected', [elem!])
-      svgCanvas.addToSelection([elem!], true)
+      svgCanvas.call('selected', [elem])
+      svgCanvas.addToSelection([elem], true)
     }
   }
 
@@ -770,13 +845,13 @@ class PathActions {
     const elem = svgCanvas.getSelectedElements()[0] as Element | null
     if (!elem) { return }
     if (elem.nodeName !== 'path') { return }
-    const angl = getRotationAngle(elem as SVGElement)
+    const angl = getRotationAngle(elem)
     if (angl === 0) { return }
 
     const batchCmd = new BatchCommand('Reorient path')
     const changes = {
-      d: (elem as Element).getAttribute('d'),
-      transform: (elem as Element).getAttribute('transform')
+      d: (elem).getAttribute('d'),
+      transform: (elem).getAttribute('transform')
     }
     batchCmd.addSubCommand(new ChangeElementCommand(elem, changes))
     svgCanvas.clearSelection()
@@ -796,7 +871,7 @@ class PathActions {
     * @param [_remove] Not in use
     */
   clear (_remove?: boolean): void {
-    const drawnPath = svgCanvas.getDrawnPath() as SVGPathElement | null
+    const drawnPath = svgCanvas.getDrawnPath()
     this.#currentPath = null
     if (drawnPath) {
       const elem = getElement(svgCanvas.getId())
@@ -866,9 +941,9 @@ class PathActions {
   /**
     */
   getNodePoint (): { x: number; y: number; type: number } {
-    const selPt = path.selected_pts.length ? path.selected_pts[0] : 1
+    const selPt = path.selected_pts.length ? (path.selected_pts[0] ?? 1) : 1
 
-    const seg = path.segs[selPt]
+    const seg = path.segs[selPt]!
     return {
       x: seg.item.x ?? 0,
       y: seg.item.y ?? 0,
@@ -888,7 +963,7 @@ class PathActions {
   clonePathNode (): void {
     path.storeD()
 
-    const selPts = path.selected_pts as number[]
+    const selPts = path.selected_pts
 
     let i = selPts.length
     const nums: number[] = []
@@ -908,7 +983,7 @@ class PathActions {
   /**
     */
   opencloseSubPath (): void {
-    const selPts = path.selected_pts as number[]
+    const selPts = path.selected_pts
     if (selPts.length !== 1) { return }
 
     const { elem } = path
@@ -942,10 +1017,10 @@ class PathActions {
 
     if (resolvedOpenPt !== false) {
       const openPtNum: number = resolvedOpenPt
-      const data = elem.getPathData() as Array<{ type: string; values: number[] }>
+      const data = elem.getPathData()
       const si = startItem as PathSeg | null
-      const lineEntry = { type: 'L', values: [si?.x ?? 0, si?.y ?? 0] }
-      const closeEntry = { type: 'Z', values: [] }
+      const lineEntry: SVGPathSegment = { type: 'L', values: [si?.x ?? 0, si?.y ?? 0] }
+      const closeEntry: SVGPathSegment = { type: 'Z', values: [] }
       if (openPtNum === path.segs.length - 1) {
         data.push(lineEntry, closeEntry)
       } else {
@@ -957,7 +1032,7 @@ class PathActions {
       return
     }
 
-    const seg = path.segs[index]
+    const seg = path.segs[index]!
 
     if (seg.mate) {
       list.removeItem(index)
@@ -969,7 +1044,7 @@ class PathActions {
     let lastM: number | undefined; let zSeg: number | undefined
 
     for (let i = 0; i < list.numberOfItems; i++) {
-      const item = list.getItem(i) as PathSeg | null
+      const item = list.getItem(i)
       if (!item) continue
 
       if (item.pathSegType === 2) {
@@ -988,10 +1063,10 @@ class PathActions {
     let num = (index - lastM) - 1
 
     while (num--) {
-      list.insertItemBefore(list.getItem(lastM), zSeg)
+      list.insertItemBefore(list.getItem(lastM)!, zSeg!)
     }
 
-    const pt = list.getItem(lastM) as PathSeg | null
+    const pt = list.getItem(lastM)
 
     svgCanvas.replacePathSeg(2, lastM, [pt?.x ?? 0, pt?.y ?? 0])
 
@@ -1004,7 +1079,7 @@ class PathActions {
     if (!pathActionsMethod.canDeleteNodes) { return }
     path.storeD()
 
-    const selPts = path.selected_pts as number[]
+    const selPts = path.selected_pts
 
     let i = selPts.length
     while (i--) {
@@ -1014,7 +1089,7 @@ class PathActions {
 
     const cleanup = (): boolean => {
       const segList = path.elem.pathSegList
-      let len = segList.numberOfItems as number
+      let len = segList.numberOfItems
 
       const remItems = (pos: number, count: number): void => {
         while (count--) {
@@ -1025,11 +1100,11 @@ class PathActions {
       if (len <= 1) { return true }
 
       while (len--) {
-        const item = segList.getItem(len) as PathSeg | null
+        const item = segList.getItem(len)
         if (!item) continue
         if (item.pathSegType === 1) {
-          const prev = segList.getItem(len - 1) as PathSeg | null
-          const nprev = segList.getItem(len - 2) as PathSeg | null
+          const prev = segList.getItem(len - 1)
+          const nprev = segList.getItem(len - 2)
           if (prev?.pathSegType === 2) {
             remItems(len - 1, 2)
             cleanup()
@@ -1040,7 +1115,7 @@ class PathActions {
             break
           }
         } else if (item.pathSegType === 2 && len > 0) {
-          const prevType = (segList.getItem(len - 1) as PathSeg | null)?.pathSegType
+          const prevType = (segList.getItem(len - 1))?.pathSegType
           if (prevType === 2) {
             remItems(len - 1, 1)
             cleanup()
@@ -1074,8 +1149,7 @@ class PathActions {
   * @function module:path.pathActions.smoothPolylineIntoPath
   * @see module:path~smoothPolylineIntoPath
   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  smoothPolylineIntoPath (element: any): any {
+  smoothPolylineIntoPath (element: SVGPolylineElement | Element): Element {
     return this.#smoothPolylineIntoPath(element)
   }
 
@@ -1092,12 +1166,12 @@ class PathActions {
   * @param newValue
   */
   moveNode (attr: string, newValue: number): void {
-    const selPts = path.selected_pts as number[]
+    const selPts = path.selected_pts
     if (!selPts.length) { return }
 
     path.storeD()
 
-    const seg = path.segs[selPts[0] ?? 0]
+    const seg = path.segs[selPts[0] ?? 0]!
     const diff: Record<string, number> = { x: 0, y: 0 }
     diff[attr] = newValue - ((seg.item[attr] as number) ?? 0)
 
@@ -1146,7 +1220,7 @@ class PathActions {
    * path to have at least 2 segments; no-op otherwise.
    */
   finishPath (): void {
-    const drawnPath = svgCanvas.getDrawnPath() as SVGPathElement | null
+    const drawnPath = svgCanvas.getDrawnPath()
     if (!drawnPath) return
     if (drawnPath.pathSegList.numberOfItems < 2) return
     const stretchy = getElement('path_stretch_line')

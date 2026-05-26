@@ -6,13 +6,11 @@
  * @copyright 2010 Alexis Deveria, 2010 Jeff Schiller
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 
 import { getRotationAngle, getBBox } from './utilities.js'
 import { transformListToTransform, transformBox, transformPoint, matrixMultiply, getTransformList } from './math.js'
 import { NS } from './namespaces'
 import { warn } from '../common/logger.js'
-
 import type { ISvgCanvas } from './svgcanvas-types.js'
 
 let svgCanvas = null as unknown as ISvgCanvas
@@ -499,8 +497,7 @@ const selectModule = new SelectModule()
  * Initializes this module.
  * @function module:select.init
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const init = (canvas: any): void => {
+export const init = (canvas: ISvgCanvas): void => {
   selectModule.init(canvas)
 }
 

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-non-null-assertion -- pathSegList access returns nullable; non-null assertions are safe within iteration bounds */
 /**
  * Manipulating coordinates.
  * @module coords
@@ -333,15 +333,14 @@ export const remapElement = (selected: Element, changes: RemapChanges, m: SVGMat
       break
     }
     case 'path': {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const selectedPath = selected as any
+      const selectedPath = selected as SVGPathElement
       const supportsPathData: boolean =
         typeof selectedPath.getPathData === 'function' &&
         typeof selectedPath.setPathData === 'function'
 
       // Handle path segments
       const segList = supportsPathData ? null : selectedPath.pathSegList
-      const len: number = supportsPathData ? selectedPath.getPathData().length : segList.numberOfItems
+      const len: number = supportsPathData ? selectedPath.getPathData().length : segList!.numberOfItems
       const det = m.a * m.d - m.b * m.c
       const shouldToggleArcSweep = det < 0
       changes.d = []
@@ -349,6 +348,7 @@ export const remapElement = (selected: Element, changes: RemapChanges, m: SVGMat
         const pathDataSegments = selectedPath.getPathData()
         for (let i = 0; i < len; ++i) {
           const seg = pathDataSegments[i]
+          if (!seg) continue
           // Normalize 'Z' -> 'z': pathMap only contains lowercase 'z' (SVG spec
           // treats Z and z as equivalent for closepath -- no operands, no
           // absolute/relative distinction), but Firefox's native getPathData()
@@ -391,21 +391,23 @@ export const remapElement = (selected: Element, changes: RemapChanges, m: SVGMat
           changes.d[i] = entry
         }
       } else {
+        // segList is non-null in this branch (null only when supportsPathData is true)
+        const list = segList!
         for (let i = 0; i < len; ++i) {
-          const seg = segList.getItem(i)
+          const seg = list.getItem(i)!
           changes.d[i] = {
             type: seg.pathSegType,
-            x: seg.x,
-            y: seg.y,
-            x1: seg.x1,
-            y1: seg.y1,
-            x2: seg.x2,
-            y2: seg.y2,
-            r1: seg.r1,
-            r2: seg.r2,
-            angle: seg.angle,
-            largeArcFlag: seg.largeArcFlag,
-            sweepFlag: seg.sweepFlag
+            x: seg.x ?? 0,
+            y: seg.y ?? 0,
+            x1: seg.x1 ?? 0,
+            y1: seg.y1 ?? 0,
+            x2: seg.x2 ?? 0,
+            y2: seg.y2 ?? 0,
+            r1: seg.r1 ?? 0,
+            r2: seg.r2 ?? 0,
+            angle: seg.angle ?? 0,
+            largeArcFlag: seg.largeArcFlag ?? 0,
+            sweepFlag: seg.sweepFlag ?? 0
           }
         }
       }

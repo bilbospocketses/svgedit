@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /**
  * Mathematical utilities.
  * @module math
@@ -130,8 +129,7 @@ export const matrixMultiply = (...args: SVGMatrix[]): SVGMatrix => {
     for (const prop of props) {
       if (Math.abs(matrix[prop]) < NEAR_ZERO) {
         // SVGMatrix properties are read-only on the interface but writable at runtime
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ;(matrix as any)[prop] = 0
+        ;(matrix as unknown as Record<string, number>)[prop] = 0
       }
     }
     return matrix

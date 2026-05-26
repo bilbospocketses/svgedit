@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unsafe-assignment -- DOM traversal uses non-null assertions; ISvgCanvas any-typed API */
 /**
  * Tools for SVG selected element operation.
  * @module selected-elem
@@ -6,13 +7,9 @@
  * @copyright 2010 Alexis Deveria, 2010 Jeff Schiller
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unnecessary-type-assertion */
-
 import { NS } from './namespaces.js'
 import type { CommandAttributes } from './history.js'
 import * as hstry from './history.js'
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore — path.js not yet converted to TS
 import * as pathModule from './path.js'
 import { warn, error } from '../common/logger.js'
 import {
@@ -35,8 +32,6 @@ import {
   transformListToTransform,
   getTransformList
 } from './math.js'
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore — recalculate.js not yet converted to TS
 import { recalculateDimensions } from './recalculate.js'
 import { isGecko } from '../common/browser.js'
 import { getParents } from '../common/util.js'
@@ -69,7 +64,7 @@ export const init = (canvas: ISvgCanvas): void => {
   svgCanvas.cloneSelectedElements = cloneSelectedElements
   svgCanvas.alignSelectedElements = alignSelectedElements
   svgCanvas.updateCanvas = updateCanvas
-  svgCanvas.cycleElement = cycleElement as any
+  svgCanvas.cycleElement = cycleElement
   svgCanvas.deleteSelectedElements = deleteSelectedElements
   svgCanvas.flipSelectedElements = flipSelectedElements
 }
@@ -135,9 +130,10 @@ const moveUpDownSelected = (dir: 'Up' | 'Down'): void => {
   svgCanvas.setCurBBoxes([])
   let closest: Element | undefined
   let foundCur: boolean | undefined
+  const bbox = getStrokedBBoxDefaultVisible([selected])
   const list: Element[] = (svgCanvas.getIntersectionList(
-    getStrokedBBoxDefaultVisible([selected]) as any
-  ) ?? []) as Element[]
+    bbox || undefined
+  ) ?? [])
   if (dir === 'Down') {
     list.reverse()
   }
@@ -197,7 +193,7 @@ const moveSelectedElements = (dx: number | number[], dy: number | number[], undo
       if (Array.isArray(dx)) {
         xform.setTranslate(dx[i] ?? 0, (dy as number[])[i] ?? 0)
       } else {
-        xform.setTranslate(dx as number, dy as number)
+        xform.setTranslate(dx, dy as number)
       }
 
       if (tlist) {
@@ -1224,7 +1220,7 @@ const updateCanvas = (w: number, h: number): { x: number; y: number; old_x: numb
 /**
  * Select the next/previous element within the current layer.
  */
-const cycleElement = (next: boolean): void => {
+const cycleElement = (next: boolean | number): void => {
   const selectedElements: (Element | null)[] = svgCanvas.getSelectedElements()
   const currentGroup: Element | null = svgCanvas.getCurrentGroup()
   let num: number

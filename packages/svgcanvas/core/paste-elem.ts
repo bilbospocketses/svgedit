@@ -1,8 +1,9 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-assignment -- clipboard JSON passes through ISvgCanvas any-typed API */
 import {
   getStrokedBBoxDefaultVisible,
   getUrlFromAttr
 } from './utilities.js'
+import type { SVGElementJSON } from './utilities.js'
 import * as hstry from './history.js'
 
 const {
@@ -111,7 +112,7 @@ export const pasteElementsMethod = (type?: 'in_place' | 'point', x?: number, y?:
     const elem = clipb[len]
     if (!elem) { continue }
 
-    const copy: Element = svgCanvas.addSVGElementsFromJson(elem as any)
+    const copy: Element = svgCanvas.addSVGElementsFromJson(elem as unknown as SVGElementJSON)
     pasted.push(copy)
     batchCmd.addSubCommand(new InsertElementCommand(copy))
 

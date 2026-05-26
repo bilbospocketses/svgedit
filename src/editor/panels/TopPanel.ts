@@ -63,7 +63,7 @@ class TopPanel {
   /**
    */
   get path (): PathActionsLike {
-    return this.editor.svgCanvas.pathActions as PathActionsLike
+    return this.editor.svgCanvas.pathActions
   }
 
   /**
