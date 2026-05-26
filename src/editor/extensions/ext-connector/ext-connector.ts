@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unused-vars */
-// svgCanvas / extension API surface is loosely typed; cleanup deferred to #3 or follow-up
 /**
  * @file ext-connector.js
  *
@@ -14,23 +12,35 @@ import { getSvgEditor } from '../../svgEditorInstance.js'
 
 const name = 'connector'
 
+/** Bounding-box shape used throughout the connector extension. */
+interface ConnBB { x: number; y: number; width: number; height: number }
+
+/** Describes one end of a connection between two elements. */
+interface Connection {
+  elem: Element
+  connector: SVGPolylineElement
+  is_start: boolean
+  start_x: number
+  start_y: number
+}
+
 const loadExtensionTranslation = async function (): Promise<void> {
-  const svgEditor: any = getSvgEditor()
-  let translationModule
+  const svgEditor = getSvgEditor()
+  let translationModule: Record<string, unknown>
   const lang = svgEditor.configObj.pref('lang')
   try {
-    translationModule = await import(`./locale/${lang}.js`)
+    translationModule = await import(`./locale/${String(lang)}.js`) as Record<string, unknown>
   } catch (_error) {
-    console.warn(`Missing translation (${lang}) for ${name} - using 'en'`)
+    console.warn(`Missing translation (${String(lang)}) for ${name} - using 'en'`)
     translationModule = await import('./locale/en.js')
   }
-  svgEditor.i18next.addResourceBundle(lang, name, translationModule.default)
+  svgEditor.i18next.addResourceBundle(lang as string, name, translationModule.default as Record<string, unknown>)
 }
 
 export default {
   name,
-  async init (S: any) {
-    const svgEditor: any = getSvgEditor()
+  async init (S: { svgroot: SVGSVGElement; selectorManager: ReturnType<typeof import('@svgedit/svgcanvas')['default']['prototype']['getSelectorManager']> }) {
+    const svgEditor = getSvgEditor()
     const svgCanvas = svgEditor.svgCanvas
     const { getElement, $id, $click, addSVGElementsFromJson } = svgCanvas
     const { svgroot, selectorManager } = S
@@ -39,28 +49,28 @@ export default {
 
     let startX: number
     let startY: number
-    let curLine: any
-    let startElem: any
-    let endElem: any
+    let curLine: SVGPolylineElement
+    let startElem: Element
+    let endElem: Element
 
     let started = false
-    let connections: any[] = []
+    let connections: Connection[] = []
 
     // svgCanvas event-bus subscription replaces the historical monkey-patching of
     // svgCanvas.groupSelectedElements + svgCanvas.moveSelectedElements (audit input #1,
     // closed 2026-05-21 via PR-B). chain-to-previous pattern matches the existing
     // svgCanvas.bind() replace-semantics — if another extension binds the same event later
     // it can chain to ours via the same idiom.
-    type BusHandler = (...args: any[]) => any
-    const prevBeforeGroup: BusHandler | undefined = svgCanvas.bind('before-group', (...args: any[]) => {
+    type BusHandler = (...args: unknown[]) => unknown
+    const prevBeforeGroup: BusHandler | undefined = svgCanvas.bind('before-group', (...args: unknown[]) => {
       if (prevBeforeGroup) prevBeforeGroup(...args)
       // Remove connectors from selection so they're not pulled into the group
-      svgCanvas.removeFromSelection(document.querySelectorAll('[id^="conn_"]'))
+      svgCanvas.removeFromSelection(Array.from(document.querySelectorAll('[id^="conn_"]')))
     })
-    const prevAfterMove: BusHandler | undefined = svgCanvas.bind('after-move', (...args: any[]) => {
+    const prevAfterMove: BusHandler | undefined = svgCanvas.bind('after-move', (...args: unknown[]) => {
       if (prevAfterMove) prevAfterMove(...args)
       // Update connector geometry now that selected elements have settled at new positions
-      updateConnectors(svgCanvas.getSelectedElements())
+      updateConnectors(svgCanvas.getSelectedElements().filter((e): e is Element => e !== null))
     })
 
     /**
@@ -70,7 +80,7 @@ export default {
      * @param bb
      * @param offset
      */
-    const getBBintersect = (x: number, y: number, bb: any, offset?: number) => {
+    const getBBintersect = (x: number, y: number, bb: ConnBB, offset?: number) => {
       // Adjust bounding box if offset is provided
       if (offset) {
         bb = { ...bb } // Create a shallow copy
@@ -146,7 +156,7 @@ export default {
 
       // Update the display property of the <style> element itself based on the 'on' value.
       if ($id('connector_rules')) {
-        $id('connector_rules').style.display = on ? 'block' : 'none'
+        $id('connector_rules')!.style.display = on ? 'block' : 'none'
       }
     }
 
@@ -185,7 +195,7 @@ export default {
      * @param diffX
      * @param diffY
      */
-    const updatePoints = (line: any, conn: any, bb: any, altBB: any, pre: string, altPre: string) => {
+    const updatePoints = (line: SVGPolylineElement, conn: Connection, bb: ConnBB, altBB: ConnBB, pre: string, altPre: string) => {
       const srcX = altBB.x + altBB.width / 2
       const srcY = altBB.y + altBB.height / 2
 
@@ -203,29 +213,29 @@ export default {
         const {
           connector: line,
           is_start: isStart,
-          start_x: startX,
-          start_y: startY
+          start_x: connStartX,
+          start_y: connStartY
         } = conn
 
         const pre = isStart ? 'start' : 'end'
         const altPre = isStart ? 'end' : 'start'
 
         // Update bbox for this element
-        const bb = { ...dataStorage.get(line, `${pre}_bb`) }
-        bb.x = startX + diffX
-        bb.y = startY + diffY
+        const bb: ConnBB = { ...(dataStorage.get(line, `${pre}_bb`) as ConnBB) }
+        bb.x = connStartX + diffX
+        bb.y = connStartY + diffY
 
         dataStorage.put(line, `${pre}_bb`, bb)
 
         // Get center point of connected element
-        const altBB = dataStorage.get(line, `${altPre}_bb`)
+        const altBB = dataStorage.get(line, `${altPre}_bb`) as ConnBB
 
         updatePoints(line, conn, bb, altBB, pre, altPre)
       }
     }
 
     // Finds connectors associated with selected elements
-    const findConnectors = (elems: any[] = []) => {
+    const findConnectors = (elems: Element[] = []) => {
       // Fetch data storage object from svgCanvas
       const dataStorage = svgCanvas.getDataStorage()
 
@@ -237,60 +247,63 @@ export default {
       // Loop through each connector
       for (const connector of connectors) {
         let addThis = false // Flag to indicate whether to add this connector
-        const parts = [] // To hold the starting and ending elements connected by the connector
+        const parts: (Element | null)[] = [] // To hold the starting and ending elements connected by the connector
 
         // Loop through the connector ends ("start" and "end")
         for (const [i, pos] of ['start', 'end'].entries()) {
           // Fetch connected element and its bounding box
-          let part = dataStorage.get(connector, `c_${pos}`)
+          const partId = dataStorage.get(connector, `c_${pos}`) as string | null
 
           // If part is null or undefined, fetch it and store it
-          if (!part) {
-            part = $id(
-              ((connector.attributes as any)['se:connector']).value.split(' ')[i]
+          if (!partId) {
+            const seConnAttr = connector.getAttributeNS(seNs, 'connector')
+            const partElem = $id(
+              (seConnAttr ?? '').split(' ')[i] ?? ''
             )
-            dataStorage.put(connector, `c_${pos}`, part.id)
-            dataStorage.put(
-              connector,
-              `${pos}_bb`,
-              svgCanvas.getStrokedBBox([part])
-            )
+            if (partElem) {
+              dataStorage.put(connector, `c_${pos}`, partElem.id)
+              dataStorage.put(
+                connector,
+                `${pos}_bb`,
+                svgCanvas.getStrokedBBox([partElem])
+              )
+            }
+            parts.push(partElem)
           } else {
             // If part is already stored, fetch it by ID
-            part = $id(part)
+            parts.push($id(partId))
           }
-
-          // Add the part to the parts array
-          parts.push(part)
         }
 
         // Loop through the starting and ending elements connected by the connector
         for (let i = 0; i < 2; i++) {
           const cElem = parts[i]
-          const parents = svgCanvas.getParents(cElem?.parentNode)
+          if (!cElem) continue
+          const parents = svgCanvas.getParents(cElem.parentNode) ?? []
 
           // Check if the element is part of a selected group
           for (const el of parents) {
-            if (elems.includes(el)) {
+            if (elems.includes(el as Element)) {
               addThis = true
               break
             }
           }
 
-          // If element is missing or parent is null, remove the connector
-          if (!cElem || !cElem.parentNode) {
+          // If parent is null, remove the connector
+          if (!cElem.parentNode) {
             connector.remove()
             continue
           }
 
           // If element is in the selection or part of a selected group
           if (elems.includes(cElem) || addThis) {
-            const bb = svgCanvas.getStrokedBBox([cElem])
+            const bb = svgCanvas.getStrokedBBox([cElem]) as ConnBB | null
+            if (!bb) continue
 
             // Add connection information to the connections array
             connections.push({
               elem: cElem,
-              connector,
+              connector: connector as unknown as SVGPolylineElement,
               is_start: i === 0,
               start_x: bb.x,
               start_y: bb.y
@@ -304,7 +317,7 @@ export default {
      * Updates the connectors based on selected elements.
      * @param [elems] - Optional array of selected elements.
      */
-    const updateConnectors = (elems?: any[]) => {
+    const updateConnectors = (elems?: Element[]) => {
       const dataStorage = svgCanvas.getDataStorage()
 
       // Find connectors associated with selected elements
@@ -314,31 +327,31 @@ export default {
         // Iterate through each connection to update its state
         for (const conn of connections) {
           const {
-            elem,
             connector: line,
             is_start: isStart,
-            start_x: startX,
-            start_y: startY
+            start_x: connStartX,
+            start_y: connStartY
           } = conn
 
           // Determine whether the connection starts or ends with this element
           const pre = isStart ? 'start' : 'end'
 
           // Update the bounding box for this element
-          const bb = svgCanvas.getStrokedBBox([elem])
-          bb.x = startX
-          bb.y = startY
+          const bb = svgCanvas.getStrokedBBox([conn.elem]) as ConnBB
+          bb.x = connStartX
+          bb.y = connStartY
           dataStorage.put(line, `${pre}_bb`, bb)
 
           // Determine the opposite end ('start' or 'end') of the connection
           const altPre = isStart ? 'end' : 'start'
 
           // Retrieve the bounding box for the connected element at the opposite end
-          const bb2 = dataStorage.get(line, `${altPre}_bb`)
+          const bb2 = dataStorage.get(line, `${altPre}_bb`) as ConnBB | undefined
+          if (!bb2) continue
 
           // Calculate the center point of the connected element
-          const srcX = bb2?.x + bb2?.width / 2
-          const srcY = bb2?.y + bb2?.height / 2
+          const srcX = bb2.x + bb2.width / 2
+          const srcY = bb2.y + bb2.height / 2
 
           // Update the point of the element being moved
           const pt = getBBintersect(srcX, srcY, bb, getOffset(pre, line))
@@ -348,7 +361,7 @@ export default {
           const pt2 = getBBintersect(
             pt.x,
             pt.y,
-            dataStorage.get(line, `${altPre}_bb`),
+            dataStorage.get(line, `${altPre}_bb`) as ConnBB,
             getOffset(altPre, line)
           )
           setPoint(line, isStart ? 'end' : 0, pt2.x, pt2.y, true)
@@ -364,12 +377,12 @@ export default {
       // Make sure all connectors have data set
       const svgContent = svgCanvas.getSvgContent()
       const elements = svgContent.querySelectorAll('*')
-      elements.forEach((element: any) => {
+      elements.forEach((element: Element) => {
         const conn = element.getAttributeNS(seNs, 'connector')
         if (conn) {
           const connData = conn.split(' ')
-          const sbb = svgCanvas.getStrokedBBox([getElement(connData[0])])
-          const ebb = svgCanvas.getStrokedBBox([getElement(connData[1])])
+          const sbb = svgCanvas.getStrokedBBox([getElement(connData[0] ?? '')!]) as ConnBB
+          const ebb = svgCanvas.getStrokedBBox([getElement(connData[1] ?? '')!]) as ConnBB
           dataStorage.put(element, 'c_start', connData[0])
           dataStorage.put(element, 'c_end', connData[1])
           dataStorage.put(element, 'start_bb', sbb)
@@ -390,18 +403,18 @@ export default {
         buttonTemplate.innerHTML = `
          <se-button id="tool_connect" title="${title}" src="conn.svg"></se-button>
          `
-        $id('tools_left').append(buttonTemplate.content.cloneNode(true))
-        $click($id('tool_connect'), () => {
+        $id('tools_left')!.append(buttonTemplate.content.cloneNode(true))
+        $click($id('tool_connect')!, () => {
           if (svgEditor.leftPanel.updateLeftPanel('tool_connect')) {
             svgCanvas.setMode('connector')
           }
         })
       },
-      mouseDown (opts: any) {
+      mouseDown (opts: { event: MouseEvent; start_x: number; start_y: number; selectedElements: Element[] }) {
         // Retrieve necessary data from the SVG canvas and the event object
         const dataStorage = svgCanvas.getDataStorage()
         const svgContent = svgCanvas.getSvgContent()
-        const { event: e, start_x: startX, start_y: startY } = opts
+        const { event: e, start_x: optsStartX, start_y: optsStartY } = opts
         const mode = svgCanvas.getMode()
         const {
           curConfig: { initStroke }
@@ -411,20 +424,20 @@ export default {
           // Return if the line is already started
           if (started) return undefined
 
-          const mouseTarget = e.target
-          const parents = svgCanvas.getParents(mouseTarget.parentNode)
+          const mouseTarget = e.target as Element
+          const parents = svgCanvas.getParents(mouseTarget.parentNode) ?? []
 
           // Check if the target is a child of the main SVG content
           if (parents.includes(svgContent)) {
             // Identify the connectable element, considering foreignObject elements
             const fo = svgCanvas.getClosest(
-              mouseTarget.parentNode,
+              mouseTarget.parentNode as Element,
               'foreignObject'
             )
             startElem = fo || mouseTarget
 
             // Retrieve the bounding box and calculate the center of the start element
-            const bb = svgCanvas.getStrokedBBox([startElem])
+            const bb = svgCanvas.getStrokedBBox([startElem]) as ConnBB
             const x = bb.x + bb.width / 2
             const y = bb.y + bb.height / 2
 
@@ -436,20 +449,20 @@ export default {
               element: 'polyline',
               attr: {
                 id: 'conn_' + svgCanvas.getNextId(),
-                points: `${x},${y} ${x},${y} ${startX},${startY}`,
+                points: `${x},${y} ${x},${y} ${optsStartX},${optsStartY}`,
                 stroke:
                   initStroke.color === 'none'
                     ? 'none'
                     : `#${initStroke.color}`,
                 'stroke-width':
-                  !startElem.stroke_width || startElem.stroke_width === 0
+                  !startElem.getAttribute('stroke-width') || startElem.getAttribute('stroke-width') === '0'
                     ? initStroke.width
-                    : startElem.stroke_width,
+                    : Number(startElem.getAttribute('stroke-width')),
                 fill: 'none',
                 opacity: initStroke.opacity,
                 style: 'pointer-events:none'
               }
-            })
+            }) as unknown as SVGPolylineElement
 
             // Store the bounding box of the start element
             dataStorage.put(curLine, 'start_bb', bb)
@@ -467,13 +480,12 @@ export default {
 
         return undefined
       },
-      mouseMove (opts: any) {
+      mouseMove (opts: { mouse_x: number; mouse_y: number }) {
         // Exit early if there are no connectors
         if (connections.length === 0) return
 
         const dataStorage = svgCanvas.getDataStorage()
         const zoom = svgCanvas.getZoom()
-        // const e = opts.event;
         const x = opts.mouse_x / zoom
         const y = opts.mouse_y / zoom
         /** @todo  We have a concern if startX or startY are undefined */
@@ -489,7 +501,7 @@ export default {
           const pt = getBBintersect(
             x,
             y,
-            dataStorage.get(curLine, 'start_bb'),
+            dataStorage.get(curLine, 'start_bb') as ConnBB,
             getOffset('start', curLine)
           )
           startX = pt.x
@@ -503,7 +515,7 @@ export default {
           for (const elem of svgCanvas.getSelectedElements()) {
             if (elem && dataStorage.has(elem, 'c_start')) {
               svgCanvas.removeFromSelection([elem])
-              elem.transform.baseVal.clear()
+              ;(elem as SVGGraphicsElement).transform.baseVal.clear()
             }
           }
           if (connections.length) {
@@ -511,22 +523,22 @@ export default {
           }
         }
       },
-      mouseUp (opts: any) {
+      mouseUp (opts: { event: MouseEvent }) {
         // Get necessary data and initial setups
         const dataStorage = svgCanvas.getDataStorage()
         const svgContent = svgCanvas.getSvgContent()
         const { event: e } = opts
-        let mouseTarget = e.target
+        let mouseTarget = e.target as Element
 
         // Early exit if not in connector mode
         if (svgCanvas.getMode() !== 'connector') return undefined
 
         // Check for a foreignObject parent and update mouseTarget if found
-        const fo = svgCanvas.getClosest(mouseTarget.parentNode, 'foreignObject')
+        const fo = svgCanvas.getClosest(mouseTarget.parentNode as Element, 'foreignObject')
         if (fo) mouseTarget = fo
 
         // Check if the target is a child of the main SVG content
-        const parents = svgCanvas.getParents(mouseTarget.parentNode)
+        const parents = svgCanvas.getParents(mouseTarget.parentNode) ?? []
         const isInSvgContent = parents.includes(svgContent)
 
         if (mouseTarget === startElem) {
@@ -577,7 +589,7 @@ export default {
         }
 
         // Update the end point of the connector
-        const bb = svgCanvas.getStrokedBBox([endElem])
+        const bb = svgCanvas.getStrokedBBox([endElem]) as ConnBB
         const pt = getBBintersect(
           startX,
           startY,
@@ -591,12 +603,12 @@ export default {
         dataStorage.put(curLine, 'c_end', endId)
         dataStorage.put(curLine, 'end_bb', bb)
         curLine.setAttributeNS(seNs, 'se:connector', connStr)
-        curLine.setAttribute('opacity', 1)
+        curLine.setAttribute('opacity', '1')
 
         // Finalize the connector
         svgCanvas.addToSelection([curLine])
         svgCanvas.moveToBottomSelectedElement()
-        selectorManager.requestSelector(curLine).showGrips(false)
+        selectorManager.requestSelector(curLine)?.showGrips(false)
 
         started = false
         return {
@@ -605,7 +617,7 @@ export default {
           started
         }
       },
-      selectedChanged (opts: any) {
+      selectedChanged (opts: { elems: (Element | null)[]; selectedElement?: Element | null; multiselected?: boolean }) {
         // Get necessary data storage and SVG content
         const dataStorage = svgCanvas.getDataStorage()
         const svgContent = svgCanvas.getSvgContent()
@@ -625,10 +637,10 @@ export default {
         for (const elem of selElems) {
           // If the element has a connector start, handle it
           if (elem && dataStorage.has(elem, 'c_start')) {
-            selectorManager.requestSelector(elem).showGrips(false)
+            selectorManager.requestSelector(elem)?.showGrips(false)
 
             // Show panel depending on selection state
-            showPanel(opts.selectedElement && !opts.multiselected)
+            showPanel(!!opts.selectedElement && !opts.multiselected)
           } else {
             // Hide panel if no connector start
             showPanel(false)
@@ -636,9 +648,9 @@ export default {
         }
 
         // Update connectors based on selected elements
-        updateConnectors(svgCanvas.getSelectedElements())
+        updateConnectors(svgCanvas.getSelectedElements().filter((e): e is Element => e !== null))
       },
-      elementChanged (opts: any) {
+      elementChanged (opts: { elems: (Element | null)[] }) {
         // Get the necessary data storage
         const dataStorage = svgCanvas.getDataStorage()
 
@@ -652,26 +664,32 @@ export default {
         }
 
         // Check for marker attributes and update offsets
-        const { markerStart, markerMid, markerEnd } = elem.attributes
+        const markerStart = elem.getAttribute('marker-start')
+        const markerMid = elem.getAttribute('marker-mid')
+        const markerEnd = elem.getAttribute('marker-end')
         if (markerStart || markerMid || markerEnd) {
-          curLine = elem
+          curLine = elem as SVGPolylineElement
           dataStorage.put(elem, 'start_off', Boolean(markerStart))
           dataStorage.put(elem, 'end_off', Boolean(markerEnd))
 
           // Convert lines to polyline if there's a mid-marker
           if (elem.tagName === 'line' && markerMid) {
-            const { x1, x2, y1, y2, id } = elem.attributes
+            const x1 = elem.getAttribute('x1') ?? '0'
+            const x2 = elem.getAttribute('x2') ?? '0'
+            const y1 = elem.getAttribute('y1') ?? '0'
+            const y2 = elem.getAttribute('y2') ?? '0'
+            const id = elem.id
 
-            const midPt = `${(Number(x1.value) + Number(x2.value)) / 2},${
-              (Number(y1.value) + Number(y2.value)) / 2
+            const midPt = `${(Number(x1) + Number(x2)) / 2},${
+              (Number(y1) + Number(y2)) / 2
             }`
             const pline = addSVGElementsFromJson({
               element: 'polyline',
               attr: {
-                points: `${x1.value},${y1.value} ${midPt} ${x2.value},${y2.value}`,
-                stroke: elem.getAttribute('stroke'),
-                'stroke-width': elem.getAttribute('stroke-width'),
-                'marker-mid': markerMid.value,
+                points: `${x1},${y1} ${midPt} ${x2},${y2}`,
+                stroke: elem.getAttribute('stroke') ?? 'none',
+                'stroke-width': elem.getAttribute('stroke-width') ?? 1,
+                'marker-mid': markerMid,
                 fill: 'none',
                 opacity: elem.getAttribute('opacity') || 1
               }
@@ -680,7 +698,7 @@ export default {
             elem.insertAdjacentElement('afterend', pline)
             elem.remove()
             svgCanvas.clearSelection()
-            pline.id = id.value
+            pline.id = id
             svgCanvas.addToSelection([pline])
             elem = pline
           }
@@ -688,36 +706,36 @@ export default {
 
         // Update connectors based on the current element
         if (elem?.id.startsWith('conn_')) {
-          const start = getElement(dataStorage.get(elem, 'c_start'))
-          updateConnectors([start])
+          const start = getElement(dataStorage.get(elem, 'c_start') as string)
+          if (start) updateConnectors([start])
         } else {
-          updateConnectors(svgCanvas.getSelectedElements())
+          updateConnectors(svgCanvas.getSelectedElements().filter((e): e is Element => e !== null))
         }
       },
-      IDsUpdated (input: any) {
-        const remove: any[] = []
-        input.elems.forEach(function (elem: any) {
+      IDsUpdated (input: { elems: Array<{ attr: Record<string, string> }>; changes: Record<string, string> }) {
+        const remove: string[] = []
+        input.elems.forEach(function (elem) {
           if ('se:connector' in elem.attr) {
             elem.attr['se:connector'] = elem.attr['se:connector']
               .split(' ')
-              .map(function (oldID: string) {
-                return input.changes[oldID]
+              .map(function (oldID) {
+                return input.changes[oldID] ?? oldID
               })
               .join(' ')
 
             // Check validity - the field would be something like 'svg_21 svg_22', but
             // if one end is missing, it would be 'svg_21' and therefore fail this test
             if (!/. ./.test(elem.attr['se:connector'])) {
-              remove.push(elem.attr.id)
+              remove.push(elem.attr.id ?? '')
             }
           }
         })
         return { remove }
       },
-      toolButtonStateUpdate (opts: any) {
-        const button = $id('tool_connect')
+      toolButtonStateUpdate (opts: { nostroke: boolean }) {
+        const button = $id('tool_connect') as HTMLElement & { pressed: boolean; disabled: boolean }
         if (opts.nostroke && button.pressed === true) {
-          svgEditor.clickSelect()
+          svgEditor.leftPanel.clickSelect()
         }
         button.disabled = opts.nostroke
       }

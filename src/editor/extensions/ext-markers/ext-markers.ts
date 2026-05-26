@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument, @typescript-eslint/require-await, @typescript-eslint/restrict-template-expressions */
-// svgCanvas / extension API surface is loosely typed; cleanup deferred to #3 or follow-up
 /**
  * @file ext-markers.js
  *
@@ -31,10 +29,12 @@
 
 import { getSvgEditor } from '../../svgEditorInstance.js'
 
+const name = 'markers'
+
 export default {
-  name: 'markers',
-  async init () {
-    const svgEditor: any = getSvgEditor()
+  name,
+  init () {
+    const svgEditor = getSvgEditor()
     const svgCanvas = svgEditor.svgCanvas
     const { BatchCommand, RemoveElementCommand, InsertElementCommand } = svgCanvas.history
     const { $id, addSVGElementsFromJson: addElem } = svgCanvas
@@ -46,7 +46,7 @@ export default {
     // the geometry is normalized to a 100x100 box with the origin at lower left
     // Safari did not like negative values for low left of viewBox
     // remember that the coordinate system has +y downward
-    const markerTypes: Record<string, any> = {
+    const markerTypes: Record<string, { element: string; attr: Record<string, string | number> } | Record<string, never>> = {
       nomarker: {},
       leftarrow:
         { element: 'path', attr: { d: 'M0,50 L100,90 L70,50 L100,10 Z' } },
@@ -60,7 +60,7 @@ export default {
 
     // duplicate shapes to support unfilled (open) marker types with an _o suffix
     ['leftarrow', 'rightarrow', 'box', 'mcircle'].forEach((v) => {
-      markerTypes[v + '_o'] = markerTypes[v]
+      markerTypes[v + '_o'] = markerTypes[v]!
     })
 
     /**
@@ -76,22 +76,23 @@ export default {
       if (!m || m.length !== 2) {
         return null
       }
-      return svgCanvas.getElement(m[1])
+      return svgCanvas.getElement(m[1]!)
     }
 
     /**
      * Toggles context tool panel off/on.
      * @param on
     */
-    const showPanel = (on: boolean, elem?: any) => {
-      $id('marker_panel').style.display = (on) ? 'block' : 'none'
+    const showPanel = (on: boolean, elem?: Element) => {
+      $id('marker_panel')!.style.display = (on) ? 'block' : 'none'
       if (on && elem) {
         mtypes.forEach((pos) => {
           const marker = getLinked(elem, 'marker-' + pos)
-          if (marker?.attributes?.se_type) {
-            $id(`${pos}_marker_list_opts`).setAttribute('value', marker.attributes.se_type.value)
+          const seType = marker?.getAttribute('se_type')
+          if (seType) {
+            $id(`${pos}_marker_list_opts`)!.setAttribute('value', seType)
           } else {
-            $id(`${pos}_marker_list_opts`).setAttribute('value', 'nomarker')
+            $id(`${pos}_marker_list_opts`)!.setAttribute('value', 'nomarker')
           }
         })
       }
@@ -107,6 +108,7 @@ export default {
       if (marker) { return undefined }
       if (seType === '' || seType === 'nomarker') { return undefined }
       const el = selElems[0]
+      if (!el) return undefined
       const color = el.getAttribute('stroke')
       const strokeWidth = 10
       const refX = 50
@@ -132,21 +134,21 @@ export default {
         }
       })
 
-      const mel = addElem(markerTypes[seType])
+      const mel = addElem(markerTypes[seType] as { element: string; attr: Record<string, string | number> })
       const fillcolor = (seType.substr(-2) === '_o')
         ? 'none'
         : color
 
-      mel.setAttribute('fill', fillcolor)
-      mel.setAttribute('stroke', color)
-      mel.setAttribute('stroke-width', strokeWidth)
+      mel.setAttribute('fill', fillcolor ?? '')
+      mel.setAttribute('stroke', color ?? '')
+      mel.setAttribute('stroke-width', String(strokeWidth))
       marker.append(mel)
 
       marker.setAttribute('viewBox', viewBox)
-      marker.setAttribute('markerWidth', markerWidth)
-      marker.setAttribute('markerHeight', markerHeight)
-      marker.setAttribute('refX', refX)
-      marker.setAttribute('refY', refY)
+      marker.setAttribute('markerWidth', String(markerWidth))
+      marker.setAttribute('markerHeight', String(markerHeight))
+      marker.setAttribute('refX', String(refX))
+      marker.setAttribute('refY', String(refY))
       svgCanvas.findDefs().append(marker)
 
       return marker
@@ -172,8 +174,8 @@ export default {
         element: 'polyline',
         attr: {
           points: (x1 + ',' + y1 + midPt + x2 + ',' + y2),
-          stroke: elem.getAttribute('stroke'),
-          'stroke-width': elem.getAttribute('stroke-width'),
+          stroke: elem.getAttribute('stroke') ?? 'none',
+          'stroke-width': elem.getAttribute('stroke-width') ?? 1,
           fill: 'none',
           opacity: elem.getAttribute('opacity') || 1
         }
@@ -181,11 +183,11 @@ export default {
       mtypes.forEach((pos) => { // get any existing marker definitions
         const nam = 'marker-' + pos
         const m = elem.getAttribute(nam)
-        if (m) { pline.setAttribute(nam, elem.getAttribute(nam)) }
+        if (m) { pline.setAttribute(nam, elem.getAttribute(nam) ?? '') }
       })
 
       const batchCmd = new BatchCommand()
-      batchCmd.addSubCommand(new RemoveElementCommand(elem, elem.parentNode))
+      batchCmd.addSubCommand(new RemoveElementCommand(elem, elem.nextSibling, elem.parentNode!))
       batchCmd.addSubCommand(new InsertElementCommand(pline))
 
       elem.insertAdjacentElement('afterend', pline)
@@ -205,6 +207,7 @@ export default {
       if (selElems.length === 0) return
       const markerName = 'marker-' + pos
       const el = selElems[0]
+      if (!el) return
       const marker = getLinked(el, markerName)
       if (marker) { marker.remove() }
       el.removeAttribute(markerName)
@@ -235,13 +238,13 @@ export default {
       mtypes.forEach((pos) => {
         const marker = getLinked(elem, 'marker-' + pos)
         if (!marker) { return }
-        if (!marker.attributes.se_type) { return } // not created by this extension
+        if (!marker.getAttribute('se_type')) { return } // not created by this extension
         const ch = marker.lastElementChild
         if (!ch) { return }
         const curfill = ch.getAttribute('fill')
         const curstroke = ch.getAttribute('stroke')
-        if (curfill && curfill !== 'none') { ch.setAttribute('fill', color) }
-        if (curstroke && curstroke !== 'none') { ch.setAttribute('stroke', color) }
+        if (curfill && curfill !== 'none') { ch.setAttribute('fill', color ?? '') }
+        if (curstroke && curstroke !== 'none') { ch.setAttribute('stroke', color ?? '') }
       })
     }
 
@@ -255,14 +258,14 @@ export default {
       mtypes.forEach((pos) => {
         const markerName = 'marker-' + pos
         const marker = getLinked(el, markerName)
-        if (!marker || !marker.attributes.se_type) { return } // not created by this extension
+        if (!marker || !marker.getAttribute('se_type')) { return } // not created by this extension
         const url = el.getAttribute(markerName)
         if (url) {
           const len = el.id.length
           const linkid = url.substr(-len - 1, len)
           if (el.id !== linkid) {
             const newMarkerId = 'mkr_' + pos + '_' + el.id
-            addMarker(newMarkerId, marker.attributes.se_type.value)
+            addMarker(newMarkerId, marker.getAttribute('se_type')!)
             svgCanvas.changeSelectedAttribute(markerName, 'url(#' + newMarkerId + ')')
             svgCanvas.call('changed', selElems)
           }
@@ -280,26 +283,26 @@ export default {
         let innerHTML = '<div id="marker_panel">'
         mtypes.forEach((pos) => {
           innerHTML += `<se-list id="${pos}_marker_list_opts" title="tools.${pos}_marker_list_opts" label="" width="22px" height="22px">`
-          Object.entries(markerTypes).forEach(([marker, _mkr]) => {
+          Object.entries(markerTypes).forEach(([marker]) => {
             innerHTML += `<se-list-item id="mkr_${pos}_${marker}" value="${marker}" title="tools.mkr_${marker}" src="${marker}.svg" img-height="22px"></se-list-item>`
           })
           innerHTML += '</se-list>'
         })
         innerHTML += '</div>'
         panelTemplate.innerHTML = innerHTML
-        $id('tools_top').appendChild(panelTemplate.content.cloneNode(true))
+        $id('tools_top')!.appendChild(panelTemplate.content.cloneNode(true))
         // don't display the panels on start
         showPanel(false)
         mtypes.forEach((pos) => {
-          $id(`${pos}_marker_list_opts`).addEventListener('change', (evt: any) => {
-            setMarker(pos, evt.detail.value)
+          $id(`${pos}_marker_list_opts`)!.addEventListener('change', (evt: Event) => {
+            setMarker(pos, (evt as CustomEvent<{ value: string }>).detail.value)
           })
         })
       },
-      selectedChanged (opts: any) {
+      selectedChanged (opts: { elems: (Element | null)[]; selectedElement?: Element | null; multiselected?: boolean }) {
         // Use this to update the current selected elements
         if (opts.elems.length === 0) showPanel(false)
-        opts.elems.forEach((elem: any) => {
+        opts.elems.forEach((elem: Element | null) => {
           if (elem && markerElems.includes(elem.tagName)) {
             if (opts.selectedElement && !opts.multiselected) {
               showPanel(true, elem)
@@ -311,7 +314,7 @@ export default {
           }
         })
       },
-      elementChanged (opts: any) {
+      elementChanged (opts: { elems: (Element | null)[] }) {
         const elem = opts.elems[0]
         if (elem && (
           elem.getAttribute('marker-start') ||

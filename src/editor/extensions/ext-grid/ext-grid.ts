@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unused-vars */
-// svgCanvas / extension API surface is loosely typed; cleanup deferred to #3 or follow-up
 /**
  * @file ext-grid.js
  *
@@ -14,30 +12,30 @@ import { getSvgEditor } from '../../svgEditorInstance.js'
 const name = 'grid'
 
 const loadExtensionTranslation = async function (): Promise<void> {
-  const svgEditor: any = getSvgEditor()
-  let translationModule
+  const svgEditor = getSvgEditor()
+  let translationModule: Record<string, unknown>
   const lang = svgEditor.configObj.pref('lang')
   try {
-    translationModule = await import(`./locale/${lang}.js`)
+    translationModule = await import(`./locale/${String(lang)}.js`) as Record<string, unknown>
   } catch (_error) {
-    console.warn(`Missing translation (${lang}) for ${name} - using 'en'`)
+    console.warn(`Missing translation (${String(lang)}) for ${name} - using 'en'`)
     translationModule = await import('./locale/en.js')
   }
-  svgEditor.i18next.addResourceBundle(lang, name, translationModule.default)
+  svgEditor.i18next.addResourceBundle(lang as string, name, translationModule.default as Record<string, unknown>)
 }
 
 export default {
   name,
   async init () {
-    const svgEditor: any = getSvgEditor()
+    const svgEditor = getSvgEditor()
     await loadExtensionTranslation()
     const svgCanvas = svgEditor.svgCanvas
     const { $id, $click, NS } = svgCanvas
-    const svgdoc = $id('svgcanvas').ownerDocument
+    const svgdoc = $id('svgcanvas')!.ownerDocument
     const { assignAttributes } = svgCanvas
     const hcanvas = document.createElement('canvas')
-    const canvBG = $id('canvasBackground')
-    const units = svgCanvas.getTypeMap() // Assumes prior `init()` call on `units.js` module
+    const canvBG = $id('canvasBackground')!
+    const units = svgCanvas.getTypeMap() as Record<string, number> // Assumes prior `init()` call on `units.js` module
     const intervals = [0.01, 0.1, 1, 10, 100, 1000]
     let showGrid = svgEditor.configObj.curConfig.showGrid || false
 
@@ -76,7 +74,7 @@ export default {
     })
     gridPattern.append(gridimg)
     gridDefs.append(gridPattern)
-    $id('canvasGrid').appendChild(gridDefs)
+    $id('canvasGrid')!.appendChild(gridDefs)
 
     // grid-box
     const gridBox = svgdoc.createElementNS(NS.SVG, 'rect')
@@ -90,7 +88,7 @@ export default {
       fill: 'url(#gridpattern)',
       style: 'pointer-events: none; display:visible;'
     })
-    $id('canvasGrid').appendChild(gridBox)
+    $id('canvasGrid')!.appendChild(gridBox)
 
     /**
      *
@@ -98,7 +96,7 @@ export default {
      */
     const updateGrid = (zoom: number) => {
       // TODO: Try this with <line> elements, then compare performance difference
-      const unit = units[svgEditor.configObj.curConfig.baseUnit] // 1 = 1px
+      const unit = units[svgEditor.configObj.curConfig.baseUnit] ?? 1 // 1 = 1px
       const uMulti = unit * zoom
       // Calculate the main number interval
       const rawM = 100 / uMulti
@@ -138,10 +136,10 @@ export default {
       ctx.stroke()
 
       const datauri = hcanvas.toDataURL('image/png')
-      gridimg.setAttribute('width', bigInt)
-      gridimg.setAttribute('height', bigInt)
-      gridimg.parentNode.setAttribute('width', bigInt)
-      gridimg.parentNode.setAttribute('height', bigInt)
+      gridimg.setAttribute('width', String(bigInt))
+      gridimg.setAttribute('height', String(bigInt))
+      ;(gridimg.parentNode as Element).setAttribute('width', String(bigInt))
+      ;(gridimg.parentNode as Element).setAttribute('height', String(bigInt))
       svgCanvas.setHref(gridimg, datauri)
     }
 
@@ -152,12 +150,12 @@ export default {
       if (showGrid) {
         updateGrid(svgCanvas.getZoom())
       }
-      $id('canvasGrid').style.display = (showGrid) ? 'block' : 'none'
-      $id('view_grid').pressed = showGrid
+      $id('canvasGrid')!.style.display = (showGrid) ? 'block' : 'none'
+      ;($id('view_grid') as HTMLElement & { pressed: boolean }).pressed = showGrid
     }
     return {
       name: svgEditor.i18next.t(`${name}:name`),
-      zoomChanged (zoom: any) {
+      zoomChanged (zoom: number) {
         if (showGrid) { updateGrid(zoom) }
       },
       callback () {
@@ -167,8 +165,8 @@ export default {
         buttonTemplate.innerHTML = `
           <se-button id="view_grid" title="${title}" src="grid.svg"></se-button>
         `
-        $id('editor_panel').append(buttonTemplate.content.cloneNode(true))
-        $click($id('view_grid'), () => {
+        $id('editor_panel')!.append(buttonTemplate.content.cloneNode(true))
+        $click($id('view_grid')!, () => {
           svgEditor.configObj.curConfig.showGrid = showGrid = !showGrid
           gridUpdate()
         })

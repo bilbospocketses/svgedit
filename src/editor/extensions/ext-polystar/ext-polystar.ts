@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unused-vars */
-// svgCanvas / extension API surface is loosely typed; cleanup deferred to #3 or follow-up
 /**
  * @file ext-polystar.js
  *
@@ -15,29 +13,29 @@ import { getSvgEditor } from '../../svgEditorInstance.js'
 const name = 'polystar'
 
 const loadExtensionTranslation = async function (): Promise<void> {
-  const svgEditor: any = getSvgEditor()
-  let translationModule
+  const svgEditor = getSvgEditor()
+  let translationModule: Record<string, unknown>
   const lang = svgEditor.configObj.pref('lang')
   try {
-    translationModule = await import(`./locale/${lang}.js`)
+    translationModule = await import(`./locale/${String(lang)}.js`) as Record<string, unknown>
   } catch (_error) {
-    console.warn(`Missing translation (${lang}) for ${name} - using 'en'`)
+    console.warn(`Missing translation (${String(lang)}) for ${name} - using 'en'`)
     translationModule = await import('./locale/en.js')
   }
-  svgEditor.i18next.addResourceBundle(lang, name, translationModule.default)
+  svgEditor.i18next.addResourceBundle(lang as string, name, translationModule.default as Record<string, unknown>)
 }
 
 export default {
   name,
   async init () {
-    const svgEditor: any = getSvgEditor()
+    const svgEditor = getSvgEditor()
     const svgCanvas = svgEditor.svgCanvas
     const { ChangeElementCommand } = svgCanvas.history
-    const addToHistory = (cmd: any): void => { svgCanvas.undoMgr.addCommandToHistory(cmd) }
+    const addToHistory = (cmd: InstanceType<typeof ChangeElementCommand>): void => { svgCanvas.undoMgr.addCommandToHistory(cmd) }
     const { $id, $click } = svgCanvas
-    let selElems: any
-    let started: boolean
-    let newFO: any
+    let selElems: (Element | null)[]
+    let started = false
+    let newFO: Element
     await loadExtensionTranslation()
 
     /**
@@ -46,9 +44,9 @@ export default {
      */
     const showPanel = (on: boolean, tool: string) => {
       if (on) {
-        $id(`${tool}_panel`).style.removeProperty('display')
+        $id(`${tool}_panel`)!.style.removeProperty('display')
       } else {
-        $id(`${tool}_panel`).style.display = 'none'
+        $id(`${tool}_panel`)!.style.display = 'none'
       }
     }
 
@@ -91,16 +89,16 @@ export default {
               </se-button>
             </se-flyingbutton>
           `
-        svgCanvas.insertChildAtIndex($id('tools_left'), buttonTemplate, 10)
+        svgCanvas.insertChildAtIndex($id('tools_left')!, buttonTemplate, 10)
         // handler
-        $click($id('tool_star'), () => {
+        $click($id('tool_star')!, () => {
           if (svgEditor.leftPanel.updateLeftPanel('tool_star')) {
             svgCanvas.setMode('star')
             showPanel(true, 'star')
             showPanel(false, 'polygon')
           }
         })
-        $click($id('tool_polygon'), () => {
+        $click($id('tool_polygon')!, () => {
           if (svgEditor.leftPanel.updateLeftPanel('tool_polygon')) {
             svgCanvas.setMode('polygon')
             showPanel(true, 'polygon')
@@ -132,35 +130,36 @@ export default {
           </div>
         `
         // add handlers for the panel
-        $id('tools_top').appendChild(panelTemplate.content.cloneNode(true))
+        $id('tools_top')!.appendChild(panelTemplate.content.cloneNode(true))
         // don't display the panels on start
         showPanel(false, 'star')
         showPanel(false, 'polygon')
-        $id('starNumPoints').addEventListener('change', (event: any) => {
-          setAttr('point', event.target.value)
+        $id('starNumPoints')!.addEventListener('change', (event: Event) => {
+          const point = Number((event.target as HTMLInputElement).value)
+          setAttr('point', point)
           const orient = 'point'
-          const point = event.target.value
           let i = selElems.length
           while (i--) {
             const elem = selElems[i]
-            if (elem.hasAttribute('r')) {
+            if (elem && elem.hasAttribute('r')) {
               const oldPoint = elem.getAttribute('point')
               const oldPoints = elem.getAttribute('points')
-              const radialshift = elem.getAttribute('radialshift')
+              const radialshift = Number(elem.getAttribute('radialshift'))
               let xpos = 0
               let ypos = 0
-              if (elem.points) {
-                const list = elem.points
+              const svgElem = elem as unknown as SVGPolygonElement
+              if (svgElem.points) {
+                const list = svgElem.points
                 const len = list.numberOfItems
-                for (let i = 0; i < len; ++i) {
-                  const pt = list.getItem(i)
-                  xpos += parseFloat(pt.x)
-                  ypos += parseFloat(pt.y)
+                for (let j = 0; j < len; ++j) {
+                  const pt = list.getItem(j)
+                  xpos += pt.x
+                  ypos += pt.y
                 }
                 const cx = xpos / len
                 const cy = ypos / len
                 const circumradius = Number(elem.getAttribute('r'))
-                const inradius = circumradius / elem.getAttribute('starRadiusMultiplier')
+                const inradius = circumradius / Number(elem.getAttribute('starRadiusMultiplier'))
 
                 let polyPoints = ''
                 for (let s = 0; point >= s; s++) {
@@ -197,34 +196,35 @@ export default {
             }
           }
         })
-        $id('RadiusMultiplier').addEventListener('change', (event: any) => {
-          setAttr('starRadiusMultiplier', event.target.value)
+        $id('RadiusMultiplier')!.addEventListener('change', (event: Event) => {
+          setAttr('starRadiusMultiplier', (event.target as HTMLInputElement).value)
         })
-        $id('radialShift').addEventListener('change', (event: any) => {
-          setAttr('radialshift', event.target.value)
+        $id('radialShift')!.addEventListener('change', (event: Event) => {
+          setAttr('radialshift', (event.target as HTMLInputElement).value)
         })
-        $id('polySides').addEventListener('change', (event: any) => {
-          setAttr('sides', event.target.value)
-          const sides = event.target.value
+        $id('polySides')!.addEventListener('change', (event: Event) => {
+          const sides = Number((event.target as HTMLInputElement).value)
+          setAttr('sides', sides)
           let i = selElems.length
           while (i--) {
             const elem = selElems[i]
-            if (elem.hasAttribute('edge')) {
+            if (elem && elem.hasAttribute('edge')) {
               const oldSides = elem.getAttribute('sides')
               const oldPoints = elem.getAttribute('points')
               let xpos = 0
               let ypos = 0
-              if (elem.points) {
-                const list = elem.points
+              const svgElem = elem as unknown as SVGPolygonElement
+              if (svgElem.points) {
+                const list = svgElem.points
                 const len = list.numberOfItems
-                for (let i = 0; i < len; ++i) {
-                  const pt = list.getItem(i)
-                  xpos += parseFloat(pt.x)
-                  ypos += parseFloat(pt.y)
+                for (let j = 0; j < len; ++j) {
+                  const pt = list.getItem(j)
+                  xpos += pt.x
+                  ypos += pt.y
                 }
                 const cx = xpos / len
                 const cy = ypos / len
-                const edg = elem.getAttribute('edge')
+                const edg = Number(elem.getAttribute('edge'))
                 const inradius = (edg / 2) * cot(Math.PI / sides)
                 const circumradius = inradius * sec(Math.PI / sides)
                 let points = ''
@@ -241,10 +241,10 @@ export default {
           }
         })
       },
-      mouseDown (opts: any) {
+      mouseDown (opts: { start_x: number; start_y: number }) {
         if (svgCanvas.getMode() === 'star') {
-          const fill = svgCanvas.getColor('fill')
-          const stroke = svgCanvas.getColor('stroke')
+          const fill = svgCanvas.getColor('fill') as string
+          const stroke = svgCanvas.getColor('stroke') as string
           const strokeWidth = svgCanvas.getStrokeWidth()
           started = true
           newFO = svgCanvas.addSVGElementsFromJson({
@@ -254,9 +254,9 @@ export default {
               cy: opts.start_y,
               id: svgCanvas.getNextId(),
               shape: 'star',
-              point: $id('starNumPoints').value,
+              point: ($id('starNumPoints') as HTMLInputElement).value,
               r: 0,
-              radialshift: $id('radialShift').value,
+              radialshift: ($id('radialShift') as HTMLInputElement).value,
               r2: 0,
               orient: 'point',
               fill,
@@ -269,8 +269,8 @@ export default {
           }
         }
         if (svgCanvas.getMode() === 'polygon') {
-          const fill = svgCanvas.getColor('fill')
-          const stroke = svgCanvas.getColor('stroke')
+          const fill = svgCanvas.getColor('fill') as string
+          const stroke = svgCanvas.getColor('stroke') as string
           const strokeWidth = svgCanvas.getStrokeWidth()
           started = true
           newFO = svgCanvas.addSVGElementsFromJson({
@@ -280,7 +280,7 @@ export default {
               cy: opts.start_y,
               id: svgCanvas.getNextId(),
               shape: 'regularPoly',
-              sides: $id('polySides').value,
+              sides: ($id('polySides') as HTMLInputElement).value,
               orient: 'x',
               edge: 0,
               fill,
@@ -295,7 +295,7 @@ export default {
         }
         return undefined
       },
-      mouseMove (opts: any) {
+      mouseMove (opts: { mouse_x: number; mouse_y: number }) {
         if (!started) {
           return undefined
         }
@@ -317,8 +317,8 @@ export default {
           const RadiusMultiplier = ($id('RadiusMultiplier') as HTMLInputElement).value
           const inradius =
             circumradius / Number(RadiusMultiplier)
-          newFO.setAttribute('r', circumradius)
-          newFO.setAttribute('r2', inradius)
+          newFO.setAttribute('r', String(circumradius))
+          newFO.setAttribute('r2', String(inradius))
           newFO.setAttribute('starRadiusMultiplier', RadiusMultiplier)
 
           let polyPoints = ''
@@ -351,10 +351,9 @@ export default {
             }
           }
           newFO.setAttribute('points', polyPoints)
-          newFO.setAttribute('fill', fill)
-          newFO.setAttribute('stroke', stroke)
-          newFO.setAttribute('stroke-width', strokeWidth)
-          /* const shape = */ newFO.getAttribute('shape')
+          newFO.setAttribute('fill', fill ?? '')
+          newFO.setAttribute('stroke', stroke ?? '')
+          newFO.setAttribute('stroke-width', String(strokeWidth))
 
           return {
             started: true
@@ -374,7 +373,7 @@ export default {
 
           const edg =
             Math.sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy)) / 1.5
-          newFO.setAttribute('edge', edg)
+          newFO.setAttribute('edge', String(edg))
 
           const inradius = (edg / 2) * cot(Math.PI / sides)
           const circumradius = inradius * sec(Math.PI / sides)
@@ -389,9 +388,9 @@ export default {
 
           // const poly = newFO.createElementNS(NS.SVG, 'polygon');
           newFO.setAttribute('points', points)
-          newFO.setAttribute('fill', fill)
-          newFO.setAttribute('stroke', stroke)
-          newFO.setAttribute('stroke-width', strokeWidth)
+          newFO.setAttribute('fill', fill ?? '')
+          newFO.setAttribute('stroke', stroke ?? '')
+          newFO.setAttribute('stroke-width', String(strokeWidth))
           return {
             started: true
           }
@@ -417,7 +416,7 @@ export default {
         }
         return undefined
       },
-      selectedChanged (opts: any) {
+      selectedChanged (opts: { elems: (Element | null)[]; selectedElement?: Element | null; multiselected?: boolean }) {
         // Use this to update the current selected elements
         selElems = opts.elems
         let i = selElems.length
@@ -431,15 +430,15 @@ export default {
           const elem = selElems[i]
           if (elem?.getAttribute('shape') === 'star') {
             if (opts.selectedElement && !opts.multiselected) {
-              $id('starNumPoints').value = elem.getAttribute('point')
-              $id('radialShift').value = elem.getAttribute('radialshift')
+              ;($id('starNumPoints') as HTMLInputElement).value = elem.getAttribute('point') ?? ''
+              ;($id('radialShift') as HTMLInputElement).value = elem.getAttribute('radialshift') ?? ''
               showPanel(true, 'star')
             } else {
               showPanel(false, 'star')
             }
           } else if (elem?.getAttribute('shape') === 'regularPoly') {
             if (opts.selectedElement && !opts.multiselected) {
-              $id('polySides').value = elem.getAttribute('sides')
+              ;($id('polySides') as HTMLInputElement).value = elem.getAttribute('sides') ?? ''
               showPanel(true, 'polygon')
             } else {
               showPanel(false, 'polygon')

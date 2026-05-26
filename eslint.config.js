@@ -57,7 +57,7 @@ export default defineConfig([
     rules: {
       '@typescript-eslint/no-non-null-assertion': 'error',
       '@typescript-eslint/no-explicit-any': 'error',
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }]
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }]
     }
   },
   // Legacy svgcanvas.d.ts shim override — retained in case any .d.ts files are
@@ -80,6 +80,16 @@ export default defineConfig([
       '@typescript-eslint/no-unused-expressions': 'warn',     // TODO: backlog — existing JS violations
       '@typescript-eslint/no-this-alias': 'warn',             // TODO: backlog — existing JS violations
       '@typescript-eslint/no-redundant-type-constituents': 'off'  // type-checked rule — cannot run on .js without projectService
+    }
+  },
+  // Extensions: $id() returns HTMLElement|null but elements are known to exist at
+  // runtime (created in callback() or hardcoded in index.html). The non-null
+  // assertion operator is the cleanest way to express this without adding
+  // redundant null guards on every DOM lookup.
+  {
+    files: ['src/editor/extensions/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-non-null-assertion': 'off'
     }
   },
   // Disable type-checked rules for test files and config files

@@ -2,25 +2,36 @@
 // Kailash Nadh (c) 2020.
 // MIT License.
 // can't use npm version as the dragmove is different.
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument */
-// dragmove utility: loose event types; cleanup deferred to #3 or follow-up
 
 let _loaded = false
-const _callbacks: any[] = []
+const _callbacks: Array<(x: number, y: number) => void> = []
 const _isTouch = window.ontouchstart !== undefined
 
-export const dragmove = function (target: any, handler: any, parent: any, onStart: any, onEnd: any, onDrag: any) {
+export const dragmove = function (
+  target: HTMLElement,
+  handler: HTMLElement,
+  parent: Element,
+  onStart: (target: HTMLElement, lastX: number, lastY: number) => void,
+  onEnd: (target: HTMLElement, parent: Element, x: number, y: number) => void,
+  onDrag: (target: HTMLElement, x: number, y: number) => void
+): void {
   // Register a global event to capture mouse moves (once).
   if (!_loaded) {
-    document.addEventListener(_isTouch ? 'touchmove' : 'mousemove', function (e: any) {
-      let c = e
-      if (e.touches) {
-        c = e.touches[0]
+    document.addEventListener(_isTouch ? 'touchmove' : 'mousemove', function (e: Event) {
+      const me = e as MouseEvent & { touches?: TouchList }
+      let clientX: number
+      let clientY: number
+      if (me.touches && me.touches.length > 0) {
+        clientX = me.touches[0]!.clientX
+        clientY = me.touches[0]!.clientY
+      } else {
+        clientX = me.clientX
+        clientY = me.clientY
       }
 
       // On mouse move, dispatch the coords to all registered callbacks.
-      for (let i = 0; i < _callbacks.length; i++) {
-        _callbacks[i](c.clientX, c.clientY)
+      for (const cb of _callbacks) {
+        cb(clientX, clientY)
       }
     })
   }
@@ -31,21 +42,27 @@ export const dragmove = function (target: any, handler: any, parent: any, onStar
 
   // On the first click and hold, record the offset of the pointer in relation
   // to the point of click inside the element.
-  handler.addEventListener(_isTouch ? 'touchstart' : 'mousedown', function (e: any) {
+  handler.addEventListener(_isTouch ? 'touchstart' : 'mousedown', function (e: Event) {
     e.stopPropagation()
     e.preventDefault()
     if (target.dataset.dragEnabled === 'false') {
       return
     }
 
-    let c = e
-    if (e.touches) {
-      c = e.touches[0]
+    const me = e as MouseEvent & { touches?: TouchList }
+    let clientX: number
+    let clientY: number
+    if (me.touches && me.touches.length > 0) {
+      clientX = me.touches[0]!.clientX
+      clientY = me.touches[0]!.clientY
+    } else {
+      clientX = me.clientX
+      clientY = me.clientY
     }
 
     isMoving = true
-    startX = target.offsetLeft - c.clientX
-    startY = target.offsetTop - c.clientY
+    startX = target.offsetLeft - clientX
+    startY = target.offsetTop - clientY
   })
 
   // On leaving click, stop moving.

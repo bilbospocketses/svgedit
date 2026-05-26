@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unused-vars */
-// svgCanvas / extension API surface is loosely typed; cleanup deferred to #3 or follow-up
 /**
  * @file ext-panning.js
  *
@@ -17,27 +15,27 @@ import { getSvgEditor } from '../../svgEditorInstance.js'
 const name = 'panning'
 
 const loadExtensionTranslation = async function (): Promise<void> {
-  const svgEditor: any = getSvgEditor()
-  let translationModule
+  const svgEditor = getSvgEditor()
+  let translationModule: Record<string, unknown>
   const lang = svgEditor.configObj.pref('lang')
   try {
-    translationModule = await import(`./locale/${lang}.js`)
+    translationModule = await import(`./locale/${String(lang)}.js`) as Record<string, unknown>
   } catch (_error) {
-    console.warn(`Missing translation (${lang}) for ${name} - using 'en'`)
+    console.warn(`Missing translation (${String(lang)}) for ${name} - using 'en'`)
     translationModule = await import('./locale/en.js')
   }
-  svgEditor.i18next.addResourceBundle(lang, name, translationModule.default)
+  svgEditor.i18next.addResourceBundle(lang as string, name, translationModule.default as Record<string, unknown>)
 }
 
 export default {
   name,
   async init () {
-    const svgEditor: any = getSvgEditor()
+    const svgEditor = getSvgEditor()
     await loadExtensionTranslation()
     const svgCanvas = svgEditor.svgCanvas
     const { $id, $click } = svgCanvas
-    const insertAfter = (referenceNode: any, newNode: any) => {
-      referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling)
+    const insertAfter = (referenceNode: Element, newNode: Node) => {
+      referenceNode.parentNode!.insertBefore(newNode, referenceNode.nextSibling)
     }
     return {
       name: svgEditor.i18next.t(`${name}:name`),
@@ -48,8 +46,8 @@ export default {
         buttonTemplate.innerHTML = `
         <se-button id="ext-panning" title="${btitle}" src="panning.svg"></se-button>
         `
-        insertAfter($id('tool_zoom'), buttonTemplate.content.cloneNode(true))
-        $click($id('ext-panning'), () => {
+        insertAfter($id('tool_zoom')!, buttonTemplate.content.cloneNode(true))
+        $click($id('ext-panning')!, () => {
           if (svgEditor.leftPanel.updateLeftPanel('ext-panning')) {
             svgCanvas.setMode('ext-panning')
           }

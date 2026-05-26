@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-non-null-assertion, @typescript-eslint/restrict-plus-operands */
-// svgCanvas / extension API surface is loosely typed; cleanup deferred to #3 or follow-up
 /**
  * @file ext-storage.js
  *
@@ -63,7 +61,7 @@ const replaceStoragePrompt = (val?: string) => {
 export default {
   name: 'storage',
   init () {
-    const svgEditor: any = getSvgEditor()
+    const svgEditor = getSvgEditor()
     const svgCanvas = svgEditor.svgCanvas
     const storage = svgEditor.storage
     const { $id } = svgCanvas
@@ -98,34 +96,37 @@ export default {
       const key = 'svgedit-' + canvasName
       const cached = storage.getItem(key)
       if (cached) {
-        svgEditor.loadFromString(cached)
-        const name = storage.getItem(`title-${key}`) ?? 'untitled.svg'
-        svgEditor.topPanel.updateTitle(name)
+        void svgEditor.loadFromString(cached)
+        const storedName = storage.getItem(`title-${key}`) ?? 'untitled.svg'
+        svgEditor.topPanel.updateTitle(storedName)
         svgEditor.layersPanel.populateLayers()
       }
     }
 
     // storageDialog added to DOM
-    const storageBox = document.createElement('se-storage-dialog') as any
+    const storageBox = document.createElement('se-storage-dialog') as HTMLElement & {
+      init: (i18n: typeof svgEditor.i18next) => void
+    }
     storageBox.setAttribute('id', 'se-storage-dialog')
     svgEditor.$container.append(storageBox)
     storageBox.init(svgEditor.i18next)
 
     // manage the change in the storageDialog
 
-    storageBox.addEventListener('change', (e: any) => {
+    storageBox.addEventListener('change', (e: Event) => {
       storageBox.setAttribute('dialog', 'close')
-      if (e?.detail?.trigger === 'ok') {
-        if (e?.detail?.select !== 'noPrefsOrContent') {
-        
+      const detail = (e as CustomEvent<{ trigger?: string; select?: string; checkbox?: boolean }>).detail
+      if (detail?.trigger === 'ok') {
+        if (detail?.select !== 'noPrefsOrContent') {
+
           const storagePrompt = new URL(top!.location.href).searchParams.get(
             'storagePrompt'
           )
           document.cookie =
             'svgeditstore=' +
-            encodeURIComponent(e.detail.select) +
+            encodeURIComponent(detail.select ?? '') +
             '; expires=Fri, 31 Dec 9999 23:59:59 GMT'
-          if (storagePrompt === 'true' && e?.detail?.checkbox) {
+          if (storagePrompt === 'true' && detail?.checkbox) {
             replaceStoragePrompt()
             return
           }
@@ -133,23 +134,23 @@ export default {
           removeStoragePrefCookie()
           if (
             svgEditor.configObj.curConfig.emptyStorageOnDecline &&
-            e?.detail?.checkbox
+            detail?.checkbox
           ) {
             setSvgContentStorage('')
-            Object.keys(svgEditor.curPrefs).forEach(name => {
-              name = 'svg-edit-' + name
+            Object.keys(svgEditor.configObj.curPrefs).forEach(prefName => {
+              const storageName = 'svg-edit-' + prefName
               if (svgEditor.storage) {
-                svgEditor.storage.removeItem(name)
+                svgEditor.storage.removeItem(storageName)
               }
-              expireCookie(name)
+              expireCookie(storageName)
             })
           }
-          if (e?.detail?.select && e?.detail?.checkbox) {
+          if (detail?.select && detail?.checkbox) {
             replaceStoragePrompt('false')
             return
           }
         }
-      } else if (e?.detail?.trigger === 'cancel') {
+      } else if (detail?.trigger === 'cancel') {
         removeStoragePrefCookie()
       }
       setupBeforeUnloadListener()
@@ -163,13 +164,14 @@ export default {
      * @param svgString
      */
     const setSvgContentStorage = (svgString: string) => {
-      const name = `svgedit-${svgEditor.configObj.curConfig.canvasName}`
+      if (!storage) return
+      const storageName = `svgedit-${svgEditor.configObj.curConfig.canvasName}`
       if (!svgString) {
-        storage.removeItem(name)
-        storage.removeItem(`${name}-title`)
+        storage.removeItem(storageName)
+        storage.removeItem(`${storageName}-title`)
       } else {
-        storage.setItem(name, svgString)
-        storage.setItem(`title-${name}`, svgEditor.title)
+        storage.setItem(storageName, svgString)
+        storage.setItem(`title-${storageName}`, svgEditor.title)
       }
     }
 
@@ -199,20 +201,20 @@ export default {
 
         const { curPrefs } = svgEditor.configObj
 
-        Object.entries(curPrefs).forEach(([key, val]) => {
-          const store = val !== undefined
-          key = 'svg-edit-' + key
-          if (!store) {
+        Object.entries(curPrefs).forEach(([prefKey, val]) => {
+          if (val === undefined || val === null) {
             return
           }
+          const storageKey = 'svg-edit-' + prefKey
+          const valStr = typeof val === 'string' ? val : JSON.stringify(val)
           if (storage) {
-            storage.setItem(key, val)
+            storage.setItem(storageKey, valStr)
           } else {
-            val = encodeURIComponent(val as string)
+            const encoded = encodeURIComponent(valStr)
             document.cookie =
-              encodeURIComponent(key) +
+              encodeURIComponent(storageKey) +
               '=' +
-              val +
+              encoded +
               '; expires=Fri, 31 Dec 9999 23:59:59 GMT'
           }
         })
@@ -223,7 +225,7 @@ export default {
     return {
       name: 'storage',
       callback () {
-      
+
         const storagePrompt = new URL(top!.location.href).searchParams.get(
           'storagePrompt'
         )
