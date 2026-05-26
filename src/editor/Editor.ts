@@ -1007,7 +1007,7 @@ class Editor {
     const bb = zInfo.bbox as { x: number; y: number; width: number; height: number }
 
     if (zoomlevel < 0.001) {
-      this.bottomPanel.changeZoom(0.1)
+      this.bottomPanel.changeZoom(String(0.1))
       return
     }
 

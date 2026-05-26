@@ -1,6 +1,14 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-non-null-assertion */
-// editor / panel API surface is loosely typed; full typing deferred to follow-up
 import SvgCanvas from '@svgedit/svgcanvas'
+import type Editor from '../Editor.js'
+import {
+  typedDetail,
+  type SeChangeDetail,
+  type SePaintDetail,
+  type SePaletteDetail,
+  type SeButtonElement,
+  type SePaintPickerElement,
+  type SePaletteElement
+} from '../typed-events.js'
 import BottomPanelHtml from './BottomPanel.html'
 
 const { $id } = SvgCanvas
@@ -11,12 +19,12 @@ const { $id } = SvgCanvas
 /**
  */
 class BottomPanel {
-  editor: any
+  editor: Editor
 
   /**
    * @param editor svgedit handler
    */
-  constructor (editor: any) {
+  constructor (editor: Editor) {
     this.editor = editor
   }
 
@@ -34,8 +42,8 @@ class BottomPanel {
 
   /**
    */
-  changeStrokeWidth (e: any): void {
-    let val = e.target.value
+  changeStrokeWidth (e: Event): void {
+    let val = Number((e.target as HTMLInputElement).value)
     if (
       val === 0 &&
       this.editor.selectedElement &&
@@ -48,7 +56,7 @@ class BottomPanel {
 
   /**
    */
-  changeZoom (value: any): void {
+  changeZoom (value: string): void {
     switch (value) {
       case 'canvas':
       case 'selection':
@@ -98,28 +106,32 @@ class BottomPanel {
 
     if (bNoStroke) {
       buttonsNeedingStroke.forEach(btn => {
+        const el = $id(btn) as SeButtonElement | null
         // if btn is pressed, change to select button
-        if (($id(btn) as any).pressed) {
+        if (el?.pressed) {
           this.editor.leftPanel.clickSelect()
         }
-        ;($id(btn) as any).disabled = true
+        if (el) el.disabled = true
       })
     } else {
       buttonsNeedingStroke.forEach(btn => {
-        ;($id(btn) as any).disabled = false
+        const el = $id(btn) as SeButtonElement | null
+        if (el) el.disabled = false
       })
     }
     if (bNoStroke && bNoFill) {
       buttonsNeedingFillAndStroke.forEach(btn => {
+        const el = $id(btn) as SeButtonElement | null
         // if btn is pressed, change to select button
-        if (($id(btn) as any).pressed) {
+        if (el?.pressed) {
           this.editor.leftPanel.clickSelect()
         }
-        ;($id(btn) as any).disabled = true
+        if (el) el.disabled = true
       })
     } else {
       buttonsNeedingFillAndStroke.forEach(btn => {
-        ;($id(btn) as any).disabled = false
+        const el = $id(btn) as SeButtonElement | null
+        if (el) el.disabled = false
       })
     }
     this.editor.svgCanvas.runExtensions({
@@ -130,45 +142,46 @@ class BottomPanel {
 
   /**
    */
-  handleColorPicker (type: any, evt: any): void {
-    const { paint } = evt.detail
+  handleColorPicker (type: string, evt: Event): void {
+    const { paint } = typedDetail<SePaintDetail>(evt)
     this.editor.svgCanvas.setPaint(type, paint)
     this.updateToolButtonState()
   }
 
   /**
    */
-  handleStrokeAttr (type: any, evt: any): void {
-    this.editor.svgCanvas.setStrokeAttr(type, evt.detail.value)
+  handleStrokeAttr (type: string, evt: Event): void {
+    this.editor.svgCanvas.setStrokeAttr(type, typedDetail<SeChangeDetail>(evt).value)
   }
 
   /**
    */
-  handleOpacity (evt: any): void {
-    const val = Number.parseInt(evt.currentTarget.value.split('%')[0])
-    this.editor.svgCanvas.setOpacity(val / 100)
+  handleOpacity (evt: Event): void {
+    const target = evt.currentTarget as HTMLInputElement
+    const val = Number.parseInt(target.value.split('%')[0] ?? '0')
+    this.editor.svgCanvas.setOpacity(String(val / 100))
   }
 
   /**
    */
-  handlePalette (e: any): void {
+  handlePalette (e: Event): void {
     e.preventDefault()
     // shift key or right click for stroke
-    const { picker, color } = e.detail
+    const { picker, color } = typedDetail<SePaletteDetail>(e)
     // Webkit-based browsers returned 'initial' here for no stroke
     const paint =
       color === 'none'
         ? new SvgCanvas.Paint()
         : new SvgCanvas.Paint({ alpha: 100, solidColor: color.substr(1) })
     if (picker === 'fill') {
-      ;($id('fill_color') as any).setPaint(paint)
+      ;($id('fill_color') as SePaintPickerElement | null)?.setPaint(paint)
     } else {
-      ;($id('stroke_color') as any).setPaint(paint)
+      ;($id('stroke_color') as SePaintPickerElement | null)?.setPaint(paint)
     }
     this.editor.svgCanvas.setColor(picker, color)
     if (
       color !== 'none' &&
-      this.editor.svgCanvas.getPaintOpacity(picker) !== 1
+      this.editor.svgCanvas.getPaintOpacity(picker as 'fill' | 'stroke') !== 1
     ) {
       this.editor.svgCanvas.setPaintOpacity(picker, 1.0)
     }
@@ -184,54 +197,54 @@ class BottomPanel {
 
     template.innerHTML = BottomPanelHtml
     this.editor.$svgEditor.append(template.content.cloneNode(true))
-    $id('palette')!.addEventListener('change', this.handlePalette.bind(this))
-    ;($id('palette') as any).init(i18next)
+    $id('palette')?.addEventListener('change', this.handlePalette.bind(this))
+    ;($id('palette') as SePaletteElement | null)?.init(i18next)
     const { curConfig } = this.editor.configObj
-    ;($id('fill_color') as any).setPaint(
+    ;($id('fill_color') as SePaintPickerElement | null)?.setPaint(
       new SvgCanvas.Paint({ alpha: 100, solidColor: curConfig.initFill.color })
     )
-    ;($id('stroke_color') as any).setPaint(
+    ;($id('stroke_color') as SePaintPickerElement | null)?.setPaint(
       new SvgCanvas.Paint({
         alpha: 100,
         solidColor: curConfig.initStroke.color
       })
     )
-    $id('zoom')!.addEventListener('change', (e: any) =>
-      this.changeZoom.bind(this)(e.detail.value)
+    $id('zoom')?.addEventListener('change', (e: Event) =>
+      this.changeZoom(typedDetail<SeChangeDetail>(e).value)
     )
-    $id('stroke_color')!.addEventListener('change', (evt: any) =>
-      this.handleColorPicker.bind(this)('stroke', evt)
+    $id('stroke_color')?.addEventListener('change', (evt: Event) =>
+      this.handleColorPicker('stroke', evt)
     )
-    $id('fill_color')!.addEventListener('change', (evt: any) =>
-      this.handleColorPicker.bind(this)('fill', evt)
+    $id('fill_color')?.addEventListener('change', (evt: Event) =>
+      this.handleColorPicker('fill', evt)
     )
-    $id('stroke_width')!.addEventListener(
+    $id('stroke_width')?.addEventListener(
       'change',
       this.changeStrokeWidth.bind(this)
     )
-    $id('stroke_style')!.addEventListener('change', (evt: any) =>
-      this.handleStrokeAttr.bind(this)('stroke-dasharray', evt)
+    $id('stroke_style')?.addEventListener('change', (evt: Event) =>
+      this.handleStrokeAttr('stroke-dasharray', evt)
     )
-    $id('stroke_linejoin')!.addEventListener('change', (evt: any) =>
-      this.handleStrokeAttr.bind(this)('stroke-linejoin', evt)
+    $id('stroke_linejoin')?.addEventListener('change', (evt: Event) =>
+      this.handleStrokeAttr('stroke-linejoin', evt)
     )
-    $id('stroke_linecap')!.addEventListener('change', (evt: any) =>
-      this.handleStrokeAttr.bind(this)('stroke-linecap', evt)
+    $id('stroke_linecap')?.addEventListener('change', (evt: Event) =>
+      this.handleStrokeAttr('stroke-linecap', evt)
     )
-    $id('opacity')!.addEventListener('change', this.handleOpacity.bind(this))
-    ;($id('fill_color') as any).init(i18next)
-    ;($id('stroke_color') as any).init(i18next)
+    $id('opacity')?.addEventListener('change', this.handleOpacity.bind(this))
+    ;($id('fill_color') as SePaintPickerElement | null)?.init(i18next)
+    ;($id('stroke_color') as SePaintPickerElement | null)?.init(i18next)
   }
 
   /**
    */
-  updateColorpickers (apply: any): void {
-    ;($id('fill_color') as any).updatePaint(
+  updateColorpickers (apply: boolean): void {
+    ;($id('fill_color') as SePaintPickerElement | null)?.updatePaint(
       this.editor.svgCanvas,
       this.editor.selectedElement,
       apply
     )
-    ;($id('stroke_color') as any).updatePaint(
+    ;($id('stroke_color') as SePaintPickerElement | null)?.updatePaint(
       this.editor.svgCanvas,
       this.editor.selectedElement,
       apply
@@ -240,7 +253,7 @@ class BottomPanel {
 }
 
 // Helper function to get the center of the workarea
-const getWorkareaCenter = (workarea: any, zoom: number): { x: number; y: number } => {
+const getWorkareaCenter = (workarea: HTMLElement, zoom: number): { x: number; y: number } => {
   const width = parseFloat(getComputedStyle(workarea).width.replace('px', ''))
   const height = parseFloat(getComputedStyle(workarea).height.replace('px', ''))
   return {

@@ -172,6 +172,76 @@ export interface SeStorageDetail {
 }
 
 // ---------------------------------------------------------------------------
+// Custom element augmentations — narrowing $id() results to Lit component shapes
+// ---------------------------------------------------------------------------
+
+/**
+ * Common shape shared by se-button, se-flyingbutton, se-explorerbutton.
+ * Covers `.pressed` and `.disabled` Lit properties that HTMLElement lacks.
+ */
+export interface SeButtonElement extends HTMLElement {
+  pressed: boolean
+  disabled: boolean
+  src: string
+}
+
+/**
+ * Shape for elements that expose a `.value` Lit property
+ * (se-spin-input, se-input, se-select, se-list, se-dropdown, se-zoom, etc.).
+ */
+export interface SeValueElement extends HTMLElement {
+  value: string | number
+}
+
+/**
+ * Shape for se-colorpicker (se-paint-picker) — exposes `.setPaint()` and `.updatePaint()`.
+ */
+export interface SePaintPickerElement extends HTMLElement {
+  setPaint (paint: unknown): void
+  updatePaint (svgCanvas: unknown, selectedElement: Element | null, apply?: boolean): void
+  init (i18next: unknown): void
+}
+
+/**
+ * Shape for se-palette — exposes `.init()`.
+ */
+export interface SePaletteElement extends HTMLElement {
+  init (i18next: unknown): void
+}
+
+/**
+ * Shape for se-cmenu-layers — exposes `.value`, `.init()`.
+ */
+export interface SeCmenuElement extends HTMLElement {
+  value: string
+  init (i18next: unknown): void
+}
+
+/**
+ * Shape for se-svg-source-editor-dialog.
+ */
+export interface SeSvgSourceDialogElement extends HTMLElement {
+  dialog: string
+  init (i18next: unknown): void
+}
+
+/**
+ * Subset of PathActions methods used by TopPanel.
+ * The real PathActions class lives in @svgedit/svgcanvas internals and is
+ * not exported publicly; this shape covers the panel-facing API surface.
+ */
+export interface PathActionsLike {
+  getNodePoint (): { x: number; y: number; type?: number } | null
+  canDeleteNodes: boolean
+  clonePathNode (): void
+  deletePathNode (): void
+  addSubPath (sp: boolean): void
+  opencloseSubPath (): void
+  linkControlPoints (linked: boolean): void
+  reorient (): void
+}
+
+// ---------------------------------------------------------------------------
 // Helper
 // ---------------------------------------------------------------------------
 
