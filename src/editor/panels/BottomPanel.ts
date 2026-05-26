@@ -159,7 +159,7 @@ class BottomPanel {
   handleOpacity (evt: Event): void {
     const target = evt.currentTarget as HTMLInputElement
     const val = Number.parseInt(target.value.split('%')[0] ?? '0')
-    this.editor.svgCanvas.setOpacity(val / 100)
+    this.editor.svgCanvas.setOpacity(String(val / 100))
   }
 
   /**
@@ -181,7 +181,7 @@ class BottomPanel {
     this.editor.svgCanvas.setColor(picker, color)
     if (
       color !== 'none' &&
-      this.editor.svgCanvas.getPaintOpacity(picker) !== 1
+      this.editor.svgCanvas.getPaintOpacity(picker as 'fill' | 'stroke') !== 1
     ) {
       this.editor.svgCanvas.setPaintOpacity(picker, 1.0)
     }

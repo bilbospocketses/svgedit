@@ -78,7 +78,7 @@ class TopPanel {
 
     if (changeElem) {
       // TODO: see todo #10 — likely should be this.editor.svgCanvas (pre-existing bug)
-      this.editor.svgCanvas.setStrokeAttr('stroke-' + pre, val)
+      this.editor.svgCanvas.setStrokeAttr('stroke-' + pre, val ?? '')
     }
     opt.classList.add('current')
     const parent = opt.parentElement
@@ -178,7 +178,9 @@ class TopPanel {
    * @returns Resolves to `undefined`
    */
   promptImgURL ({ cancelDeletes = false } = {}) {
-    let curhref = this.editor.svgCanvas.getHref(this.editor.selectedElement)
+    const selectedEl = this.editor.selectedElement
+    if (!selectedEl) return
+    let curhref = this.editor.svgCanvas.getHref(selectedEl) ?? ''
     curhref = curhref.startsWith('data:') ? '' : curhref
     // TODO: see todo #10 — native prompt(); replace with custom dialog
     const url = prompt(
@@ -232,7 +234,7 @@ class TopPanel {
       const angleEl = $id('angle') as SeValueElement | null
       if (angleEl) angleEl.value = angle
 
-      const blurval = this.editor.svgCanvas.getBlur(elem) * 10
+      const blurval = Number(this.editor.svgCanvas.getBlur(elem)) * 10
       const blurEl = $id('blur') as SeValueElement | null
       if (blurEl) blurEl.value = blurval
 
@@ -240,7 +242,7 @@ class TopPanel {
         this.editor.svgCanvas.addedNew &&
         elname === 'image' &&
         this.editor.svgCanvas.getMode() === 'image' &&
-        !this.editor.svgCanvas.getHref(elem).startsWith('data:')
+        !(this.editor.svgCanvas.getHref(elem) ?? '').startsWith('data:')
       ) {
         /* await */ this.promptImgURL({ cancelDeletes: true })
       }
@@ -266,8 +268,8 @@ class TopPanel {
           }
 
           if (unit) {
-            x = convertUnit(x)
-            y = convertUnit(y)
+            x = convertUnit(x ?? 0)
+            y = convertUnit(y ?? 0)
           }
           /**
            * Updates the value of an input field if needed
@@ -285,8 +287,8 @@ class TopPanel {
             el.value = newValue
           }
 
-          updateValue('selected_x', x)
-          updateValue('selected_y', y)
+          updateValue('selected_x', Number(x ?? 0))
+          updateValue('selected_y', Number(y ?? 0))
 
           this.displayTool('xy_panel')
         }
@@ -451,13 +453,13 @@ class TopPanel {
           tagName === 'image' &&
           this.editor.svgCanvas.getMode() === 'image'
         ) {
-          this.editor.svgCanvas.setImageURL(this.editor.svgCanvas.getHref(elem))
+          this.editor.svgCanvas.setImageURL(this.editor.svgCanvas.getHref(elem) ?? '')
           // image
         } else if (tagName === 'g' || tagName === 'use') {
           this.displayTool('container_panel')
           const title = this.editor.svgCanvas.getTitle()
           const gTitleEl = $id('g_title') as SeValueElement | null
-          if (gTitleEl) gTitleEl.value = title
+          if (gTitleEl) gTitleEl.value = title ?? ''
           const gTitleBtn = $id('g_title') as SeButtonElement | null
           if (gTitleBtn) gTitleBtn.disabled = tagName === 'use'
         }
@@ -476,7 +478,7 @@ class TopPanel {
     } else if (this.multiselected) {
       // Check if all selected elements are 'text' nodes, if yes enable text panel
       const selElems = this.editor.svgCanvas.getSelectedElements()
-      if (selElems.every((el: Element) => el.tagName === 'text')) {
+      if (selElems.filter((el): el is Element => el !== null).every((el) => el.tagName === 'text')) {
         this.displayTool('text_panel')
       }
 
@@ -526,8 +528,8 @@ class TopPanel {
     const origSource = this.editor.svgCanvas.getSvgString()
     $editorDialog.setAttribute('dialog', 'open')
     $editorDialog.setAttribute('value', origSource)
-    $editorDialog.setAttribute('copysec', Boolean(forSaving))
-    $editorDialog.setAttribute('applysec', !forSaving)
+    $editorDialog.setAttribute('copysec', String(Boolean(forSaving)))
+    $editorDialog.setAttribute('applysec', String(!forSaving))
   }
 
   /**
@@ -585,7 +587,7 @@ class TopPanel {
   /**
    */
   changeFontSize (e: Event): void {
-    this.editor.svgCanvas.setFontSize((e.target as HTMLInputElement).value)
+    this.editor.svgCanvas.setFontSize(Number((e.target as HTMLInputElement).value))
   }
 
   /**
@@ -645,7 +647,7 @@ class TopPanel {
     if (value === '') {
       value = 'selected'
     }
-    this.editor.svgCanvas.alignSelectedElements(pos, value)
+    this.editor.svgCanvas.alignSelectedElements(pos, String(value))
   }
 
   /**
@@ -820,7 +822,7 @@ class TopPanel {
    */
   get anyTextSelected () {
     const selected = this.editor.svgCanvas.getSelectedElements()
-    return selected.filter((el: Element) => el.tagName === 'text').length > 0
+    return selected.filter((el): el is Element => el !== null).filter((el) => el.tagName === 'text').length > 0
   }
 
   /**
@@ -920,7 +922,7 @@ class TopPanel {
             // switch into "select" mode if we've clicked on an element
             editor.svgCanvas.setMode('select')
             editor.svgCanvas.selectOnly(
-              editor.svgCanvas.getSelectedElements(),
+              editor.svgCanvas.getSelectedElements().filter((el): el is Element => el !== null),
               true
             )
           },
