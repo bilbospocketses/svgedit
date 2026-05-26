@@ -2,6 +2,7 @@ import { LitElement, html, css } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import { ifDefined } from 'lit/directives/if-defined.js'
 import { styleMap } from 'lit/directives/style-map.js'
+import { getSvgEditor } from '../svgEditorInstance.js'
 
 /**
  * SeZoom — numeric spin input with slotted dropdown of zoom-level options.
@@ -182,7 +183,8 @@ export class SeZoom extends LitElement {
   }
 
   render() {
-    const imgPath = svgEditor.configObj.curConfig.imgPath
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    const imgPath = getSvgEditor().configObj.curConfig.imgPath
     const iconSrc = this.src ? `${imgPath}/${this.src}` : undefined
     const arrowDownSrc = `${imgPath}/arrow_down.svg`
     const optionsStyle = styleMap({ display: this.showOptions ? 'flex' : 'none' })

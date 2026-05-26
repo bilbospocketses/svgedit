@@ -13,8 +13,7 @@ import PaintBox from './PaintBox.js'
 import type { ISvgCanvas } from '@svgedit/svgcanvas'
 import './jgraduate/se-gradient-editor.js'
 import { t } from '../locale.js'
-
-declare const svgEditor: SvgEditorGlobal
+import { getSvgEditor } from '../svgEditorInstance.js'
 
 @customElement('se-colorpicker')
 export class SePaintPicker extends LitElement {
@@ -64,7 +63,7 @@ export class SePaintPicker extends LitElement {
 
   override connectedCallback (): void {
     super.connectedCallback()
-    this._imgPath = svgEditor.configObj.curConfig.imgPath
+    this._imgPath = getSvgEditor().configObj.curConfig.imgPath
   }
 
   override firstUpdated (): void {

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return */
 /**
  * Standalone initialisation function extracted from Editor.init().
  *
@@ -15,13 +14,18 @@ import {
 import {
   hasCustomHandler, getCustomHandler, injectExtendedContextMenuItemsIntoDom
 } from './contextmenu.js'
-// @ts-expect-error: *.html imported as string via vite-plugin-string; no ambient module declaration exists yet
 import editorTemplate from './templates/editorTemplate.html'
 import Rulers from './Rulers.js'
 import SvgCanvas from '@svgedit/svgcanvas'
 import type Editor from './Editor.js'
+import { typedDetail, type SeChangeDetail, type SeSvgSourceDetail, type SeCmenuDetail } from './typed-events.js'
 
 const { $id, $click, convertUnit } = SvgCanvas
+
+/** Custom element that supports an `.init(i18next)` lifecycle method. */
+interface InitableElement extends HTMLElement {
+  init: (i18next: unknown) => void
+}
 
 export async function initEditor (editor: Editor): Promise<void> {
   if ('localStorage' in window) {
@@ -42,30 +46,30 @@ export async function initEditor (editor: Editor): Promise<void> {
     editor.$svgEditor.style.visibility = 'hidden'
     editor.workarea = $id('workarea') as HTMLElement
     // Image props dialog added to DOM
-    const newSeImgPropDialog = document.createElement('se-img-prop-dialog') as any
+    const newSeImgPropDialog = document.createElement('se-img-prop-dialog') as unknown as InitableElement
     newSeImgPropDialog.setAttribute('id', 'se-img-prop')
     editor.$container.append(newSeImgPropDialog)
     newSeImgPropDialog.init(editor.i18next)
     // editor prefences dialoag added to DOM
-    const newSeEditPrefsDialog = document.createElement('se-edit-prefs-dialog') as any
+    const newSeEditPrefsDialog = document.createElement('se-edit-prefs-dialog') as unknown as InitableElement
     newSeEditPrefsDialog.setAttribute('id', 'se-edit-prefs')
     editor.$container.append(newSeEditPrefsDialog)
     newSeEditPrefsDialog.init(editor.i18next)
     // canvas menu added to DOM
-    const dialogBox = document.createElement('se-cmenu_canvas-dialog') as any
+    const dialogBox = document.createElement('se-cmenu_canvas-dialog') as unknown as InitableElement
     dialogBox.setAttribute('id', 'se-cmenu_canvas')
     editor.$container.append(dialogBox)
     dialogBox.init(editor.i18next)
     // alertDialog added to DOM
-    const alertBox = document.createElement('se-alert-dialog') as any
+    const alertBox = document.createElement('se-alert-dialog')
     alertBox.setAttribute('id', 'se-alert-dialog')
     editor.$container.append(alertBox)
     // promptDialog added to DOM
-    const promptBox = document.createElement('se-status-dialog') as any
+    const promptBox = document.createElement('se-status-dialog')
     promptBox.setAttribute('id', 'se-status-dialog')
     editor.$container.append(promptBox)
     // Export dialog added to DOM
-    const exportDialog = document.createElement('se-export-dialog') as any
+    const exportDialog = document.createElement('se-export-dialog') as unknown as InitableElement
     exportDialog.setAttribute('id', 'se-export-dialog')
     editor.$container.append(exportDialog)
     exportDialog.init(editor.i18next)
@@ -105,11 +109,12 @@ export async function initEditor (editor: Editor): Promise<void> {
   editor.uiContext = 'toolbars'
 
   // For external openers -- let the opener/parent know svgedit is ready
-  const w = window.opener || window.parent
+  const w: Window | null = (window.opener as Window | null) ?? window.parent
   if (w) {
     try {
+      const CE = (w as unknown as { CustomEvent: typeof CustomEvent }).CustomEvent ?? CustomEvent
       w.document.documentElement.dispatchEvent(
-        new w.CustomEvent('svgEditorReady', { bubbles: true, cancelable: true })
+        new CE('svgEditorReady', { bubbles: true, cancelable: true })
       )
     } catch { /* cross-origin -- ignore */ }
   }
@@ -138,7 +143,7 @@ export async function initEditor (editor: Editor): Promise<void> {
   editor.svgCanvas.bind('transition', editor.elementTransition.bind(editor))
   editor.svgCanvas.bind('changed', editor.elementChanged.bind(editor))
   editor.svgCanvas.bind('exported', editor.exportHandler.bind(editor))
-  editor.svgCanvas.bind('exportedPDF', (_win: any, data: any) => {
+  editor.svgCanvas.bind('exportedPDF', (_win: unknown, data: { output?: string; exportWindowName?: string }) => {
     if (!data.output) { // Ignore Chrome
       return
     }
@@ -163,7 +168,7 @@ export async function initEditor (editor: Editor): Promise<void> {
    * @param centerInfo.newCtr
    * @listens module:svgcanvas.SvgCanvas#event:updateCanvas
    */
-    (_win: any, { center, newCtr }: { center: boolean; newCtr: { x: number; y: number } }) => {
+    (_win: unknown, { center, newCtr }: { center: boolean; newCtr: { x: number; y: number } }) => {
       editor.updateCanvas(center, newCtr)
     }
   )
@@ -176,19 +181,21 @@ export async function initEditor (editor: Editor): Promise<void> {
 
   editor.svgCanvas.textActions.setInputElem($id('text') as HTMLInputElement)
 
-  editor.setBackground(String(editor.configObj.pref('bkgd_color') ?? ''), String(editor.configObj.pref('bkgd_url') ?? ''))
+  editor.setBackground((editor.configObj.pref('bkgd_color') as string | undefined) ?? '', (editor.configObj.pref('bkgd_url') as string | undefined) ?? '')
 
   // update resolution option with actual resolution
   const res = editor.svgCanvas.getResolution()
+  let resW: string | number = res.w
+  let resH: string | number = res.h
   if (editor.configObj.curConfig.baseUnit !== 'px') {
-    res.w = convertUnit(res.w) + editor.configObj.curConfig.baseUnit
-    res.h = convertUnit(res.h) + editor.configObj.curConfig.baseUnit
+    resW = convertUnit(res.w) + editor.configObj.curConfig.baseUnit
+    resH = convertUnit(res.h) + editor.configObj.curConfig.baseUnit
   }
   $id('se-img-prop')?.setAttribute('dialog', 'close')
   $id('se-img-prop')?.setAttribute('title', editor.svgCanvas.getDocumentTitle() ?? '')
-  $id('se-img-prop')?.setAttribute('width', String(res.w))
-  $id('se-img-prop')?.setAttribute('height', String(res.h))
-  $id('se-img-prop')?.setAttribute('save', String(editor.configObj.pref('img_save') ?? ''))
+  $id('se-img-prop')?.setAttribute('width', String(resW))
+  $id('se-img-prop')?.setAttribute('height', String(resH))
+  $id('se-img-prop')?.setAttribute('save', (editor.configObj.pref('img_save') as string | undefined) ?? '')
 
   // Lose focus for select elements when changed (Allows keyboard shortcuts to work better)
   const selElements = document.querySelectorAll('select')
@@ -202,7 +209,7 @@ export async function initEditor (editor: Editor): Promise<void> {
   let promptMoveLayerOnce = false
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   $id('selLayerNames')?.addEventListener('change', async (evt) => {
-    const destLayer = (evt as any).detail.value
+    const destLayer = typedDetail<SeChangeDetail>(evt).value
     if (!destLayer) return
     if (promptMoveLayerOnce) {
       promptMoveLayerOnce = true
@@ -220,11 +227,11 @@ export async function initEditor (editor: Editor): Promise<void> {
     }
   })
   $id('tool_font_family')?.addEventListener('change', (evt) => {
-    editor.svgCanvas.setFontFamily((evt as any).detail.value)
+    editor.svgCanvas.setFontFamily(typedDetail<SeChangeDetail>(evt).value)
   })
 
   $id('seg_type')?.addEventListener('change', (evt) => {
-    editor.svgCanvas.setSegType((evt as any).detail.value)
+    editor.svgCanvas.setSegType(Number(typedDetail<SeChangeDetail>(evt).value))
   })
 
   const addListenerMulti = (element: HTMLElement, eventNames: string, listener: EventListener) => {
@@ -379,14 +386,18 @@ export async function initEditor (editor: Editor): Promise<void> {
     })
   })
   // ref: https://stackoverflow.com/a/1038781
-  const getMaxDimension = (prop: 'Width' | 'Height') =>
-    Math.max(
-      (document.body as any)[`scroll${prop}`],
-      (document.documentElement as any)[`scroll${prop}`],
-      (document.body as any)[`offset${prop}`],
-      (document.documentElement as any)[`offset${prop}`],
-      (document.documentElement as any)[`client${prop}`]
+  const getMaxDimension = (prop: 'Width' | 'Height'): number => {
+    const scrollKey = `scroll${prop}` as const
+    const offsetKey = `offset${prop}` as const
+    const clientKey = `client${prop}` as const
+    return Math.max(
+      document.body[scrollKey],
+      document.documentElement[scrollKey],
+      document.body[offsetKey],
+      document.documentElement[offsetKey],
+      document.documentElement[clientKey]
     )
+  }
   const winWh = {
     width: getMaxDimension('Width'),
     height: getMaxDimension('Height')
@@ -447,19 +458,20 @@ export async function initEditor (editor: Editor): Promise<void> {
     inputEle.setAttribute('autocomplete', 'off')
   })
 
-  $id('se-svg-editor-dialog')?.addEventListener('change', (e: any) => {
-    if (e?.detail?.copy === 'click') {
-      void editor.cancelOverlays(e)
-    } else if (e?.detail?.dialog === 'dynamic') {
+  $id('se-svg-editor-dialog')?.addEventListener('change', (e: Event) => {
+    const detail = typedDetail<SeSvgSourceDetail>(e)
+    if (detail && 'copy' in detail && detail.copy === 'click') {
+      void editor.cancelOverlays(e as CustomEvent)
+    } else if (detail && 'dialog' in detail && detail.dialog === 'dynamic') {
       editor.toggleDynamicOutput(e)
-    } else if (e?.detail?.dialog === 'closed') {
+    } else if (detail && 'dialog' in detail && detail.dialog === 'closed') {
       editor.hideSourceEditor()
     } else {
-      void editor.saveSourceEditor(e)
+      void editor.saveSourceEditor(e as CustomEvent)
     }
   })
-  $id('se-cmenu_canvas')?.addEventListener('change', (e: any) => {
-    const action = e?.detail?.trigger
+  $id('se-cmenu_canvas')?.addEventListener('change', (e: Event) => {
+    const action = typedDetail<SeCmenuDetail>(e)?.trigger
     switch (action) {
       case 'delete':
         editor.svgCanvas.deleteSelectedElements()

@@ -7,11 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed (#3 PR-5 completion — elix.d.ts rename + type cleanup — 2026-05-25)
+### Changed (TODO #19 PR-1 — editor core type-safety sweep — 2026-05-25)
 
-- Renamed `src/editor/elix.d.ts` → `globals.d.ts` — file contained zero elix declarations since PR-3c; now accurately named as the `svgEditor` global ambient type file
-- `se-paint-picker.ts` — `declare const svgEditor: any` → `SvgEditorGlobal` (proper typed global)
-- Removed 2 unused eslint-disable directives from `se-paint-picker.ts` (`no-unsafe-member-access`, `no-unsafe-argument` from Step 14f)
+**Infrastructure:**
+- New `svgEditorInstance.ts` accessor module (`getSvgEditor()`/`setSvgEditor()`) replaces `window.svgEditor` global — 34 consumer files converted to explicit imports
+- New `vite-shims.d.ts` with `declare module '*.html'` — eliminates 5 `@ts-expect-error` HTML-import directives
+- New `typed-events.ts` with per-custom-element event detail interfaces + `typedDetail<T>()` helper — eliminates `(evt as any).detail` cast pattern
+- Deleted `globals.d.ts` (formerly `elix.d.ts`) — superseded by accessor module
+
+**Editor core sweep (6 files, zero suppressions remaining):**
+- Removed all file-level `eslint-disable` banners from `Editor.ts`, `editorInit.ts`, `ConfigObj.ts`, `MainMenu.ts`, `Rulers.ts`
+- Typed all `any` fields on Editor class: `configObj` → `ConfigObj`, `i18next` → `I18nextFacade`, panel fields → actual class types
+- Replaced ~20 `as any` casts with real types via ISvgCanvas, typed events, and accessor module
+- Extension `init(this: any)` pattern → `init()` + `getSvgEditor()` across all 10 extensions
+
+**Test counts (verified 2026-05-26):** vitest 701/701, e2e 250/250. Fixed 4 pre-existing group-transforms e2e failures (arrow-key shortcuts never registered in e2e because extension loading is fire-and-forget; `Ctrl+Shift+G` was never a real ungroup shortcut).
 
 ### Changed (Step 14f — editor type-safety sweep + d.ts cleanup — 2026-05-25)
 

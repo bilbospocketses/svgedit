@@ -2,6 +2,7 @@ import { LitElement, html, css, nothing } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import { ifDefined } from 'lit/directives/if-defined.js'
 import { t } from '../locale.js'
+import { getSvgEditor } from '../svgEditorInstance.js'
 
 /**
  * SESpinInput — number-input custom element with optional icon or label.
@@ -95,7 +96,8 @@ export class SESpinInput extends LitElement {
   render() {
     const shortcut = this.getAttribute('shortcut')
     const divTitle = `${t(this.title)} ${shortcut ? '[' + t(shortcut) + ']' : ''}`
-    const imgSrc = this.src ? svgEditor.configObj.curConfig.imgPath + '/' + this.src : undefined
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    const imgSrc = this.src ? getSvgEditor().configObj.curConfig.imgPath + '/' + this.src : undefined
     const showImg = !!this.src && !this.label
     const showLabel = !!this.label
     const divClass = showImg ? 'imginside' : ''

@@ -1,6 +1,7 @@
 import { LitElement, html, css, nothing } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import { t } from '../locale.js'
+import { getSvgEditor } from '../svgEditorInstance.js'
 
 /**
  * SeMenu — popup wrapper for `<se-menu-item>` children, owning its own button
@@ -92,7 +93,8 @@ export class SeMenu extends LitElement {
 
   render() {
     const imgSrc = this.src
-      ? svgEditor.configObj.curConfig.imgPath + '/' + this.src
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      ? getSvgEditor().configObj.curConfig.imgPath + '/' + this.src
       : undefined
     return html`
       <button

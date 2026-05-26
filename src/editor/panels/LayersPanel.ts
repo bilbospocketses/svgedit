@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-this-alias */
 // editor / panel API surface is loosely typed; full typing deferred to follow-up
 import SvgCanvas from '@svgedit/svgcanvas'
-// @ts-expect-error: LayersPanel.html imported as string via vite-plugin-string; no ambient module declaration
 import LayersPanelHtml from './LayersPanel.html'
 
 const { $id, $click } = SvgCanvas

@@ -63,9 +63,9 @@ export const hasCustomHandler = function (handlerKey: string): boolean {
 * @param handlerKey
 */
 export const getCustomHandler = function (handlerKey: string): MenuItemAction {
-  // Non-null assertion: callers check hasCustomHandler first
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  return contextMenuExtensions[handlerKey]!.action
+  const ext = contextMenuExtensions[handlerKey]
+  if (!ext) throw new Error(`No custom handler registered for "${handlerKey}"`)
+  return ext.action
 }
 
 /**

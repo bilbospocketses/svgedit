@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-non-null-assertion */
 // editor / panel API surface is loosely typed; full typing deferred to follow-up
 import SvgCanvas from '@svgedit/svgcanvas'
-// @ts-expect-error: LeftPanel.html imported as string via vite-plugin-string; no ambient module declaration
 import leftPanelHTML from './LeftPanel.html'
 
 const { $id, $qa, $click } = SvgCanvas

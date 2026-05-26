@@ -2,6 +2,7 @@ import { LitElement, html, css, nothing } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import { ifDefined } from 'lit/directives/if-defined.js'
 import { t } from '../locale.js'
+import { getSvgEditor } from '../svgEditorInstance.js'
 
 /**
  * SeListItem — option item inside a `<se-list>` dropdown.
@@ -46,7 +47,8 @@ export class SeListItem extends LitElement {
   @property() accessor selected = ''
 
   render() {
-    const imgPath = svgEditor.configObj.curConfig.imgPath
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    const imgPath = getSvgEditor().configObj.curConfig.imgPath
     return html`
       <div
         aria-label="option"

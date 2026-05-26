@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-this-alias, @typescript-eslint/require-await, @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument, @typescript-eslint/require-await, @typescript-eslint/restrict-template-expressions */
 // svgCanvas / extension API surface is loosely typed; cleanup deferred to #3 or follow-up
 /**
  * @file ext-markers.js
@@ -29,11 +29,13 @@
  *
 */
 
+import { getSvgEditor } from '../../svgEditorInstance.js'
+
 export default {
   name: 'markers',
-  async init (this: any) {
-    const svgEditor: any = this
-    const { svgCanvas } = svgEditor
+  async init () {
+    const svgEditor: any = getSvgEditor()
+    const svgCanvas = svgEditor.svgCanvas
     const { BatchCommand, RemoveElementCommand, InsertElementCommand } = svgCanvas.history
     const { $id, addSVGElementsFromJson: addElem } = svgCanvas
     const mtypes = ['start', 'mid', 'end']

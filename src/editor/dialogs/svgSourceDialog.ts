@@ -1,7 +1,6 @@
 import { LitElement, html, css } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
-
-declare const svgEditor: SvgEditorGlobal
+import { getSvgEditor } from '../svgEditorInstance.js'
 
 /**
  * SVG Source Editor dialog — allows viewing/editing raw SVG markup.
@@ -207,7 +206,8 @@ export class SeSvgSourceEditorDialog extends LitElement {
   }
 
   render () {
-    const dynamicChecked = svgEditor.configObj.curConfig.dynamicOutput
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    const dynamicChecked = getSvgEditor().configObj.curConfig.dynamicOutput
     return html`
       <dialog @close=${this._onDialogClose}>
         <div id="svg_source_container">

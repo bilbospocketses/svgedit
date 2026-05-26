@@ -1,12 +1,35 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument */
 import SvgCanvas from '@svgedit/svgcanvas'
+import type { ISvgCanvas } from '@svgedit/svgcanvas'
 import { isChrome } from '@svgedit/svgcanvas/common/browser.js'
+import type ConfigObj from './ConfigObj.js'
+import type Rulers from './Rulers.js'
+import { typedDetail, type SeImgPropDetail, type SeEditPrefsDetail, type SeExportDetail } from './typed-events.js'
 
 const { $id, $click, convertUnit, isValidUnit } = SvgCanvas
 const homePage = 'https://github.com/bilbospocketses/svgedit'
 
-/** The editor instance — typed loosely to avoid circular reference. */
-type EditorInstance = any
+/** Narrow i18next facade — matches the surface from locale.ts. */
+interface I18nextFacade {
+  t: (key: string, vars?: Record<string, unknown>) => string
+  addResourceBundle: (lang: string, ns: string, dict: Record<string, unknown>) => void
+}
+
+/** Narrow interface for the Editor instance — avoids circular import. */
+interface EditorInstance {
+  svgCanvas: ISvgCanvas
+  configObj: ConfigObj
+  i18next: I18nextFacade
+  rulers: Rulers
+  $svgEditor: HTMLElement
+  docprops: boolean
+  exportWindowCt: number
+  exportWindowName: string | null
+  exportWindow: Window | null
+  customExportImage: boolean
+  customExportPDF: boolean
+  updateCanvas: (center?: boolean, newCtr?: { x: number; y: number }) => void
+  setBackground: (color: string, url: string) => void
+}
 
 /**
  *
@@ -31,7 +54,7 @@ class MainMenu {
     const $imgDialog = $id('se-img-prop')
     if (!$imgDialog) return
     $imgDialog.setAttribute('dialog', 'close')
-    $imgDialog.setAttribute('save', String(this.editor.configObj.pref('img_save') ?? ''))
+    $imgDialog.setAttribute('save', (this.editor.configObj.pref('img_save') as string | undefined) ?? '')
     this.editor.docprops = false
   }
 
@@ -51,7 +74,7 @@ class MainMenu {
    */
   saveDocProperties (e: CustomEvent): boolean {
     // set title
-    const { title, w, h, save } = e.detail
+    const { title, w, h, save } = typedDetail<SeImgPropDetail>(e)
     // set document title
     this.editor.svgCanvas.setDocumentTitle(title)
 
@@ -63,7 +86,9 @@ class MainMenu {
       seAlert(this.editor.i18next.t('notification.invalidAttrValGiven'))
       return false
     }
-    if (!this.editor.svgCanvas.setResolution(w, h)) {
+    const resW = w === 'fit' ? 'fit' as const : Number(w)
+    const resH = h === 'fit' ? Number(h) : Number(h)
+    if (!this.editor.svgCanvas.setResolution(resW, resH)) {
       seAlert(this.editor.i18next.t('notification.noContentToFitTo'))
       return false
     }
@@ -90,7 +115,7 @@ class MainMenu {
       gridcolor,
       showrulers,
       baseunit
-    } = e.detail
+    } = typedDetail<SeEditPrefsDetail>(e)
     // Set background
     this.editor.setBackground(bgcolor, bgurl)
 
@@ -119,12 +144,13 @@ class MainMenu {
    * @param e
    * @returns Resolves to `undefined`
    */
-  async clickExport (e: any): Promise<void> {
-    if (e?.detail?.trigger !== 'ok' || e?.detail?.imgType === undefined) {
+  async clickExport (e?: Event | { detail: SeExportDetail }): Promise<void> {
+    const detail: SeExportDetail | undefined = e ? (e as CustomEvent<SeExportDetail>).detail : undefined
+    if (!detail || detail.trigger !== 'ok' || detail.imgType === undefined) {
       return
     }
-    const imgType = e?.detail?.imgType
-    const quality = e?.detail?.quality ? e?.detail?.quality / 100 : 1
+    const imgType = detail.imgType
+    const quality = detail.quality ? detail.quality / 100 : 1
     // Open placeholder window (prevents popup)
     let exportWindowName: string | undefined
 
@@ -143,7 +169,7 @@ class MainMenu {
       if (!this.editor.customExportPDF && !chrome) {
         openExportWindow()
       }
-      this.editor.svgCanvas.exportPDF(exportWindowName)
+      void this.editor.svgCanvas.exportPDF(exportWindowName)
     } else {
       if (!this.editor.customExportImage) {
         openExportWindow()
@@ -151,7 +177,7 @@ class MainMenu {
       /* const results = */ await this.editor.svgCanvas.rasterExport(
         imgType,
         quality,
-        this.editor.exportWindowName
+        this.editor.exportWindowName ?? undefined
       )
     }
   }
@@ -169,16 +195,16 @@ class MainMenu {
 
     // update resolution option with actual resolution
     const resolution = this.editor.svgCanvas.getResolution()
+    let resW: string | number = resolution.w
+    let resH: string | number = resolution.h
     if (this.editor.configObj.curConfig.baseUnit !== 'px') {
-      resolution.w =
-        convertUnit(resolution.w) + this.editor.configObj.curConfig.baseUnit
-      resolution.h =
-        convertUnit(resolution.h) + this.editor.configObj.curConfig.baseUnit
+      resW = convertUnit(resolution.w) + this.editor.configObj.curConfig.baseUnit
+      resH = convertUnit(resolution.h) + this.editor.configObj.curConfig.baseUnit
     }
-    $imgDialog.setAttribute('save', String(this.editor.configObj.pref('img_save') ?? ''))
-    $imgDialog.setAttribute('width', String(resolution.w))
-    $imgDialog.setAttribute('height', String(resolution.h))
-    $imgDialog.setAttribute('title', this.editor.svgCanvas.getDocumentTitle())
+    $imgDialog.setAttribute('save', (this.editor.configObj.pref('img_save') as string | undefined) ?? '')
+    $imgDialog.setAttribute('width', String(resW))
+    $imgDialog.setAttribute('height', String(resH))
+    $imgDialog.setAttribute('title', this.editor.svgCanvas.getDocumentTitle() ?? '')
     $imgDialog.setAttribute('dialog', 'open')
   }
 
@@ -194,9 +220,9 @@ class MainMenu {
     if (!$editDialog) return
     // Update background color with current one
     const canvasBg = this.editor.configObj.curPrefs.bkgd_color
-    const url = this.editor.configObj.pref('bkgd_url')
+    const url = this.editor.configObj.pref('bkgd_url') as string | undefined
     if (url) {
-      $editDialog.setAttribute('bgurl', String(url))
+      $editDialog.setAttribute('bgurl', url)
     }
     $editDialog.setAttribute(
       'gridsnappingon',
@@ -263,21 +289,23 @@ class MainMenu {
     )
     $id('se-img-prop')?.addEventListener(
       'change',
-      ((e: any) => {
-        if (e.detail.dialog === 'closed') {
+      ((e: Event) => {
+        const detail = typedDetail<SeImgPropDetail>(e)
+        if (detail.dialog === 'closed') {
           this.hideDocProperties()
         } else {
-          this.saveDocProperties(e)
+          this.saveDocProperties(e as CustomEvent)
         }
       })
     )
     $id('se-edit-prefs')?.addEventListener(
       'change',
-      ((e: any) => {
-        if (e.detail.dialog === 'closed') {
+      ((e: Event) => {
+        const detail = typedDetail<SeEditPrefsDetail>(e)
+        if (detail.dialog === 'closed') {
           this.hidePreferences()
         } else {
-          void this.savePreferences(e)
+          void this.savePreferences(e as CustomEvent)
         }
       })
     )

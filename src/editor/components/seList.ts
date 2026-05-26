@@ -2,6 +2,7 @@ import { LitElement, html, css, nothing } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import { ifDefined } from 'lit/directives/if-defined.js'
 import { t } from '../locale.js'
+import { getSvgEditor } from '../svgEditorInstance.js'
 
 /**
  * SeList — dropdown container custom element.
@@ -94,7 +95,8 @@ export class SeList extends LitElement {
   }
 
   private _renderSelectedValue() {
-    const imgPath = svgEditor.configObj.curConfig.imgPath
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    const imgPath = getSvgEditor().configObj.curConfig.imgPath
     const items = this.querySelectorAll('se-list-item')
     for (const el of Array.from(items)) {
       if (el.getAttribute('value') === this.value) {

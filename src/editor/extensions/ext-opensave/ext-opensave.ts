@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-this-alias, @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unused-vars */
 // svgCanvas / extension API surface is loosely typed; cleanup deferred to #3 or follow-up
 /**
  * @file ext-opensave.js
@@ -15,11 +15,13 @@
    * @listens module:svgcanvas.SvgCanvas#event:saved
    */
 import { fileOpen, fileSave } from 'browser-fs-access'
+import { getSvgEditor } from '../../svgEditorInstance.js'
 
 const name = 'opensave'
 let handle: any = null
 
-const loadExtensionTranslation = async function (svgEditor: any): Promise<void> {
+const loadExtensionTranslation = async function (): Promise<void> {
+  const svgEditor: any = getSvgEditor()
   let translationModule
   const lang = svgEditor.configObj.pref('lang')
   try {
@@ -33,11 +35,11 @@ const loadExtensionTranslation = async function (svgEditor: any): Promise<void> 
 
 export default {
   name,
-  async init (this: any, _S: any) {
-    const svgEditor: any = this
-    const { svgCanvas } = svgEditor
+  async init (_S: any) {
+    const svgEditor: any = getSvgEditor()
+    const svgCanvas = svgEditor.svgCanvas
     const { $id, $click } = svgCanvas
-    await loadExtensionTranslation(svgEditor)
+    await loadExtensionTranslation()
     /**
     * @param e
     */
@@ -55,7 +57,7 @@ export default {
       const dragE = e as DragEvent
       if (dragE.dataTransfer && !dragE.dataTransfer.types?.includes('Files')) return
 
-      $id('se-status-dialog').title = this.i18next.t('notification.loadingImage')
+      $id('se-status-dialog').title = svgEditor.i18next.t('notification.loadingImage')
       $id('se-status-dialog').setAttribute('close', false)
       e.stopPropagation()
       e.preventDefault()
@@ -79,11 +81,11 @@ export default {
         reader = new FileReader()
         reader.onloadend = (ev) => {
           // imgImport.shiftKey (shift key pressed or not) will determine if import should preserve dimension)
-          const newElement = this.svgCanvas.importSvgString((ev.target as any)!.result, (imgImport as any).shiftKey)
-          this.svgCanvas.alignSelectedElements('m', 'page')
-          this.svgCanvas.alignSelectedElements('c', 'page')
+          const newElement = svgCanvas.importSvgString((ev.target as any)!.result, (imgImport as any).shiftKey)
+          svgCanvas.alignSelectedElements('m', 'page')
+          svgCanvas.alignSelectedElements('c', 'page')
           // highlight imported element, otherwise we get strange empty selectbox
-          this.svgCanvas.selectOnly([newElement])
+          svgCanvas.selectOnly([newElement])
           $id('se-status-dialog').setAttribute('close', true)
           resetFileInput()
         }
@@ -99,22 +101,22 @@ export default {
               * @param imageHeight
               */
           const insertNewImage = (imageWidth: number, imageHeight: number) => {
-            const newImage = this.svgCanvas.addSVGElementsFromJson({
+            const newImage = svgCanvas.addSVGElementsFromJson({
               element: 'image',
               attr: {
                 x: 0,
                 y: 0,
                 width: imageWidth,
                 height: imageHeight,
-                id: this.svgCanvas.getNextId(),
+                id: svgCanvas.getNextId(),
                 style: 'pointer-events:inherit'
               }
             })
-            this.svgCanvas.setHref(newImage, result)
-            this.svgCanvas.selectOnly([newImage])
-            this.svgCanvas.alignSelectedElements('m', 'page')
-            this.svgCanvas.alignSelectedElements('c', 'page')
-            this.topPanel.updateContextPanel()
+            svgCanvas.setHref(newImage, result)
+            svgCanvas.selectOnly([newImage])
+            svgCanvas.alignSelectedElements('m', 'page')
+            svgCanvas.alignSelectedElements('c', 'page')
+            svgEditor.topPanel.updateContextPanel()
             $id('se-status-dialog').setAttribute('close', true)
             resetFileInput()
           }
@@ -138,7 +140,7 @@ export default {
     imgImport.type = 'file'
     imgImport.addEventListener('change', importImage)
     // dropping a svg file will import it in the svg as well
-    this.workarea.addEventListener('drop', importImage)
+    svgEditor.workarea.addEventListener('drop', importImage)
 
     const clickClear = async function () {
       const [x, y] = svgEditor.configObj.curConfig.dimensions

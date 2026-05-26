@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-this-alias */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument */
 // svgCanvas / extension API surface is loosely typed; cleanup deferred to #3 or follow-up
 /**
  * @file ext-overview_window.js
@@ -9,11 +9,12 @@
  *
  */
 import { dragmove } from './dragmove/dragmove.js'
+import { getSvgEditor } from '../../svgEditorInstance.js'
 
 export default {
   name: 'overview_window',
-  init (this: any, _opts?: any) {
-    const svgEditor: any = this
+  init (_opts?: any) {
+    const svgEditor: any = getSvgEditor()
     const { $id, $click } = svgEditor.svgCanvas
     const overviewWindowGlobals: Record<string, any> = {}
 

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-this-alias, @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unused-vars */
 // svgCanvas / extension API surface is loosely typed; cleanup deferred to #3 or follow-up
 /**
  * @file ext-shapes.js
@@ -8,9 +8,12 @@
  * @copyright 2010 Christian Tzurcanu, 2010 Alexis Deveria
  *
  */
+import { getSvgEditor } from '../../svgEditorInstance.js'
+
 const name = 'shapes'
 
-const loadExtensionTranslation = async function (svgEditor: any): Promise<void> {
+const loadExtensionTranslation = async function (): Promise<void> {
+  const svgEditor: any = getSvgEditor()
   let translationModule
   const lang = svgEditor.configObj.pref('lang')
   try {
@@ -24,13 +27,13 @@ const loadExtensionTranslation = async function (svgEditor: any): Promise<void> 
 
 export default {
   name,
-  async init (this: any) {
-    const svgEditor: any = this
+  async init () {
+    const svgEditor: any = getSvgEditor()
     const canv = svgEditor.svgCanvas
     const { $id, $click } = canv
     const svgroot = canv.getSvgRoot()
     let lastBBox: any = {}
-    await loadExtensionTranslation(svgEditor)
+    await loadExtensionTranslation()
 
     const modeId = 'shapelib'
     const startClientPos: any = {}

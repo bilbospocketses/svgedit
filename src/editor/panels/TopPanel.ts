@@ -2,7 +2,6 @@
 // editor / panel API surface is loosely typed; full typing deferred to follow-up
 
 import SvgCanvas from '@svgedit/svgcanvas'
-// @ts-expect-error: TopPanel.html imported as string via vite-plugin-string; no ambient module declaration
 import topPanelHTML from './TopPanel.html'
 
 const { $qa, $id, $click, isValidUnit, getTypeMap, convertUnit } = SvgCanvas

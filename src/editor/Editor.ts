@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-non-null-assertion */
 /**
  * The main module for the visual SVG this.
  *
@@ -31,14 +30,26 @@ import LayersPanel from './panels/LayersPanel.js'
 import MainMenu from './MainMenu.js'
 import { getParentsUntil } from '@svgedit/svgcanvas/common/util.js'
 import { EmbedServer } from '../embed/server.js'
-const SVGEDIT_VERSION = '7.4.1'
+import { setSvgEditor } from './svgEditorInstance.js'
+import { typedDetail } from './typed-events.js'
 
-/** Make window.svgEditor accessible */
-declare global {
-  interface Window {
-    svgEditor: Editor
-  }
+/** Narrow i18next facade — matches the surface from locale.ts. */
+interface I18nextFacade {
+  t: (key: string, vars?: Record<string, unknown>) => string
+  addResourceBundle: (lang: string, ns: string, dict: Record<string, unknown>) => void
 }
+
+/** Callback tuple stored by `ready()`. */
+type ReadyCallback = [() => unknown, (value?: unknown) => void, (reason?: unknown) => void]
+
+/** Shortcut definition used in the keyboard handler. */
+interface ShortcutDef {
+  key: string | [string, boolean?]
+  fn: () => void
+  sel?: string
+}
+
+const SVGEDIT_VERSION = '7.4.1'
 
 const { $id, $click, decode64 } = SvgCanvas
 
@@ -54,30 +65,30 @@ class Editor {
   $click: typeof $click
   customExportImage: boolean
   customExportPDF: boolean
-  callbacks: any[]
+  callbacks: ReadyCallback[]
   curContext: string | null
   exportWindowName: string | null
   docprops: boolean
-  shortcuts: any[]
+  shortcuts: ShortcutDef[]
   /** Embed-API server instance; accessible for calling .ready() and wiring canvas events. */
   public readonly _embedServer!: EmbedServer
 
   // --- Properties (startup own) ---
   extensionsAdded: boolean
-  messageQueue: any[]
+  messageQueue: Array<{ title?: string; message?: string }>
   $container: HTMLElement
 
   // --- Properties (startup forward-declared) ---
-  configObj!: any
+  configObj: ConfigObj
   svgCanvas!: ISvgCanvas
-  i18next!: any
+  i18next!: I18nextFacade
   $svgEditor!: HTMLElement
   workarea!: HTMLElement
-  leftPanel!: any
-  bottomPanel!: any
-  topPanel!: any
-  layersPanel!: any
-  mainMenu!: any
+  leftPanel: LeftPanel
+  bottomPanel: BottomPanel
+  topPanel: TopPanel
+  layersPanel: LayersPanel
+  mainMenu: MainMenu
   rulers!: Rulers
   canvMenu!: HTMLElement | null
   exportWindow!: Window | null
@@ -86,13 +97,13 @@ class Editor {
   selectedElement!: Element | null
   multiselected!: boolean
   enableToolCancel!: boolean
-  modeEvent!: any
+  modeEvent!: CustomEvent | null
   exportWindowCt!: number
   goodLangs!: string[]
   storage!: Storage | null
   isReady!: boolean
   setPanning!: (active: boolean) => void
-  setConfig!: (...args: any[]) => any
+  setConfig!: (opts: Record<string, unknown>, cfgCfg?: { overwrite?: boolean; allowInitialUserOverride?: boolean }) => void
 
   /**
    *
@@ -356,12 +367,13 @@ class Editor {
     this.layersPanel = new LayersPanel(this)
     this.mainMenu = new MainMenu(this)
     // makes svgEditor accessible as a global variable
-    window.svgEditor = this
+    setSvgEditor(this)
+    ;(window as unknown as Record<string, unknown>).svgEditor = this
 
     // Embed-API wire-in (Task 11). Activates only when ?embed=1 OR window.parent !== window.
     // Default dialog handlers wrap existing window.seAlert / window.seConfirm (see ambient declarations above).
     // svgCanvas event binding is deferred to init() where svgCanvas is actually created.
-    ;(this as { _embedServer: EmbedServer })._embedServer = new EmbedServer(this as any, {
+    ;(this as { _embedServer: EmbedServer })._embedServer = new EmbedServer(this as unknown as { svgCanvas: Record<string, unknown> } & Record<string, unknown>, {
       version: SVGEDIT_VERSION,
       defaultDialogHandlers: {
         alert: (msg) => { seAlert(msg); return Promise.resolve() },
@@ -398,7 +410,7 @@ class Editor {
         this.configObj.curConfig.extensions.map(async (extname: string) => {
           try {
             // Vite cannot statically analyze these dynamic extension imports.
-            const imported = await import(/* @vite-ignore */ `${this.configObj.curConfig.extPath}/${encodeURIComponent(extname)}/${encodeURIComponent(extname)}.js`)
+            const imported = await import(/* @vite-ignore */ `${this.configObj.curConfig.extPath}/${encodeURIComponent(extname)}/${encodeURIComponent(extname)}.js`) as { default: { name?: string; init?: (...args: unknown[]) => unknown } }
             const { name = extname, init: initfn } = imported.default
             return this.addExtension(name, (initfn && initfn.bind(this)), { langParam: 'en' }) /** @todo  change to current lng */
           } catch (err) {
@@ -412,7 +424,7 @@ class Editor {
       await Promise.all(
         this.configObj.curConfig.userExtensions.map(async ({ pathName, config }: { pathName: string; config: unknown }) => {
           try {
-            const imported = await import(/* @vite-ignore */ encodeURI(pathName))
+            const imported = await import(/* @vite-ignore */ encodeURI(pathName)) as { default: { name: string; init?: (...args: unknown[]) => unknown } }
             const { name, init: initfn } = imported.default
             return this.addExtension(name, (initfn && initfn.bind(this, config)), {})
           } catch (err) {
@@ -429,7 +441,7 @@ class Editor {
         * @param _data
         * @listens module:SvgCanvas#event:extensions_added
         */
-        (_win: any, _data: any) => {
+        (_win: unknown, _data: unknown) => {
           this.extensionsAdded = true
           this.setAll()
 
@@ -593,7 +605,7 @@ class Editor {
   setAll (): void {
     const keyHandler: Record<string, { fn: () => void; pd: boolean }> = {} // will contain the action for each pressed key
 
-    this.shortcuts.forEach((shortcut: any) => {
+    this.shortcuts.forEach((shortcut) => {
       // Bind function to shortcut key
       if (shortcut.key) {
         // Set shortcut based on options
@@ -603,14 +615,14 @@ class Editor {
         if (Array.isArray(shortcut.key)) {
           keyval = shortcut.key[0]
           if (shortcut.key.length > 1) {
-            pd = shortcut.key[1]
+            pd = shortcut.key[1] ?? false
           }
         }
         keyval = String(keyval)
         const { fn } = shortcut
         // Split on '/' for alternative keys (e.g., 'DELETE/BACKSPACE'). The dict
         // lookup must use the canonical UPPERCASE_KEY form per normalizeShortcut().
-        ;(keyval as string).split('/').forEach((key: string) => {
+        ;keyval.split('/').forEach((key: string) => {
           keyHandler[key] = { fn, pd }
         })
       }
@@ -625,10 +637,8 @@ class Editor {
       // return if no shortcut defined for this key
       if (!keyHandler[key]) return
       // launch associated handler and preventDefault if necessary
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-      keyHandler[key]!.fn()
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-      if (keyHandler[key]!.pd) {
+      keyHandler[key].fn()
+      if (keyHandler[key].pd) {
         e.preventDefault()
       }
     })
@@ -652,8 +662,8 @@ class Editor {
   /**
    * @param sel Selector to match
    */
-  getButtonData (sel: string): any {
-    return Object.values(this.shortcuts).find((btn: any) => {
+  getButtonData (sel: string): ShortcutDef | undefined {
+    return Object.values(this.shortcuts).find((btn) => {
       return btn.sel === sel
     })
   }
@@ -663,7 +673,7 @@ class Editor {
    * @param data
    * @listens module:svgcanvas.SvgCanvas#event:exported
    */
-  exportHandler (_win: any, data: any): void {
+  exportHandler (_win: unknown, data: { issues: string[]; exportWindowName: string; bloburl?: string; datauri?: string; type: string }): void {
     const { issues, exportWindowName } = data
     this.exportWindow = window.open('', exportWindowName) // A hack to get the window via JSON-able name without opening a new one
     if (!this.exportWindow || this.exportWindow.closed) {
@@ -671,7 +681,7 @@ class Editor {
       return
     }
 
-    this.exportWindow.location.href = data.bloburl || data.datauri
+    this.exportWindow.location.href = data.bloburl ?? data.datauri ?? ''
     const done = this.configObj.pref('export_notice_done')
     if (done !== 'all') {
       let note = this.i18next.t('notification.saveFromBrowser', {
@@ -717,6 +727,7 @@ class Editor {
     const zoom = this.svgCanvas.getZoom()
     const { workarea } = this
     const cnvs = $id('svgcanvas')
+    if (!cnvs) return
 
     let w = parseFloat(
       getComputedStyle(workarea, null).width.replace('px', '')
@@ -741,12 +752,12 @@ class Editor {
     }
 
     const oldCanY =
-      parseFloat(getComputedStyle(cnvs!, null).height.replace('px', '')) / 2
+      parseFloat(getComputedStyle(cnvs, null).height.replace('px', '')) / 2
     const oldCanX =
-      parseFloat(getComputedStyle(cnvs!, null).width.replace('px', '')) / 2
+      parseFloat(getComputedStyle(cnvs, null).width.replace('px', '')) / 2
 
-    cnvs!.style.width = w + 'px'
-    cnvs!.style.height = h + 'px'
+    cnvs.style.width = w + 'px'
+    cnvs.style.height = h + 'px'
     const newCanY = h / 2
     const newCanX = w / 2
     const offset = this.svgCanvas.updateCanvas(w, h)
@@ -799,7 +810,7 @@ class Editor {
       this.configObj.urldata.storagePrompt !== true &&
       this.storagePromptState === 'ignore'
     ) {
-      if ($id('dialog_box') != null) $id('dialog_box')!.style.display = 'none'
+      $id('dialog_box')?.style.setProperty('display', 'none')
     }
   }
 
@@ -826,14 +837,14 @@ class Editor {
    * @listens module:svgcanvas.SvgCanvas#event:selected
    * @fires module:svgcanvas.SvgCanvas#event:ext_selectedChanged
    */
-  selectedChanged (_win: any, elems: any[]): void {
+  selectedChanged (_win: unknown, elems: Element[]): void {
     const mode = this.svgCanvas.getMode()
     if (mode === 'select') {
       this.leftPanel.clickSelect()
     }
     const isNode = mode === 'pathedit'
     // if this.elems[1] is present, then we have more than one element
-    this.selectedElement = elems.length === 1 || !elems[1] ? elems[0] : null
+    this.selectedElement = elems.length === 1 || !elems[1] ? elems[0] ?? null : null
     this.multiselected = elems.length >= 2 && !!elems[1]
     if (this.selectedElement && !isNode) {
       this.topPanel.update()
@@ -860,7 +871,7 @@ class Editor {
    * @listens module:svgcanvas.SvgCanvas#event:transition
    * @fires module:svgcanvas.SvgCanvas#event:ext_elementTransition
    */
-  elementTransition (_win: any, elems: any[]): void {
+  elementTransition (_win: unknown, elems: Element[]): void {
     const mode = this.svgCanvas.getMode()
     const elem = elems[0]
 
@@ -868,7 +879,7 @@ class Editor {
       return
     }
 
-    this.multiselected = elems.length >= 2 && elems[1]
+    this.multiselected = elems.length >= 2 && !!elems[1]
     // Only updating fields for single elements for now
     if (!this.multiselected) {
       switch (mode) {
@@ -897,7 +908,7 @@ class Editor {
    * @listens module:svgcanvas.SvgCanvas#event:changed
    * @fires module:svgcanvas.SvgCanvas#event:ext_elementChanged
    */
-  elementChanged (_win: any, elems: any[]): void {
+  elementChanged (_win: unknown, elems: Element[]): void {
     const mode = this.svgCanvas.getMode()
     if (mode === 'select') {
       this.leftPanel.clickSelect()
@@ -905,7 +916,7 @@ class Editor {
 
     elems.forEach((elem) => {
       const isSvgElem = elem?.tagName === 'svg'
-      if (isSvgElem || this.svgCanvas.isLayer(elem)) {
+      if (isSvgElem || this.svgCanvas.isLayer(elem as SVGGElement)) {
         this.layersPanel.populateLayers()
         // if the element changed was the svg, then it could be a resolution change
         if (isSvgElem) {
@@ -931,7 +942,7 @@ class Editor {
 
     // In the event a gradient was flipped:
     if (this.selectedElement && mode === 'select') {
-      this.bottomPanel.updateColorpickers()
+      this.bottomPanel.updateColorpickers(false)
     }
 
     this.svgCanvas.runExtensions({
@@ -942,7 +953,7 @@ class Editor {
 
   /**
    */
-  elementRenamed (_win: any, renameObj: any): void {
+  elementRenamed (_win: unknown, renameObj: unknown): void {
     this.svgCanvas.runExtensions({
       action: 'elementRenamed',
       vars: { renameObj }
@@ -951,13 +962,13 @@ class Editor {
 
   /**
    */
-  afterClear (_win: any): void {
+  afterClear (_win: unknown): void {
     this.svgCanvas.runExtensions({ action: 'afterClear' })
   }
 
   /**
    */
-  beforeClear (_win: any): void {
+  beforeClear (_win: unknown): void {
     this.svgCanvas.runExtensions({ action: 'beforeClear' })
   }
 
@@ -978,7 +989,7 @@ class Editor {
    * @listens module:svgcanvas.SvgCanvas#event:zoomed
    * @fires module:svgcanvas.SvgCanvas#event:ext_zoomChanged
    */
-  zoomChanged (_win: any, bbox: any, autoCenter?: boolean): void {
+  zoomChanged (_win: unknown, bbox: unknown, autoCenter?: boolean): void {
     const scrbar = 15
     const zInfo = this.svgCanvas.setBBoxZoom(
       bbox,
@@ -1029,7 +1040,7 @@ class Editor {
    * @param context
    * @listens module:svgcanvas.SvgCanvas#event:contextset
    */
-  contextChanged (_win: any, context: Element | null): void {
+  contextChanged (_win: unknown, context: Element | null): void {
     let linkStr = ''
     if (context) {
       let str = ''
@@ -1052,8 +1063,12 @@ class Editor {
     } else {
       this.curContext = null
     }
-    $id('cur_context_panel')!.style.display = context ? 'block' : 'none'
-    $id('cur_context_panel')!.innerHTML = linkStr
+    const ctxPanel = $id('cur_context_panel')
+    if (ctxPanel) {
+      ctxPanel.style.display = context ? 'block' : 'none'
+      // Pre-existing: linkStr is built from internal layer names, not user-supplied HTML.
+      ctxPanel.innerHTML = linkStr
+    }
   }
 
   /**
@@ -1064,8 +1079,9 @@ class Editor {
   setIcon (elem: string, iconId: string): void {
     const img = document.createElement('img')
     img.src = this.configObj.curConfig.imgPath + iconId
-    // TODO: see todo #10 — setIcon investigation at :905; preserved verbatim
-    const icon = typeof iconId === 'string' ? img : (iconId as any).cloneNode(true)
+    // iconId is always a string (param type), so this branch always takes the img path.
+    // The else branch is dead code preserved for historical compatibility.
+    const icon: Node = img
     if (!icon) {
       console.warn('NOTE: Icon image missing: ' + iconId)
       // Audit input #6 — surface missing-icon to embed host so hosts can act on the gap; standalone callers still see the console.warn.
@@ -1073,10 +1089,12 @@ class Editor {
       return
     }
     // empty()
-    while ($id(elem)?.firstChild) {
-      $id(elem)!.removeChild($id(elem)!.firstChild!)
+    const target = $id(elem)
+    if (!target) return
+    while (target.firstChild) {
+      target.removeChild(target.firstChild)
     }
-    $id(elem)?.appendChild(icon)
+    target.appendChild(icon)
   }
 
   /**
@@ -1086,7 +1104,7 @@ class Editor {
    * @returns Resolves to `undefined`
    */
   // eslint-disable-next-line @typescript-eslint/require-await
-  async extAdded (_win: any, ext: any): Promise<void> {
+  async extAdded (_win: unknown, ext: { callback?: () => void; events?: { id: string; click: () => void } } | null): Promise<void> {
     if (!ext) {
       return undefined
     }
@@ -1238,7 +1256,7 @@ class Editor {
       this.layersPanel.populateLayers()
     }
 
-    if (!this.svgCanvas.setSvgString(e.detail.value)) {
+    if (!this.svgCanvas.setSvgString(typedDetail<{ value: string }>(e).value)) {
       const ok = await seConfirm(
         this.i18next.t('notification.QerrorsRevertToSource')
       )
@@ -1257,7 +1275,7 @@ class Editor {
    * @returns Resolves to `undefined`
    */
   async cancelOverlays (e: CustomEvent): Promise<void> {
-    if ($id('dialog_box') != null) $id('dialog_box')!.style.display = 'none'
+    $id('dialog_box')?.style.setProperty('display', 'none')
     const $editorDialog = $id('se-svg-editor-dialog')
     const editingsource = $editorDialog?.getAttribute('dialog') === 'open'
     if (!editingsource && !this.docprops && !this.configObj.preferences) {
@@ -1269,7 +1287,7 @@ class Editor {
 
     if (editingsource) {
       const origSource = this.svgCanvas.getSvgString()
-      if (origSource !== e.detail.value) {
+      if (origSource !== typedDetail<{ value: string }>(e).value) {
         const ok = await seConfirm(
           this.i18next.t('notification.QignoreSourceChanges')
         )
@@ -1284,8 +1302,9 @@ class Editor {
 
   /**
    */
-  toggleDynamicOutput (e: any): void {
-    this.configObj.curConfig.dynamicOutput = e.detail.dynamic
+  toggleDynamicOutput (e: Event): void {
+    const detail = typedDetail<{ dynamic: boolean }>(e)
+    this.configObj.curConfig.dynamicOutput = detail.dynamic
     this.svgCanvas.setConfig(this.configObj.curConfig)
     const $editorDialog = $id('se-svg-editor-dialog')
     const origSource = this.svgCanvas.getSvgString()
@@ -1362,9 +1381,7 @@ class Editor {
     this.configObj.pref('lang', lang)
     const $editDialog = $id('se-edit-prefs')
     $editDialog?.setAttribute('lang', lang)
-    const oldLayerName = $id('#layerlist')
-      ? $id('#layerlist')!.querySelector('tr.layersel td.layername')?.textContent
-      : ''
+    const oldLayerName = $id('#layerlist')?.querySelector('tr.layersel td.layername')?.textContent ?? ''
     const renameLayer =
       oldLayerName === this.i18next.t('notification.common.layer') + ' 1'
 
@@ -1394,7 +1411,7 @@ class Editor {
    * @param cb Callback to be queued to invoke
    * @returns Resolves when all callbacks, including the supplied have resolved
    */
-  ready (cb: () => any): Promise<any> {
+  ready (cb: () => unknown): Promise<unknown> {
     return new Promise((resolve, reject) => {
       if (this.isReady) {
         resolve(cb())
@@ -1434,7 +1451,7 @@ class Editor {
    * @param [opts={}]
    * @param [opts.noAlert=false] Option to avoid alert to user and instead get rejected promise
    */
-  loadFromString (str: string, { noAlert }: { noAlert?: boolean | undefined } = {}): Promise<any> {
+  loadFromString (str: string, { noAlert }: { noAlert?: boolean | undefined } = {}): Promise<unknown> {
     return this.ready(() => {
       try {
         this.loadSvgString(str, { noAlert })
@@ -1460,7 +1477,7 @@ class Editor {
    *   the SVG (or upon failure to parse the loaded string) when `noAlert` is
    *   enabled
    */
-  loadFromURL (url: string, { cache, noAlert }: { cache?: boolean | undefined; noAlert?: boolean | undefined } = {}): Promise<any> {
+  loadFromURL (url: string, { cache, noAlert }: { cache?: boolean | undefined; noAlert?: boolean | undefined } = {}): Promise<unknown> {
     return this.ready(() => {
       return new Promise<void>((resolve, reject) => {
         fetch(url, { cache: cache ? 'force-cache' : 'no-cache' })
@@ -1500,7 +1517,7 @@ class Editor {
    * @param [opts.noAlert]
    * @returns Resolves to `undefined` and rejects if loading SVG string fails and `noAlert` is enabled
    */
-  loadFromDataURI (str: string, { noAlert }: { noAlert?: boolean | undefined } = {}): Promise<any> {
+  loadFromDataURI (str: string, { noAlert }: { noAlert?: boolean | undefined } = {}): Promise<unknown> {
     return this.ready(() => {
       let base64 = false
       let preMatch = str.match(/^data:image\/svg\+xml;base64,/)
@@ -1526,13 +1543,15 @@ class Editor {
    * @throws {Error} If called too early
    * @returns Resolves to `undefined`
    */
-  addExtension (name: string, initfn: any, initArgs: any): Promise<void> {
+  addExtension (name: string, initfn: ((...args: unknown[]) => unknown) | false | undefined, initArgs: Record<string, unknown>): Promise<void> {
     // Note that we don't want this on this.ready since some extensions
     // may want to run before then (like server_opensave).
     if (!this.svgCanvas) {
       throw new Error('Extension added too early')
     }
-    return this.svgCanvas.addExtension(name, initfn, initArgs)
+    // Extensions may pass false/undefined when they have no init function.
+    const fn = initfn || (() => ({}))
+    return this.svgCanvas.addExtension(name, fn, initArgs as { importLocale: unknown })
   }
 }
 
