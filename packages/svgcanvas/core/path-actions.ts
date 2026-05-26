@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unsafe-assignment,
-   @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- path module uses nullable pathSegList/segs; ISvgCanvas any-typed API */
+   @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- path module uses nullable path data/segs; ISvgCanvas any-typed API */
 /**
  * Path functionality.
  * @module path
@@ -20,7 +20,9 @@ import {
   getBBox
 } from './utilities.js'
 import type { PathSeg, Segment } from './path-method.js'
-import { Path } from './path-method.js'
+import { Path, toPathSeg } from './path-method.js'
+import { getPathData, setPathData } from './path-data.js'
+import type { SVGPathDataCommand } from './path-data.js'
 
 import type { ISvgCanvas } from './svgcanvas-types.js'
 
@@ -56,15 +58,16 @@ export const init = (canvas: ISvgCanvas): void => {
  * @param toRel - true of convert to relative
  */
 export const convertPath = (pth: SVGPathElement, toRel: boolean): string => {
-  const { pathSegList } = pth
-  const len = pathSegList.numberOfItems
+  const pathData = getPathData(pth)
+  const len = pathData.length
   let curx = 0; let cury = 0
   let d = ''
   let lastM: [number, number] | null = null
 
   for (let i = 0; i < len; ++i) {
-    const seg = pathSegList.getItem(i)
-    if (!seg) continue
+    const cmd = pathData[i]
+    if (!cmd) continue
+    const seg = toPathSeg(cmd)
     // if these properties are not in the segment, set them to zero
     let x = seg.x ?? 0
     let y = seg.y ?? 0
@@ -453,13 +456,13 @@ class PathActions {
         index = this.#subpath ? path.segs.length : 0
         svgCanvas.addPointGrip(index, mouseX, mouseY)
       } else {
-        const seglist = drawnPath.pathSegList
-        let i = seglist.numberOfItems
+        const drawnData = getPathData(drawnPath)
+        let i = drawnData.length
         const FUZZ = 6 / zoom
         let clickOnPoint = false
         while (i) {
           i--
-          const item = seglist.getItem(i)
+          const item = drawnData[i] ? toPathSeg(drawnData[i]!) : null
           if (!item) continue
           const px = item.x ?? 0; const py = item.y ?? 0
           if (x >= (px - FUZZ) && x <= (px + FUZZ) &&
@@ -476,20 +479,22 @@ class PathActions {
 
         const newpath = getElement(id)
         let sSeg: PathSeg | null
-        const len = seglist.numberOfItems
+        const len = drawnData.length
         if (clickOnPoint) {
           if (i <= 1 && len >= 2) {
-            const absX = seglist.getItem(0)?.x ?? 0
-            const absY = seglist.getItem(0)?.y ?? 0
+            const firstCmd = drawnData[0] ? toPathSeg(drawnData[0]) : null
+            const absX = firstCmd?.x ?? 0
+            const absY = firstCmd?.y ?? 0
 
-            sSeg = stretchy.pathSegList.getItem(1)
-            const newEntry: SVGPathSegment = sSeg?.pathSegType === 4
+            const stretchyData = getPathData(stretchy)
+            sSeg = stretchyData[1] ? toPathSeg(stretchyData[1]) : null
+            const newEntry: SVGPathDataCommand = sSeg?.pathSegType === 4
               ? { type: 'L', values: [absX, absY] }
               : { type: 'C', values: [(sSeg?.x1 ?? 0) / zoom, (sSeg?.y1 ?? 0) / zoom, absX, absY, absX, absY] }
 
-            const data = drawnPath.getPathData()
+            const data = getPathData(drawnPath)
             data.push(newEntry, { type: 'Z', values: [] })
-            drawnPath.setPathData(data)
+            setPathData(drawnPath, data)
           } else if (len < 3) {
             keep = false
             return keep
@@ -522,24 +527,26 @@ class PathActions {
             return false
           }
 
-          const num = drawnPath.pathSegList.numberOfItems
-          const last = drawnPath.pathSegList.getItem(num - 1)
-          const lastx = last?.x ?? 0; const lasty = last?.y ?? 0
+          const drawnData2 = getPathData(drawnPath)
+          const num = drawnData2.length
+          const lastCmd = drawnData2[num - 1] ? toPathSeg(drawnData2[num - 1]!) : null
+          const lastx = lastCmd?.x ?? 0; const lasty = lastCmd?.y ?? 0
 
           if (evt.shiftKey) {
             const xya = snapToAngle(lastx, lasty, x, y);
             ({ x, y } = xya)
           }
 
-          sSeg = stretchy.pathSegList.getItem(1)
+          const stretchyData2 = getPathData(stretchy)
+          sSeg = stretchyData2[1] ? toPathSeg(stretchyData2[1]) : null
           const rx = svgCanvas.round(x)
           const ry = svgCanvas.round(y)
-          const nextEntry: SVGPathSegment = sSeg?.pathSegType === 4
+          const nextEntry: SVGPathDataCommand = sSeg?.pathSegType === 4
             ? { type: 'L', values: [rx, ry] }
             : { type: 'C', values: [(sSeg?.x1 ?? 0) / zoom, (sSeg?.y1 ?? 0) / zoom, (sSeg?.x2 ?? 0) / zoom, (sSeg?.y2 ?? 0) / zoom, rx, ry] }
-          const data = drawnPath.getPathData()
+          const data = getPathData(drawnPath)
           data.push(nextEntry)
-          drawnPath.setPathData(data)
+          setPathData(drawnPath, data)
 
           x *= zoom
           y *= zoom
@@ -613,8 +620,8 @@ class PathActions {
     const drawnPath = svgCanvas.getDrawnPath()
     if (svgCanvas.getCurrentMode() === 'path') {
       if (!drawnPath) { return }
-      const seglist = drawnPath.pathSegList
-      const index = seglist.numberOfItems - 1
+      const drawnMoveData = getPathData(drawnPath)
+      const index = drawnMoveData.length - 1
 
       if (this.#newPoint) {
         const pointGrip1 = svgCanvas.addCtrlGrip('1c1')
@@ -648,7 +655,7 @@ class PathActions {
         if (index === 0) {
           this.#firstCtrl = [mouseX, mouseY]
         } else {
-          const last = seglist.getItem(index - 1)
+          const last = drawnMoveData[index - 1] ? toPathSeg(drawnMoveData[index - 1]!) : null
           let lastX = last?.x ?? 0
           let lastY = last?.y ?? 0
 
@@ -664,10 +671,10 @@ class PathActions {
       } else {
         const stretchy = getElement('path_stretch_line') as SVGPathElement | null
         if (stretchy) {
-          const prev = seglist.getItem(index)
-          if (prev?.pathSegType === 6) {
-            const prevX = (prev.x ?? 0) + ((prev.x ?? 0) - (prev.x2 ?? 0))
-            const prevY = (prev.y ?? 0) + ((prev.y ?? 0) - (prev.y2 ?? 0))
+          const prevCmd = drawnMoveData[index] ? toPathSeg(drawnMoveData[index]) : null
+          if (prevCmd?.pathSegType === 6) {
+            const prevX = (prevCmd.x ?? 0) + ((prevCmd.x ?? 0) - (prevCmd.x2 ?? 0))
+            const prevY = (prevCmd.y ?? 0) + ((prevCmd.y ?? 0) - (prevCmd.y2 ?? 0))
             svgCanvas.replacePathSeg(
               6,
               1,
@@ -907,11 +914,12 @@ class PathActions {
     const m = transformListToTransform(tlist).matrix
     tlist.clear()
     pth.removeAttribute('transform')
-    const segList = pth.pathSegList
-    const len = segList.numberOfItems
+    const resetData = getPathData(pth)
+    const len = resetData.length
     for (let i = 0; i < len; ++i) {
-      const seg = segList.getItem(i)
-      if (!seg) continue
+      const cmd = resetData[i]
+      if (!cmd) continue
+      const seg = toPathSeg(cmd)
       const type = seg.pathSegType
       if (type === 1) { continue }
       const pts: number[] = []
@@ -987,7 +995,6 @@ class PathActions {
     if (selPts.length !== 1) { return }
 
     const { elem } = path
-    const list = elem.pathSegList
 
     const index = selPts[0] ?? 0
 
@@ -1017,16 +1024,16 @@ class PathActions {
 
     if (resolvedOpenPt !== false) {
       const openPtNum: number = resolvedOpenPt
-      const data = elem.getPathData()
+      const data = getPathData(elem)
       const si = startItem as PathSeg | null
-      const lineEntry: SVGPathSegment = { type: 'L', values: [si?.x ?? 0, si?.y ?? 0] }
-      const closeEntry: SVGPathSegment = { type: 'Z', values: [] }
+      const lineEntry: SVGPathDataCommand = { type: 'L', values: [si?.x ?? 0, si?.y ?? 0] }
+      const closeEntry: SVGPathDataCommand = { type: 'Z', values: [] }
       if (openPtNum === path.segs.length - 1) {
         data.push(lineEntry, closeEntry)
       } else {
         data.splice(openPtNum, 0, lineEntry, closeEntry)
       }
-      elem.setPathData(data)
+      setPathData(elem, data)
 
       path.init().selectPt(openPtNum + 1)
       return
@@ -1035,25 +1042,35 @@ class PathActions {
     const seg = path.segs[index]!
 
     if (seg.mate) {
-      list.removeItem(index)
-      list.removeItem(index)
+      const mateData = getPathData(elem)
+      mateData.splice(index, 2)
+      setPathData(elem, mateData)
       path.init().selectPt(index - 1)
       return
     }
 
     let lastM: number | undefined; let zSeg: number | undefined
 
-    for (let i = 0; i < list.numberOfItems; i++) {
-      const item = list.getItem(i)
-      if (!item) continue
+    let ocData = getPathData(elem)
+    for (let i = 0; i < ocData.length; i++) {
+      const cmd = ocData[i]
+      if (!cmd) continue
+      const item = toPathSeg(cmd)
 
       if (item.pathSegType === 2) {
         lastM = i
       } else if (i === index) {
-        if (lastM !== undefined) list.removeItem(lastM)
+        if (lastM !== undefined) {
+          ocData.splice(lastM, 1)
+          setPathData(elem, ocData)
+          ocData = getPathData(elem)
+          // Adjust indices after removal
+          i--
+        }
       } else if (item.pathSegType === 1 && index < i) {
         zSeg = i - 1
-        list.removeItem(i)
+        ocData.splice(i, 1)
+        setPathData(elem, ocData)
         break
       }
     }
@@ -1062,13 +1079,19 @@ class PathActions {
 
     let num = (index - lastM) - 1
 
+    ocData = getPathData(elem)
     while (num--) {
-      list.insertItemBefore(list.getItem(lastM)!, zSeg!)
+      const moveCmd = ocData[lastM]
+      if (moveCmd) {
+        ocData.splice(zSeg!, 0, { ...moveCmd })
+      }
     }
+    setPathData(elem, ocData)
 
-    const pt = list.getItem(lastM)
+    ocData = getPathData(elem)
+    const ptCmd = ocData[lastM] ? toPathSeg(ocData[lastM]!) : null
 
-    svgCanvas.replacePathSeg(2, lastM, [pt?.x ?? 0, pt?.y ?? 0])
+    svgCanvas.replacePathSeg(2, lastM, [ptCmd?.x ?? 0, ptCmd?.y ?? 0])
 
     path.init().selectPt(0)
   }
@@ -1088,23 +1111,26 @@ class PathActions {
     }
 
     const cleanup = (): boolean => {
-      const segList = path.elem.pathSegList
-      let len = segList.numberOfItems
+      let cleanData = getPathData(path.elem)
+      let len = cleanData.length
 
       const remItems = (pos: number, count: number): void => {
-        while (count--) {
-          segList.removeItem(pos)
-        }
+        cleanData.splice(pos, count)
+        setPathData(path.elem, cleanData)
       }
 
       if (len <= 1) { return true }
 
       while (len--) {
-        const item = segList.getItem(len)
-        if (!item) continue
+        cleanData = getPathData(path.elem)
+        const cmd = cleanData[len]
+        if (!cmd) continue
+        const item = toPathSeg(cmd)
         if (item.pathSegType === 1) {
-          const prev = segList.getItem(len - 1)
-          const nprev = segList.getItem(len - 2)
+          const prevCmd = cleanData[len - 1]
+          const nprevCmd = cleanData[len - 2]
+          const prev = prevCmd ? toPathSeg(prevCmd) : null
+          const nprev = nprevCmd ? toPathSeg(nprevCmd) : null
           if (prev?.pathSegType === 2) {
             remItems(len - 1, 2)
             cleanup()
@@ -1115,12 +1141,13 @@ class PathActions {
             break
           }
         } else if (item.pathSegType === 2 && len > 0) {
-          const prevType = (segList.getItem(len - 1))?.pathSegType
+          const prevCmd2 = cleanData[len - 1]
+          const prevType = prevCmd2 ? toPathSeg(prevCmd2).pathSegType : undefined
           if (prevType === 2) {
             remItems(len - 1, 1)
             cleanup()
             break
-          } else if (prevType === 1 && segList.numberOfItems - 1 === len) {
+          } else if (prevType === 1 && cleanData.length - 1 === len) {
             remItems(len, 1)
             cleanup()
             break
@@ -1132,7 +1159,7 @@ class PathActions {
 
     cleanup()
 
-    if (path.elem.pathSegList.numberOfItems <= 1) {
+    if (getPathData(path.elem).length <= 1) {
       pathActionsMethod.toSelectMode(path.elem)
       svgCanvas.canvas.deleteSelectedElements()
       return
@@ -1183,22 +1210,23 @@ class PathActions {
   * @param elem
   */
   fixEnd (elem: SVGPathElement): void {
-    const segList = elem.pathSegList
-    const len = segList.numberOfItems
+    const fixData = getPathData(elem)
+    const len = fixData.length
     let lastM: PathSeg | null = null
     for (let i = 0; i < len; ++i) {
-      const item = segList.getItem(i)
-      if (!item) continue
+      const cmd = fixData[i]
+      if (!cmd) continue
+      const item = toPathSeg(cmd)
       if (item.pathSegType === 2) {
         lastM = item
       }
 
       if (item.pathSegType === 1) {
-        const prev = segList.getItem(i - 1)
+        const prevCmd = fixData[i - 1]
+        const prev = prevCmd ? toPathSeg(prevCmd) : null
         if (prev && lastM && (prev.x !== lastM.x || prev.y !== lastM.y)) {
-          const data = elem.getPathData()
-          data.splice(i, 0, { type: 'L', values: [lastM.x ?? 0, lastM.y ?? 0] })
-          elem.setPathData(data)
+          fixData.splice(i, 0, { type: 'L', values: [lastM.x ?? 0, lastM.y ?? 0] })
+          setPathData(elem, fixData)
           pathActionsMethod.fixEnd(elem)
           break
         }
@@ -1222,7 +1250,7 @@ class PathActions {
   finishPath (): void {
     const drawnPath = svgCanvas.getDrawnPath()
     if (!drawnPath) return
-    if (drawnPath.pathSegList.numberOfItems < 2) return
+    if (getPathData(drawnPath).length < 2) return
     const stretchy = getElement('path_stretch_line')
     if (stretchy) stretchy.remove()
     svgCanvas.setDrawnPath(null)

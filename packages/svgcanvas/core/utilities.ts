@@ -15,6 +15,7 @@ import {
   getTransformList
 } from './math.js'
 import { mergeDeep } from '../common/util.js'
+import { getPathData as getPathDataFn } from './path-data.js'
 
 /** A plain bounding box object. */
 export interface BBoxObject {
@@ -285,26 +286,54 @@ export const findDefs = (): SVGDefsElement => {
 
 // TODO(codedread): Consider moving the next two functions to bbox.js
 
-/** Internal type for legacy SVGPathSeg used by pathSegList (removed from spec but still found in polyfills). */
-interface LegacyPathSeg {
-  x?: number
-  y?: number
-  x1?: number
-  y1?: number
-  x2?: number
-  y2?: number
-}
-
 /**
  * Get correct BBox for a path in Webkit.
- * Uses the legacy pathSegList API (polyfill-backed in this codebase).
+ * Uses the local path-data module for parsing.
  */
-export const getPathBBox = (path: SVGPathElement & { pathSegList: { numberOfItems: number; getItem(i: number): LegacyPathSeg | null } }): BBoxObject => {
-  const seglist = path.pathSegList
-  const totalSegments = seglist.numberOfItems
+export const getPathBBox = (path: SVGPathElement): BBoxObject => {
+  const pathDataForBBox = getPathDataFn(path)
+  const totalSegments = pathDataForBBox.length
+
+  interface LegacyPathSeg {
+    x?: number
+    y?: number
+    x1?: number
+    y1?: number
+    x2?: number
+    y2?: number
+  }
+
+  const cmdToLegacy = (cmd: { type: string; values: number[] }): LegacyPathSeg => {
+    const { type, values } = cmd
+    const U = type.toUpperCase()
+    const seg: LegacyPathSeg = {}
+    switch (U) {
+      case 'M': case 'L': case 'T':
+        seg.x = values[0] ?? 0; seg.y = values[1] ?? 0; break
+      case 'H':
+        seg.x = values[0] ?? 0; break
+      case 'V':
+        seg.y = values[0] ?? 0; break
+      case 'C':
+        seg.x1 = values[0] ?? 0; seg.y1 = values[1] ?? 0
+        seg.x2 = values[2] ?? 0; seg.y2 = values[3] ?? 0
+        seg.x = values[4] ?? 0; seg.y = values[5] ?? 0; break
+      case 'S':
+        seg.x2 = values[0] ?? 0; seg.y2 = values[1] ?? 0
+        seg.x = values[2] ?? 0; seg.y = values[3] ?? 0; break
+      case 'Q':
+        seg.x1 = values[0] ?? 0; seg.y1 = values[1] ?? 0
+        seg.x = values[2] ?? 0; seg.y = values[3] ?? 0; break
+      case 'A':
+        seg.x = values[5] ?? 0; seg.y = values[6] ?? 0; break
+      default: break
+    }
+    return seg
+  }
 
   const bounds: [number[], number[]] = [[], []]
-  const start = seglist.getItem(0)
+  const startCmd = pathDataForBBox[0]
+  const start = startCmd ? cmdToLegacy(startCmd) : { x: 0, y: 0 }
   let P0 = [start?.x ?? 0, start?.y ?? 0]
 
   const getCalc = (j: number, P1: number[], P2: number[], P3: number[]) => (t: number): number => {
@@ -318,8 +347,9 @@ export const getPathBBox = (path: SVGPathElement & { pathSegList: { numberOfItem
   }
 
   for (let i = 0; i < totalSegments; i++) {
-    const seg = seglist.getItem(i)
-    if (!seg) continue
+    const rawCmd = pathDataForBBox[i]
+    if (!rawCmd) continue
+    const seg = cmdToLegacy(rawCmd)
 
     if (seg.x === undefined) continue
 

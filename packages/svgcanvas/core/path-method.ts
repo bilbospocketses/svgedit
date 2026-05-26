@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion -- pathSegList returns nullable items within iteration bounds */
+/* Path editing data structures and segment operations. */
 /**
  * Path functionality.
  * @module path
@@ -17,16 +17,10 @@ import {
   assignAttributes, getRotationAngle,
   getElement
 } from './utilities.js'
+import { getPathData, setPathData } from './path-data.js'
+import type { SVGPathDataCommand } from './path-data.js'
 
-// Augment SVGPathElement with the pathSegList shim.
-// getPathData and setPathData are already declared by path-data-polyfill/types.d.ts.
-declare global {
-  interface SVGPathElement {
-    readonly pathSegList: PathDataListShim
-  }
-}
-
-/** Seg object shape returned by PathDataListShim */
+/** Seg object shape used by the path editing subsystem. */
 export interface PathSeg {
   pathSegType: number
   pathSegTypeAsLetter: string
@@ -44,7 +38,7 @@ export interface PathSeg {
   [key: string]: number | boolean | string | undefined
 }
 
-const TYPE_TO_CMD: Record<number, SVGPathDataCommand> = {
+export const TYPE_TO_CMD: Record<number, string> = {
   1: 'Z',
   2: 'M',
   3: 'm',
@@ -66,164 +60,92 @@ const TYPE_TO_CMD: Record<number, SVGPathDataCommand> = {
   19: 't'
 }
 
-const CMD_TO_TYPE: Record<string, number> = Object.fromEntries(
+export const CMD_TO_TYPE: Record<string, number> = Object.fromEntries(
   Object.entries(TYPE_TO_CMD).map(([k, v]) => [v, Number(k)])
 )
 
-export class PathDataListShim {
-  private elem: SVGPathElement
-
-  constructor (elem: SVGPathElement) {
-    this.elem = elem
+/** Convert a path-data command entry to a PathSeg with named properties. */
+export function toPathSeg (entry: SVGPathDataCommand): PathSeg {
+  const { type, values = [] } = entry
+  const cmd = CMD_TO_TYPE[type] ?? CMD_TO_TYPE[type?.toUpperCase?.() ?? '']
+  const seg: PathSeg = { pathSegType: cmd ?? 0, pathSegTypeAsLetter: type }
+  const U = String(type).toUpperCase()
+  switch (U) {
+    case 'H':
+      seg.x = values[0] ?? 0
+      break
+    case 'V':
+      seg.y = values[0] ?? 0
+      break
+    case 'M':
+    case 'L':
+    case 'T':
+      seg.x = values[0] ?? 0
+      seg.y = values[1] ?? 0
+      break
+    case 'S':
+      seg.x2 = values[0] ?? 0; seg.y2 = values[1] ?? 0; seg.x = values[2] ?? 0; seg.y = values[3] ?? 0
+      break
+    case 'C':
+      seg.x1 = values[0] ?? 0; seg.y1 = values[1] ?? 0; seg.x2 = values[2] ?? 0; seg.y2 = values[3] ?? 0; seg.x = values[4] ?? 0; seg.y = values[5] ?? 0
+      break
+    case 'Q':
+      seg.x1 = values[0] ?? 0; seg.y1 = values[1] ?? 0; seg.x = values[2] ?? 0; seg.y = values[3] ?? 0
+      break
+    case 'A':
+      seg.r1 = values[0] ?? 0; seg.r2 = values[1] ?? 0; seg.angle = values[2] ?? 0
+      seg.largeArcFlag = values[3] ?? 0; seg.sweepFlag = values[4] ?? 0; seg.x = values[5] ?? 0; seg.y = values[6] ?? 0
+      break
+    default:
+      break
   }
-
-  private _getData (): SVGPathSegment[] {
-    return this.elem.getPathData()
-  }
-
-  private _setData (data: SVGPathSegment[]): void {
-    this.elem.setPathData(data)
-  }
-
-  get numberOfItems (): number {
-    return this._getData().length
-  }
-
-  private _entryToSeg (entry: { type: string; values: number[] }): PathSeg {
-    const { type, values = [] } = entry
-    const cmd = CMD_TO_TYPE[type] ?? CMD_TO_TYPE[type?.toUpperCase?.() ?? '']
-    const seg: PathSeg = { pathSegType: cmd ?? 0, pathSegTypeAsLetter: type }
-    const U = String(type).toUpperCase()
-    switch (U) {
-      case 'H':
-        seg.x = values[0] ?? 0
-        break
-      case 'V':
-        seg.y = values[0] ?? 0
-        break
-      case 'M':
-      case 'L':
-      case 'T':
-        seg.x = values[0] ?? 0
-        seg.y = values[1] ?? 0
-        break
-      case 'S':
-        seg.x2 = values[0] ?? 0; seg.y2 = values[1] ?? 0; seg.x = values[2] ?? 0; seg.y = values[3] ?? 0
-        break
-      case 'C':
-        seg.x1 = values[0] ?? 0; seg.y1 = values[1] ?? 0; seg.x2 = values[2] ?? 0; seg.y2 = values[3] ?? 0; seg.x = values[4] ?? 0; seg.y = values[5] ?? 0
-        break
-      case 'Q':
-        seg.x1 = values[0] ?? 0; seg.y1 = values[1] ?? 0; seg.x = values[2] ?? 0; seg.y = values[3] ?? 0
-        break
-      case 'A':
-        seg.r1 = values[0] ?? 0; seg.r2 = values[1] ?? 0; seg.angle = values[2] ?? 0
-        seg.largeArcFlag = values[3] ?? 0; seg.sweepFlag = values[4] ?? 0; seg.x = values[5] ?? 0; seg.y = values[6] ?? 0
-        break
-      default:
-        break
-    }
-    return seg
-  }
-
-  private _segToEntry (seg: PathSeg): SVGPathSegment {
-    const type: SVGPathDataCommand | undefined = TYPE_TO_CMD[seg.pathSegType] ?? (seg as unknown as { type?: SVGPathDataCommand }).type
-    if (!type) {
-      return { type: 'Z', values: [] }
-    }
-    const U = String(type).toUpperCase()
-    let values: number[] = []
-    switch (U) {
-      case 'H':
-        values = [seg.x ?? 0]
-        break
-      case 'V':
-        values = [seg.y ?? 0]
-        break
-      case 'M':
-      case 'L':
-      case 'T':
-        values = [seg.x ?? 0, seg.y ?? 0]
-        break
-      case 'S':
-        values = [seg.x2 ?? 0, seg.y2 ?? 0, seg.x ?? 0, seg.y ?? 0]
-        break
-      case 'C':
-        values = [seg.x1 ?? 0, seg.y1 ?? 0, seg.x2 ?? 0, seg.y2 ?? 0, seg.x ?? 0, seg.y ?? 0]
-        break
-      case 'Q':
-        values = [seg.x1 ?? 0, seg.y1 ?? 0, seg.x ?? 0, seg.y ?? 0]
-        break
-      case 'A':
-        values = [
-          seg.r1 ?? 0,
-          seg.r2 ?? 0,
-          seg.angle ?? 0,
-          Number(seg.largeArcFlag ?? 0),
-          Number(seg.sweepFlag ?? 0),
-          seg.x ?? 0,
-          seg.y ?? 0
-        ]
-        break
-      default:
-        values = []
-    }
-    return { type, values }
-  }
-
-  getItem (index: number): PathSeg | null {
-    const data = this._getData()
-    const entry = data[index]
-    return entry ? this._entryToSeg(entry) : null
-  }
-
-  replaceItem (seg: PathSeg, index: number): PathSeg {
-    const data = this._getData()
-    data[index] = this._segToEntry(seg)
-    this._setData(data)
-    return seg
-  }
-
-  insertItemBefore (seg: PathSeg, index: number): PathSeg {
-    const data = this._getData()
-    data.splice(index, 0, this._segToEntry(seg))
-    this._setData(data)
-    return seg
-  }
-
-  appendItem (seg: PathSeg): PathSeg {
-    const data = this._getData()
-    data.push(this._segToEntry(seg))
-    this._setData(data)
-    return seg
-  }
-
-  removeItem (index: number): void {
-    const data = this._getData()
-    data.splice(index, 1)
-    this._setData(data)
-  }
-
-  clear (): void {
-    this._setData([])
-  }
+  return seg
 }
 
-if (
-  typeof SVGPathElement !== 'undefined' &&
-  typeof SVGPathElement.prototype.getPathData === 'function' &&
-  typeof SVGPathElement.prototype.setPathData === 'function' &&
-  !('pathSegList' in SVGPathElement.prototype)
-) {
-  Object.defineProperty(SVGPathElement.prototype, 'pathSegList', {
-    get (this: SVGPathElement): PathDataListShim {
-      const self = this as SVGPathElement & { _pathSegListShim?: PathDataListShim }
-      if (!self._pathSegListShim) {
-        self._pathSegListShim = new PathDataListShim(this)
-      }
-      return self._pathSegListShim
-    }
-  })
+/** Convert a PathSeg with named properties back to a path-data command entry. */
+export function fromPathSeg (seg: PathSeg): SVGPathDataCommand {
+  const type: string | undefined = TYPE_TO_CMD[seg.pathSegType] ?? (seg as unknown as { type?: string }).type
+  if (!type) {
+    return { type: 'Z', values: [] }
+  }
+  const U = String(type).toUpperCase()
+  let values: number[] = []
+  switch (U) {
+    case 'H':
+      values = [seg.x ?? 0]
+      break
+    case 'V':
+      values = [seg.y ?? 0]
+      break
+    case 'M':
+    case 'L':
+    case 'T':
+      values = [seg.x ?? 0, seg.y ?? 0]
+      break
+    case 'S':
+      values = [seg.x2 ?? 0, seg.y2 ?? 0, seg.x ?? 0, seg.y ?? 0]
+      break
+    case 'C':
+      values = [seg.x1 ?? 0, seg.y1 ?? 0, seg.x2 ?? 0, seg.y2 ?? 0, seg.x ?? 0, seg.y ?? 0]
+      break
+    case 'Q':
+      values = [seg.x1 ?? 0, seg.y1 ?? 0, seg.x ?? 0, seg.y ?? 0]
+      break
+    case 'A':
+      values = [
+        seg.r1 ?? 0,
+        seg.r2 ?? 0,
+        seg.angle ?? 0,
+        Number(seg.largeArcFlag ?? 0),
+        Number(seg.sweepFlag ?? 0),
+        seg.x ?? 0,
+        seg.y ?? 0
+      ]
+      break
+    default:
+      values = []
+  }
+  return { type, values }
 }
 
 import type { ISvgCanvas } from './svgcanvas-types.js'
@@ -496,28 +418,24 @@ export const replacePathSegMethod = (type: number, index: number, pts: number[],
   const path = svgCanvas.getPathObj() as Path | null
   const pth = (elem as SVGPathElement | null | undefined) ?? path?.elem
   if (!pth) return
-  const pathFuncs = svgCanvas.getPathFuncs()
-  const func = 'createSVGPathSeg' + pathFuncs[type]
   const segData = svgCanvas.getSegData?.() as Record<number, string[]> | undefined
   const props = segData?.[type] ?? segData?.[type - 1]
   if (props && pts.length < props.length) {
-    const currentSeg = (pth).pathSegList?.getItem?.(index)
+    const data = getPathData(pth)
+    const currentSeg = data[index] ? toPathSeg(data[index]) : null
     if (currentSeg) {
       pts = props.map((prop, i) => (pts[i] !== undefined ? (pts[i]) : ((currentSeg[prop] as number) ?? 0)))
     }
   }
-  let seg: PathSeg
-  if (typeof (pth as SVGPathElement & Record<string, unknown>)[func] === 'function') {
-    seg = ((pth as SVGPathElement & Record<string, (...args: number[]) => PathSeg>)[func]!)(...pts)
-  } else {
-    const safeProps = props ?? []
-    seg = { pathSegType: type, pathSegTypeAsLetter: '' }
-    safeProps.forEach((prop, i) => {
-      seg[prop] = pts[i]
-    })
-  }
+  const safeProps = props ?? []
+  const seg: PathSeg = { pathSegType: type, pathSegTypeAsLetter: TYPE_TO_CMD[type] ?? '' }
+  safeProps.forEach((prop, i) => {
+    seg[prop] = pts[i]
+  })
 
-  ;(pth).pathSegList.replaceItem(seg, index)
+  const data = getPathData(pth)
+  data[index] = fromPathSeg(seg)
+  setPathData(pth, data)
 }
 
 /**
@@ -668,7 +586,9 @@ export class Segment {
       if (this.ctrlpts) {
         if (full) {
           const path = svgCanvas.getPathObj() as Path
-          this.item = path.elem.pathSegList.getItem(this.index) ?? this.item
+          const data = getPathData(path.elem)
+          const cmd = data[this.index]
+          if (cmd) { this.item = toPathSeg(cmd) }
           this.type = this.item.pathSegType
         }
         getControlPointsMethod(this)
@@ -784,7 +704,9 @@ export class Segment {
     replacePathSegMethod(newType, this.index, pts)
     this.type = newType
     const path = svgCanvas.getPathObj() as Path
-    this.item = path.elem.pathSegList.getItem(this.index) ?? this.item
+    const data = getPathData(path.elem)
+    const cmd = data[this.index]
+    if (cmd) { this.item = toPathSeg(cmd) }
     this.showCtrlPts(newType === 6)
     this.ctrlpts = getControlPointsMethod(this)
     this.update(true)
@@ -844,16 +766,17 @@ export class Path {
       el.setAttribute('display', 'none')
     })
 
-    const segList = this.elem.pathSegList
-    const len = segList.numberOfItems
+    const pathData = getPathData(this.elem)
+    const len = pathData.length
     this.segs = []
     this.selected_pts = []
     this.first_seg = null
 
     // Set up segs array
     for (let i = 0; i < len; i++) {
-      const item = segList.getItem(i)
-      if (!item) continue
+      const cmd = pathData[i]
+      if (!cmd) continue
+      const item = toPathSeg(cmd)
       const segment = new Segment(i, item)
       segment.path = this
       this.segs.push(segment)
@@ -950,7 +873,7 @@ export class Path {
     if (!seg?.prev) { return }
 
     const { prev } = seg
-    let newEntry: SVGPathSegment | undefined
+    let newEntry: SVGPathDataCommand | undefined
     let newX: number
     let newY: number
     switch (seg.item.pathSegType) {
@@ -980,9 +903,9 @@ export class Path {
       }
     }
     if (!newEntry) return
-    const data = this.elem.getPathData()
+    const data = getPathData(this.elem)
     data.splice(index, 0, newEntry)
-    this.elem.setPathData(data)
+    setPathData(this.elem, data)
   }
 
   /**
@@ -991,7 +914,6 @@ export class Path {
   deleteSeg (index: number): void {
     const seg = this.segs[index]
     if (!seg) return
-    const list = this.elem.pathSegList
 
     seg.show(false)
     const { next } = seg
@@ -1003,14 +925,20 @@ export class Path {
       // Reposition last node
       replacePathSegMethod(4, seg.index, pt)
 
-      list.removeItem(seg.mate.index)
+      const d1 = getPathData(this.elem)
+      d1.splice(seg.mate.index, 1)
+      setPathData(this.elem, d1)
     } else if (!seg.prev) {
       // First node of open path, make next point the M
       const pt = [next?.item.x ?? 0, next?.item.y ?? 0]
       if (seg.next) replacePathSegMethod(2, seg.next.index, pt)
-      list.removeItem(index)
+      const d2 = getPathData(this.elem)
+      d2.splice(index, 1)
+      setPathData(this.elem, d2)
     } else {
-      list.removeItem(index)
+      const d3 = getPathData(this.elem)
+      d3.splice(index, 1)
+      setPathData(this.elem, d3)
     }
   }
 
@@ -1182,8 +1110,10 @@ export class Path {
       this.imatrix = null
     }
 
+    const updateData = getPathData(elem)
     this.eachSeg(function (i) {
-      this.item = elem.pathSegList.getItem(i) ?? this.item
+      const cmd = updateData[i]
+      if (cmd) { this.item = toPathSeg(cmd) }
       this.update()
     })
 

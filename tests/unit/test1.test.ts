@@ -1,4 +1,6 @@
 import SvgCanvas from '../../packages/svgcanvas/svgcanvas.js'
+import { getPathData } from '../../packages/svgcanvas/core/path-data.js'
+import { toPathSeg } from '../../packages/svgcanvas/core/path-method.js'
 
 describe('Basic Module', function () {
   // helper functions
@@ -82,18 +84,18 @@ describe('Basic Module', function () {
       const p1 = document.getElementById('p1')
       const p2 = document.getElementById('p2')
       const dAbs = p1.getAttribute('d')
-      const seglist = p1.pathSegList
+      const segData = getPathData(p1)
 
       assert.equal(p1.nodeName, 'path', "Expected 'path', got")
 
-      assert.equal(seglist.numberOfItems, 4, 'Number of segments before conversion')
+      assert.equal(segData.length, 4, 'Number of segments before conversion')
 
       // verify segments before conversion
-      let curseg = seglist.getItem(0)
+      let curseg = toPathSeg(segData[0])
       assert.equal(curseg.pathSegTypeAsLetter.toUpperCase(), 'M', 'Before conversion, segment #1 type')
-      curseg = seglist.getItem(1)
+      curseg = toPathSeg(segData[1])
       assert.equal(curseg.pathSegTypeAsLetter.toUpperCase(), 'L', 'Before conversion, segment #2 type')
-      curseg = seglist.getItem(3)
+      curseg = toPathSeg(segData[3])
       assert.equal(curseg.pathSegTypeAsLetter.toUpperCase(), 'Z', 'Before conversion, segment #3 type' + dAbs)
 
       // convert and verify segments

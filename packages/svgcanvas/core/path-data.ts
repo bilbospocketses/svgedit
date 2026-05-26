@@ -979,6 +979,10 @@ export function getPathData (el: SVGPathElement, settings?: SVGPathDataSettings)
  * Write structured path data to an SVGPathElement's `d` attribute.
  */
 export function setPathData (el: SVGPathElement, data: SVGPathDataCommand[]): void {
+  // Invalidate caches so the next getPathData() re-parses from the attribute.
+  cachedPathData.delete(el)
+  cachedNormalizedPathData.delete(el)
+
   if (data.length === 0) {
     el.removeAttribute('d')
   } else {

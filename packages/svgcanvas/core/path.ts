@@ -13,6 +13,8 @@ import {
   getRotationAngle, getBBox,
   getRefElem, findDefs
 } from './utilities.js'
+import { getPathData } from './path-data.js'
+import { toPathSeg } from './path-method.js'
 import {
   init as pathMethodInit,
   ptObjToArrMethod,
@@ -458,14 +460,15 @@ export const recalcRotatedPath = (): void => {
   newcx = r * Math.cos(theta) + oldcx
   newcy = r * Math.sin(theta) + oldcy
 
-  const list = pathElem.pathSegList
-  if (!list) { return }
+  const recalcData = getPathData(pathElem)
+  if (!recalcData.length) { return }
 
-  let i = list.numberOfItems
+  let i = recalcData.length
   while (i) {
     i -= 1
-    const seg = list.getItem(i)
-    if (!seg) { continue }
+    const cmd = recalcData[i]
+    if (!cmd) { continue }
+    const seg = toPathSeg(cmd)
     const type = seg.pathSegType
     if (type === 1) { continue }
 
@@ -608,15 +611,16 @@ const pathMap: (string | number)[] = [
  * @param toRel - true of convert to relative
  */
 export const convertPath = (pth: SVGPathElement, toRel: boolean): string => {
-  const pathSegList = pth.pathSegList
-  const len = pathSegList.numberOfItems
+  const cvtData = getPathData(pth)
+  const len = cvtData.length
   let curx = 0; let cury = 0
   let d = ''
   let lastM: [number, number] | null = null
 
   for (let i = 0; i < len; ++i) {
-    const seg = pathSegList.getItem(i)
-    if (!seg) { continue }
+    const cmd = cvtData[i]
+    if (!cmd) { continue }
+    const seg = toPathSeg(cmd)
     // if these properties are not in the segment, set them to zero
     let x = seg.x || 0
     let y = seg.y || 0

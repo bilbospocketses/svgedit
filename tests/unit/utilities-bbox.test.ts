@@ -1,11 +1,12 @@
 import { strict as assert } from 'node:assert'
-import 'path-data-polyfill'
 
 import { NS } from '../../packages/svgcanvas/core/namespaces.js'
 import * as utilities from '../../packages/svgcanvas/core/utilities.js'
 import * as math from '../../packages/svgcanvas/core/math.js'
 import * as path from '../../packages/svgcanvas/core/path.js'
 import * as units from '../../packages/svgcanvas/core/units.js'
+import { getPathData } from '../../packages/svgcanvas/core/path-data.js'
+import { toPathSeg } from '../../packages/svgcanvas/core/path-method.js'
 
 describe('utilities bbox', function () {
   /**
@@ -73,13 +74,13 @@ describe('utilities bbox', function () {
       const m = math.transformListToTransform(tlist).matrix
       tlist.clear()
       pth.removeAttribute('transform')
-      const segList = pth.pathSegList
+      const segData = getPathData(pth)
 
-      const len = segList.numberOfItems
+      const len = segData.length
       // let lastX, lastY;
 
       for (let i = 0; i < len; ++i) {
-        const seg = segList.getItem(i)
+        const seg = toPathSeg(segData[i])
         const type = seg.pathSegType
         if (type === 1) { continue }
         const pts = [];

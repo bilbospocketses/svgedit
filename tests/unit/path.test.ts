@@ -1,10 +1,19 @@
-import 'path-data-polyfill'
 import { NS } from '../../packages/svgcanvas/core/namespaces.js'
 import * as utilities from '../../packages/svgcanvas/core/utilities.js'
 import { convertPath as convertPathActions } from '../../packages/svgcanvas/core/path-actions.js'
 import * as pathModule from '../../packages/svgcanvas/core/path.js'
-import { Path, Segment } from '../../packages/svgcanvas/core/path-method.js'
+import { Path, Segment, toPathSeg } from '../../packages/svgcanvas/core/path-method.js'
+import { getPathData } from '../../packages/svgcanvas/core/path-data.js'
+import type { PathSeg } from '../../packages/svgcanvas/core/path-method.js'
 import { init as unitsInit } from '../../packages/svgcanvas/core/units.js'
+
+/** Helper: get a PathSeg from a path element at the given index. */
+function getItem (el: SVGPathElement, index: number): PathSeg {
+  const data = getPathData(el)
+  const cmd = data[index]
+  if (!cmd) throw new Error(`No path data at index ${index}`)
+  return toPathSeg(cmd)
+}
 
 // pathseg polyfill provided SVGPathSeg.PATHSEG_* numeric constants used below.
 // After the pathseg drop (Step 2 of migration), define just what this file uses.
@@ -64,15 +73,15 @@ describe('path', function () {
     utilities.init(mockUtilitiesContext)
     new Path(path)
 
-    assert.equal(path.pathSegList.getItem(1).pathSegTypeAsLetter, 'L')
-    assert.equal(path.pathSegList.getItem(1).x, 10)
-    assert.equal(path.pathSegList.getItem(1).y, 11)
+    assert.equal(getItem(path,1).pathSegTypeAsLetter, 'L')
+    assert.equal(getItem(path,1).x, 10)
+    assert.equal(getItem(path,1).y, 11)
 
     pathModule.replacePathSeg(SVGPathSeg.PATHSEG_LINETO_REL, 1, [30, 31], path)
 
-    assert.equal(path.pathSegList.getItem(1).pathSegTypeAsLetter, 'l')
-    assert.equal(path.pathSegList.getItem(1).x, 30)
-    assert.equal(path.pathSegList.getItem(1).y, 31)
+    assert.equal(getItem(path,1).pathSegTypeAsLetter, 'l')
+    assert.equal(getItem(path,1).x, 30)
+    assert.equal(getItem(path,1).y, 31)
   })
 
   it('Test svgedit.path.Segment.setType simple', function () {
@@ -84,20 +93,20 @@ describe('path', function () {
     utilities.init(mockUtilitiesContext)
     new Path(path)
 
-    assert.equal(path.pathSegList.getItem(1).pathSegTypeAsLetter, 'L')
-    assert.equal(path.pathSegList.getItem(1).x, 10)
-    assert.equal(path.pathSegList.getItem(1).y, 11)
+    assert.equal(getItem(path,1).pathSegTypeAsLetter, 'L')
+    assert.equal(getItem(path,1).x, 10)
+    assert.equal(getItem(path,1).y, 11)
 
-    const segment = new Segment(1, path.pathSegList.getItem(1))
+    const segment = new Segment(1, getItem(path,1))
     segment.setType(SVGPathSeg.PATHSEG_LINETO_REL, [30, 31])
     assert.equal(segment.item.pathSegTypeAsLetter, 'l')
     assert.equal(segment.item.x, 30)
     assert.equal(segment.item.y, 31)
 
     // Also verify that the actual path changed.
-    assert.equal(path.pathSegList.getItem(1).pathSegTypeAsLetter, 'l')
-    assert.equal(path.pathSegList.getItem(1).x, 30)
-    assert.equal(path.pathSegList.getItem(1).y, 31)
+    assert.equal(getItem(path,1).pathSegTypeAsLetter, 'l')
+    assert.equal(getItem(path,1).x, 30)
+    assert.equal(getItem(path,1).y, 31)
   })
 
   it('Test svgedit.path.Segment.setType with control points', function () {
@@ -110,25 +119,25 @@ describe('path', function () {
     const [mockPathContext, mockUtilitiesContext] = getMockContexts(svg)
     pathModule.init(mockPathContext)
     utilities.init(mockUtilitiesContext)
-    const segment = new Segment(1, path.pathSegList.getItem(1))
+    const segment = new Segment(1, getItem(path,1))
     segment.path = new Path(path)
 
-    assert.equal(path.pathSegList.getItem(1).pathSegTypeAsLetter, 'C')
-    assert.equal(path.pathSegList.getItem(1).x1, 11)
-    assert.equal(path.pathSegList.getItem(1).y1, 12)
-    assert.equal(path.pathSegList.getItem(1).x2, 13)
-    assert.equal(path.pathSegList.getItem(1).y2, 14)
-    assert.equal(path.pathSegList.getItem(1).x, 15)
-    assert.equal(path.pathSegList.getItem(1).y, 16)
+    assert.equal(getItem(path,1).pathSegTypeAsLetter, 'C')
+    assert.equal(getItem(path,1).x1, 11)
+    assert.equal(getItem(path,1).y1, 12)
+    assert.equal(getItem(path,1).x2, 13)
+    assert.equal(getItem(path,1).y2, 14)
+    assert.equal(getItem(path,1).x, 15)
+    assert.equal(getItem(path,1).y, 16)
 
     segment.setType(SVGPathSeg.PATHSEG_CURVETO_CUBIC_REL, [30, 31, 32, 33, 34, 35])
-    assert.equal(path.pathSegList.getItem(1).pathSegTypeAsLetter, 'c')
-    assert.equal(path.pathSegList.getItem(1).x1, 32)
-    assert.equal(path.pathSegList.getItem(1).y1, 33)
-    assert.equal(path.pathSegList.getItem(1).x2, 34)
-    assert.equal(path.pathSegList.getItem(1).y2, 35)
-    assert.equal(path.pathSegList.getItem(1).x, 30)
-    assert.equal(path.pathSegList.getItem(1).y, 31)
+    assert.equal(getItem(path,1).pathSegTypeAsLetter, 'c')
+    assert.equal(getItem(path,1).x1, 32)
+    assert.equal(getItem(path,1).y1, 33)
+    assert.equal(getItem(path,1).x2, 34)
+    assert.equal(getItem(path,1).y2, 35)
+    assert.equal(getItem(path,1).x, 30)
+    assert.equal(getItem(path,1).y, 31)
   })
 
   it('Test svgedit.path.Segment.move', function () {
@@ -140,15 +149,15 @@ describe('path', function () {
     utilities.init(mockUtilitiesContext)
     new Path(path)
 
-    assert.equal(path.pathSegList.getItem(1).pathSegTypeAsLetter, 'L')
-    assert.equal(path.pathSegList.getItem(1).x, 10)
-    assert.equal(path.pathSegList.getItem(1).y, 11)
+    assert.equal(getItem(path,1).pathSegTypeAsLetter, 'L')
+    assert.equal(getItem(path,1).x, 10)
+    assert.equal(getItem(path,1).y, 11)
 
-    const segment = new Segment(1, path.pathSegList.getItem(1))
+    const segment = new Segment(1, getItem(path,1))
     segment.move(-3, 4)
-    assert.equal(path.pathSegList.getItem(1).pathSegTypeAsLetter, 'L')
-    assert.equal(path.pathSegList.getItem(1).x, 7)
-    assert.equal(path.pathSegList.getItem(1).y, 15)
+    assert.equal(getItem(path,1).pathSegTypeAsLetter, 'L')
+    assert.equal(getItem(path,1).x, 7)
+    assert.equal(getItem(path,1).y, 15)
   })
 
   it('Test svgedit.path.Segment.move for quadratic curve', function () {
@@ -161,7 +170,7 @@ describe('path', function () {
     const pathObj = new Path(path)
 
     pathObj.segs[1].move(-3, 4)
-    const seg = path.pathSegList.getItem(1)
+    const seg = getItem(path,1)
 
     assert.equal(seg.pathSegTypeAsLetter, 'Q')
     assert.equal(seg.x, 12)
@@ -180,7 +189,7 @@ describe('path', function () {
     const pathObj = new Path(path)
 
     pathObj.segs[1].move(5, -6)
-    const seg = path.pathSegList.getItem(1)
+    const seg = getItem(path,1)
 
     assert.equal(seg.pathSegTypeAsLetter, 'S')
     assert.equal(seg.x, 20)
@@ -199,7 +208,7 @@ describe('path', function () {
     const pathObj = new Path(path)
 
     pathObj.segs[0].move(5, 5)
-    const seg = path.pathSegList.getItem(1)
+    const seg = getItem(path,1)
 
     assert.equal(seg.pathSegTypeAsLetter, 'Q')
     assert.equal(seg.x, 20)
@@ -217,23 +226,23 @@ describe('path', function () {
     utilities.init(mockUtilitiesContext)
     new Path(path)
 
-    assert.equal(path.pathSegList.getItem(1).pathSegTypeAsLetter, 'C')
-    assert.equal(path.pathSegList.getItem(1).x1, 11)
-    assert.equal(path.pathSegList.getItem(1).y1, 12)
-    assert.equal(path.pathSegList.getItem(1).x2, 13)
-    assert.equal(path.pathSegList.getItem(1).y2, 14)
-    assert.equal(path.pathSegList.getItem(1).x, 15)
-    assert.equal(path.pathSegList.getItem(1).y, 16)
+    assert.equal(getItem(path,1).pathSegTypeAsLetter, 'C')
+    assert.equal(getItem(path,1).x1, 11)
+    assert.equal(getItem(path,1).y1, 12)
+    assert.equal(getItem(path,1).x2, 13)
+    assert.equal(getItem(path,1).y2, 14)
+    assert.equal(getItem(path,1).x, 15)
+    assert.equal(getItem(path,1).y, 16)
 
-    const segment = new Segment(1, path.pathSegList.getItem(1))
+    const segment = new Segment(1, getItem(path,1))
     segment.moveCtrl(1, 100, -200)
-    assert.equal(path.pathSegList.getItem(1).pathSegTypeAsLetter, 'C')
-    assert.equal(path.pathSegList.getItem(1).x1, 111)
-    assert.equal(path.pathSegList.getItem(1).y1, -188)
-    assert.equal(path.pathSegList.getItem(1).x2, 13)
-    assert.equal(path.pathSegList.getItem(1).y2, 14)
-    assert.equal(path.pathSegList.getItem(1).x, 15)
-    assert.equal(path.pathSegList.getItem(1).y, 16)
+    assert.equal(getItem(path,1).pathSegTypeAsLetter, 'C')
+    assert.equal(getItem(path,1).x1, 111)
+    assert.equal(getItem(path,1).y1, -188)
+    assert.equal(getItem(path,1).x2, 13)
+    assert.equal(getItem(path,1).y2, 14)
+    assert.equal(getItem(path,1).x, 15)
+    assert.equal(getItem(path,1).y, 16)
   })
 
   it('Test svgedit.path.convertPath', function () {
@@ -279,7 +288,7 @@ describe('path', function () {
 
     pathModule.recalcRotatedPath()
 
-    const seg = path.pathSegList.getItem(1)
+    const seg = getItem(path,1)
     assert.equal(seg.pathSegTypeAsLetter, 'C')
     assert.closeTo(seg.x1, 0, 1e-6)
     assert.closeTo(seg.y1, 10, 1e-6)
@@ -349,13 +358,13 @@ describe('path', function () {
     const path = document.createElementNS(NS.SVG, 'path')
     path.setAttribute('d', 'M0,0 H10 V10 Z')
 
-    const seg1 = new Segment(0, path.pathSegList.getItem(0))
+    const seg1 = new Segment(0, getItem(path,0))
     assert.equal(seg1.index, 0)
 
-    const seg2 = new Segment(1, path.pathSegList.getItem(1))
+    const seg2 = new Segment(1, getItem(path,1))
     assert.equal(seg2.type, 12) // PATHSEG_LINETO_HORIZONTAL_ABS
 
-    const seg3 = new Segment(2, path.pathSegList.getItem(2))
+    const seg3 = new Segment(2, getItem(path,2))
     assert.equal(seg3.type, 14) // PATHSEG_LINETO_VERTICAL_ABS
   })
 
@@ -424,7 +433,7 @@ describe('path', function () {
     const path = document.createElementNS(NS.SVG, 'path')
     path.setAttribute('d', 'M0,0 A10,10 0 0 1 20,20')
 
-    const seg = new Segment(1, path.pathSegList.getItem(1))
+    const seg = new Segment(1, getItem(path,1))
     assert.equal(seg.type, 10) // PATHSEG_ARC_ABS
   })
 
@@ -480,7 +489,7 @@ describe('path', function () {
     const path = document.createElementNS(NS.SVG, 'path')
     path.setAttribute('d', 'M0,0 L10,10 L20,20')
 
-    const seg = new Segment(1, path.pathSegList.getItem(1))
+    const seg = new Segment(1, getItem(path,1))
     assert.ok(seg.type)
   })
 
@@ -512,7 +521,7 @@ describe('path', function () {
     const path = document.createElementNS(NS.SVG, 'path')
     path.setAttribute('d', 'M10,10 L20,20')
 
-    const seg = new Segment(0, path.pathSegList.getItem(0))
+    const seg = new Segment(0, getItem(path,0))
     assert.equal(seg.type, 2) // PATHSEG_MOVETO_ABS
   })
 })
