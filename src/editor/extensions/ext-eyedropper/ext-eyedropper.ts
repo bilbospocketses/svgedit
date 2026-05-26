@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unused-vars */
-// svgCanvas / extension API surface is loosely typed; cleanup deferred to #3 or follow-up
 /**
  * @file ext-eyedropper.js
  *
@@ -15,28 +13,27 @@ import { getSvgEditor } from '../../svgEditorInstance.js'
 const name = 'eyedropper'
 
 const loadExtensionTranslation = async function (): Promise<void> {
-  const svgEditor: any = getSvgEditor()
-  let translationModule
+  const svgEditor = getSvgEditor()
+  let translationModule: Record<string, unknown>
   const lang = svgEditor.configObj.pref('lang')
   try {
-    translationModule = await import(`./locale/${lang}.js`)
+    translationModule = await import(`./locale/${String(lang)}.js`) as Record<string, unknown>
   } catch (_error) {
-    console.warn(`Missing translation (${lang}) for ${name} - using 'en'`)
+    console.warn(`Missing translation (${String(lang)}) for ${name} - using 'en'`)
     translationModule = await import('./locale/en.js')
   }
-  svgEditor.i18next.addResourceBundle(lang, name, translationModule.default)
+  svgEditor.i18next.addResourceBundle(lang as string, name, translationModule.default as Record<string, unknown>)
 }
 
 export default {
   name,
   async init () {
-    const svgEditor: any = getSvgEditor()
+    const svgEditor = getSvgEditor()
     const svgCanvas = svgEditor.svgCanvas
     await loadExtensionTranslation()
     const { ChangeElementCommand } = svgCanvas.history
-    // svgdoc = S.svgroot.parentNode.ownerDocument,
-    const addToHistory = (cmd: any): void => { svgCanvas.undoMgr.addCommandToHistory(cmd) }
-    const currentStyle: Record<string, any> = {}
+    const addToHistory = (cmd: InstanceType<typeof ChangeElementCommand>): void => { svgCanvas.undoMgr.addCommandToHistory(cmd) }
+    const currentStyle: Record<string, string | number | null> = {}
     const { $id, $click } = svgCanvas
 
     // Helper to show what style is currectly picked
@@ -55,9 +52,9 @@ export default {
         const strokeWidthNum = Number(currentStyle.strokeWidth)
         const borderStyle = currentStyle.strokeDashArray === 'none' || !currentStyle.strokeDashArray ? 'solid' : 'dotted'
 
-        helperCursor.style.background = currentStyle.fillPaint ?? 'transparent'
-        helperCursor.style.opacity = currentStyle.opacity ?? 1
-        helperCursor.style.border = (strokeWidthNum > 0 && currentStyle.strokePaint) ? `2px ${borderStyle} ${currentStyle.strokePaint}` : 'none'
+        helperCursor.style.background = String(currentStyle.fillPaint ?? 'transparent')
+        helperCursor.style.opacity = String(currentStyle.opacity ?? 1)
+        helperCursor.style.border = (strokeWidthNum > 0 && currentStyle.strokePaint) ? `2px ${borderStyle} ${String(currentStyle.strokePaint)}` : 'none'
       }
     }
 
@@ -80,8 +77,8 @@ export default {
      *
      * @param opts
      */
-    const getStyle = (opts: any) => {
-      let elem = null
+    const getStyle = (opts: { multiselected?: boolean; elems: (Element | null)[] }) => {
+      let elem: Element | null = null
       if (!opts.multiselected && opts.elems[0] &&
         !['svg', 'g', 'use'].includes(opts.elems[0].nodeName)
       ) {
@@ -104,20 +101,19 @@ export default {
       callback () {
         // Add the button and its handler(s)
         const title = `${name}:buttons.0.title`
-        // const key = `${name}:buttons.0.key`
         const key = 'ctrl+I'
         const buttonTemplate = `
         <se-button id="tool_eyedropper" title="${title}" src="eye_dropper.svg" shortcut=${key}></se-button>
         `
-        svgCanvas.insertChildAtIndex($id('tools_left'), buttonTemplate, 12)
-        $click($id('tool_eyedropper'), () => {
+        svgCanvas.insertChildAtIndex($id('tools_left')!, buttonTemplate, 12)
+        $click($id('tool_eyedropper')!, () => {
           if (svgEditor.leftPanel.updateLeftPanel('tool_eyedropper')) {
             svgCanvas.setMode(name)
           }
         })
 
         // enables helper, resets currently picked style if no element selected
-        document.addEventListener('modeChange', (_e) => {
+        document.addEventListener('modeChange', () => {
           if (svgCanvas.getMode() === name) {
             styleHelper()
           } else {
@@ -140,7 +136,7 @@ export default {
           }
         })
 
-        svgEditor.workarea.addEventListener('mouseleave', (_e: MouseEvent) => {
+        svgEditor.workarea.addEventListener('mouseleave', () => {
           helperCursor.style.display = 'none'
         })
 
@@ -153,19 +149,19 @@ export default {
       },
       // if we have selected an element, grab its paint and enable the eye dropper button
       selectedChanged: getStyle,
-      mouseDown (opts: any) {
+      mouseDown (opts: { event: MouseEvent }) {
         const mode = svgCanvas.getMode()
         if (mode === name) {
           const e = opts.event
-          const { target } = e
+          const target = e.target as Element
           if (!['svg', 'g', 'use'].includes(target.nodeName)) {
-            const changes: Record<string, any> = {}
+            const changes: Record<string, string | null> = {}
 
             // If some style is picked - applies it to the target, if no style - picks it from the target
             if (Object.keys(currentStyle).length > 0) {
-              const change = function (elem: any, attrname: string, newvalue: any) {
+              const change = function (elem: Element, attrname: string, newvalue: string | number | null) {
                 changes[attrname] = elem.getAttribute(attrname)
-                elem.setAttribute(attrname, newvalue)
+                elem.setAttribute(attrname, String(newvalue))
               }
 
               if (currentStyle.fillPaint) { change(target, 'fill', currentStyle.fillPaint) }

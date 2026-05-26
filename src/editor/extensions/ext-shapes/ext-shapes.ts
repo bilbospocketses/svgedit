@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unused-vars */
-// svgCanvas / extension API surface is loosely typed; cleanup deferred to #3 or follow-up
 /**
  * @file ext-shapes.js
  *
@@ -13,32 +11,32 @@ import { getSvgEditor } from '../../svgEditorInstance.js'
 const name = 'shapes'
 
 const loadExtensionTranslation = async function (): Promise<void> {
-  const svgEditor: any = getSvgEditor()
-  let translationModule
+  const svgEditor = getSvgEditor()
+  let translationModule: Record<string, unknown>
   const lang = svgEditor.configObj.pref('lang')
   try {
-    translationModule = await import(`./locale/${lang}.js`)
+    translationModule = await import(`./locale/${String(lang)}.js`) as Record<string, unknown>
   } catch (_error) {
-    console.warn(`Missing translation (${lang}) for ${name} - using 'en'`)
+    console.warn(`Missing translation (${String(lang)}) for ${name} - using 'en'`)
     translationModule = await import('./locale/en.js')
   }
-  svgEditor.i18next.addResourceBundle(lang, name, translationModule.default)
+  svgEditor.i18next.addResourceBundle(lang as string, name, translationModule.default as Record<string, unknown>)
 }
 
 export default {
   name,
   async init () {
-    const svgEditor: any = getSvgEditor()
+    const svgEditor = getSvgEditor()
     const canv = svgEditor.svgCanvas
     const { $id, $click } = canv
     const svgroot = canv.getSvgRoot()
-    let lastBBox: any = {}
+    let lastBBox: DOMRect | { x: number; y: number; width: number; height: number } = { x: 0, y: 0, width: 0, height: 0 }
     await loadExtensionTranslation()
 
     const modeId = 'shapelib'
-    const startClientPos: any = {}
+    const startClientPos: { x: number; y: number } = { x: 0, y: 0 }
 
-    let curShape: any
+    let curShape: SVGGraphicsElement
     let startX: number
     let startY: number
 
@@ -50,19 +48,19 @@ export default {
           <se-explorerbutton id="tool_shapelib" title="${svgEditor.i18next.t(`${name}:buttons.0.title`)}" lib="${extPath}/ext-shapes/shapelib/"
           src="shapelib.svg"></se-explorerbutton>
           `
-          canv.insertChildAtIndex($id('tools_left'), buttonTemplate, 9)
-          $click($id('tool_shapelib'), () => {
+          canv.insertChildAtIndex($id('tools_left')!, buttonTemplate, 9)
+          $click($id('tool_shapelib')!, () => {
             if (svgEditor.leftPanel.updateLeftPanel('tool_shapelib')) {
               canv.setMode(modeId)
             }
           })
         }
       },
-      mouseDown (opts: any) {
+      mouseDown (opts: { start_x: number; start_y: number; event: MouseEvent }) {
         const mode = canv.getMode()
         if (mode !== modeId) { return undefined }
 
-        const currentD = $id('tool_shapelib')!.dataset.draw
+        const currentD = $id('tool_shapelib')!.dataset.draw ?? ''
         startX = opts.start_x
         const x = startX
         startY = opts.start_y
@@ -78,10 +76,10 @@ export default {
           attr: {
             d: currentD,
             id: canv.getNextId(),
-            opacity: curStyle.opacity / 2,
+            opacity: Number(curStyle.opacity) / 2,
             style: 'pointer-events:none'
           }
-        })
+        }) as SVGGraphicsElement
 
         curShape.setAttribute('transform', 'translate(' + x + ',' + y + ') scale(0.005) translate(' + -x + ',' + -y + ')')
 
@@ -93,7 +91,7 @@ export default {
           started: true
         }
       },
-      mouseMove (opts: any) {
+      mouseMove (opts: { mouse_x: number; mouse_y: number; event: MouseEvent }) {
         const mode = canv.getMode()
         if (mode !== modeId) { return }
 
@@ -150,7 +148,7 @@ export default {
 
         lastBBox = curShape.getBBox()
       },
-      mouseUp (opts: any) {
+      mouseUp (opts: { event: MouseEvent }) {
         const mode = canv.getMode()
         if (mode !== modeId) { return undefined }
 

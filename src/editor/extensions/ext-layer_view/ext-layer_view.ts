@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unused-vars */
-// svgCanvas / extension API surface is loosely typed; cleanup deferred to #3 or follow-up
 /**
  * @file ext-layer_view.js
  *
@@ -13,48 +11,49 @@ import { getSvgEditor } from '../../svgEditorInstance.js'
 const name = 'layer_view'
 
 const loadExtensionTranslation = async function (): Promise<void> {
-  const svgEditor: any = getSvgEditor()
-  let translationModule
+  const svgEditor = getSvgEditor()
+  let translationModule: Record<string, unknown>
   const lang = svgEditor.configObj.pref('lang')
   try {
-    translationModule = await import(`./locale/${lang}.js`)
+    translationModule = await import(`./locale/${String(lang)}.js`) as Record<string, unknown>
   } catch (_error) {
-    console.warn(`Missing translation (${lang}) for ${name} - using 'en'`)
+    console.warn(`Missing translation (${String(lang)}) for ${name} - using 'en'`)
     translationModule = await import('./locale/en.js')
   }
-  svgEditor.i18next.addResourceBundle(lang, name, translationModule.default)
+  svgEditor.i18next.addResourceBundle(lang as string, name, translationModule.default as Record<string, unknown>)
 }
 
 export default {
   name,
-  async init (_S: any) {
-    const svgEditor: any = getSvgEditor()
+  async init () {
+    const svgEditor = getSvgEditor()
     const svgCanvas = svgEditor.svgCanvas
     const { $id, $click } = svgCanvas
     await loadExtensionTranslation()
 
-    const clickLayerView = (e?: any) => {
-      $id('tool_layerView').pressed = !$id('tool_layerView').pressed
-      updateLayerView(e)
+    const clickLayerView = () => {
+      const btn = $id('tool_layerView') as HTMLElement & { pressed: boolean }
+      btn.pressed = !btn.pressed
+      updateLayerView()
     }
 
-    const updateLayerView = (_e?: any) => {
+    const updateLayerView = () => {
       const drawing = svgCanvas.getCurrentDrawing()
       const curLayer = drawing.getCurrentLayerName()
       let layer = drawing.getNumLayers()
       while (layer--) {
         const name = drawing.getLayerName(layer)
-        if (name !== curLayer && $id('tool_layerView').pressed) {
+        if (name !== curLayer && ($id('tool_layerView') as HTMLElement & { pressed: boolean }).pressed) {
           drawing.setLayerVisibility(name, false)
         } else {
           drawing.setLayerVisibility(name, true)
         }
       }
-      $id('layerlist').querySelectorAll('tr.layer').forEach(
-        function (el: any) {
+      $id('layerlist')!.querySelectorAll('tr.layer').forEach(
+        function (el: Element) {
           const layervis = el.querySelector('td.layervis')
-          const vis = el.classList.contains('layersel') || !$id('tool_layerView').pressed ? 'layervis' : 'layerinvis layervis'
-          layervis.setAttribute('class', vis)
+          const vis = el.classList.contains('layersel') || !($id('tool_layerView') as HTMLElement & { pressed: boolean }).pressed ? 'layervis' : 'layerinvis layervis'
+          layervis?.setAttribute('class', vis)
         }
       )
     }
@@ -63,17 +62,18 @@ export default {
       name: svgEditor.i18next.t(`${name}:name`),
       // The callback should be used to load the DOM with the appropriate UI items
       layersChanged () {
-        if ($id('tool_layerView').pressed) {
+        if (($id('tool_layerView') as HTMLElement & { pressed: boolean }).pressed) {
           updateLayerView()
         } if (svgEditor.configObj.curConfig.layerView) {
           svgEditor.configObj.curConfig.layerView = false
-          $id('tool_layerView').pressed = true
+          ;($id('tool_layerView') as HTMLElement & { pressed: boolean }).pressed = true
           updateLayerView()
         }
       },
       layerVisChanged () {
-        if ($id('tool_layerView').pressed) {
-          $id('tool_layerView').pressed = !$id('tool_layerView').pressed
+        const btn = $id('tool_layerView') as HTMLElement & { pressed: boolean }
+        if (btn.pressed) {
+          btn.pressed = false
         }
       },
       callback () {
@@ -82,8 +82,8 @@ export default {
         const key = svgEditor.i18next.t(`${name}:buttons.0.key`)
         buttonTemplate.innerHTML = `
       <se-button id="tool_layerView" title="${title}" shortcut="${key}" src="layer_view.svg"></se-button>`
-        $id('editor_panel').append(buttonTemplate.content.cloneNode(true))
-        $click($id('tool_layerView'), clickLayerView.bind(this))
+        $id('editor_panel')!.append(buttonTemplate.content.cloneNode(true))
+        $click($id('tool_layerView')!, clickLayerView.bind(this))
       }
     }
   }

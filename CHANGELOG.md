@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (TODO #19 PR-4 — extensions type-safety sweep — 2026-05-26)
+
+- Removed all `eslint-disable` banners + all `as any` casts from 12 extension files
+- Typed extension init callbacks, event handlers, dataStorage returns, dynamic import modules
+- Fixed `RemoveElementCommand` constructor call, `setAttribute` number→string coercion
+- Converted ext-markers `async init()` → sync (no await needed)
+- Added eslint config override for `no-non-null-assertion` in extensions (heavy `$id()` usage)
+
+**Test counts (verified 2026-05-26):** vitest 701/701, lint 0 errors + 0 warnings.
+
 ### Changed (TODO #19 PR-3 — components + dialogs type-safety sweep — 2026-05-26)
 
 - Removed all `eslint-disable` banners + all `as any` casts from 10 component/dialog files + 8 stale inline directives from prior PRs
