@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (TODO #19 PR-2 — panels type-safety sweep — 2026-05-26)
+
+- Removed all `eslint-disable` banners + all 90 `as any` casts from `TopPanel.ts` (68), `BottomPanel.ts` (15), `LayersPanel.ts` (5), `LeftPanel.ts` (2)
+- `typedDetail<SeChangeDetail>(evt)` replaces `(evt as any).detail.value` pattern (~50 sites in TopPanel alone)
+- Added typed element interfaces (`SeButtonElement`, `SeValueElement`, `SePaintPickerElement`, `PathActionsLike`) to `typed-events.ts`
+- Fixed 22 type errors surfaced by cast removal: null-safety on `selectedElements`, `getAttribute` returns, `convertUnit` args; `fill`/`stroke` literal narrowing; boolean-to-string coercion on setAttribute
+
+**Test counts (verified 2026-05-26):** vitest 701/701.
+
 ### Changed (TODO #19 PR-1 — editor core type-safety sweep — 2026-05-25)
 
 **Infrastructure:**
