@@ -106,6 +106,47 @@ export interface SeCmenuDetail {
 }
 
 // ---------------------------------------------------------------------------
+// se-img-prop-dialog
+// ---------------------------------------------------------------------------
+
+/** Detail for `change` events from se-img-prop-dialog. */
+export interface SeImgPropDetail {
+  dialog: string
+  title: string
+  w: string
+  h: string
+  save: string
+}
+
+// ---------------------------------------------------------------------------
+// se-edit-prefs-dialog
+// ---------------------------------------------------------------------------
+
+/** Detail for `change` events from se-edit-prefs-dialog. */
+export interface SeEditPrefsDetail {
+  dialog: string
+  lang: string
+  bgcolor: string
+  bgurl: string
+  gridsnappingon: boolean
+  gridsnappingstep: number
+  gridcolor: string
+  showrulers: boolean
+  baseunit: string
+}
+
+// ---------------------------------------------------------------------------
+// se-export-dialog
+// ---------------------------------------------------------------------------
+
+/** Detail for `change` events from se-export-dialog. */
+export interface SeExportDetail {
+  trigger: string
+  imgType: string | undefined
+  quality: number | undefined
+}
+
+// ---------------------------------------------------------------------------
 // svg-source-dialog (polymorphic change event)
 // ---------------------------------------------------------------------------
 

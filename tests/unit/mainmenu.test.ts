@@ -90,7 +90,7 @@ describe('MainMenu', () => {
 
     expect(result).toBe(true)
     expect(editor.svgCanvas.setDocumentTitle).toHaveBeenCalledWith('Demo')
-    expect(editor.svgCanvas.setResolution).toHaveBeenCalledWith('200', '100')
+    expect(editor.svgCanvas.setResolution).toHaveBeenCalledWith(200, 100)
     expect(editor.updateCanvas).toHaveBeenCalled()
     expect(prefStore.img_save).toBe('layer')
     expect(editor.docprops).toBe(false)

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
 import { mergeDeep } from '@svgedit/svgcanvas/common/util.js'
 
 /**
@@ -68,9 +67,13 @@ interface UrlData {
   [key: string]: unknown
 }
 
-/** The editor instance passed to ConfigObj (typed loosely to avoid circular ref). */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type EditorInstance = any
+/** Narrow interface for the Editor instance — avoids circular import of Editor class. */
+interface EditorInstance {
+  storage: Storage | null
+  loadFromDataURI (str: string, opts?: { noAlert?: boolean }): Promise<unknown>
+  loadFromString (str: string, opts?: { noAlert?: boolean }): Promise<unknown>
+  loadFromURL (url: unknown): Promise<unknown>
+}
 
 /**
  * @class configObj
@@ -376,14 +379,14 @@ export default class ConfigObj {
         }
         if (source) {
           if (source.startsWith('data:')) {
-            this.editor.loadFromDataURI(source)
+            void this.editor.loadFromDataURI(source)
           } else {
-            this.editor.loadFromString(source)
+            void this.editor.loadFromString(source)
           }
           return
         }
         if (this.urldata.url) {
-          this.editor.loadFromURL(this.urldata.url)
+          void this.editor.loadFromURL(this.urldata.url)
           return
         }
       }
@@ -495,8 +498,7 @@ export default class ConfigObj {
         ) {
           return
         }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        this.curConfig[key] = (this.curConfig[key] as any[]).concat(val) // We will handle any dupes later
+        this.curConfig[key] = (this.curConfig[key] as unknown[]).concat(val as unknown[]) // We will handle any dupes later
       // Only allow other configObj.curConfig if defined in configObj.defaultConfig
       } else if ({}.hasOwnProperty.call(this.defaultConfig, key)) {
         if (cfgCfg.overwrite === false && (

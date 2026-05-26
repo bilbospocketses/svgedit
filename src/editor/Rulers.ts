@@ -1,12 +1,17 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
 import rulersTemplate from './templates/rulersTemplate.html'
 import SvgCanvas from '@svgedit/svgcanvas'
 import type { ISvgCanvas } from '@svgedit/svgcanvas'
+import type ConfigObj from './ConfigObj.js'
 
 const { $id, getTypeMap } = SvgCanvas
 
-/** The editor instance — typed loosely to avoid circular reference. */
-type EditorInstance = any
+/** Narrow interface for the Editor instance — avoids circular import. */
+interface EditorInstance {
+  svgCanvas: ISvgCanvas
+  configObj: ConfigObj
+  $svgEditor: HTMLElement
+  workarea: HTMLElement
+}
 
 /**
  *
@@ -68,12 +73,13 @@ class Rulers {
   updateRulers (scanvas?: HTMLElement | null, zoom?: number): void {
     if (!zoom) { zoom = this.svgCanvas.getZoom() }
     if (!scanvas) { scanvas = $id('svgcanvas') }
+    if (!scanvas) return
 
     let d: number; let i: number
     const limit = 30000
     const contentElem = this.svgCanvas.getSvgContent() as Element
-    const units = getTypeMap() as Record<string, number>
-    const unit = units[this.editor.configObj.curConfig.baseUnit as string]! // 1 = 1px
+    const units = getTypeMap()
+    const unit = units[this.editor.configObj.curConfig.baseUnit] ?? 1 // 1 = 1px
 
     // draw x ruler then y ruler
     for (d = 0; d < 2; d++) {
@@ -91,18 +97,18 @@ class Rulers {
       const $hcanv = $hcanvOrig.cloneNode(true) as HTMLCanvasElement
       $hcanvOrig.replaceWith($hcanv)
 
-      const hcanv = $hcanv as any
-
       // Set the canvas size to the width of the container
       let rulerLen: number
       if (lentype === 'width') {
-        rulerLen = parseFloat(getComputedStyle(scanvas!, null).width.replace('px', ''))
+        rulerLen = parseFloat(getComputedStyle(scanvas, null).width.replace('px', ''))
       } else {
-        rulerLen = parseFloat(getComputedStyle(scanvas!, null).height.replace('px', ''))
+        rulerLen = parseFloat(getComputedStyle(scanvas, null).height.replace('px', ''))
       }
       const totalLen = rulerLen
       ;($hcanv.parentNode as HTMLElement).style[lentype] = totalLen + 'px'
-      let ctx = $hcanv.getContext('2d')!
+      const ctxOrNull = $hcanv.getContext('2d')
+      if (!ctxOrNull) continue
+      let ctx: CanvasRenderingContext2D = ctxOrNull
       let ctxArr: CanvasRenderingContext2D[] | undefined
       let num: number
       let ctxArrNum: number | undefined
@@ -112,12 +118,11 @@ class Rulers {
       ctx.fillRect(0, 0, $hcanv.width, $hcanv.height)
 
       // Remove any existing canvasses
-      const elements = Array.prototype.filter.call($hcanv.parentNode!.children, function (child: Node) {
-        return child !== $hcanv
-      }) as Element[]
-      Array.from(elements).forEach(function (element) {
-        element.remove()
-      })
+      const parentNode = $hcanv.parentNode as HTMLElement | null
+      if (parentNode) {
+        const elements = Array.from(parentNode.children).filter((child) => child !== $hcanv)
+        elements.forEach((element) => { element.remove() })
+      }
 
       // Create multiple canvases when necessary (due to browser limits)
       if (rulerLen >= limit) {
@@ -126,21 +131,21 @@ class Rulers {
         ctxArr[0] = ctx
         let copy: HTMLCanvasElement | undefined
         for (i = 1; i < ctxArrNum; i++) {
-          hcanv[lentype] = limit
+          $hcanv[lentype] = limit
           copy = $hcanv.cloneNode(true) as HTMLCanvasElement
           ;($hcanv.parentNode as HTMLElement).append(copy)
           ctxArr[i] = copy.getContext('2d') as CanvasRenderingContext2D
         }
 
         if (copy) {
-          (copy as any)[lentype] = rulerLen % limit
+          copy[lentype] = rulerLen % limit
         }
 
         // set copy width to last
         rulerLen = limit
       }
 
-      hcanv[lentype] = rulerLen
+      $hcanv[lentype] = rulerLen
 
       const uMulti = unit * zoom
 
@@ -148,7 +153,7 @@ class Rulers {
       const rawM = 50 / uMulti
       let multi = 1
       for (i = 0; i < this.rulerIntervals.length; i++) {
-        num = this.rulerIntervals[i]!
+        num = this.rulerIntervals[i] ?? 0
         multi = num
         if (rawM <= num) {
           break
@@ -181,7 +186,7 @@ class Rulers {
         if (multi >= 1) {
           label = Math.round(num)
         } else {
-          const decs = String(multi).split('.')[1]!.length
+          const decs = (String(multi).split('.')[1] ?? '').length
           label = num.toFixed(decs)
         }
 
@@ -196,7 +201,7 @@ class Rulers {
           // draw label vertically
           const str = String(label).split('')
           for (i = 0; i < str.length; i++) {
-            ctx.fillText(str[i]!, 1, (rulerD + 9) + i * 9)
+            ctx.fillText(str[i] ?? '', 1, (rulerD + 9) + i * 9)
           }
         }
 
@@ -207,12 +212,12 @@ class Rulers {
           if (ctxArr && subD > rulerLen) {
             ctxNum++
             ctx.stroke()
-            if (ctxNum >= ctxArrNum!) {
+            if (ctxNum >= (ctxArrNum ?? 0)) {
               i = 10
               rulerD = totalLen
               continue
             }
-            ctx = ctxArr[ctxNum]!
+            ctx = ctxArr[ctxNum] ?? ctx
             rulerD -= limit
             subD = Math.round(rulerD + part * i) + 0.5
           }
