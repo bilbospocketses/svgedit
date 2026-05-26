@@ -95,7 +95,6 @@ export class SeList extends LitElement {
   }
 
   private _renderSelectedValue() {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const imgPath = getSvgEditor().configObj.curConfig.imgPath
     const items = this.querySelectorAll('se-list-item')
     for (const el of Array.from(items)) {

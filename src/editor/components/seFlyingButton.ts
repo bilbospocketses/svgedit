@@ -166,7 +166,6 @@ export class SeFlyingButton extends LitElement {
   }
 
   render() {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const imgPath = getSvgEditor().configObj.curConfig.imgPath
     const shortcut = this.getAttribute('shortcut')
     const titleText = `${t(this.title)} ${shortcut ? `[${t(shortcut)}]` : ''}`.trim()

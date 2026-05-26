@@ -1,6 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
 import SvgCanvas from '@svgedit/svgcanvas'
 import type { ISvgCanvas } from '@svgedit/svgcanvas'
+import type Paint from '@svgedit/svgcanvas/core/paint.js'
 /**
  *
  */
@@ -9,7 +9,7 @@ class PaintBox {
   defs: Element
   grad: Element
   type: string
-  paint: any
+  paint: Paint | null
   _paintColor: string | null
   _paintOpacity: number
   static ctr: number
@@ -36,6 +36,7 @@ class PaintBox {
     this.rect = docElem.firstElementChild as Element
     this.defs = docElem.getElementsByTagName('defs')[0] as Element
     this.grad = this.defs.firstElementChild as Element
+    this.paint = null
     this._paintColor = null
     this._paintOpacity = 1
     this.type = type
@@ -44,22 +45,27 @@ class PaintBox {
   /**
      * @param paint
      */
-  setPaint (paint: any): void {
+  setPaint (paint: Paint): void {
     this.paint = paint
 
-    const ptype: string = paint.type
+    const ptype = paint.type
     const opac: number = paint.alpha / 100
 
     let fillAttr = 'none'
     switch (ptype) {
       case 'solidColor':
-        fillAttr = (paint[ptype] !== 'none') ? '#' + paint[ptype] : paint[ptype]
+        fillAttr = (paint.solidColor !== 'none' && paint.solidColor !== null)
+          ? '#' + paint.solidColor
+          : (paint.solidColor ?? 'none')
         break
       case 'linearGradient':
       case 'radialGradient': {
-        this.grad.remove()
-        this.grad = paint[ptype]
-        this.defs.appendChild(this.grad)
+        const gradEl = paint[ptype]
+        if (gradEl) {
+          this.grad.remove()
+          this.grad = gradEl
+          this.defs.appendChild(this.grad)
+        }
         const id = (this.grad as Element & { id: string }).id = 'gradbox_' + this.type
         fillAttr = 'url(#' + id + ')'
         break
@@ -76,29 +82,36 @@ class PaintBox {
   * @param opac
   * @param type
   */
-  static getPaint (svgCanvas: ISvgCanvas, color: string, opac: number, type: string): any {
+  static getPaint (svgCanvas: ISvgCanvas, color: string, opac: number, type: string): Paint {
     // update the editor's fill paint
-    const opts: Record<string, any> = { alpha: opac }
     if (color.startsWith('url(#')) {
       let refElem: Element | null = svgCanvas.getRefElem(color)
       refElem = refElem ? refElem.cloneNode(true) as Element : (document.querySelectorAll('#' + type + '_color defs *')[0] ?? null)
       if (!refElem) {
         console.error(`the color ${color} is referenced by an url that can't be identified - using 'none'`)
-        opts.solidColor = 'none'
-      } else {
-        opts[refElem.tagName] = refElem
+        return new SvgCanvas.Paint({ alpha: opac, solidColor: 'none' })
       }
-    } else if (color.startsWith('#')) {
-      opts.solidColor = color.substr(1)
+      const tagName = refElem.tagName
+      if (tagName === 'linearGradient') {
+        return new SvgCanvas.Paint({ alpha: opac, linearGradient: refElem as SVGLinearGradientElement })
+      }
+      if (tagName === 'radialGradient') {
+        return new SvgCanvas.Paint({ alpha: opac, radialGradient: refElem as SVGRadialGradientElement })
+      }
+      // Unknown gradient type — fall through to empty paint
+      return new SvgCanvas.Paint({ alpha: opac })
     }
-    return new (SvgCanvas as any).Paint(opts)
+    if (color.startsWith('#')) {
+      return new SvgCanvas.Paint({ alpha: opac, solidColor: color.substr(1) })
+    }
+    return new SvgCanvas.Paint({ alpha: opac })
   }
 
   /**
      * @param svgcanvas
      * @param selectedElement
      */
-  update (svgcanvas: ISvgCanvas, selectedElement: Element | null): any {
+  update (svgcanvas: ISvgCanvas, selectedElement: Element | null): Paint | null {
     if (!selectedElement) { return null }
 
     const { type } = this

@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
-// fetch().json() returns `any`; typed via `as` casts below; cleanup deferred to #3
-
 import { LitElement, html, css } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import { classMap } from 'lit/directives/class-map.js'
@@ -240,8 +237,8 @@ export class SeExplorerButton extends LitElement {
   private async _loadLib(libDir: string): Promise<void> {
     try {
       const response = await fetch(`${libDir}index.json`)
-      const json = await response.json()
-      const { lib } = json as { lib: string[] }
+      const json = await response.json() as { lib: string[] }
+      const { lib } = json
       this._menuHtml = lib.map((menu: string, i: number) =>
         `<div data-menu="${menu}" class="menu-item ${i === 0 ? 'pressed' : ''} ">${menu}</div>`
       ).join('')
@@ -256,9 +253,9 @@ export class SeExplorerButton extends LitElement {
     try {
       // initialize buttons for all shapes defined for this library
       const response = await fetch(`${libDir}${lib}.json`)
-      const json = await response.json()
-      this._data = json.data as Record<string, string>
-      const size = (json.size as number) ?? 300
+      const json = await response.json() as { data: Record<string, string>; size?: number; fill?: boolean }
+      this._data = json.data
+      const size = json.size ?? 300
       const fill = json.fill ? '#333' : 'none'
       const off = size * 0.05
       const vb = [-off, -off, size + off * 2, size + off * 2].join(' ')

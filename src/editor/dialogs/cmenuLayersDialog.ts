@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
-// i18next is passed as `any` from the editor; typing deferred to #3 (full i18n type pass)
 import { LitElement, html, css } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import { styleMap } from 'lit/directives/style-map.js'
@@ -90,7 +88,7 @@ export class SeCMenuLayersDialog extends LitElement {
   private _sidePanels: Element | null = null
   private _workareaListenersAttached = false
 
-  init(i18next: any): void {
+  init(i18next: { t: (key: string) => string }): void {
     this.setAttribute('layers-dupe', i18next.t('layers.dupe'))
     this.setAttribute('layers-del', i18next.t('layers.del'))
     this.setAttribute('layers-merge_down', i18next.t('layers.merge_down'))

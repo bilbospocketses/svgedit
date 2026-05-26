@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
 /**
  * @file jPickerShim — transitional bridge between jGraduate's internal
  * jPickerMethod calls and the new se-color-picker Lit component.
@@ -9,7 +8,6 @@
  *
  * @module jPickerShim
  */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 // Side-effect import — registers the <se-color-picker> custom element
 import './se-color-picker.js'
@@ -53,9 +51,14 @@ export const jPickerDefaults = {
  * @param model - The ColorModel from se-color-picker's event detail
  * @returns Object with a `val(name)` method
  */
-function buildValProxy (model: ColorModel): { val: (name: string) => any } {
+/** Proxy returned to jGraduate callbacks — mirrors the old jPicker Color .val() API. */
+interface ValProxy {
+  val: (name: string) => unknown
+}
+
+function buildValProxy (model: ColorModel): ValProxy {
   return {
-    val (name: string): any {
+    val (name: string): unknown {
       switch (name) {
         case 'hex': return model.hex
         case 'ahex': return model.ahex
@@ -99,13 +102,22 @@ function buildValProxy (model: ColorModel): { val: (name: string) => any } {
  * @param cancelCallback - Called when user clicks Cancel
  * @param _i18next - Unused, kept for signature compat
  */
+/** Shape of the options object passed by jGraduate to jPickerMethod. */
+interface JPickerOptions {
+  color?: {
+    active?: string | { val?: (name: string) => string; ahex?: string }
+    alphaSupport?: boolean
+  }
+  window?: { alphaSupport?: boolean }
+}
+
 export function jPickerMethod (
-  elem: any,
-  options: any,
-  commitCallback: any,
-  liveCallback: any,
-  cancelCallback: any,
-  _i18next?: any
+  elem: HTMLElement,
+  options: JPickerOptions | undefined,
+  commitCallback: ((proxy: ValProxy) => void) | null,
+  liveCallback: ((proxy: ValProxy) => void) | null,
+  cancelCallback: (() => void) | null,
+  _i18next?: unknown
 ): void {
   // Resolve the initial color string (8-char ahex expected)
   let initColor = 'ff0000ff'
@@ -116,7 +128,7 @@ export function jPickerMethod (
       let hex = active.replace(/^#/, '').toLowerCase()
       if (hex.length === 6) hex += 'ff'
       initColor = hex
-    } else if (typeof active?.val === 'function') {
+    } else if (typeof active === 'object' && active !== null && typeof active.val === 'function') {
       // Legacy jPicker Color object with .val('ahex')
       initColor = active.val('ahex') || 'ff0000ff'
     } else if (typeof active?.ahex === 'string') {
@@ -143,25 +155,25 @@ export function jPickerMethod (
 
   // Wire event listeners
   picker.addEventListener('commit', (e: Event) => {
-    const model = (e as CustomEvent).detail.color as ColorModel
-    const proxy = buildValProxy(model)
+    const detail = (e as CustomEvent<{ color: ColorModel }>).detail
+    const proxy = buildValProxy(detail.color)
     hide()
-    if (typeof commitCallback === 'function') {
+    if (commitCallback) {
       commitCallback(proxy)
     }
   })
 
   picker.addEventListener('cancel', () => {
     hide()
-    if (typeof cancelCallback === 'function') {
+    if (cancelCallback) {
       cancelCallback()
     }
   })
 
-  if (typeof liveCallback === 'function') {
+  if (liveCallback) {
     picker.addEventListener('live', (e: Event) => {
-      const model = (e as CustomEvent).detail.color as ColorModel
-      const proxy = buildValProxy(model)
+      const detail = (e as CustomEvent<{ color: ColorModel }>).detail
+      const proxy = buildValProxy(detail.color)
       liveCallback(proxy)
     })
   }
