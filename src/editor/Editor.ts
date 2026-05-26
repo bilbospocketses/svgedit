@@ -31,14 +31,8 @@ import LayersPanel from './panels/LayersPanel.js'
 import MainMenu from './MainMenu.js'
 import { getParentsUntil } from '@svgedit/svgcanvas/common/util.js'
 import { EmbedServer } from '../embed/server.js'
+import { setSvgEditor } from './svgEditorInstance.js'
 const SVGEDIT_VERSION = '7.4.1'
-
-/** Make window.svgEditor accessible */
-declare global {
-  interface Window {
-    svgEditor: Editor
-  }
-}
 
 const { $id, $click, decode64 } = SvgCanvas
 
@@ -356,7 +350,8 @@ class Editor {
     this.layersPanel = new LayersPanel(this)
     this.mainMenu = new MainMenu(this)
     // makes svgEditor accessible as a global variable
-    window.svgEditor = this
+    setSvgEditor(this)
+    ;(window as any).svgEditor = this
 
     // Embed-API wire-in (Task 11). Activates only when ?embed=1 OR window.parent !== window.
     // Default dialog handlers wrap existing window.seAlert / window.seConfirm (see ambient declarations above).

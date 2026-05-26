@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-this-alias, @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unused-vars */
 // svgCanvas / extension API surface is loosely typed; cleanup deferred to #3 or follow-up
 /**
  * @file ext-panning.js
@@ -12,9 +12,12 @@
   This is a very basic svgedit extension to let tablet/mobile devices pan without problem
 */
 
+import { getSvgEditor } from '../../svgEditorInstance.js'
+
 const name = 'panning'
 
-const loadExtensionTranslation = async function (svgEditor: any): Promise<void> {
+const loadExtensionTranslation = async function (): Promise<void> {
+  const svgEditor: any = getSvgEditor()
   let translationModule
   const lang = svgEditor.configObj.pref('lang')
   try {
@@ -28,12 +31,10 @@ const loadExtensionTranslation = async function (svgEditor: any): Promise<void> 
 
 export default {
   name,
-  async init (this: any) {
-    const svgEditor: any = this
-    await loadExtensionTranslation(svgEditor)
-    const {
-      svgCanvas
-    } = svgEditor
+  async init () {
+    const svgEditor: any = getSvgEditor()
+    await loadExtensionTranslation()
+    const svgCanvas = svgEditor.svgCanvas
     const { $id, $click } = svgCanvas
     const insertAfter = (referenceNode: any, newNode: any) => {
       referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling)

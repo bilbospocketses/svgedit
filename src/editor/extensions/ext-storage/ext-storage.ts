@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-this-alias, @typescript-eslint/no-non-null-assertion, @typescript-eslint/restrict-plus-operands */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-non-null-assertion, @typescript-eslint/restrict-plus-operands */
 // svgCanvas / extension API surface is loosely typed; cleanup deferred to #3 or follow-up
 /**
  * @file ext-storage.js
@@ -21,6 +21,7 @@
  *   initial (or URL-forced) dialog. *
  */
 import './storageDialog.js'
+import { getSvgEditor } from '../../svgEditorInstance.js'
 
 /**
  * Expire the storage cookie.
@@ -61,9 +62,10 @@ const replaceStoragePrompt = (val?: string) => {
 
 export default {
   name: 'storage',
-  init (this: any) {
-    const svgEditor: any = this
-    const { svgCanvas, storage } = svgEditor
+  init () {
+    const svgEditor: any = getSvgEditor()
+    const svgCanvas = svgEditor.svgCanvas
+    const storage = svgEditor.storage
     const { $id } = svgCanvas
 
     // We could empty any already-set data for users when they decline storage,

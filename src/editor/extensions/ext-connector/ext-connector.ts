@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-this-alias, @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unused-vars */
 // svgCanvas / extension API surface is loosely typed; cleanup deferred to #3 or follow-up
 /**
  * @file ext-connector.js
@@ -10,9 +10,12 @@
  *
  */
 
+import { getSvgEditor } from '../../svgEditorInstance.js'
+
 const name = 'connector'
 
-const loadExtensionTranslation = async function (svgEditor: any): Promise<void> {
+const loadExtensionTranslation = async function (): Promise<void> {
+  const svgEditor: any = getSvgEditor()
   let translationModule
   const lang = svgEditor.configObj.pref('lang')
   try {
@@ -26,13 +29,13 @@ const loadExtensionTranslation = async function (svgEditor: any): Promise<void> 
 
 export default {
   name,
-  async init (this: any, S: any) {
-    const svgEditor: any = this
-    const { svgCanvas } = svgEditor
+  async init (S: any) {
+    const svgEditor: any = getSvgEditor()
+    const svgCanvas = svgEditor.svgCanvas
     const { getElement, $id, $click, addSVGElementsFromJson } = svgCanvas
     const { svgroot, selectorManager } = S
     const seNs = svgCanvas.getEditorNS()
-    await loadExtensionTranslation(svgEditor)
+    await loadExtensionTranslation()
 
     let startX: number
     let startY: number

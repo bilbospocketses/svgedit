@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-this-alias, @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unused-vars */
 // svgCanvas / extension API surface is loosely typed; cleanup deferred to #3 or follow-up
 /**
  * @file ext-layer_view.js
@@ -8,9 +8,12 @@
  *
  */
 
+import { getSvgEditor } from '../../svgEditorInstance.js'
+
 const name = 'layer_view'
 
-const loadExtensionTranslation = async function (svgEditor: any): Promise<void> {
+const loadExtensionTranslation = async function (): Promise<void> {
+  const svgEditor: any = getSvgEditor()
   let translationModule
   const lang = svgEditor.configObj.pref('lang')
   try {
@@ -24,11 +27,11 @@ const loadExtensionTranslation = async function (svgEditor: any): Promise<void> 
 
 export default {
   name,
-  async init (this: any, _S: any) {
-    const svgEditor: any = this
-    const { svgCanvas } = svgEditor
+  async init (_S: any) {
+    const svgEditor: any = getSvgEditor()
+    const svgCanvas = svgEditor.svgCanvas
     const { $id, $click } = svgCanvas
-    await loadExtensionTranslation(svgEditor)
+    await loadExtensionTranslation()
 
     const clickLayerView = (e?: any) => {
       $id('tool_layerView').pressed = !$id('tool_layerView').pressed

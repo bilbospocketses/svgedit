@@ -2,6 +2,7 @@ import { LitElement, html, css } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import { classMap } from 'lit/directives/class-map.js'
 import { t } from '../locale.js'
+import { getSvgEditor } from '../svgEditorInstance.js'
 
 /**
  * Boolean attribute contract for `pressed` / `disabled` / `opened`:
@@ -165,7 +166,8 @@ export class SeFlyingButton extends LitElement {
   }
 
   render() {
-    const imgPath = svgEditor.configObj.curConfig.imgPath
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    const imgPath = getSvgEditor().configObj.curConfig.imgPath
     const shortcut = this.getAttribute('shortcut')
     const titleText = `${t(this.title)} ${shortcut ? `[${t(shortcut)}]` : ''}`.trim()
 

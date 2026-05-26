@@ -3,6 +3,7 @@ import { customElement, property } from 'lit/decorators.js'
 import { ifDefined } from 'lit/directives/if-defined.js'
 import { t } from '../locale.js'
 import { matchShortcut } from '../common/shortcut.js'
+import { getSvgEditor } from '../svgEditorInstance.js'
 
 /**
  * SeButton — icon-button custom element.
@@ -95,7 +96,8 @@ export class SeButton extends LitElement {
       if (this.src.indexOf('data:') !== -1) {
         imgSrc = this.src
       } else {
-        imgSrc = svgEditor.configObj.curConfig.imgPath + '/' + this.src
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        imgSrc = getSvgEditor().configObj.curConfig.imgPath + '/' + this.src
       }
     }
 

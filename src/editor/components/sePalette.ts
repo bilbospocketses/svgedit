@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import { ifDefined } from 'lit/directives/if-defined.js'
+import { getSvgEditor } from '../svgEditorInstance.js'
 
 const NO_COLOR_SVG_DATA_URL = 'data:image/svg+xml;charset=utf-8;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjQgMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgY2xhc3M9InN2Z19pY29uIj48c3ZnIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+CiAgICA8bGluZSBmaWxsPSJub25lIiBzdHJva2U9IiNkNDAwMDAiIGlkPSJzdmdfOTAiIHkyPSIyNCIgeDI9IjI0IiB5MT0iMCIgeDE9IjAiLz4KICAgIDxsaW5lIGlkPSJzdmdfOTIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2Q0MDAwMCIgeTI9IjI0IiB4Mj0iMCIgeTE9IjAiIHgxPSIyNCIvPgogIDwvc3ZnPjwvc3ZnPg=='
 
@@ -70,7 +71,7 @@ const palette = [
  * Dropped:
  *   - Imperative DOM mutation (static `template` + `cloneNode` + querySelector field
  *     assignments to `$strip` / `expand_btn` / `popUp`)
- *   - Constructor-time global access (`svgEditor.$click` + `svgEditor.svgCanvas.container
+ *   - Constructor-time global access (`svgEditor.$click` + `getSvgEditor().svgCanvas.container
  *     .addEventListener`) — moved to declarative `@click` binding (expand toggle) and
  *     `firstUpdated` + `queueMicrotask` (container close listener) with paired cleanup
  *     in `disconnectedCallback`
@@ -149,9 +150,9 @@ export class SePalette extends LitElement {
   }
 
   firstUpdated() {
-    // Lazy access in case svgEditor.svgCanvas is not yet set up at connection time
+    // Lazy access in case getSvgEditor().svgCanvas is not yet set up at connection time
     queueMicrotask(() => {
-      const container = svgEditor.svgCanvas.container
+      const container = getSvgEditor().svgCanvas.container
       this._containerClickHandler = () => { this.isPopupOpen = false }
       container.addEventListener('click', this._containerClickHandler)
     })
@@ -160,7 +161,7 @@ export class SePalette extends LitElement {
   disconnectedCallback() {
     super.disconnectedCallback()
     if (this._containerClickHandler) {
-      svgEditor.svgCanvas.container.removeEventListener('click', this._containerClickHandler)
+      getSvgEditor().svgCanvas.container.removeEventListener('click', this._containerClickHandler)
       this._containerClickHandler = null
     }
   }

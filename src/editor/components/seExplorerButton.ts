@@ -6,6 +6,7 @@ import { customElement, property, state } from 'lit/decorators.js'
 import { classMap } from 'lit/directives/class-map.js'
 import { unsafeHTML } from 'lit/directives/unsafe-html.js'
 import SvgCanvas from '@svgedit/svgcanvas'
+import { getSvgEditor } from '../svgEditorInstance.js'
 
 const { $id } = SvgCanvas
 
@@ -174,13 +175,13 @@ export class SeExplorerButton extends LitElement {
       void this._loadLib(this.lib)
     }
     if (changed.has('src') && this.src) {
-      const imgPath = svgEditor.configObj.curConfig.imgPath
+      const imgPath = getSvgEditor().configObj.curConfig.imgPath
       this._activeSrc = imgPath + '/' + this.src
     }
   }
 
   render() {
-    const imgPath = svgEditor.configObj.curConfig.imgPath
+    const imgPath = getSvgEditor().configObj.curConfig.imgPath
     const shortcut = this.getAttribute('shortcut')
     const titleText = `${this.title}${shortcut ? ` [${shortcut}]` : ''}`
 
