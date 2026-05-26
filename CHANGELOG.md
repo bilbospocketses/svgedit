@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (#3 PR-5 completion — elix.d.ts rename + type cleanup — 2026-05-25)
+
+- Renamed `src/editor/elix.d.ts` → `globals.d.ts` — file contained zero elix declarations since PR-3c; now accurately named as the `svgEditor` global ambient type file
+- `se-paint-picker.ts` — `declare const svgEditor: any` → `SvgEditorGlobal` (proper typed global)
+- Removed 2 unused eslint-disable directives from `se-paint-picker.ts` (`no-unsafe-member-access`, `no-unsafe-argument` from Step 14f)
+
 ### Changed (Step 14f — editor type-safety sweep + d.ts cleanup — 2026-05-25)
 
 - **`svgCanvas: any` → `ISvgCanvas`** in 4 editor-layer files (`Editor.ts`, `Rulers.ts`, `PaintBox.ts`, `se-paint-picker.ts`) — all member access now type-checked

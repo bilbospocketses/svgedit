@@ -3,8 +3,8 @@
  * components. Only the members actually accessed in src/editor/components/ are
  * typed here — everything else is intentionally omitted.
  *
- * This file also serves as the home for narrow elix-module declarations where
- * the upstream packages ship without their own .d.ts files.
+ * TODO #19 will replace this ambient file with a proper accessor module
+ * (`getSvgEditor()` / `setSvgEditor()`) and explicit imports.
  */
 
 // ---------------------------------------------------------------------------
