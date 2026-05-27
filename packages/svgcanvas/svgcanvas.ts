@@ -13,12 +13,6 @@
    @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument,
    @typescript-eslint/no-unsafe-return, @typescript-eslint/unbound-method -- ISvgCanvas interface uses `any` pervasively; these flow from the interface contract */
 
-// SVG 2 getPathData/setPathData polyfill. Not yet natively supported in shipping
-// browsers as of this writing -- the polyfill installs on SVGPathElement.prototype
-// before any other import touches path elements. Enables the PathDataListShim in
-// core/path-method.js to install pathSegList delegation, which core/path-actions.js
-// relies on.
-import 'path-data-polyfill'
 import type { ISvgCanvas } from './core/svgcanvas-types.js'
 import Paint from './core/paint.js'
 import * as pathModule from './core/path.js'

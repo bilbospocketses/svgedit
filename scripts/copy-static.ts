@@ -16,7 +16,6 @@ const targets: Array<[string, string]> = [
   ['src/editor/extensions', 'extensions'],
   // Test harness assets for Playwright (unit-style tests in browser)
   ['src/editor/tests', 'tests'],
-  ['node_modules/path-data-polyfill/path-data-polyfill.js', 'tests/vendor/path-data-polyfill/path-data-polyfill.js'],
   // Embed e2e fixture: served under /tests/e2e/fixtures/ by vite preview
   ['tests/e2e/fixtures/embed-host.html', 'tests/e2e/fixtures/embed-host.html'],
   // Embed client bundle: fixture imports /dist/embed/index.js; vite preview serves dist/editor as root

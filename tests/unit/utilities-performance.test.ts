@@ -1,9 +1,9 @@
-import 'path-data-polyfill'
-
 import { NS } from '../../packages/svgcanvas/core/namespaces.js'
 import * as utilities from '../../packages/svgcanvas/core/utilities.js'
 import * as math from '../../packages/svgcanvas/core/math.js'
 import * as units from '../../packages/svgcanvas/core/units.js'
+import { getPathData } from '../../packages/svgcanvas/core/path-data.js'
+import { toPathSeg } from '../../packages/svgcanvas/core/path-method.js'
 
 describe('utilities performance', function () {
   let currentLayer; let groupWithMatrixTransform; let textWithMatrixTransform
@@ -122,13 +122,13 @@ describe('utilities performance', function () {
       const m = math.transformListToTransform(tlist).matrix
       tlist.clear()
       path.removeAttribute('transform')
-      const segList = path.pathSegList
+      const segData = getPathData(path)
 
-      const len = segList.numberOfItems
+      const len = segData.length
       // let lastX, lastY;
 
       for (let i = 0; i < len; ++i) {
-        const seg = segList.getItem(i)
+        const seg = toPathSeg(segData[i])
         const type = seg.pathSegType
         if (type === 1) {
           continue

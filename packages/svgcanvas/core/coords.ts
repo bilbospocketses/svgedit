@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion -- pathSegList access returns nullable; non-null assertions are safe within iteration bounds */
+/* Coordinate remapping for SVG elements. */
 /**
  * Manipulating coordinates.
  * @module coords
@@ -22,6 +22,7 @@ import {
   getTransformList
 } from './math.js'
 import { convertToNum } from './units.js'
+import { getPathData } from './path-data.js'
 
 import type { ISvgCanvas } from './svgcanvas-types.js'
 
@@ -334,82 +335,56 @@ export const remapElement = (selected: Element, changes: RemapChanges, m: SVGMat
     }
     case 'path': {
       const selectedPath = selected as SVGPathElement
-      const supportsPathData: boolean =
-        typeof selectedPath.getPathData === 'function' &&
-        typeof selectedPath.setPathData === 'function'
 
       // Handle path segments
-      const segList = supportsPathData ? null : selectedPath.pathSegList
-      const len: number = supportsPathData ? selectedPath.getPathData().length : segList!.numberOfItems
+      const pathDataSegments = getPathData(selectedPath)
+      const len: number = pathDataSegments.length
       const det = m.a * m.d - m.b * m.c
       const shouldToggleArcSweep = det < 0
       changes.d = []
-      if (supportsPathData) {
-        const pathDataSegments = selectedPath.getPathData()
-        for (let i = 0; i < len; ++i) {
-          const seg = pathDataSegments[i]
-          if (!seg) continue
-          // Normalize 'Z' -> 'z': pathMap only contains lowercase 'z' (SVG spec
-          // treats Z and z as equivalent for closepath -- no operands, no
-          // absolute/relative distinction), but Firefox's native getPathData()
-          // returns the literal letter as written in the source path.
-          const t = seg.type === 'Z' ? 'z' : seg.type
-          const type = pathMap.indexOf(t)
-          if (type === -1) continue
-          const values: number[] = seg.values || []
-          const entry: PathSegEntry = { type }
-          // Use ?? 0 fallbacks for noUncheckedIndexedAccess (values[] is a well-typed number array
-          // populated from seg.values which is always the correct length per SVG path spec)
-          switch (t.toUpperCase()) {
-            case 'M':
-            case 'L':
-            case 'T':
-              entry.x = values[0] ?? 0; entry.y = values[1] ?? 0
-              break
-            case 'H':
-              entry.x = values[0] ?? 0
-              break
-            case 'V':
-              entry.y = values[0] ?? 0
-              break
-            case 'C':
-              entry.x1 = values[0] ?? 0; entry.y1 = values[1] ?? 0; entry.x2 = values[2] ?? 0; entry.y2 = values[3] ?? 0; entry.x = values[4] ?? 0; entry.y = values[5] ?? 0
-              break
-            case 'S':
-              entry.x2 = values[0] ?? 0; entry.y2 = values[1] ?? 0; entry.x = values[2] ?? 0; entry.y = values[3] ?? 0
-              break
-            case 'Q':
-              entry.x1 = values[0] ?? 0; entry.y1 = values[1] ?? 0; entry.x = values[2] ?? 0; entry.y = values[3] ?? 0
-              break
-            case 'A':
-              entry.r1 = values[0] ?? 0; entry.r2 = values[1] ?? 0; entry.angle = values[2] ?? 0
-              entry.largeArcFlag = values[3] ?? 0; entry.sweepFlag = values[4] ?? 0; entry.x = values[5] ?? 0; entry.y = values[6] ?? 0
-              break
-            default:
-              break
-          }
-          changes.d[i] = entry
+      for (let i = 0; i < len; ++i) {
+        const seg = pathDataSegments[i]
+        if (!seg) continue
+        // Normalize 'Z' -> 'z': pathMap only contains lowercase 'z' (SVG spec
+        // treats Z and z as equivalent for closepath -- no operands, no
+        // absolute/relative distinction), but Firefox's native getPathData()
+        // returns the literal letter as written in the source path.
+        const t = seg.type === 'Z' ? 'z' : seg.type
+        const type = pathMap.indexOf(t)
+        if (type === -1) continue
+        const values: number[] = seg.values || []
+        const entry: PathSegEntry = { type }
+        // Use ?? 0 fallbacks for noUncheckedIndexedAccess (values[] is a well-typed number array
+        // populated from seg.values which is always the correct length per SVG path spec)
+        switch (t.toUpperCase()) {
+          case 'M':
+          case 'L':
+          case 'T':
+            entry.x = values[0] ?? 0; entry.y = values[1] ?? 0
+            break
+          case 'H':
+            entry.x = values[0] ?? 0
+            break
+          case 'V':
+            entry.y = values[0] ?? 0
+            break
+          case 'C':
+            entry.x1 = values[0] ?? 0; entry.y1 = values[1] ?? 0; entry.x2 = values[2] ?? 0; entry.y2 = values[3] ?? 0; entry.x = values[4] ?? 0; entry.y = values[5] ?? 0
+            break
+          case 'S':
+            entry.x2 = values[0] ?? 0; entry.y2 = values[1] ?? 0; entry.x = values[2] ?? 0; entry.y = values[3] ?? 0
+            break
+          case 'Q':
+            entry.x1 = values[0] ?? 0; entry.y1 = values[1] ?? 0; entry.x = values[2] ?? 0; entry.y = values[3] ?? 0
+            break
+          case 'A':
+            entry.r1 = values[0] ?? 0; entry.r2 = values[1] ?? 0; entry.angle = values[2] ?? 0
+            entry.largeArcFlag = values[3] ?? 0; entry.sweepFlag = values[4] ?? 0; entry.x = values[5] ?? 0; entry.y = values[6] ?? 0
+            break
+          default:
+            break
         }
-      } else {
-        // segList is non-null in this branch (null only when supportsPathData is true)
-        const list = segList!
-        for (let i = 0; i < len; ++i) {
-          const seg = list.getItem(i)!
-          changes.d[i] = {
-            type: seg.pathSegType,
-            x: seg.x ?? 0,
-            y: seg.y ?? 0,
-            x1: seg.x1 ?? 0,
-            y1: seg.y1 ?? 0,
-            x2: seg.x2 ?? 0,
-            y2: seg.y2 ?? 0,
-            r1: seg.r1 ?? 0,
-            r2: seg.r2 ?? 0,
-            angle: seg.angle ?? 0,
-            largeArcFlag: seg.largeArcFlag ?? 0,
-            sweepFlag: seg.sweepFlag ?? 0
-          }
-        }
+        changes.d[i] = entry
       }
 
       const firstseg = changes.d[0]
@@ -531,10 +506,9 @@ export const remapElement = (selected: Element, changes: RemapChanges, m: SVGMat
       })
 
       const d = dstr.trim()
-      // setAttribute('d', ...) is the authoritative write; path-data-polyfill hooks
-      // it to keep its internal cache in sync.  A subsequent setPathData() call would
-      // re-serialise in the polyfill's own whitespace-only format and overwrite the
-      // carefully comma-formatted dstr, so we do not call it here.
+      // setAttribute('d', ...) is the authoritative write; use it directly for the
+      // carefully comma-formatted dstr rather than going through setPathData() which
+      // would re-serialise in its own whitespace-only format.
       selected.setAttribute('d', d)
       break
     }

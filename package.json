@@ -60,7 +60,6 @@
     "browser-fs-access": "0.38.0",
     "jspdf": "4.2.1",
     "lit": "^3.3.3",
-    "path-data-polyfill": "^1.0.10",
     "svg2pdf.js": "2.7.0"
   },
   "devDependencies": {

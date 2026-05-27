@@ -1,6 +1,3 @@
-import 'path-data-polyfill'
-// path-method.js installs the PathDataListShim on SVGPathElement.prototype
-// (provides .pathSegList getter backed by path-data-polyfill getPathData/setPathData).
 import '../../packages/svgcanvas/core/path-method.js'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { init as pathActionsInit, pathActionsMethod } from '../../packages/svgcanvas/core/path-actions.js'
@@ -469,17 +466,8 @@ describe('PathActions', () => {
         configurable: true
       })
 
-      // Mock pathSegList on the element
-      Object.defineProperty(pathElement, 'pathSegList', {
-        value: {
-          numberOfItems: 3,
-          getItem: vi.fn((i) => ({
-            pathSegType: i === 0 ? 2 : 4 // M then L segments
-          })),
-          removeItem: vi.fn()
-        },
-        configurable: true
-      })
+      // Set a d attribute so getPathData can parse it (3 segments: M, L, L)
+      pathElement.setAttribute('d', 'M0,0 L10,10 L20,20')
 
       pathActionsMethod.deletePathNode()
 
