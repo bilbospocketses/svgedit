@@ -81,7 +81,7 @@ Do not include AI-generated attribution lines in commit messages.
 
 - `master` is PR-gated as of 2026-05-18. Direct push is blocked; all changes land via PR → CI green → squash/rebase merge.
 - Signed commits are required (SSH or GPG).
-- The `build-and-test` CI check must pass before merge.
+- All CI checks must pass before merge (`build-and-unit`, `e2e-chromium`, `e2e-firefox`, CodeQL, Scorecard).
 - Update `CHANGELOG.md` under `[Unreleased]` for any user-visible change.
 
 ## Branch Strategy
