@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (CI e2e sharding -- 2026-05-27)
+
+- CI workflow split into 3 parallel jobs: `build-and-unit`, `e2e-chromium`, `e2e-firefox` for ~50% faster e2e wall time
+- Playwright workers explicitly set to 1 in CI for stability (was implicit default)
+- All CI jobs now have 60-minute timeout (was unbounded 6-hour GitHub default)
+- Build artifact passed between jobs via `upload-artifact`/`download-artifact` (1-day retention)
+
 ### Changed (CI — 2026-05-27)
 
 - Bumped Playwright per-test timeout from 60s to 120s in `playwright.config.mjs` — GitHub Actions runners intermittently 6x slower than normal, causing 86/250 e2e tests to timeout despite all passing locally
