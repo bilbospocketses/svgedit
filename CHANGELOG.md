@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (CI — 2026-05-27)
+
+- Bumped Playwright per-test timeout from 60s to 120s in `playwright.config.mjs` — GitHub Actions runners intermittently 6x slower than normal, causing 86/250 e2e tests to timeout despite all passing locally
+
 ### Changed (TODO #18 — fork path-data-polyfill into codebase — 2026-05-26)
 
 - Forked `path-data-polyfill` v1.0.10 (958-line ES5 IIFE) → `packages/svgcanvas/core/path-data.ts` (987-line TypeScript module)
