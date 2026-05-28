@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (Brand sweep + dep audit -- 2026-05-28)
+
+- Removed upstream attribution comments (`<!-- Created with SVG-edit - https://github.com/SVG-Edit/svgedit-->`) from 10 SVG icons in `src/editor/images/` (anchor_*, bold, hello_world, italic, rotate, text_decoration_*).
+- Dep audit: `jspdf` already on target 4.2.1; `svg2pdf.js` (2.7.0) and `browser-fs-access` (0.38.0) verified on latest; Babel confirmed absent from direct deps (transitive only via node_modules).
+
 ### Changed (CI Playwright Docker container -- 2026-05-28)
 
 - e2e jobs (`e2e-chromium`, `e2e-firefox`) now run inside the official Playwright Docker container (`mcr.microsoft.com/playwright:v1.57.0-noble`) with browsers pre-installed. Eliminates the `playwright install --with-deps` step entirely, which had been hanging on GitHub-hosted runners after the browser download reached 100% (caused 60-min timeouts on PR #70 e2e-firefox and PR #68 e2e-chromium + e2e-firefox).
