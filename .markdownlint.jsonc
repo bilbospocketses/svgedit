@@ -28,6 +28,6 @@
   "MD033": false,
   // Allow bare URLs (avoids noise in CHANGELOG links)
   "MD034": false,
-  // Don't require trailing newline (Windows-friendly)
+  // Require trailing newline (standard practice)
   "MD047": true
 }
