@@ -13,8 +13,10 @@ as rules; consult them when "tight" or "non-obvious" feels ambiguous.
 3. [CHANGELOG entries](#3-changelog-entries)
 4. [JSDoc](#4-jsdoc)
 5. [Inline code comments](#5-inline-code-comments)
-
-> Sections 6-9 (commits, PRs, enforcement, scope) land in subsequent commits on this branch.
+6. [Commit messages](#6-commit-messages)
+7. [PR descriptions](#7-pr-descriptions)
+8. [Enforcement](#8-enforcement)
+9. [Out of scope](#9-out-of-scope)
 
 ## 1. Voice & tone
 
@@ -188,3 +190,119 @@ process.env.HOME = '/root'
 // Added in PR #71 for the Playwright Docker container migration
 process.env.HOME = '/root'
 ```
+
+## 6. Commit messages
+
+**Subject:**
+
+- Imperative present tense: `Add X`, not `Added X` or `Adding X`.
+- ≤72 characters.
+- No trailing period.
+- Type prefix optional but conventional: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`, `ci:`.
+
+**Body (optional):**
+
+- Wrapped ≤80 characters.
+- Separated from subject by one blank line.
+- Explains motivation and non-obvious tradeoffs. Don't restate the diff.
+
+**Forbidden:**
+
+- AI attribution lines (`Co-Authored-By: Claude…`, `Generated with Claude Code`, etc.).
+  Fork lineage is human-only.
+- Issue/PR references in the subject; put them in the body.
+
+**Good:**
+
+```text
+ci: set HOME=/root in Playwright container jobs for firefox launch
+
+Firefox in the Playwright Docker image refuses to launch when $HOME
+isn't owned by the current user. Container runs as root but $HOME
+inherits from the runner's environment, so firefox sees a HOME folder
+owned by a different uid and aborts.
+
+Refs PR #71.
+```
+
+**Bad** (past tense; trailing period; AI attribution; subject > 72 chars):
+
+```text
+ci: Added the HOME=/root environment variable for firefox launch in container.
+
+This was needed because firefox kept failing in the docker container we
+added in the previous PR.
+
+Co-Authored-By: Claude
+```
+
+## 7. PR descriptions
+
+Two required sections:
+
+```text
+## Summary
+
+<1-5 terse bullets matching the CHANGELOG terseness target (100-180 chars per bullet)>
+
+## Test plan
+
+- [ ] <verification step the reviewer should mentally run through>
+- [ ] <another>
+```
+
+**Additional sections allowed when scope warrants:**
+
+- `## Background` — context the reviewer needs to evaluate the change
+- `## Why` — rationale, if not obvious from Summary
+- `## Notes for reviewer` — call-outs for things easy to miss
+- `## Out of scope` — what the PR intentionally does NOT do (heads off review comments)
+
+**Good Summary bullet:**
+
+> e2e jobs now run inside `mcr.microsoft.com/playwright:v1.57.0-noble` — eliminates
+> the install hang on GitHub-hosted runners (60-min timeouts on PRs #68/#70).
+
+**Bad Summary bullet** (verbose, lists context that belongs in Background):
+
+> We've been having problems with the GitHub Actions runners where the Playwright
+> install hangs after the browser download reaches 100%, causing 60-minute timeouts
+> and blocking PR merges, so this PR switches the e2e jobs to run inside the official
+> Playwright Docker container which has the browsers pre-installed, eliminating the
+> install step entirely.
+
+## 8. Enforcement
+
+Honor system primary. Tooling catches markdown-formatting drift on files we choose to enforce.
+
+**Tools:**
+
+- **markdownlint-cli2** — config in `.markdownlint.jsonc`; runner config in
+  `.markdownlint-cli2.jsonc`. Currently scoped to `STYLE.md` only; sub-project 12.B
+  expands to README, CONTRIBUTING, `docs/tutorials/`.
+- **eslint** — existing config covers TS/JS line length and comment formatting.
+- **No new required CI checks.** Lint runs locally via `npm run lint:md`; not yet
+  wired into `npm run lint` (avoids day-one CI failures on existing docs).
+
+**Contributor workflow:**
+
+1. Before substantial doc/code contribution: skim this guide.
+2. Before opening PR: run `npm run lint` and `npm run lint:md` locally.
+3. If a rule feels wrong for a specific case: flag on the PR. Don't silently deviate.
+
+## 9. Out of scope
+
+The following are NOT governed by this guide:
+
+- **Spec docs** in `docs/superpowers/specs/` follow the superpowers
+  brainstorming-skill format.
+- **Plan docs** in `docs/superpowers/plans/` follow the superpowers
+  writing-plans-skill format.
+- **Test fixtures** in `tests/` and `packages/svgcanvas/tests/` follow practical
+  conventions; this guide doesn't constrain test code style beyond what eslint
+  already enforces.
+- **Third-party JSDoc** in `node_modules/` — obviously.
+
+Existing docs (`README.md`, `CONTRIBUTING.md`, `docs/tutorials/*.md`, in-tree
+JSDoc) are NOT retro-edited as part of the initial STYLE.md ship. Sub-project 12.B
+applies these rules to existing docs in a follow-up sweep.
