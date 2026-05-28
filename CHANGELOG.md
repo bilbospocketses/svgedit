@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (Brand hygiene sweep — upstream attribution strip -- 2026-05-28)
+
+- Stripped upstream `@copyright` / `@author` JSDoc lines from 36 TypeScript source files (24 in
+  `packages/svgcanvas/`, 12 in `src/editor/`). Fork lineage is in git history; per-file `@license`
+  tags kept.
+- Surgical edit pattern: only the `@copyright` and `@author` lines were removed. JSDoc blocks that
+  became empty after the strip were deleted in full. File descriptions, `@module`, `@example`,
+  `@license`, and other tags preserved.
+
 ### Changed (Brand hygiene sweep — docs framing -- 2026-05-28)
 
 - `AGENTS.md` (new) at repo root anchors STYLE.md's agent-context references — multi-session
