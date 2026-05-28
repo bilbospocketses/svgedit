@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (CI playwright install resilience -- 2026-05-28)
+
+- CI workflow `npx playwright install --with-deps <browser>` split into `install-deps <browser>` (apt) + retry-wrapped `install <browser>` (binary). 3 attempts, 5-min per-attempt timeout. Mitigates intermittent Playwright install hangs (download reaches 100% then process freezes) that caused PR #70 e2e-firefox 60-min timeouts.
+
 ### Changed (CI e2e sharding -- 2026-05-27)
 
 - CI workflow split into 3 parallel jobs: `build-and-unit`, `e2e-chromium`, `e2e-firefox` for ~50% faster e2e wall time

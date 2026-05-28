@@ -74,8 +74,21 @@ jobs:
           name: dist-editor
           path: dist/editor/
 
-      - name: Install Playwright chromium
-        run: npx playwright install --with-deps chromium
+      - name: Install Playwright system deps (chromium)
+        run: npx playwright install-deps chromium
+
+      - name: Install Playwright chromium (with retry)
+        run: |
+          for attempt in 1 2 3; do
+            echo "Playwright chromium install attempt $attempt of 3..."
+            if timeout 300 npx playwright install chromium; then
+              echo "Install succeeded on attempt $attempt"
+              exit 0
+            fi
+            echo "::warning::Playwright chromium install attempt $attempt hung or failed after 5min, retrying..."
+          done
+          echo "::error::All 3 playwright chromium install attempts failed"
+          exit 1
 
       - name: E2e tests (chromium)
         run: npx playwright test --project chromium
@@ -101,8 +114,21 @@ jobs:
           name: dist-editor
           path: dist/editor/
 
-      - name: Install Playwright firefox
-        run: npx playwright install --with-deps firefox
+      - name: Install Playwright system deps (firefox)
+        run: npx playwright install-deps firefox
+
+      - name: Install Playwright firefox (with retry)
+        run: |
+          for attempt in 1 2 3; do
+            echo "Playwright firefox install attempt $attempt of 3..."
+            if timeout 300 npx playwright install firefox; then
+              echo "Install succeeded on attempt $attempt"
+              exit 0
+            fi
+            echo "::warning::Playwright firefox install attempt $attempt hung or failed after 5min, retrying..."
+          done
+          echo "::error::All 3 playwright firefox install attempts failed"
+          exit 1
 
       - name: E2e tests (firefox)
         run: npx playwright test --project firefox
