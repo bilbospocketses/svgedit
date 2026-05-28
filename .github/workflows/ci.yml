@@ -65,6 +65,11 @@ jobs:
     runs-on: ubuntu-latest
     container: mcr.microsoft.com/playwright:v1.57.0-noble
     timeout-minutes: 60
+    env:
+      # Firefox refuses to launch when $HOME isn't owned by the current user
+      # (Playwright-in-Docker quirk). Setting HOME=/root sidesteps it.
+      # Chromium doesn't need this but we set it on both jobs for symmetry.
+      HOME: /root
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
@@ -92,6 +97,10 @@ jobs:
     runs-on: ubuntu-latest
     container: mcr.microsoft.com/playwright:v1.57.0-noble
     timeout-minutes: 60
+    env:
+      # Firefox refuses to launch when $HOME isn't owned by the current user
+      # (Playwright-in-Docker quirk). Setting HOME=/root sidesteps it.
+      HOME: /root
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
