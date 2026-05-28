@@ -15,7 +15,7 @@
     "packages/svgcanvas"
   ],
   "scripts": {
-    "lint": "eslint .",
+    "lint": "eslint . && markdownlint-cli2",
     "lint:md": "markdownlint-cli2",
     "pretest": "npm run lint",
     "test": "vitest run --coverage && tsx scripts/run-e2e.ts",

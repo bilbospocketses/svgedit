@@ -1,10 +1,19 @@
 # Contributing to svgedit (personal fork)
 
-Thanks for your interest. **Important context:** this repo is a personal hard fork of [SVG-Edit/svgedit](https://github.com/SVG-Edit/svgedit), shaped toward standalone distribution (Velopack + Docker) and iframe-embeddable use inside [Control Menu](https://github.com/bilbospocketses/control-menu). Upstream changes are not merged here, and most contributions belong with the upstream project rather than this fork.
+Thanks for your interest. **Important context:** this repo is a personal hard fork of
+[SVG-Edit/svgedit](https://github.com/SVG-Edit/svgedit), shaped toward standalone distribution
+(Velopack + Docker) and iframe-embeddable use inside
+[Control Menu](https://github.com/bilbospocketses/control-menu). Upstream changes are not merged.
+The fork is personal-taste-driven, not maintainer-acceptance-driven.
 
-For general svgedit features and bug fixes, file PRs against [SVG-Edit/svgedit](https://github.com/SVG-Edit/svgedit).
+**Issues are welcome** for bug reports, feature suggestions, and discussion — particularly
+fork-specific topics (Velopack installer, iframe embed surface, Control Menu integration). General
+svgedit issues that apply equally to upstream are better filed at
+[SVG-Edit/svgedit](https://github.com/SVG-Edit/svgedit).
 
-For fork-specific issues — the Velopack installer, iframe embed surface, Control Menu integration, the in-progress TypeScript migration — this is the right place.
+**Pull requests are reviewed case-by-case** with no guarantee of merge. The fork's scope is locked
+(see `README.md`); changes outside that scope generally won't land. Coordinate via an issue first
+if the work is substantial.
 
 ## Prerequisites
 
@@ -32,7 +41,7 @@ npm run lint       # lint only
 
 ## Project Structure
 
-```
+```text
 packages/svgcanvas/         svgcanvas workspace package (core SVG manipulation)
 src/editor/                 editor UI shell (chrome, panels, dialogs)
 src/editor/extensions/      built-in editor extensions
@@ -43,24 +52,26 @@ docs/                       AUDIT, design specs, plans, manual checklists
 
 ## Code Style
 
-For doc, comment, commit-message, and PR-description conventions, see [`STYLE.md`](./STYLE.md).
+For doc, JSDoc, code-comment, commit-message, and PR-description conventions, see [`STYLE.md`](./STYLE.md).
 
-The codebase is mid-migration from JavaScript to TypeScript. The active branch `feat/ts-migration` is converting files in stages.
-
-- New code on `master`: existing JS + `standard` conventions
-- New code on `feat/ts-migration` (and post-merge `master`): TypeScript + ESLint + `typescript-eslint`
+Master is on TypeScript + ESLint + `typescript-eslint`. The `feat/ts-migration` branch is retained
+as historical reference for the JS → TS conversion work that landed on master via TODO #3 and
+TODO #19.
 
 General conventions:
 
-- Vanilla DOM + web components — no React; new code avoids jQuery (legacy jQuery in `jQuery.j*.js` files is being migrated out)
-- ES modules throughout; no CommonJS
-- 2-space indentation, single quotes
+- Vanilla DOM + web components — no React; new code avoids jQuery (legacy jQuery files are being
+  migrated out).
+- ES modules throughout; no CommonJS.
+- 2-space indentation, single quotes.
 
 ## Tests
 
-Tests use **Vitest** (unit) and **Playwright** (e2e). Unit tests live alongside the code they cover; e2e tests live under `tests/`. The full suite runs via `npm test`.
+Tests use **Vitest** (unit) and **Playwright** (e2e). Unit tests live alongside the code they
+cover; e2e tests live under `tests/`. The full suite runs via `npm test`.
 
-Any PR that changes core canvas behavior, export pipelines, or extension loading SHOULD include or update a test.
+Any PR that changes core canvas behavior, export pipelines, or extension loading SHOULD include or
+update a test.
 
 ## Specs and Plans
 
@@ -77,7 +88,8 @@ See [`STYLE.md` § 6](./STYLE.md#6-commit-messages) for conventions.
 
 ## Pull Requests
 
-- `master` is PR-gated as of 2026-05-18. Direct push is blocked; all changes land via PR → CI green → squash/rebase merge.
+- `master` is PR-gated as of 2026-05-18. Direct push is blocked; all changes land via PR → CI green
+  → squash/rebase merge.
 - Signed commits are required (SSH or GPG).
 - All CI checks must pass before merge (`build-and-unit`, `e2e-chromium`, `e2e-firefox`, CodeQL, Scorecard).
 - Update `CHANGELOG.md` under `[Unreleased]` for any user-visible change.
@@ -103,4 +115,5 @@ See `SECURITY.md`. Do not file a public issue for security reports.
 
 ## License
 
-By contributing you agree your contributions are licensed under the project's `GPL-3.0-only` license. Inherited upstream code retains the licenses listed in `LICENSE-MIT.txt`.
+By contributing you agree your contributions are licensed under the project's `GPL-3.0-only`
+license. Inherited upstream code retains the licenses listed in `LICENSE-MIT.txt`.

@@ -1,15 +1,19 @@
 // markdownlint-cli2 runner config.
-// Globs are intentionally narrow for sub-project 12.A:
-// only STYLE.md is governed by the strict rules.
-// Sub-project 12.B will expand the glob to README, CONTRIBUTING, docs/.
+// Globs cover the top-level fork docs governed by STYLE.md.
+// Sub-project 12.D will add docs/tutorials/** once those files are rewritten.
 {
   "config": ".markdownlint.jsonc",
   "globs": [
-    "STYLE.md"
+    "STYLE.md",
+    "README.md",
+    "CONTRIBUTING.md",
+    "AGENTS.md",
+    "CHANGELOG.md"
   ],
   "ignores": [
     "node_modules/**",
     "dist/**",
-    "docs/superpowers/**"
+    "docs/superpowers/**",
+    "docs/tutorials/**"
   ]
 }
