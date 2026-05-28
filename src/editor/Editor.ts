@@ -2,12 +2,6 @@
  * The main module for the visual SVG this.
  *
  * @license MIT
- *
- * 2010 Pavol Rusnak
- * 2010 Jeff Schiller
- * 2010 Narendra Sisodiya
- * 2014 Brett Zamir
- * 2020 OptimistikSAS
  * @module SVGEditor
  */
 

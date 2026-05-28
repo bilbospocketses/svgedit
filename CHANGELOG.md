@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Surgical edit pattern: only the `@copyright` and `@author` lines were removed. JSDoc blocks that
   became empty after the strip were deleted in full. File descriptions, `@module`, `@example`,
   `@license`, and other tags preserved.
+- `Editor.ts` had a multi-line `@copyright` value (five untagged continuation lines listing
+  additional authors). Those continuation lines were stripped alongside the tag header — they
+  are the tag's value, not separate JSDoc content.
 
 ### Changed (Brand hygiene sweep — docs framing -- 2026-05-28)
 
