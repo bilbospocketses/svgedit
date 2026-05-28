@@ -1,0 +1,15 @@
+// markdownlint-cli2 runner config.
+// Globs are intentionally narrow for sub-project 12.A:
+// only STYLE.md is governed by the strict rules.
+// Sub-project 12.B will expand the glob to README, CONTRIBUTING, docs/.
+{
+  "config": ".markdownlint.jsonc",
+  "globs": [
+    "STYLE.md"
+  ],
+  "ignores": [
+    "node_modules/**",
+    "dist/**",
+    "docs/superpowers/**"
+  ]
+}

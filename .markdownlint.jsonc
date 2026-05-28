@@ -1,0 +1,33 @@
+// markdownlint config for svgedit. See STYLE.md for the rationale behind each rule.
+// Reference: https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md
+{
+  // Line length: soft 100 chars. Off for code blocks, tables, embedded HTML.
+  "MD013": {
+    "line_length": 100,
+    "code_blocks": false,
+    "tables": false,
+    "headings": false
+  },
+  // Heading style: ATX (`#` syntax), not setext (underlines)
+  "MD003": { "style": "atx" },
+  // Code-block style: fenced with backticks
+  "MD046": { "style": "fenced" },
+  // Blank lines around headings — improves rendering + scannability
+  "MD022": true,
+  // Blank lines around fenced code blocks
+  "MD031": true,
+  // Blank lines around lists
+  "MD032": true,
+  // No trailing spaces (except 2-space line break — disabled for clarity)
+  "MD009": { "br_spaces": 0 },
+  // No multiple consecutive blank lines
+  "MD012": { "maximum": 1 },
+  // First line MUST be a top-level heading
+  "MD041": true,
+  // Allow inline HTML (badges, details/summary, etc.)
+  "MD033": false,
+  // Allow bare URLs (avoids noise in CHANGELOG links)
+  "MD034": false,
+  // Don't require trailing newline (Windows-friendly)
+  "MD047": true
+}

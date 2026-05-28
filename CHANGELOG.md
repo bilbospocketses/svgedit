@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (House style guide -- 2026-05-28)
+
+- `STYLE.md` at repo root codifies doc, JSDoc, code-comment, commit-message, and PR-description conventions. Calibrated-terse, contributor-doc framing, mixed voice by context. 9 sections with good/bad example pairs.
+- `.markdownlint.jsonc` + `.markdownlint-cli2.jsonc` companion configs. New `npm run lint:md` script — scoped to `STYLE.md` initially; sub-project 12.B will expand to other docs.
+- `CONTRIBUTING.md` links to the new style guide; duplicated commit-message rules removed from CONTRIBUTING (now redirects to `STYLE.md § 6`).
+
 ### Changed (Brand sweep + dep audit -- 2026-05-28)
 
 - Removed upstream attribution comments (`<!-- Created with SVG-edit - https://github.com/SVG-Edit/svgedit-->`) from 10 SVG icons in `src/editor/images/` (anchor_*, bold, hello_world, italic, rotate, text_decoration_*).

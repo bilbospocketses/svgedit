@@ -16,6 +16,7 @@
   ],
   "scripts": {
     "lint": "eslint .",
+    "lint:md": "markdownlint-cli2",
     "pretest": "npm run lint",
     "test": "vitest run --coverage && tsx scripts/run-e2e.ts",
     "typecheck": "tsc --build packages/svgcanvas",
@@ -73,6 +74,7 @@
     "eslint": "^9.39.4",
     "globals": "^15.15.0",
     "jsdom": "^27.4.0",
+    "markdownlint-cli2": "^0.22.1",
     "tsx": "^4.22.3",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.59.3",
