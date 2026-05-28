@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (Brand hygiene sweep — docs framing -- 2026-05-28)
+
+- `AGENTS.md` (new) at repo root anchors STYLE.md's agent-context references — multi-session
+  conventions, no AI attribution, verify against current code.
+- `CONTRIBUTING.md` refreshed: drops upstream-PR-routing, drops outdated `feat/ts-migration`
+  "active branch" + `standard` linter framing, adopts open-issues / case-by-case-PRs posture.
+- `README.md` `docs/tutorials/` row points at TODO #12.D as the home for tutorial rewrites.
+- `.markdownlint-cli2.jsonc` globs expanded to `STYLE.md`, `README.md`, `CONTRIBUTING.md`,
+  `AGENTS.md`, `CHANGELOG.md`. `docs/tutorials/**` stays ignored pending 12.D rewrites.
+- `npm run lint` now chains `markdownlint-cli2` after `eslint`. Standalone `npm run lint:md`
+  retained.
+
 ### Added (House style guide -- 2026-05-28)
 
 - `STYLE.md` at repo root codifies doc, JSDoc, code-comment, commit-message, and PR-description
