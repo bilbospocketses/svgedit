@@ -43,6 +43,8 @@ docs/                       AUDIT, design specs, plans, manual checklists
 
 ## Code Style
 
+For doc, comment, commit-message, and PR-description conventions, see [`STYLE.md`](./STYLE.md).
+
 The codebase is mid-migration from JavaScript to TypeScript. The active branch `feat/ts-migration` is converting files in stages.
 
 - New code on `master`: existing JS + `standard` conventions
@@ -71,11 +73,7 @@ Specs and plans in `docs/` are frozen snapshots — don't retroactively edit the
 
 ## Commit Messages
 
-Conventional-commit-style prefixes: `feat:`, `fix:`, `refactor:`, `docs:`, `style:`, `chore:`, `build:`, `test:`.
-
-Subject line short + imperative. Wrap body at 72 columns. Reference issue numbers when applicable.
-
-Do not include AI-generated attribution lines in commit messages.
+See [`STYLE.md` § 6](./STYLE.md#6-commit-messages) for conventions.
 
 ## Pull Requests
 
