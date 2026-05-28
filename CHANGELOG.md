@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (CI Playwright Docker container -- 2026-05-28)
+
+- e2e jobs (`e2e-chromium`, `e2e-firefox`) now run inside the official Playwright Docker container (`mcr.microsoft.com/playwright:v1.57.0-noble`) with browsers pre-installed. Eliminates the `playwright install --with-deps` step entirely, which had been hanging on GitHub-hosted runners after the browser download reached 100% (caused 60-min timeouts on PR #70 e2e-firefox and PR #68 e2e-chromium + e2e-firefox).
+- `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1` set for all `npm ci` steps to skip the @playwright/test postinstall browser download (browsers come from the container image).
+
 ### Changed (CI e2e sharding -- 2026-05-27)
 
 - CI workflow split into 3 parallel jobs: `build-and-unit`, `e2e-chromium`, `e2e-firefox` for ~50% faster e2e wall time

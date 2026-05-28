@@ -2,11 +2,16 @@
 #
 # Three jobs:
 #   build-and-unit  -- lint, typecheck, build, vitest, upload dist/editor artifact
-#   e2e-chromium    -- download artifact, install chromium, run e2e --project chromium
-#   e2e-firefox     -- download artifact, install firefox, run e2e --project firefox
+#   e2e-chromium    -- download artifact, run e2e --project chromium (in Playwright container)
+#   e2e-firefox     -- download artifact, run e2e --project firefox (in Playwright container)
 #
 # The master branch ruleset requires all three job contexts.
 # All actions pinned to commit SHAs per sha_pinning_required enforcement.
+#
+# The e2e jobs run inside the official Playwright Docker image, which ships
+# with browsers pre-installed. This sidesteps the `playwright install` flow
+# which has been intermittently hanging on GitHub-hosted runners (download
+# reaches 100% then freezes for 60 min).
 
 name: CI
 
@@ -33,6 +38,8 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
       - name: Lint
         run: npm run lint
@@ -56,7 +63,13 @@ jobs:
   e2e-chromium:
     needs: build-and-unit
     runs-on: ubuntu-latest
+    container: mcr.microsoft.com/playwright:v1.57.0-noble
     timeout-minutes: 60
+    env:
+      # Firefox refuses to launch when $HOME isn't owned by the current user
+      # (Playwright-in-Docker quirk). Setting HOME=/root sidesteps it.
+      # Chromium doesn't need this but we set it on both jobs for symmetry.
+      HOME: /root
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
@@ -67,15 +80,14 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
       - name: Download build artifact
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: dist-editor
           path: dist/editor/
-
-      - name: Install Playwright chromium
-        run: npx playwright install --with-deps chromium
 
       - name: E2e tests (chromium)
         run: npx playwright test --project chromium
@@ -83,7 +95,12 @@ jobs:
   e2e-firefox:
     needs: build-and-unit
     runs-on: ubuntu-latest
+    container: mcr.microsoft.com/playwright:v1.57.0-noble
     timeout-minutes: 60
+    env:
+      # Firefox refuses to launch when $HOME isn't owned by the current user
+      # (Playwright-in-Docker quirk). Setting HOME=/root sidesteps it.
+      HOME: /root
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
@@ -94,15 +111,14 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
       - name: Download build artifact
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: dist-editor
           path: dist/editor/
-
-      - name: Install Playwright firefox
-        run: npx playwright install --with-deps firefox
 
       - name: E2e tests (firefox)
         run: npx playwright test --project firefox
