@@ -5,7 +5,6 @@
  * @module path
  * @license MIT
  *
- * @copyright 2011 Alexis Deveria, 2011 Jeff Schiller
  */
 
 import { NS } from './namespaces.js'
@@ -938,16 +937,12 @@ class PathActions {
     return undefined
   }
 
-  /**
-    */
   zoomChange (): void {
     if (svgCanvas.getCurrentMode() === 'pathedit') {
       path.update()
     }
   }
 
-  /**
-    */
   getNodePoint (): { x: number; y: number; type: number } {
     const selPt = path.selected_pts.length ? (path.selected_pts[0] ?? 1) : 1
 
@@ -966,8 +961,6 @@ class PathActions {
     svgCanvas.setLinkControlPoints(linkPoints)
   }
 
-  /**
-    */
   clonePathNode (): void {
     path.storeD()
 
@@ -988,8 +981,6 @@ class PathActions {
     path.endChanges('Clone path node(s)')
   }
 
-  /**
-    */
   opencloseSubPath (): void {
     const selPts = path.selected_pts
     if (selPts.length !== 1) { return }
@@ -1096,8 +1087,6 @@ class PathActions {
     path.init().selectPt(0)
   }
 
-  /**
-    */
   deletePathNode (): void {
     if (!pathActionsMethod.canDeleteNodes) { return }
     path.storeD()

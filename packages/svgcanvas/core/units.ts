@@ -3,7 +3,6 @@
  * @module units
  * @license MIT
  *
- * @copyright 2010 Alexis Deveria, 2010 Jeff Schiller
  */
 
 import { error } from '../common/logger.js'

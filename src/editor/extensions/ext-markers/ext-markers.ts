@@ -3,8 +3,6 @@
  *
  * @license Apache-2.0
  *
- * @copyright 2010 Will Schleter based on ext-arrows.js by Copyright(c) 2010 Alexis Deveria
- * @copyright 2021 OptimistikSAS
  *
  * This extension provides for the addition of markers to the either end
  * or the middle of a line, polyline, path, polygon.
@@ -199,9 +197,6 @@ export default {
       return pline
     }
 
-    /**
-    *
-    */
     const setMarker = (pos: string, markerType: string) => {
       const selElems = svgCanvas.getSelectedElements()
       if (selElems.length === 0) return

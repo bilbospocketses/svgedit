@@ -2,8 +2,6 @@
  * @file ext-polystar.js
  *
  *
- * @copyright 2010 CloudCanvas, Inc. All rights reserved
- * @copyright 2021 Optimistik SAS, Inc. All rights reserved
  * @license MIT
  *
  */

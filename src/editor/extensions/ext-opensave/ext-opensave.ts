@@ -3,7 +3,6 @@
  *
  * @license MIT
  *
- * @copyright 2020 OptimistikSAS
  *
  */
 
@@ -208,9 +207,6 @@ export default {
       return blob
     }
 
-    /**
-     *
-     */
     const clickSave = async function (type: string) {
       const $editorDialog = $id('se-svg-editor-dialog')
       const editingsource = $editorDialog?.getAttribute('dialog') === 'open'

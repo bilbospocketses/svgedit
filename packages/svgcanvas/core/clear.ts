@@ -2,7 +2,6 @@
  * Tools for clear.
  * @module clear
  * @license MIT
- * @copyright 2011 Jeff Schiller
  */
 import { NS } from './namespaces.js'
 

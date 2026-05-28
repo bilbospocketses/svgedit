@@ -3,7 +3,6 @@
  * @module svgcanvas
  * @license MIT
  *
- * @copyright 2010 Alexis Deveria, 2010 Jeff Schiller
  */
 import { getElement, assignAttributes, cleanupElement, type SVGElementJSON } from './utilities.js'
 import { NS } from './namespaces.js'

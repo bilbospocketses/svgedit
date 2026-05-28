@@ -2,7 +2,6 @@
  * Tools for event.
  * @module event
  * @license MIT
- * @copyright 2011 Jeff Schiller
  */
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unsafe-assignment,
@@ -580,9 +579,6 @@ const mouseMoveEvent = (evt: MouseEvent): void => {
   })
 } // mouseMove()
 
-/**
-*
-*/
 const mouseOutEvent = (evt: MouseEvent): void => {
   const { $id } = svgCanvas
   if (svgCanvas.getCurrentMode() !== 'select' && svgCanvas.getStarted()) {

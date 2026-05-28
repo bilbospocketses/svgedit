@@ -3,7 +3,6 @@
  * @module path
  * @license MIT
  *
- * @copyright 2011 Alexis Deveria, 2011 Jeff Schiller
  */
 
 

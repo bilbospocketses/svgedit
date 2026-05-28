@@ -3,7 +3,6 @@
  * Tools for selection.
  * @module selection
  * @license MIT
- * @copyright 2011 Jeff Schiller
  */
 
 import { NS } from './namespaces.js'

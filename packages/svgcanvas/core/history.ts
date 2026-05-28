@@ -3,7 +3,6 @@
  * For command history tracking and undo functionality.
  * @module history
  * @license MIT
- * @copyright 2010 Jeff Schiller
  */
 
 import { NS } from './namespaces.js'
@@ -94,8 +93,6 @@ export class Command {
   text: string = ''
   elem: Element = null as unknown as Element
 
-  /**
-  */
   getText (): string {
     return this.text
   }
@@ -483,9 +480,6 @@ interface UndoableChangeEntry {
   elements: (Element | null)[]
 }
 
-/**
-*
-*/
 export class UndoManager {
   _handler: HistoryEventHandler | null
   maxHistory: number

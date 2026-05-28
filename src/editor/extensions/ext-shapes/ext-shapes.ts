@@ -3,7 +3,6 @@
  *
  * @license MIT
  *
- * @copyright 2010 Christian Tzurcanu, 2010 Alexis Deveria
  *
  */
 import { getSvgEditor } from '../../svgEditorInstance.js'
