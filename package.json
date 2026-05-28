@@ -16,6 +16,7 @@
   ],
   "scripts": {
     "lint": "eslint .",
+    "lint:md": "markdownlint-cli2",
     "pretest": "npm run lint",
     "test": "vitest run --coverage && tsx scripts/run-e2e.ts",
     "typecheck": "tsc --build packages/svgcanvas",
