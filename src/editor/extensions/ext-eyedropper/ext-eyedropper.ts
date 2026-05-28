@@ -3,8 +3,6 @@
  *
  * @license MIT
  *
- * @copyright 2010 Jeff Schiller
- * @copyright 2021 OptimistikSAS
  *
  */
 

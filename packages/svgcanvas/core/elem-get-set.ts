@@ -1,7 +1,6 @@
 /**
  * @module elem-get-set get and set methods.
  * @license MIT
- * @copyright 2011 Jeff Schiller
  */
 
 /* eslint-disable @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-assignment,

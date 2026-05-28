@@ -3,7 +3,6 @@
  * @module text-actions Tools for Text edit functions
  * @license MIT
  *
- * @copyright 2010 Alexis Deveria, 2010 Jeff Schiller
  */
 
 import { NS } from './namespaces.js'
@@ -539,8 +538,6 @@ class TextActions {
     this.#textinput = elem
   }
 
-  /**
-   */
   clear (): void {
     if (svgCanvas.getCurrentMode() === 'textedit') {
       svgCanvas.textActions.toSelectMode()

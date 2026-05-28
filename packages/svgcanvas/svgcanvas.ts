@@ -4,7 +4,6 @@
  *
  * @license MIT
  *
- * @copyright 2010 Alexis Deveria, 2010 Pavol Rusnak, 2010 Jeff Schiller, 2021 OptimistikSAS
  *
  */
 

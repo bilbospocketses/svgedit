@@ -2,7 +2,6 @@
  * Tools for blur event.
  * @module blur
  * @license MIT
- * @copyright 2011 Jeff Schiller
  */
 
 import type { ISvgCanvas } from './svgcanvas-types.js'

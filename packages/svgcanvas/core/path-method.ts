@@ -4,7 +4,6 @@
  * @module path
  * @license MIT
  *
- * @copyright 2011 Alexis Deveria, 2011 Jeff Schiller
  */
 
 
@@ -485,9 +484,6 @@ export const getSegSelectorMethod = (seg: Segment, update?: boolean): SVGPathEle
   return segLine
 }
 
-/**
-*
-*/
 export class Segment {
   selected: boolean
   index: number
@@ -562,8 +558,6 @@ export class Segment {
     }
   }
 
-  /**
-   */
   addGrip (): void {
     this.ptgrip = getPointGripMethod(this, true)
     this.ctrlpts = getControlPointsMethod(this) // , true);
@@ -713,9 +707,6 @@ export class Segment {
   }
 }
 
-/**
-*
-*/
 export class Path {
   elem: SVGPathElement
   segs: Segment[]
@@ -954,8 +945,6 @@ export class Path {
     this.selected_pts.splice(pos, 1)
   }
 
-  /**
-  */
   clearSelection (): void {
     this.eachSeg(function () {
       // 'this' is the segment here
@@ -964,8 +953,6 @@ export class Path {
     this.selected_pts = []
   }
 
-  /**
-  */
   storeD (): void {
     this.last_d = this.elem.getAttribute('d')
   }

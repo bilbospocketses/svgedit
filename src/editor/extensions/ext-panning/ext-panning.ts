@@ -3,7 +3,6 @@
  *
  * @license MIT
  *
- * @copyright 2013 Luis Aguirre
  *
  */
 /*

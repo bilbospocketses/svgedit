@@ -3,7 +3,6 @@
  * Tools for undo.
  * @module undo
  * @license MIT
- * @copyright 2011 Jeff Schiller
  */
 import * as draw from './draw.js'
 import * as hstry from './history.js'

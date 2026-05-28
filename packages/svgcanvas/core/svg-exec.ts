@@ -5,7 +5,6 @@
  * Tools for svg.
  * @module svg
  * @license MIT
- * @copyright 2011 Jeff Schiller
  */
 
 import { jsPDF as JsPDF } from 'jspdf'
@@ -765,8 +764,6 @@ const embedImage = (src: string): Promise<string | false> => {
   })
 }
 
-/**
- */
 const getIssues = (): { issues: string[]; issueCodes: string[] } => {
   const uiStrings = svgCanvas.getUIStrings()
   // remove the selected outline before serializing

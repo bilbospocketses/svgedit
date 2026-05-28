@@ -3,7 +3,6 @@
  * @module browser
  * @license MIT
  *
- * @copyright 2010 Jeff Schiller, 2010 Alexis Deveria
  */
 
 const NSSVG = 'http://www.w3.org/2000/svg'

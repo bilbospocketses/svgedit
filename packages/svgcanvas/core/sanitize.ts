@@ -3,7 +3,6 @@
  * @module sanitize
  * @license MIT
  *
- * @copyright 2010 Alexis Deveria, 2010 Jeff Schiller
  */
 
 import { getReverseNS, NS } from './namespaces.js'

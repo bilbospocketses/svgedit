@@ -3,7 +3,6 @@
  * Tools for drawing.
  * @module draw
  * @license MIT
- * @copyright 2011 Jeff Schiller
  */
 
 import Layer from './layer.js'
@@ -170,8 +169,6 @@ export class Drawing {
     return this.#svgElem.querySelector(`[id=${id}]`)
   }
 
-  /**
-   */
   getSvgElem (): SVGSVGElement {
     return this.#svgElem
   }

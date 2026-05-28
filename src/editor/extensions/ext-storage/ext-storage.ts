@@ -11,7 +11,6 @@
  *
  * @license MIT
  *
- * @copyright 2010 Brett Zamir
  * @todo Revisit on whether to use `svgEditor.pref` over directly setting
  * `curConfig` in all extensions for a more public API (not only for `extPath`
  * and `imagePath`, but other currently used config in the extensions)

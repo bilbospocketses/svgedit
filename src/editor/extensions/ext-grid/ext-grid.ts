@@ -3,7 +3,6 @@
  *
  * @license Apache-2.0
  *
- * @copyright 2010 Redou Mine, 2010 Alexis Deveria
  *
  */
 
@@ -143,9 +142,6 @@ export default {
       svgCanvas.setHref(gridimg, datauri)
     }
 
-    /**
-     *
-     */
     const gridUpdate = () => {
       if (showGrid) {
         updateGrid(svgCanvas.getZoom())

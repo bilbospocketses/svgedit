@@ -3,7 +3,6 @@
  *
  * @license MIT
  *
- * @copyright 2013 James Sacksteder
  *
  */
 import { dragmove } from './dragmove/dragmove.js'

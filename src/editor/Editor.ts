@@ -2,13 +2,6 @@
  * The main module for the visual SVG this.
  *
  * @license MIT
- *
- * @copyright 2010 Alexis Deveria
- * 2010 Pavol Rusnak
- * 2010 Jeff Schiller
- * 2010 Narendra Sisodiya
- * 2014 Brett Zamir
- * 2020 OptimistikSAS
  * @module SVGEditor
  */
 
@@ -53,9 +46,6 @@ const SVGEDIT_VERSION = '7.4.1'
 
 const { $id, $click, decode64 } = SvgCanvas
 
-/**
- *
- */
 class Editor {
   // --- Properties from Editor ---
   langChanged: boolean
@@ -105,18 +95,11 @@ class Editor {
   setPanning!: (active: boolean) => void
   setConfig!: (opts: Record<string, unknown>, cfgCfg?: { overwrite?: boolean; allowInitialUserOverride?: boolean }) => void
 
-  /**
-   *
-   */
   constructor (div: HTMLElement | null = null) {
     this.extensionsAdded = false
     this.messageQueue = []
     this.$container = (div ?? $id('svg_editor')) as HTMLElement
-    /**
-     */
     this.langChanged = false
-    /**
-     */
     this.showSaveWarning = false
     /**
      * Will be set to a boolean by `ext-storage.js`
@@ -814,9 +797,6 @@ class Editor {
     }
   }
 
-  /**
-   *
-   */
   updateWireFrame () {
     const rule = `
       #workarea.wireframe #svgcontent * {
@@ -951,8 +931,6 @@ class Editor {
     })
   }
 
-  /**
-   */
   elementRenamed (_win: unknown, renameObj: unknown): void {
     this.svgCanvas.runExtensions({
       action: 'elementRenamed',
@@ -960,20 +938,14 @@ class Editor {
     })
   }
 
-  /**
-   */
   afterClear (_win: unknown): void {
     this.svgCanvas.runExtensions({ action: 'afterClear' })
   }
 
-  /**
-   */
   beforeClear (_win: unknown): void {
     this.svgCanvas.runExtensions({ action: 'beforeClear' })
   }
 
-  /**
-   */
   zoomDone () {
     for (const el of this.svgCanvas.selectedElements) {
       if (el) this.svgCanvas.selectorManager.requestSelector(el)?.resize()
@@ -1110,9 +1082,6 @@ class Editor {
     }
     let cbCalled = false
 
-    /**
-     *
-     */
     const runCallback = () => {
       if (ext.callback && !cbCalled) {
         cbCalled = true
@@ -1139,9 +1108,6 @@ class Editor {
     this.updateCanvas(true, undefined)
   }
 
-  /**
-   *
-   */
   cutSelected () {
     if (this.selectedElement || this.multiselected) {
       this.svgCanvas.cutSelectedElements()
@@ -1157,9 +1123,6 @@ class Editor {
     }
   }
 
-  /**
-   *
-   */
   pasteInCenter () {
     const { workarea } = this
     const zoom = this.svgCanvas.getZoom()
@@ -1204,16 +1167,10 @@ class Editor {
     }
   }
 
-  /**
-   *
-   */
   selectNext () {
     this.svgCanvas.cycleElement(1)
   }
 
-  /**
-   *
-   */
   selectPrev () {
     this.svgCanvas.cycleElement(0)
   }
@@ -1234,9 +1191,6 @@ class Editor {
     this.topPanel.updateContextPanel()
   }
 
-  /**
-   *
-   */
   hideSourceEditor (): void {
     const $editorDialog = $id('se-svg-editor-dialog')
     $editorDialog?.setAttribute('dialog', 'closed')
@@ -1300,8 +1254,6 @@ class Editor {
     }
   }
 
-  /**
-   */
   toggleDynamicOutput (e: Event): void {
     const detail = typedDetail<{ dynamic: boolean }>(e)
     this.configObj.curConfig.dynamicOutput = detail.dynamic
@@ -1312,8 +1264,6 @@ class Editor {
     $editorDialog?.setAttribute('value', origSource)
   }
 
-  /**
-   */
   enableOrDisableClipboard () {
     let svgeditClipboard
     try {

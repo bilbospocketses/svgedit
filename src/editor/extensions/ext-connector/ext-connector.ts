@@ -3,8 +3,6 @@
  *
  * @license MIT
  *
- * @copyright 2010 Alexis Deveria
- * @copyright 2023 Optimistik SAS
  *
  */
 

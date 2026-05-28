@@ -3,7 +3,6 @@
  * @module layer
  * @license MIT
  *
- * @copyright 2011 Jeff Schiller, 2016 Flint O'Brien
  */
 
 import { NS } from './namespaces.js'
@@ -146,8 +145,6 @@ class Layer {
     }
   }
 
-  /**
-  */
   getTitleElement (): SVGTitleElement | null {
     const len = this.#group.childNodes.length
     for (let i = 0; i < len; ++i) {
