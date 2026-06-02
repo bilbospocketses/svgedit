@@ -52,8 +52,6 @@ export class Selector {
 
   /**
   * @param id - Internally identify the selector
-  * @param elem - DOM element associated with this selector
-  * @param [bbox] - Optional bbox to use for initialization
   */
   constructor (id: number, elem: Element, bbox?: { x: number; y: number; width: number; height: number }) {
     this.id = id
@@ -465,7 +463,7 @@ export class SelectorManager {
   }
 
   /**
-  * @returns The rubberBandBox DOM element.
+  * Returns the rubber-band selection box, creating it on first call.
   */
   getRubberBandBox (): SVGRectElement | null {
     if (!this.rubberBandBox) {
@@ -501,7 +499,7 @@ export const init = (canvas: ISvgCanvas): void => {
 }
 
 /**
+ * Returns the singleton SelectorManager for the current canvas.
  * @function module:select.getSelectorManager
- * @returns The SelectorManager instance.
  */
 export const getSelectorManager = (): SelectorManager => selectModule.getSelectorManager()

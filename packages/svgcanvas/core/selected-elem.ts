@@ -48,6 +48,7 @@ import type { ISvgCanvas } from './svgcanvas-types.js'
 let svgCanvas = null as unknown as ISvgCanvas
 
 /**
+ * Initializes the selected-elem module and binds all element-manipulation methods onto the canvas.
  * @function module:selected-elem.init
  */
 export const init = (canvas: ISvgCanvas): void => {
@@ -727,8 +728,6 @@ const groupSelectedElements = (type?: string, urlArg?: string): void => {
 
 /**
  * Pushes all appropriate parent group properties down to its children.
- * @param g
- * @param undoable
  */
 // @preserve audit-flagged:823 — fill/stroke ungroup pushdown preserved as-is
 const pushGroupProperty = (g: Element, undoable: boolean): hstry.BatchCommand | undefined => {
