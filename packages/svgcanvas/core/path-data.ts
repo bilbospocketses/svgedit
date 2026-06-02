@@ -15,11 +15,13 @@
 // Public types
 // ---------------------------------------------------------------------------
 
+/** Represents a single SVG path command with its type letter and numeric value array. */
 export interface SVGPathDataCommand {
   type: string
   values: number[]
 }
 
+/** Options for getPathData; pass `normalize: true` to reduce commands to M/L/C/Z only. */
 export interface SVGPathDataSettings {
   normalize?: boolean | undefined
 }
