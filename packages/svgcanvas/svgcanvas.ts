@@ -677,6 +677,7 @@ class SvgCanvas implements ISvgCanvas {
   }
 
   /**
+   * Commit a completed change to undo history and fire the #changed event
    * @fires module:svgcanvas.SvgCanvas#event:changed
    */
   endChanges ({ cmd, elem }: { cmd: any; elem: Element }): void {
