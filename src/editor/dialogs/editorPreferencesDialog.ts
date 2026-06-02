@@ -24,37 +24,29 @@ export class SeEditPrefsDialog extends LitElement {
     }
 
     dialog::backdrop {
-      background: rgba(0, 0, 0, 0.3);
+      background: var(--se-scrim);
     }
 
     .toolbar_button button {
-      border: 1px solid #dedede;
+      border: 1px solid var(--se-border);
       line-height: 130%;
       float: left;
-      background: #E8E8E8 none;
+      background: var(--se-surface) none;
       padding: 5px 10px 5px 7px;
       line-height: 17px;
       margin: 5px 20px 0 0;
-      border: 1px var(--border-color) solid;
-      border-top-color: #FFF;
-      border-left-color: #FFF;
-      border-radius: 5px;
-      -moz-border-radius: 5px;
-      -webkit-border-radius: 5px;
+      border-radius: var(--se-radius-sm);
       cursor: pointer;
     }
 
     .toolbar_button button:hover {
-      border: 1px #e0a874 solid;
-      border-top-color: #fcd9ba;
-      border-left-color: #fcd9ba;
-      background-color: #FFC;
+      border: 1px solid var(--se-accent-hover);
+      background-color: var(--se-accent-subtle);
     }
 
     .toolbar_button button:active {
-      background-color: #F4E284;
-      border-left: 1px solid #663300;
-      border-top: 1px solid #663300;
+      background-color: var(--se-accent-subtle);
+      border: 1px solid var(--se-accent);
     }
 
     .toolbar_button button .svg_icon {
@@ -86,14 +78,14 @@ export class SeEditPrefsDialog extends LitElement {
     #svginfo_bg_note {
       font-size: .9em;
       font-style: italic;
-      color: #444;
+      color: var(--se-text-muted);
     }
 
     #svg_prefs_container {
       padding: 10px;
-      background-color: #5a6162;
-      color: #c5c5c5;
-      border: 1px outset #777;
+      background-color: var(--se-surface);
+      color: var(--se-text);
+      border: 1px solid var(--se-border-strong);
       opacity: 1.0;
       font-family: Verdana, Helvetica, sans-serif;
       font-size: .8em;
@@ -107,13 +99,14 @@ export class SeEditPrefsDialog extends LitElement {
 
     #tool_prefs_save {
       width: 30%;
-      background-color: #c79605;
+      background-color: var(--se-accent);
+      color: var(--se-on-accent);
       margin-left: 20%;
     }
 
     #tool_prefs_cancel {
       width: 30%;
-      background-color: #c8c8c8;
+      background-color: var(--se-surface-2);
     }
 
     #svg_prefs_container fieldset + fieldset {
@@ -132,7 +125,7 @@ export class SeEditPrefsDialog extends LitElement {
     fieldset {
       padding: 5px;
       margin: 5px;
-      border: 1px solid #DDD;
+      border: 1px solid var(--se-border);
     }
 
     #svg_prefs_container label {
@@ -144,11 +137,11 @@ export class SeEditPrefsDialog extends LitElement {
       float: left;
       margin: 2px;
       padding: 20px;
-      border: 1px solid #6f6f6f;
+      border: 1px solid var(--se-border-strong);
     }
 
     #change_background div.cur_background {
-      border: 2px solid blue;
+      border: 2px solid var(--se-accent);
       padding: 19px;
     }
 
