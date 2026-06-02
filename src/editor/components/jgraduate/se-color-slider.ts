@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 
+/** Pointer-driven 1D/2D color-picker slider; dispatches `sl-change` with normalized x/y values */
 @customElement('se-color-slider')
 export class SeColorSlider extends LitElement {
   static styles = css`

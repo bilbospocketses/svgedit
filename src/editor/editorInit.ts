@@ -27,6 +27,7 @@ interface InitableElement extends HTMLElement {
   init: (i18next: unknown) => void
 }
 
+/** Wire up DOM, SvgCanvas, event listeners, extensions, and embed-API bridge for the editor. */
 export async function initEditor (editor: Editor): Promise<void> {
   if ('localStorage' in window) {
     editor.storage = window.localStorage
@@ -162,10 +163,6 @@ export async function initEditor (editor: Editor): Promise<void> {
   editor.svgCanvas.bind(
     'updateCanvas',
     /**
-   * @param win
-   * @param centerInfo
-   * @param centerInfo.center
-   * @param centerInfo.newCtr
    * @listens module:svgcanvas.SvgCanvas#event:updateCanvas
    */
     (_win: unknown, { center, newCtr }: { center: boolean; newCtr: { x: number; y: number } }) => {
@@ -355,16 +352,13 @@ export async function initEditor (editor: Editor): Promise<void> {
   })
 
   /**
+   * Enable or disable space-key panning mode on the canvas.
    * @function module:SVGthis.setPanning
-   * @param active
    */
   editor.setPanning = (active) => {
     editor.svgCanvas.spaceKey = keypan = active
   }
   let inp: HTMLElement | null = null
-  /**
-    *
-    */
   const unfocus = () => {
     inp?.blur()
   }

@@ -48,6 +48,7 @@ function clamp (v: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, v))
 }
 
+/** Full gradient editor supporting solid color, linear, and radial gradients with stop management */
 @customElement('se-gradient-editor')
 export class SeGradientEditor extends LitElement {
   static styles = css`

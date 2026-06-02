@@ -15,6 +15,7 @@ import './jgraduate/se-gradient-editor.js'
 import { t } from '../locale.js'
 import { getSvgEditor } from '../svgEditorInstance.js'
 
+/** `<se-colorpicker>` — paint picker button that opens a gradient editor popup for fill/stroke selection. */
 @customElement('se-colorpicker')
 export class SePaintPicker extends LitElement {
   static styles = css`

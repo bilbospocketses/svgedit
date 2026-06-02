@@ -13,9 +13,7 @@ interface EditorInstance {
   workarea: HTMLElement
 }
 
-/**
- *
- */
+/** Renders and updates horizontal and vertical canvas rulers that track scroll and zoom */
 class Rulers {
   rulerIntervals: number[]
   svgCanvas: ISvgCanvas
@@ -24,8 +22,6 @@ class Rulers {
   rulerY: HTMLElement | null
   rulerCorner: HTMLElement | null
 
-  /**
-  */
   constructor (editor: EditorInstance) {
     // Make [1,2,5] array
     this.rulerIntervals = []
@@ -58,18 +54,11 @@ class Rulers {
     }
   }
 
-  /**
-  */
   manageScroll (): void {
     if (this.rulerX) this.rulerX.scrollLeft = this.editor.workarea.scrollLeft
     if (this.rulerY) this.rulerY.scrollTop = this.editor.workarea.scrollTop
   }
 
-  /**
-   *
-   * @param [scanvas]
-   * @param [zoom]
-   */
   updateRulers (scanvas?: HTMLElement | null, zoom?: number): void {
     if (!zoom) { zoom = this.svgCanvas.getZoom() }
     if (!scanvas) { scanvas = $id('svgcanvas') }

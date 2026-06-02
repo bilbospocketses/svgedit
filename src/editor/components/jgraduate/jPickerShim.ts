@@ -49,7 +49,6 @@ export const jPickerDefaults = {
  * interface that jGraduate consumes.
  *
  * @param model - The ColorModel from se-color-picker's event detail
- * @returns Object with a `val(name)` method
  */
 /** Proxy returned to jGraduate callbacks — mirrors the old jPicker Color .val() API. */
 interface ValProxy {

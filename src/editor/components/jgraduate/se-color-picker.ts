@@ -15,6 +15,7 @@ import { t } from '../../locale.js'
 
 type PickerMode = 'h' | 's' | 'v' | 'r' | 'g' | 'b' | 'a'
 
+/** Photoshop-style HSV/RGB/alpha color picker rendered with Canvas 2D; dispatches `commit`, `cancel`, and `live` events */
 @customElement('se-color-picker')
 export class SeColorPicker extends LitElement {
   static styles = css`
