@@ -99,9 +99,9 @@ export class SeGradientEditor extends LitElement {
       position: absolute;
       width: 16px;
       height: 16px;
-      border: 2px solid #000;
+      border: 2px solid #000; /* hex-guard-allow: contrast handle — coord marker border must be absolute black to read over any gradient color */
       border-radius: 50%;
-      background: rgba(255,255,255,0.6);
+      background: rgba(255,255,255,0.6); /* hex-guard-allow: contrast handle — semi-transparent white fill makes coord marker readable on any gradient while preserving context */
       cursor: move;
       transform: translate(-50%, -50%);
       display: flex;

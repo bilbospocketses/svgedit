@@ -16,7 +16,7 @@
   ],
   "scripts": {
     "lint": "eslint . && markdownlint-cli2 && npm run lint:hex",
-    "lint:hex": "node scripts/check-no-raw-hex.mjs",
+    "lint:hex": "node scripts/check-no-raw-hex.mjs --error",
     "lint:md": "markdownlint-cli2",
     "pretest": "npm run lint",
     "test": "vitest run --coverage && tsx scripts/run-e2e.ts",

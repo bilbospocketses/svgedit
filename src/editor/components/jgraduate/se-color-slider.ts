@@ -15,10 +15,10 @@ export class SeColorSlider extends LitElement {
       position: absolute;
       width: 11px;
       height: 11px;
-      border: 1px solid #000;
+      border: 1px solid #000; /* hex-guard-allow: contrast handle — must be absolute black to read over any hue/saturation */
       border-radius: 50%;
       background: transparent;
-      box-shadow: 0 0 0 1px #fff inset;
+      box-shadow: 0 0 0 1px #fff inset; /* hex-guard-allow: contrast handle — inner white ring pairs with black border so cursor is visible on any color */
       pointer-events: none;
       transform: translate(-50%, -50%);
     }
@@ -41,11 +41,11 @@ export class SeColorSlider extends LitElement {
     }
     .arrow-y::before {
       left: -6px;
-      border-right: 5px solid #000;
+      border-right: 5px solid #000; /* hex-guard-allow: contrast handle — spectrum bar arrow must be absolute black to read over any hue */
     }
     .arrow-y::after {
       right: -6px;
-      border-left: 5px solid #000;
+      border-left: 5px solid #000; /* hex-guard-allow: contrast handle — spectrum bar arrow must be absolute black to read over any hue */
     }
   `
 
