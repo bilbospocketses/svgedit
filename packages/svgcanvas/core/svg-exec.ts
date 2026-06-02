@@ -50,7 +50,7 @@ let svgCanvas = null as unknown as ISvgCanvas
 
 /**
  * @function module:svg-exec.init
- * @param svgContext
+ * Initializes the svg-exec module and registers its methods on the canvas instance.
  */
 export const init = (canvas: ISvgCanvas): void => {
   svgCanvas = canvas
@@ -70,7 +70,6 @@ export const init = (canvas: ISvgCanvas): void => {
 /**
  * Main function to set up the SVG content for output.
  * @function module:svgcanvas.SvgCanvas#svgCanvasToString
- * @returns The SVG image for output
  */
 const svgCanvasToString = (): string => {
   // keep calling it until there are none to remove
@@ -126,9 +125,6 @@ const svgCanvasToString = (): string => {
 /**
  * Sub function ran on each SVG element to convert it to a string as desired.
  * @function module:svgcanvas.SvgCanvas#svgToString
- * @param elem - The SVG element to convert
- * @param indent - Number of spaces to indent this tag
- * @returns The given element as an SVG tag
  */
 const svgToString = (elem: Element, indent: number): string => {
   const curConfig = svgCanvas.getCurConfig() as { baseUnit: string; dynamicOutput?: boolean }
@@ -362,7 +358,6 @@ const svgToString = (elem: Element, indent: number): string => {
 /**
  * This function sets the current drawing as the input SVG XML.
  * @function module:svgcanvas.SvgCanvas#setSvgString
- * @param xmlString - The SVG as XML text.
  * @param [preventUndo=false] - Indicates if we want to do the
  * changes without adding them to the undo stack - e.g. for initializing a
  * drawing on page load.
@@ -600,7 +595,6 @@ const setSvgString = (xmlString: string, preventUndo?: boolean): boolean => {
  * This function imports the input SVG XML as a `<symbol>` in the `<defs>`, then adds a
  * `<use>` to the current layer.
  * @function module:svgcanvas.SvgCanvas#importSvgString
- * @param xmlString - The SVG as XML text.
  * @param [preserveDimension] - A boolean to force to preserve initial dimension of the imported svg
  * @fires module:svgcanvas.SvgCanvas#event:changed
  * @returns This function returns null if the import was unsuccessful, or the element otherwise.
@@ -730,7 +724,6 @@ const importSvgString = (xmlString: string, preserveDimension?: boolean): Elemen
 /**
  * Converts a given image file to a data URL when possible, then runs a given callback.
  * @function module:svgcanvas.SvgCanvas#embedImage
- * @param src - The path/URL of the image
  * @returns Resolves to a Data URL (string|false)
  */
 const embedImage = (src: string): Promise<string | false> => {
@@ -796,7 +789,6 @@ const getIssues = (): { issues: string[]; issueCodes: string[] } => {
 
 /**
  * Utility function to convert all external image links in an SVG element to Base64 data URLs.
- * @param svgElement - The SVG element to process.
  */
 const convertImagesToBase64 = async (svgElement: Element): Promise<void> => {
   const imageElements = svgElement.querySelectorAll('image')
@@ -828,7 +820,6 @@ const convertImagesToBase64 = async (svgElement: Element): Promise<void> => {
  * @param [quality=1.0] - The image quality (for JPEG).
  * @param [windowName='Exported Image'] - The window name.
  * @param [opts={}] - Additional options.
- * @returns Resolves to an object containing export data.
  */
 const rasterExport = (
   imgType = 'PNG',
@@ -917,7 +908,6 @@ const rasterExport = (
  * Exports the SVG content as a PDF.
  * @param [windowName='svg.pdf'] - The window name or file name.
  * @param [outputType] - The output type for jsPDF.
- * @returns Resolves to an object containing PDF export data.
  */
 const exportPDF = (
   windowName = 'svg.pdf',
@@ -980,7 +970,6 @@ const exportPDF = (
 /**
  * Ensure each element has a unique ID.
  * @function module:svgcanvas.SvgCanvas#uniquifyElems
- * @param g - The parent element of the tree to give unique IDs
  */
 const uniquifyElemsMethod = (g: Element): void => {
   const ids: Record<string, { elem: Element | null; attrs: Attr[]; hrefs: Element[] }> = {}
@@ -1071,7 +1060,6 @@ const uniquifyElemsMethod = (g: Element): void => {
 /**
  * Assigns reference data for each use element.
  * @function module:svgcanvas.SvgCanvas#setUseData
- * @param parent
  */
 const setUseDataMethod = (parent: Element): void => {
   let elems: Element | NodeListOf<Element> = parent
@@ -1170,7 +1158,6 @@ const removeUnusedDefElemsMethod = (): number => {
 /**
  * Converts gradients from userSpaceOnUse to objectBoundingBox.
  * @function module:svgcanvas.SvgCanvas#convertGradients
- * @param elem
  */
 const convertGradientsMethod = (elem: Element): void => {
   const elems = elem.querySelectorAll('linearGradient, radialGradient')

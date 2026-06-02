@@ -22,7 +22,7 @@ let svgCanvas = null as unknown as ISvgCanvas
 
 /**
  * @function module:text-actions.init
- * @param canvas
+ * Initializes the text-actions module and registers the canvas instance.
  */
 export const init = (canvas: ISvgCanvas): void => {
   svgCanvas = canvas
@@ -90,8 +90,7 @@ class TextActions {
   }
 
   /**
-   *
-   * @param [index]
+   * Positions the SVG text cursor at the given character index, or the current selection position.
    * @private
    */
   #setCursor = (index?: number): void => {
@@ -157,10 +156,7 @@ class TextActions {
   }
 
   /**
-   *
-   * @param start
-   * @param end
-   * @param [skipInput]
+   * Highlights the text selection from start to end character index and updates the selection block.
    * @private
    */
   #setSelection = (start: number, end: number, skipInput?: boolean): void => {
@@ -228,9 +224,7 @@ class TextActions {
   }
 
   /**
-   *
-   * @param mouseX
-   * @param mouseY
+   * Returns the character index closest to the given screen coordinates.
    * @private
    */
   #getIndexFromPoint = (mouseX: number, mouseY: number): number => {
@@ -267,9 +261,7 @@ class TextActions {
   }
 
   /**
-   *
-   * @param mouseX
-   * @param mouseY
+   * Moves the text cursor to the character position nearest to the given screen coordinates.
    * @private
    */
   #setCursorFromPoint = (mouseX: number, mouseY: number): void => {
@@ -277,10 +269,7 @@ class TextActions {
   }
 
   /**
-   *
-   * @param x
-   * @param y
-   * @param [apply]
+   * Extends the current text selection to the character nearest to the given screen coordinates.
    * @private
    */
   #setEndSelectionFromPoint = (x: number, y: number, apply?: boolean): void => {
@@ -293,9 +282,7 @@ class TextActions {
   }
 
   /**
-   *
-   * @param xIn
-   * @param yIn
+   * Converts screen-space coordinates to SVG text-element local coordinates, accounting for zoom and transform.
    * @private
    */
   #screenToPt = (xIn: number, yIn: number): XYObject => {
@@ -317,9 +304,7 @@ class TextActions {
   }
 
   /**
-   *
-   * @param xIn
-   * @param yIn
+   * Converts SVG text-element local coordinates to screen-space coordinates, accounting for zoom and transform.
    * @private
    */
   #ptToScreen = (xIn: number, yIn: number): XYObject => {
@@ -341,8 +326,7 @@ class TextActions {
   }
 
   /**
-   *
-   * @param evt
+   * Selects all text in the current text element; removes itself as a listener after one invocation.
    * @private
    */
   #selectAll = (evt: Event): void => {
@@ -352,8 +336,7 @@ class TextActions {
   }
 
   /**
-   *
-   * @param evt
+   * Selects the word under the double-click position and sets up triple-click to select all.
    * @private
    */
   #selectWord = (evt: MouseEvent): void => {
@@ -382,9 +365,7 @@ class TextActions {
   }
 
   /**
-   * @param target
-   * @param x
-   * @param y
+   * Sets the active text element and enters edit mode at the given coordinates.
    */
   select (target: SVGTextElement, x: number, y: number): void {
     this.#curtext = target
@@ -392,7 +373,7 @@ class TextActions {
   }
 
   /**
-   * @param elem
+   * Begins text editing on the given text element, entering edit mode.
    */
   start (elem: SVGTextElement): void {
     this.#curtext = elem
@@ -400,10 +381,7 @@ class TextActions {
   }
 
   /**
-   * @param evt
-   * @param mouseTarget
-   * @param startX
-   * @param startY
+   * Handles mouse-down in text edit mode, focusing the input and positioning the cursor.
    */
   mouseDown (_evt: MouseEvent, _mouseTarget: Element, startX: number, startY: number): void {
     const pt = this.#screenToPt(startX, startY)
@@ -417,8 +395,7 @@ class TextActions {
   }
 
   /**
-   * @param mouseX
-   * @param mouseY
+   * Extends the text selection as the mouse drags through the text element.
    */
   mouseMove (mouseX: number, mouseY: number): void {
     const pt = this.#screenToPt(mouseX, mouseY)
@@ -426,9 +403,7 @@ class TextActions {
   }
 
   /**
-   * @param evt
-   * @param mouseX
-   * @param mouseY
+   * Finalizes the text selection on mouse-up, switching to select mode if click was outside the text.
    */
   mouseUp (evt: MouseEvent, mouseX: number, mouseY: number): void {
     const pt = this.#screenToPt(mouseX, mouseY)
@@ -453,15 +428,14 @@ class TextActions {
   }
 
   /**
-   * @param index
+   * Public entry-point to position the SVG text cursor at the given character index.
    */
   setCursor (index?: number): void {
     this.#setCursor(index)
   }
 
   /**
-   * @param [x]
-   * @param [y]
+   * Switches the canvas to text-edit mode and places the cursor, optionally at given screen coordinates.
    */
   toEditMode (x?: number, y?: number): void {
     this.#allowDbl = false
@@ -493,7 +467,7 @@ class TextActions {
   }
 
   /**
-   * @param [selectElem]
+   * Exits text-edit mode, stops the cursor blink, and optionally re-selects the text element.
    * @fires module:svgcanvas.SvgCanvas#event:selected
    */
   toSelectMode (selectElem?: boolean | Element): void {
@@ -532,12 +506,13 @@ class TextActions {
   }
 
   /**
-   * @param elem
+   * Registers the hidden text input element used to capture keyboard events during text editing.
    */
   setInputElem (elem: HTMLInputElement): void {
     this.#textinput = elem
   }
 
+  /** Exits text-edit mode if currently active, returning to select mode. */
   clear (): void {
     if (svgCanvas.getCurrentMode() === 'textedit') {
       svgCanvas.textActions.toSelectMode()
@@ -545,6 +520,7 @@ class TextActions {
   }
 
   /**
+   * Initializes per-edit-session state: computes char positions, matrix, and sets initial selection.
    * @param [_inputElem] Not in use
    */
   init (_inputElem?: Element | string): void {
@@ -632,5 +608,5 @@ class TextActions {
   }
 }
 
-// Export singleton instance for backward compatibility
+/** Singleton TextActions instance exported for backward compatibility with the svgCanvas API. */
 export const textActionsMethod: TextActions = new TextActions()
