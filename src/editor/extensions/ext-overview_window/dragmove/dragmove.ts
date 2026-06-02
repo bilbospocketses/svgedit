@@ -7,6 +7,7 @@ let _loaded = false
 const _callbacks: Array<(x: number, y: number) => void> = []
 const _isTouch = window.ontouchstart !== undefined
 
+/** Attach drag-move behavior to an element, dispatching start/drag/end callbacks with boundary support */
 export const dragmove = function (
   target: HTMLElement,
   handler: HTMLElement,

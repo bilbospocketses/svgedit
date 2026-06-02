@@ -48,11 +48,6 @@ export default {
       }
     }
 
-    /**
-     *
-     * @param attr attribute to change
-     * @param val new value
-     */
     const setAttr = (attr: string, val: string | number) => {
       svgCanvas.changeSelectedAttribute(attr, val)
       svgCanvas.call('changed', selElems)
@@ -60,7 +55,7 @@ export default {
 
     /**
      * @param n angle
-     * @return {Float} cotangeante
+     * @return cotangeante
      */
     const cot = (n: number): number => 1 / Math.tan(n)
 
