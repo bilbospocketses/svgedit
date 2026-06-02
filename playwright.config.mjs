@@ -8,13 +8,13 @@ export default defineConfig({
     timeout: 10000
   },
   use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:8000',
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:9000',
     headless: true
   },
   reporter: 'list',
   webServer: {
     command: 'npm run start:e2e',
-    url: 'http://localhost:8000/index.html',
+    url: 'http://localhost:9000/index.html',
     reuseExistingServer: !process.env.CI,
     timeout: 180 * 1000
   },
