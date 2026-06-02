@@ -9,6 +9,7 @@ describe('embed URL param parser', () => {
     expect(p.theme).toBe(undefined)
     expect(p.allowedOrigins).toEqual([])
     expect(p.dialogTimeoutMs).toBe(30000)
+    expect(p.palette).toBe(undefined)
   })
 
   it('parses embed=1 as truthy', () => {
@@ -45,5 +46,27 @@ describe('embed URL param parser', () => {
 
   it('rejects negative dialogTimeout, keeps default', () => {
     expect(parseEmbedURLParams(new URLSearchParams('dialogTimeout=-1')).dialogTimeoutMs).toBe(30000)
+  })
+
+  it('parses palette as a comma-separated, URL-decoded list', () => {
+    const p = parseEmbedURLParams(new URLSearchParams('palette=%23ff0000,%2300ff00,none'))
+    expect(p.palette).toEqual(['#ff0000', '#00ff00', 'none'])
+  })
+
+  it('returns undefined palette when absent', () => {
+    expect(parseEmbedURLParams(new URLSearchParams('')).palette).toBe(undefined)
+  })
+
+  it('drops empty palette entries', () => {
+    const p = parseEmbedURLParams(new URLSearchParams('palette=%23ff0000,,%2300ff00'))
+    expect(p.palette).toEqual(['#ff0000', '#00ff00'])
+  })
+
+  it('returns undefined palette for an all-empty value', () => {
+    expect(parseEmbedURLParams(new URLSearchParams('palette=,,')).palette).toBe(undefined)
+  })
+
+  it('returns undefined palette for an empty value', () => {
+    expect(parseEmbedURLParams(new URLSearchParams('palette=')).palette).toBe(undefined)
   })
 })
