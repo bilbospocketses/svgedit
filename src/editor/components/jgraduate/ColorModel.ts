@@ -245,7 +245,6 @@ export class ColorModel extends EventTarget {
    * space (RGB ↔ HSV) and fires a `change` event unless the value is already
    * equal to the current value.
    *
-   * @param channel - Which channel to set.
    * @param value   - New value (clamped to the channel's valid range).
    * @param source  - Optional caller token for feedback-loop prevention.
    */
