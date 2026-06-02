@@ -1,49 +1,44 @@
-# Introduction
+# Locale
 
-As of v3.0, locale files are defined as an object exported as
-an ES6 Module default. See `editor/locale` for some example files.
+This fork is **English-only**. The former `i18next`-based runtime and the
+non-English locale files were removed per the project scope directive.
+`src/editor/locale.ts` is a small shim that keeps the existing call shapes
+working.
 
-(In previous versions, the locale files were required to call
-`svgEditor.readLang`.)
+## The `t()` function
 
-## Expected format
+```js
+import { t } from './locale.js'
 
-You may also see the [LocaleStrings API]{@link module:locale.LocaleStrings}
-for the programmatic definition of the expected object (i.e., an object of
-strings and a potential recursion of other such subobjects or an array of
-strings and such objects). This is true for extenions as well.
+t('foo.bar')             // dotted key against the default ('translation') bundle
+t('myext:foo.bar')       // 'namespace:key' against an extension-registered bundle
+t('greeting', { name })  // '{{name}}' placeholders replaced from the vars object
+```
 
-However, we are not currently processing any formatting of such strings
-(besides using the convention of using brackets to surround variables
-`{variableToSubstitute}`). In the absence of such, you may wish to use
-your own formatting such as with
-[Fluent.js](https://github.com/projectfluent/fluent.js).
+If a key is not found, `t()` returns the key string unchanged.
 
-While it is possible we may move to accept JSON in future versions
-(to avoid maintainers needing to worry about JavaScript execution),
-the ES6 Modules export allows for cleaner objects; there is no need for
-quoted keys when alphanumeric keys are used, and there is the opportunity
-to use less-distracting single quotes if not
-[ES6 Template Literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals)).
+## Locale-object format
 
-## Special properties
+A bundle is a nested dictionary of strings (and sub-dictionaries). The base
+English bundle is `src/editor/locale/lang.en.js` (default export). Example
+shape:
 
-The `lang` property  should define its HTML `lang` value (which should
-probably always be the same as "<lang>" within the "lang.<lang>.js"
-file name). This is important for accessibility (screen readers),
-search engines, and, for some languages, font selection (e.g., Chinese,
-Japanese and Korean languages are expected in different font styles,
-despite many characters being shared). `lang` can also potentially be
-used programmatically for different styling or behaviors.
+```js
+export default {
+  tools: { select: 'Select', line: 'Line' },
+  layers: { layer: 'Layer' }
+}
+```
 
-While not currently in use, the `dir` property should be used to indicate
-the default directionality of the language of the locale.
+## Extensions
 
-## Location of locale files (including for extensions)
+Extensions register their own (English) strings under a namespace via
+`svgEditor.i18next.addResourceBundle('en', '<name>', dict)`, typically loading
+`ext-<name>/locale/en.js` during their `init` (see
+[ExtensionDocs](ExtensionDocs.md)). The `addResourceBundle` facade deep-merges
+into the namespace, so multiple consumers do not clobber each other.
 
-While `editor/locale` hosts the main locale files, internationalizable
-extensions define their own locale files (better supporting modularity). In
-our project, these can be found within `editor/extensions/ext-locale/<ext name>/`.
+## Not supported
 
-See [ExtensionDocs]{@tutorial ExtensionDocs} if you are implementing an
-internationalized extension.
+Multi-language authoring and the old multiple-`lang.<code>.js` mechanism are
+gone — the fork ships only `en`.

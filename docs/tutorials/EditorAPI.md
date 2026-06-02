@@ -1,11 +1,11 @@
 # Editor API
 
-This is an entry point that summarizes the documentation on the Editor.
+The editor is the UI shell around the [Canvas](CanvasAPI.md). Its entry point
+is `src/editor/Editor.ts`, which constructs the `svgEditor` instance; read the
+in-code TypeScript types and JSDoc there for the programmatic API.
 
-For user-facing information about the Editor, see [Editor]{@tutorial Editor}.
-
-The main API entrance point is with the [Editor JSDocs]{@link module:SVGEditor}.
+For end-user usage, see [Editor](Editor.md).
 
 ## Canvas-specific methods
 
-See [Canvas]{@tutorial CanvasAPI}.
+See [Canvas](CanvasAPI.md).

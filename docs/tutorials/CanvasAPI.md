@@ -1,20 +1,19 @@
 # Canvas
 
-While the Canvas works with the [Editor]{@tutorial EditorAPI}, it can also
-work on its own.
+The canvas is svgedit's rendering and SVG-manipulation engine, in
+`packages/svgcanvas/` (entry point `svgcanvas.ts`). It can run on its own or
+driven by the [Editor](EditorAPI.md).
 
-Its methods can be summarized here.
+Its public API is the TypeScript surface of the `SvgCanvas` class plus the
+`packages/svgcanvas/core/` modules — read the in-code types and JSDoc there.
+There is no generated API site.
 
-See also the [JSDocs entry for Canvas]{@link module:svgcanvas}.
+## Methods surfaced to extensions
 
-## Exposed `svgCanvas` private methods and properties
-
-These are supplied in an object supplied as the first parameter to each
-extension function (see [ExtensionDocs]{@tutorial ExtensionDocs} for
-an example and information).
-
-See their [JSDocs API]{@link module:svgcanvas.PrivateMethods}.
+Extensions reach the canvas through `getSvgEditor().svgCanvas` (some also
+receive a context object as their `init` argument). See
+[ExtensionDocs](ExtensionDocs.md).
 
 ## Canvas events
 
-See [Events]{@tutorial Events} (under "Canvas events").
+See the "Canvas events" section of [Events](Events.md).

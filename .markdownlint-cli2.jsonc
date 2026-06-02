@@ -1,6 +1,6 @@
 // markdownlint-cli2 runner config.
 // Globs cover the top-level fork docs governed by STYLE.md.
-// Sub-project 12.D will add docs/tutorials/** once those files are rewritten.
+// docs/tutorials/ is linted as of sub-project 12.D.
 {
   "config": ".markdownlint.jsonc",
   "globs": [
@@ -8,12 +8,12 @@
     "README.md",
     "CONTRIBUTING.md",
     "AGENTS.md",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "docs/tutorials/*.md"
   ],
   "ignores": [
     "node_modules/**",
     "dist/**",
-    "docs/superpowers/**",
-    "docs/tutorials/**"
+    "docs/superpowers/**"
   ]
 }

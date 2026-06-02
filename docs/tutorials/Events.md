@@ -1,128 +1,53 @@
-# Introduction
+# Events
 
-## `save`, `open`, `exportImage` (`setCustomHandlers`)
+## Save / open / export handlers
 
-You can hook to the save event (e.g. in an extension), to handle saving
-the SVG file differently:
+Saving, opening, and exporting are provided by extensions — notably
+`src/editor/extensions/ext-opensave/`. To change how the editor saves, opens,
+or exports, customize or replace that extension. The handler shape (`open`,
+`save`, `exportImage`, `exportPDF`) is documented as the `CustomHandler`
+interface in `src/editor/Editor.ts`.
 
-### Example
+## Editor-ready event (host / embedder pages)
+
+When the editor finishes loading it dispatches a native, bubbling
+`CustomEvent` named `svgEditorReady` on the `document.documentElement` of its
+opener or parent window (see `src/editor/editorInit.ts`). A host page listens
+for it with native DOM events (no jQuery):
+
 ```js
-svgEditor.setCustomHandlers({
-  save (_win, _data) {
-    // Save svg
-  }
+document.addEventListener('svgEditorReady', () => {
+  // The embedded / opened editor has finished initializing.
 })
 ```
 
-Other methods corresponding to UI events that may be supplied are `open`
-and `exportImage`.
+A clean host-facing API for driving the embedded editor is planned separately
+(the embed-API work; it will ship as `EMBED_API.md`).
 
-See [`CustomHandler`]{@link module:SVGEditor.CustomHandler} for the required
-format of the object to be passed to
-[`setCustomHandlers`]{@link module:SVGEditor.setCustomHandlers}.
+## Within-frame editor callbacks (`svgEditor.ready`)
 
-## Parent/Opening window events
-
-### `svgEditorReady`
-
-The `svgEditorReady` event is triggered on a containing `document` (of
-`window.opener` or `window.parent`) when the editor is loaded.
-
-See [svgEditorReadyEvent]{@link module:SVGEditor#event:svgEditorReadyEvent}
-for the JSDocs.
-
-### Example
-
-```js
-$(document).bind('svgEditorReady', function () {
-  const svg = `
-    <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
-      "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-    <svg xmlns="http://www.w3.org/2000/svg" width="100" height="50">
-      <ellipse cx="50" cy="25" rx="50" ry="25" style="fill:blue;"/>
-    </svg>`
-  $('iframe.svgedit')[0].contentWindow.svgCanvas.setSvgString(svg)
-})
-```
-
-If you are acting within the frame, you may use `svgEditor.ready`
-(see "Editor (within-frame) events (`svgEditor`)" below).
-
-## Editor (within-frame) events (`svgEditor`)
-
-### `svgEditor.canvas`
-
-- Canvas object. See "Canvas events".
-
-### `svgEditor.canvas.bind(eventName, function () {})`
-
-- Method for listening to canvas events. See "Canvas events".
-
-### `svgEditor.ready(function () {})`
-
-Method for listening to editor callbacks. Used internally as well.
-
-No arguments passed to callback.
-
-See [`SVGEditor.ready`]{@link module:SVGEditor.ready}.
+Code running inside the editor frame can register callbacks with
+`svgEditor.ready(fn)` (see `src/editor/Editor.ts`); it is used internally too.
 
 ## Extension events
 
-Most extensions will want to run functions when certain events are
-triggered. This is a list of the current events that can be hooked
-onto. All events are optional.
-
-See the `vars` param of
-[`runExtensions`]{@link module:svgcanvas.SvgCanvas#runExtensions}
-for some of the available extension events and their descriptions and types.
-
-See [`ExtensionStatus`]{@link module:svgcanvas.ExtensionStatus} for the
-values to be returned by the corresponding extension methods listening
-for these extension event types.
+Extensions run functions when certain events fire. See the `vars` parameter of
+`runExtensions` in `packages/svgcanvas/svgcanvas.ts` for the available
+extension events, and `ExtensionStatus` for the values the corresponding
+extension methods return. See [ExtensionDocs](ExtensionDocs.md).
 
 ## Canvas events
 
-Canvas events are listened to with the bind method
-([JSDocs API]{@link module:svgcanvas.SvgCanvas#bind}):
+Canvas events are observed with `canvas.bind(eventName, callback)` and fired
+internally with `canvas.call(eventName, …)` (see
+`packages/svgcanvas/svgcanvas.ts`). `bind` returns any previously bound
+callback; the callback receives the `window` object and one event-specific
+argument.
 
-```js
-canvas.bind(eventName, callback)
-```
-
-Canvas events are passed between the editor and canvas and should mostly
-only of be of interest to those working with the [Canvas]{@tutorial CanvasAPI}
-alone or those developing SVGEdit).
-
-`callback` (see [`EventHandler`]{@link module:svgcanvas.EventHandler}) will be passed the
-`window` object and a single argument specific to the event
-(see [`GenericCanvasEvent`]{@link module:svgcanvas.SvgCanvas#event:GenericCanvasEvent}).
-
-The `bind` method will return any previous callback attached to the given
-event name.
-
-The method used to trigger these bound events is `call()`
-([JSDocs]{@link module:svgcanvas.SvgCanvas#call}).
-
-All events below are currently called from within `svgcanvas.js` except where
-noted. All events are also defined internally within `svg-editor.js` except
-where noted.
-
-|Event|Where bound/defined (besides editor)|Where called/triggered (besides canvas)|
-|-----|------------------------------------|-----------------------------|
-|`changed` | | (Also called from `draw.js`, `ext-arrows.js`, `ext-foreignObject.js`, `ext-markers.js`, `ext-polygon.js`, `ext-star.js`, and `path.js`) |
-|`cleared` | Not bound/defined in SVGEdit. | |
-|`contextset` | | Only called from `draw.js`|
-|`exported` | | |
-|`exportedPDF` | | |
-|`extension_added` | | |
-|`extensions_added` | | Only called from `svg-editor.js` |
-|`message` | Only bound/defined in `ext-webappfind.js` | Only called from `svg-editor.js` |
-|`pointsAdded` | Not bound/defined in SVGEdit. | |
-|`saved` | | |
-|`selected` | | Also called from `path.js` |
-|`setnonce` | Only bound/defined in `ext-arrows.js` | |
-|`transition` | | |
-|`updateCanvas` | | |
-|`unsetnonce` | Only bound/defined in `ext-arrows.js` | |
-|`zoomed` | | |
-|`zoomDone` | | |
+The events currently fired by the canvas (grep `call('…')` under
+`packages/svgcanvas/` for the authoritative list) include `changed`,
+`selected`, `pointsAdded`, `transition`, `contextset`, `zoomed`, `zoomDone`,
+`updateCanvas`, `exported`, `exportedPDF`, `sourcechanged`, `setnonce`,
+`unsetnonce`, `extension_added`, `beforeClear`, `afterClear`, and
+`elementRenamed`. These mostly matter when working with the canvas directly or
+developing svgedit itself.
