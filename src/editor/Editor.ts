@@ -46,6 +46,7 @@ const SVGEDIT_VERSION = '7.4.1'
 
 const { $id, $click, decode64 } = SvgCanvas
 
+/** Main SVG editor class — owns the canvas, panels, keyboard shortcuts, and extension lifecycle. */
 class Editor {
   // --- Properties from Editor ---
   langChanged: boolean
@@ -420,8 +421,6 @@ class Editor {
       this.svgCanvas.bind(
         'extensions_added',
         /**
-        * @param _win
-        * @param _data
         * @listens module:SvgCanvas#event:extensions_added
         */
         (_win: unknown, _data: unknown) => {
@@ -434,7 +433,6 @@ class Editor {
 
           this.messageQueue.forEach(
             /**
-             * @param messageObj
              * @fires module:svgcanvas.SvgCanvas#event:message
              */
             (messageObj) => {
@@ -462,7 +460,6 @@ class Editor {
 
   /**
    * sets cursor styling for workarea depending on the current mode
-   * @param mode
    */
   setCursorStyle (mode: string): void {
     let cs = 'auto'
@@ -506,9 +503,6 @@ class Editor {
 
   /**
    *
-   * @param str SVG string
-   * @param [opts={}]
-   * @param [opts.noAlert]
    * @throws {Error} Upon failure to load SVG
    */
   loadSvgString (str: string, { noAlert }: { noAlert?: boolean | undefined } = {}): void {
@@ -563,8 +557,8 @@ class Editor {
    */
 
   /**
+   * Toggle randomized element ID generation on the canvas.
    * @function module:SVGthis.randomizeIds
-   * @param arg
    */
   randomizeIds (arg: boolean): void {
     this.svgCanvas.randomizeIds(arg)
@@ -642,9 +636,6 @@ class Editor {
     })
   }
 
-  /**
-   * @param sel Selector to match
-   */
   getButtonData (sel: string): ShortcutDef | undefined {
     return Object.values(this.shortcuts).find((btn) => {
       return btn.sel === sel
@@ -652,8 +643,6 @@ class Editor {
   }
 
   /**
-   * @param win
-   * @param data
    * @listens module:svgcanvas.SvgCanvas#event:exported
    */
   exportHandler (_win: unknown, data: { issues: string[]; exportWindowName: string; bloburl?: string; datauri?: string; type: string }): void {
@@ -687,11 +676,6 @@ class Editor {
     }
   }
 
-  /**
-   *
-   * @param color
-   * @param url
-   */
   setBackground (color: string, url: string): void {
     // if (color == this.configObj.pref('bkgd_color') && url == this.configObj.pref('bkgd_url')) { return; }
     this.configObj.pref('bkgd_color', color)
@@ -702,9 +686,8 @@ class Editor {
   }
 
   /**
+   * Resize and reposition the canvas element, adjusting scroll to maintain the current view center.
    * @function module:SVGthis.updateCanvas
-   * @param center
-   * @param newCtr
    */
   updateCanvas (center?: boolean, newCtr?: { x: number; y: number }): void {
     const zoom = this.svgCanvas.getZoom()
@@ -812,8 +795,6 @@ class Editor {
   // called when we've selected a different element
   /**
    *
-   * @param win
-   * @param elems Array of elements that were selected
    * @listens module:svgcanvas.SvgCanvas#event:selected
    * @fires module:svgcanvas.SvgCanvas#event:ext_selectedChanged
    */
@@ -846,8 +827,6 @@ class Editor {
   // Call when part of element is in process of changing, generally
   // on mousemove actions like rotate, move, etc.
   /**
-   * @param win
-   * @param elems
    * @listens module:svgcanvas.SvgCanvas#event:transition
    * @fires module:svgcanvas.SvgCanvas#event:ext_elementTransition
    */
@@ -883,8 +862,6 @@ class Editor {
 
   // called when any element has changed
   /**
-   * @param win
-   * @param elems
    * @listens module:svgcanvas.SvgCanvas#event:changed
    * @fires module:svgcanvas.SvgCanvas#event:ext_elementChanged
    */
@@ -954,10 +931,8 @@ class Editor {
   }
 
   /**
+   * Handle a zoom event by computing the new zoom level and updating the canvas scroll position.
    * @function module:svgcanvas.SvgCanvas#zoomChanged
-   * @param win
-   * @param bbox
-   * @param autoCenter
    * @listens module:svgcanvas.SvgCanvas#event:zoomed
    * @fires module:svgcanvas.SvgCanvas#event:ext_zoomChanged
    */
@@ -1008,8 +983,6 @@ class Editor {
   }
 
   /**
-   * @param win
-   * @param context
    * @listens module:svgcanvas.SvgCanvas#event:contextset
    */
   contextChanged (_win: unknown, context: Element | null): void {
@@ -1044,9 +1017,8 @@ class Editor {
   }
 
   /**
+   * Replace the child content of a toolbar element with an icon image loaded from the configured imgPath.
    * @function module:SVGEditor.setIcon
-   * @param elem
-   * @param iconId
    */
   setIcon (elem: string, iconId: string): void {
     const img = document.createElement('img')
@@ -1070,10 +1042,7 @@ class Editor {
   }
 
   /**
-   * @param win
-   * @param ext
    * @listens module:svgcanvas.SvgCanvas#event:extension_added
-   * @returns Resolves to `undefined`
    */
   // eslint-disable-next-line @typescript-eslint/require-await
   async extAdded (_win: unknown, ext: { callback?: () => void; events?: { id: string; click: () => void } } | null): Promise<void> {
@@ -1095,9 +1064,6 @@ class Editor {
     return runCallback()
   }
 
-  /**
-   * @param multiplier
-   */
   zoomImage (multiplier?: number): void {
     const resolution = this.svgCanvas.getResolution()
     multiplier = multiplier ? resolution.zoom * multiplier : 1
@@ -1115,6 +1081,7 @@ class Editor {
   }
 
   /**
+   * Copy the currently selected element(s) to the internal clipboard.
    * @function copySelected
    */
   copySelected () {
@@ -1141,19 +1108,12 @@ class Editor {
     this.svgCanvas.pasteElements('point', x, y)
   }
 
-  /**
-   * @param dir
-   */
   moveUpDownSelected (dir: 'Up' | 'Down'): void {
     if (this.selectedElement) {
       this.svgCanvas.moveUpDownSelected(dir)
     }
   }
 
-  /**
-   * @param dx
-   * @param dy
-   */
   moveSelected (dx: number, dy: number): void {
     if (this.selectedElement || this.multiselected) {
       if (this.configObj.curConfig.gridSnapping) {
@@ -1175,10 +1135,6 @@ class Editor {
     this.svgCanvas.cycleElement(0)
   }
 
-  /**
-   * @param cw
-   * @param step
-   */
   rotateSelected (cw: 0 | 1, step: number): void {
     if (!this.selectedElement || this.multiselected) {
       return
@@ -1196,10 +1152,6 @@ class Editor {
     $editorDialog?.setAttribute('dialog', 'closed')
   }
 
-  /**
-   * @param e
-   * @returns Resolves to `undefined`
-   */
   async saveSourceEditor (e: CustomEvent): Promise<void> {
     const $editorDialog = $id('se-svg-editor-dialog')
     if ($editorDialog?.getAttribute('dialog') !== 'open') return
@@ -1224,10 +1176,6 @@ class Editor {
     this.leftPanel.clickSelect()
   }
 
-  /**
-   * @param e
-   * @returns Resolves to `undefined`
-   */
   async cancelOverlays (e: CustomEvent): Promise<void> {
     $id('dialog_box')?.style.setProperty('display', 'none')
     const $editorDialog = $id('se-svg-editor-dialog')
@@ -1278,6 +1226,7 @@ class Editor {
   }
 
   /**
+   * Prompt the user to confirm discarding unsaved changes before opening a new file.
    * @function module:SVGthis.openPrep
    * @returns Resolves to boolean indicating `true` if there were no changes
    *  and `false` after the user confirms.
@@ -1289,29 +1238,17 @@ class Editor {
     return await seConfirm(this.i18next.t('notification.QwantToOpen'))
   }
 
-  /**
-   *
-   * @param e
-   */
   onDragEnter (e: DragEvent): void {
     e.stopPropagation()
     e.preventDefault()
     // and indicator should be displayed here, such as "drop files here"
   }
 
-  /**
-   *
-   * @param e
-   */
   onDragOver (e: DragEvent): void {
     e.stopPropagation()
     e.preventDefault()
   }
 
-  /**
-   *
-   * @param e
-   */
   onDragLeave (e: DragEvent): void {
     e.stopPropagation()
     e.preventDefault()
@@ -1319,12 +1256,11 @@ class Editor {
   }
 
   /**
+   * Switch the editor UI language and rename the default layer if it used the old locale string.
    * @function module:SVGthis.setLang
-   * @param lang The language code
    * @param allStrings See {@tutorial LocaleDocs}
    * @fires module:svgcanvas.SvgCanvas#event:ext_langReady
    * @fires module:svgcanvas.SvgCanvas#event:ext_langChanged
-   * @returns A Promise which resolves to `undefined`
    */
   setLang (lang: string): void {
     this.langChanged = true
@@ -1358,7 +1294,6 @@ class Editor {
    *   to be invoked immediately if it is already ready--i.e.,
    *   if `runCallbacks` has been run).
    * @function module:SVGthis.ready
-   * @param cb Callback to be queued to invoke
    * @returns Resolves when all callbacks, including the supplied have resolved
    */
   ready (cb: () => unknown): Promise<unknown> {
@@ -1396,9 +1331,8 @@ class Editor {
   }
 
   /**
+   * Load an SVG string into the editor, waiting until the editor is ready before applying it.
    * @function module:SVGthis.loadFromString
-   * @param str The SVG string to load
-   * @param [opts={}]
    * @param [opts.noAlert=false] Option to avoid alert to user and instead get rejected promise
    */
   loadFromString (str: string, { noAlert }: { noAlert?: boolean | undefined } = {}): Promise<unknown> {
@@ -1415,14 +1349,12 @@ class Editor {
 
   /**
    * @callback module:SVGthis.URLLoadCallback
-   * @param success
    */
   /**
+   * Fetch an SVG from a URL and load it into the editor, waiting for the editor to be ready.
    * @function module:SVGthis.loadFromURL
    * @param url URL from which to load an SVG string via Ajax
    * @param [opts={}] May contain properties: `cache`, `callback`
-   * @param [opts.cache]
-   * @param [opts.noAlert]
    * @returns Resolves to `undefined` or rejects upon bad loading of
    *   the SVG (or upon failure to parse the loaded string) when `noAlert` is
    *   enabled
@@ -1461,10 +1393,9 @@ class Editor {
   }
 
   /**
+   * Decode a data URI (base64 or percent-encoded) and load the resulting SVG into the editor.
    * @function module:SVGthis.loadFromDataURI
    * @param str The Data URI to base64-decode (if relevant) and load
-   * @param [opts={}]
-   * @param [opts.noAlert]
    * @returns Resolves to `undefined` and rejects if loading SVG string fails and `noAlert` is enabled
    */
   loadFromDataURI (str: string, { noAlert }: { noAlert?: boolean | undefined } = {}): Promise<unknown> {
@@ -1486,12 +1417,10 @@ class Editor {
   }
 
   /**
+   * Register and initialize an extension by delegating to the canvas; must be called after canvas creation.
    * @function module:SVGthis.addExtension
    * @param name Used internally; no need for i18n.
-   * @param initfn Config to be invoked on this module
-   * @param initArgs
    * @throws {Error} If called too early
-   * @returns Resolves to `undefined`
    */
   addExtension (name: string, initfn: ((...args: unknown[]) => unknown) | false | undefined, initArgs: Record<string, unknown>): Promise<void> {
     // Note that we don't want this on this.ready since some extensions
