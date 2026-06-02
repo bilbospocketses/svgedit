@@ -71,13 +71,6 @@ export default {
       updateConnectors(svgCanvas.getSelectedElements().filter((e): e is Element => e !== null))
     })
 
-    /**
-     * getBBintersect
-     * @param x
-     * @param y
-     * @param bb
-     * @param offset
-     */
     const getBBintersect = (x: number, y: number, bb: ConnBB, offset?: number) => {
       // Adjust bounding box if offset is provided
       if (offset) {
@@ -117,7 +110,6 @@ export default {
     /**
      * getOffset
      * @param side - The side of the line ("start" or "end") where the marker may be present.
-     * @param line - The line element to check for a marker.
      * @returns - Returns the calculated offset if a marker is present, otherwise returns 0.
      */
     const getOffset = (side: string, line: Element) => {
@@ -135,7 +127,6 @@ export default {
     }
 
     /**
-     * showPanel
      * @param on - Determines whether to show or hide the elements.
      */
     const showPanel = (on: boolean) => {
@@ -159,12 +150,7 @@ export default {
     }
 
     /**
-     * setPoint
-     * @param elem - The SVG element.
      * @param pos - The position index or "end".
-     * @param x - The x-coordinate.
-     * @param y - The y-coordinate.
-     * @param [setMid] - Whether to set the midpoint.
      */
     const setPoint = (elem: SVGPolylineElement, pos: number | 'end', x: number, y: number, setMid?: boolean) => {
       // Create a new SVG point
@@ -189,10 +175,6 @@ export default {
       }
     }
 
-    /**
-     * @param diffX
-     * @param diffY
-     */
     const updatePoints = (line: SVGPolylineElement, conn: Connection, bb: ConnBB, altBB: ConnBB, pre: string, altPre: string) => {
       const srcX = altBB.x + altBB.width / 2
       const srcY = altBB.y + altBB.height / 2
@@ -313,7 +295,6 @@ export default {
 
     /**
      * Updates the connectors based on selected elements.
-     * @param [elems] - Optional array of selected elements.
      */
     const updateConnectors = (elems?: Element[]) => {
       const dataStorage = svgCanvas.getDataStorage()
