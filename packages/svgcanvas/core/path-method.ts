@@ -37,6 +37,7 @@ export interface PathSeg {
   [key: string]: number | boolean | string | undefined
 }
 
+/** Map from SVGPathSeg numeric type constants to their single-letter command strings. */
 export const TYPE_TO_CMD: Record<number, string> = {
   1: 'Z',
   2: 'M',
@@ -59,6 +60,7 @@ export const TYPE_TO_CMD: Record<number, string> = {
   19: 't'
 }
 
+/** Inverse of TYPE_TO_CMD — maps command letter strings to their numeric type constants. */
 export const CMD_TO_TYPE: Record<string, number> = Object.fromEntries(
   Object.entries(TYPE_TO_CMD).map(([k, v]) => [v, Number(k)])
 )
@@ -152,8 +154,8 @@ import type { ISvgCanvas } from './svgcanvas-types.js'
 let svgCanvas = null as unknown as ISvgCanvas
 
 /**
+* Initialize path-method module with the canvas context.
 * @function module:path-actions.init
-* @param pathMethodsContext
 */
 export const init = (canvas: ISvgCanvas): void => {
   svgCanvas = canvas
@@ -161,10 +163,9 @@ export const init = (canvas: ISvgCanvas): void => {
 
 
 /**
+* Convert a PathSeg object to a flat number array ordered by segment type properties.
 * @function module:path.ptObjToArr
 * @todo See if this should just live in `replacePathSeg`
-* @param type
-* @param segItem
 */
 export const ptObjToArrMethod = (type: number, segItem: PathSeg): number[] => {
   const segData = svgCanvas.getSegData()
@@ -175,9 +176,8 @@ export const ptObjToArrMethod = (type: number, segItem: PathSeg): number[] => {
 }
 
 /**
+* Return the canvas-coordinate position of a path segment's grip, applying any path matrix and zoom.
 * @function module:path.getGripPt
-* @param seg
-* @param altPt
 */
 export const getGripPtMethod = (seg: Segment, altPt?: { x: number; y: number } | null): { x: number; y: number } => {
   const { path: pth } = seg
@@ -198,9 +198,8 @@ export const getGripPtMethod = (seg: Segment, altPt?: { x: number; y: number } |
 }
 
 /**
+* Convert a grip canvas-coordinate position back to path-data coordinates, reversing matrix and zoom.
 * @function module:path.getPointFromGrip
-* @param pt
-* @param pth
 */
 export const getPointFromGripMethod = (pt: { x: number; y: number }, pth: Path): { x: number; y: number } => {
   const out = {
@@ -221,6 +220,7 @@ export const getPointFromGripMethod = (pt: { x: number; y: number }, pth: Path):
 }
 
 /**
+* Return (creating if absent) the SVG group element that holds all path-edit grip elements.
 * @function module:path.getGripContainer
 */
 export const getGripContainerMethod = (): Element => {
@@ -238,9 +238,6 @@ export const getGripContainerMethod = (): Element => {
 * Requires prior call to `setUiStrings` if `xlink:title`
 *    to be set on the grip.
 * @function module:path.addPointGrip
-* @param index
-* @param [x]
-* @param [y]
 */
 export const addPointGripMethod = (index: number, x?: number, y?: number): SVGCircleElement => {
   // create the container of all the point grips
@@ -290,7 +287,6 @@ export const addPointGripMethod = (index: number, x?: number, y?: number): SVGCi
 * Requires prior call to `setUiStrings` if `xlink:title`
 *    to be set on the grip.
 * @function module:path.addCtrlGrip
-* @param id
 */
 export const addCtrlGripMethod = (id: string): SVGCircleElement => {
   let pointGrip = getElement('ctrlpointgrip_' + id) as SVGCircleElement | null
@@ -317,8 +313,8 @@ export const addCtrlGripMethod = (id: string): SVGCircleElement => {
 }
 
 /**
+* Return (creating if absent) the SVG line element used to draw a control-point handle arm.
 * @function module:path.getCtrlLine
-* @param id
 */
 export const getCtrlLineMethod = (id: string): SVGLineElement => {
   let ctrlLine = getElement('ctrlLine_' + id) as SVGLineElement | null
@@ -336,9 +332,8 @@ export const getCtrlLineMethod = (id: string): SVGLineElement => {
 }
 
 /**
+* Return the point-grip circle for a segment, optionally updating its position to the current grip coordinates.
 * @function module:path.getPointGrip
-* @param seg
-* @param [update]
 */
 export const getPointGripMethod = (seg: Segment, update?: boolean): SVGCircleElement => {
   const { index } = seg
@@ -357,8 +352,8 @@ export const getPointGripMethod = (seg: Segment, update?: boolean): SVGCircleEle
 }
 
 /**
+* Build and display Bezier control-point grips and their connecting lines for a cubic segment; returns null for non-cubic segments.
 * @function module:path.getControlPoints
-* @param seg
 */
 export const getControlPointsMethod = (seg: Segment): Record<string, SVGLineElement | SVGCircleElement> | null => {
   const { item, index } = seg
@@ -409,9 +404,6 @@ export const getControlPointsMethod = (seg: Segment): Record<string, SVGLineElem
 * This replaces the segment at the given index. Type is given as number.
 * @function module:path.replacePathSeg
 * @param type Possible values set during {@link module:path.init}
-* @param index
-* @param pts
-* @param [elem]
 */
 export const replacePathSegMethod = (type: number, index: number, pts: number[], elem?: SVGPathElement | SVGElement | null): void => {
   const path = svgCanvas.getPathObj() as Path | null
@@ -438,9 +430,8 @@ export const replacePathSegMethod = (type: number, index: number, pts: number[],
 }
 
 /**
+* Return (creating if absent) the highlight path element for a segment, optionally updating its geometry.
 * @function module:path.getSegSelector
-* @param seg
-* @param [update]
 */
 export const getSegSelectorMethod = (seg: Segment, update?: boolean): SVGPathElement => {
   const { index } = seg
@@ -484,6 +475,7 @@ export const getSegSelectorMethod = (seg: Segment, update?: boolean): SVGPathEle
   return segLine
 }
 
+/** Represents one segment within a path, holding its grip, control-point elements, and selection state. */
 export class Segment {
   selected: boolean
   index: number
@@ -498,10 +490,6 @@ export class Segment {
   mate?: Segment
   olditem?: PathSeg
 
-  /**
-  * @param index
-  * @param item
-  */
   constructor (index: number, item: PathSeg) {
     this.selected = false
     this.index = index
@@ -513,9 +501,6 @@ export class Segment {
     this.segsel = null
   }
 
-  /**
-   * @param y
-   */
   showCtrlPts (y: boolean): void {
     for (const i in this.ctrlpts) {
       if ({}.hasOwnProperty.call(this.ctrlpts, i)) {
@@ -524,17 +509,11 @@ export class Segment {
     }
   }
 
-  /**
-   * @param y
-   */
   selectCtrls (y: boolean): void {
     document.getElementById(`ctrlpointgrip_${this.index}c1`)?.setAttribute('fill', y ? '#0FF' : '#EEE')
     document.getElementById(`ctrlpointgrip_${this.index}c2`)?.setAttribute('fill', y ? '#0FF' : '#EEE')
   }
 
-  /**
-   * @param y
-   */
   show (y: boolean): void {
     if (this.ptgrip) {
       this.ptgrip.setAttribute('display', y ? 'inline' : 'none')
@@ -544,9 +523,6 @@ export class Segment {
     }
   }
 
-  /**
-   * @param y
-   */
   select (y: boolean): void {
     if (this.ptgrip) {
       this.ptgrip.setAttribute('stroke', y ? '#0FF' : '#00F')
@@ -564,9 +540,6 @@ export class Segment {
     this.segsel = getSegSelectorMethod(this, true)
   }
 
-  /**
-   * @param [full]
-   */
   update (full?: boolean): void {
     if (this.ptgrip) {
       const pt = getGripPtMethod(this)
@@ -591,10 +564,6 @@ export class Segment {
     }
   }
 
-  /**
-   * @param dx
-   * @param dy
-   */
   move (dx: number, dy: number): void {
     const { item } = this
 
@@ -636,9 +605,6 @@ export class Segment {
     if (this.next) { this.next.update(true) }
   }
 
-  /**
-   * @param num
-   */
   setLinked (num: number): void {
     let seg: Segment | undefined; let anum: number; let pt: PathSeg
     if (num === 2) {
@@ -667,11 +633,6 @@ export class Segment {
     seg.update(true)
   }
 
-  /**
-   * @param num
-   * @param dx
-   * @param dy
-   */
   moveCtrl (num: number, dx: number, dy: number): void {
     const { item } = this
     const xKey = 'x' + num
@@ -692,7 +653,6 @@ export class Segment {
 
   /**
    * @param newType Possible values set during {@link module:path.init}
-   * @param pts
    */
   setType (newType: number, pts: number[]): void {
     replacePathSegMethod(newType, this.index, pts)
@@ -707,6 +667,7 @@ export class Segment {
   }
 }
 
+/** Manages the full editing state of a single SVGPathElement, including segments, grips, and undo data. */
 export class Path {
   elem: SVGPathElement
   segs: Segment[]
@@ -724,7 +685,6 @@ export class Path {
   [key: string]: any
 
   /**
-  * @param elem
   * @throws {Error} If constructed without a path element
   */
   constructor (elem: SVGPathElement) {
@@ -842,9 +802,6 @@ export class Path {
     return this
   }
 
-  /**
-  * @param fn
-  */
   eachSeg (fn: (this: Segment, i: number) => boolean | void): void {
     const len = this.segs.length
     for (let i = 0; i < len; i++) {
@@ -855,9 +812,6 @@ export class Path {
     }
   }
 
-  /**
-  * @param index
-  */
   addSeg (index: number): void {
     // Adds a new segment
     const seg = this.segs[index]
@@ -899,9 +853,6 @@ export class Path {
     setPathData(this.elem, data)
   }
 
-  /**
-  * @param index
-  */
   deleteSeg (index: number): void {
     const seg = this.segs[index]
     if (!seg) return
@@ -933,9 +884,6 @@ export class Path {
     }
   }
 
-  /**
-  * @param index
-  */
   removePtFromSelection (index: number): void {
     const pos = this.selected_pts.indexOf(index)
     if (pos === -1) {
@@ -957,9 +905,6 @@ export class Path {
     this.last_d = this.elem.getAttribute('d')
   }
 
-  /**
-  * @param y
-  */
   show (y: boolean): this {
     // Shows this path's segment grips
     this.eachSeg(function () {
@@ -974,8 +919,6 @@ export class Path {
 
   /**
   * Move selected points.
-  * @param dx
-  * @param dy
   */
   movePts (dx: number, dy: number): void {
     let i = this.selected_pts.length
@@ -985,10 +928,6 @@ export class Path {
     }
   }
 
-  /**
-  * @param dx
-  * @param dy
-  */
   moveCtrl (dx: number, dy: number): void {
     const seg = this.segs[this.selected_pts[0] ?? 0]
     seg?.moveCtrl(this.dragctrl as number, dx, dy)
@@ -1060,10 +999,6 @@ export class Path {
     path.endChanges(text)
   }
 
-  /**
-  * @param [pt]
-  * @param [ctrlNum]
-  */
   selectPt (pt?: number, ctrlNum?: number): void {
     this.clearSelection()
     if (pt === undefined || pt === null) {
@@ -1107,17 +1042,11 @@ export class Path {
     return this
   }
 
-  /**
-  * @param [text]
-  */
   endChanges (text?: string): void {
     const cmd = new ChangeElementCommand(this.elem, { d: this.last_d ?? null }, text)
     svgCanvas.endChanges({ cmd, elem: this.elem })
   }
 
-  /**
-  * @param indexes
-  */
   addPtsToSelection (indexes: number | number[]): void {
     if (!Array.isArray(indexes)) { indexes = [indexes] }
     indexes.forEach((index) => {
@@ -1143,9 +1072,6 @@ export class Path {
   }
 
   // STATIC
-  /**
-  * @param index
-  */
   static subpathIsClosed (index: number): boolean {
     let clsd = false
     // Check if subpath is already open

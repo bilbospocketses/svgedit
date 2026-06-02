@@ -51,8 +51,8 @@ import type { ISvgCanvas } from './svgcanvas-types.js'
 let svgCanvas = null as unknown as ISvgCanvas
 const uiStrings: Record<string, string> = {}
 /**
+* Merge UI string labels (e.g., tooltip text) used by path grip elements.
 * @function module:path.setUiStrings
-* @param strs
 */
 export const setUiStrings = (strs: { ui: Record<string, string> }): void => {
   Object.assign(uiStrings, strs.ui)
@@ -67,8 +67,8 @@ let linkControlPts = true
 let pathData: Record<string, Path> = {}
 
 /**
+* Set whether moving one Bezier control point automatically mirrors the opposite control point.
 * @function module:path.setLinkControlPoints
-* @param lcp
 */
 export const setLinkControlPoints = (lcp: boolean): void => {
   linkControlPts = lcp
@@ -76,10 +76,12 @@ export const setLinkControlPoints = (lcp: boolean): void => {
 
 let activePath: Path | null = null
 
+/** Return the currently active Path instance, or null when no path is being edited. */
 export function getPath (): Path | null {
   return activePath
 }
 
+/** Set the currently active Path instance; pass null to deactivate. */
 export function setPath (p: Path | null): void {
   activePath = p
 }
@@ -94,81 +96,82 @@ export function setPath (p: Path | null): void {
  * @property {module:svgcanvas.SvgCanvas} canvas
  */
 /**
+ * Dispatch a named canvas event to registered listeners.
  * @function module:path.EditorContext#call
- * @param ev - String with the event name
  * @param arg - Argument to pass through to the callback function.
  *  If the event is "changed", an array of `Element`s is passed; if "selected", a single-item array of `Element` is passed.
  */
 /**
  * Note: This doesn't round to an integer necessarily.
  * @function module:path.EditorContext#round
- * @param val
  * @returns Rounded value to nearest value based on `zoom`
  */
 /**
+ * Deselect all currently selected elements.
  * @function module:path.EditorContext#clearSelection
  * @param [noCall] - When `true`, does not call the "selected" handler
 */
 /**
+ * Add elements to the current selection, optionally showing resize grips.
  * @function module:path.EditorContext#addToSelection
  * @param elemsToAdd - An array of DOM elements to add to the selection
  * @param showGrips - Indicates whether the resize grips should be shown
 */
 /**
+ * Push a command onto the undo history stack.
  * @function module:path.EditorContext#addCommandToHistory
- * @param cmd
  */
 /**
+ * Apply a transform matrix to an element's coordinate attributes, updating them in place.
  * @function module:path.EditorContext#remapElement
  * @param selected - DOM element to be changed
  * @param changes - Object with changes to be remapped
  * @param m - Matrix object to use for remapping coordinates
  */
 /**
+ * Create and insert SVG elements from a JSON descriptor, returning the created element.
  * @function module:path.EditorContext#addSVGElementsFromJson
- * @param data
- * @returns The new element
 */
 /**
+ * Return whether grid-snapping is currently enabled.
  * @function module:path.EditorContext#getGridSnapping
  */
 /**
+ * Return the current fill/stroke opacity value.
  * @function module:path.EditorContext#getOpacity
  */
 /**
+ * Return the list of currently selected DOM elements.
  * @function module:path.EditorContext#getSelectedElements
  * @returns the array with selected DOM elements
 */
 /**
+ * Return the root container element of the SVG editor canvas.
  * @function module:path.EditorContext#getContainer
  */
 /**
+ * Set the drawing-started flag indicating a mouse-drag operation is in progress.
  * @function module:path.EditorContext#setStarted
- * @param s
  */
 /**
+ * Return the rubber-band selection rectangle SVG element.
  * @function module:path.EditorContext#getRubberBox
 */
 /**
+ * Assign and return the rubber-band selection rectangle element.
  * @function module:path.EditorContext#setRubberBox
- * @param rb
- * @returns Same as parameter passed in
  */
 /**
+ * Register grip elements as selected and notify the canvas, indicating whether the subpath is closed.
  * @function module:path.EditorContext#addPtsToSelection
- * @param cfg
- * @param cfg.closedSubpath
- * @param cfg.grips
  */
 /**
+ * Finalize a change command by recording it to history and firing the changed event.
  * @function module:path.EditorContext#endChanges
- * @param cfg
- * @param cfg.cmd
- * @param cfg.elem
 */
 /**
+ * Return the current zoom level as a numeric multiplier.
  * @function module:path.EditorContext#getZoom
- * @returns The current zoom level
  */
 /**
  * Returns the last created DOM element ID string.
@@ -182,28 +185,27 @@ export function setPath (p: Path | null): void {
  * Gets the desired element from a mouse event.
  * @function module:path.EditorContext#getMouseTarget
  * @param evt - Event object from the mouse event
- * @returns DOM element we want
  */
 /**
+ * Return the current editor interaction mode string (e.g., 'select', 'path', 'pathedit').
  * @function module:path.EditorContext#getCurrentMode
  */
 /**
+ * Change the current editor interaction mode and return the new mode string.
  * @function module:path.EditorContext#setCurrentMode
- * @param cm The mode
- * @returns The same mode as passed in
 */
 /**
+ * Update the in-progress drawn path element reference and return the new value.
  * @function module:path.EditorContext#setDrawnPath
- * @param dp
- * @returns The same value as passed in
  */
 /**
+ * Return the root SVGSVGElement of the editor document.
  * @function module:path.EditorContext#getSvgRoot
 */
 
 /**
+* Initialize the path module, wiring all path-editing methods onto the canvas context object.
 * @function module:path.init
-* @param editorContext
 */
 export const init = (canvas: ISvgCanvas): void => {
   svgCanvas = canvas
@@ -239,24 +241,21 @@ export const init = (canvas: ISvgCanvas): void => {
 
 
 /**
+* Re-export of ptObjToArrMethod — converts a PathSeg object to a flat number array ordered by segment type properties.
 * @function module:path.ptObjToArr
 * @todo See if this should just live in `replacePathSeg`
-* @param type
-* @param segItem
 */
 export const ptObjToArr: typeof ptObjToArrMethod = ptObjToArrMethod
 
 /**
+* Re-export of getGripPtMethod — return the canvas-coordinate position of a path segment's grip.
 * @function module:path.getGripPt
-* @param seg
-* @param altPt
 */
 export const getGripPt: typeof getGripPtMethod = getGripPtMethod
 
 /**
+* Re-export of getPointFromGripMethod — convert a grip canvas-coordinate position back to path-data coordinates.
 * @function module:path.getPointFromGrip
-* @param pt
-* @param pth
 */
 export const getPointFromGrip: typeof getPointFromGripMethod = getPointFromGripMethod
 
@@ -264,13 +263,11 @@ export const getPointFromGrip: typeof getPointFromGripMethod = getPointFromGripM
 * Requires prior call to `setUiStrings` if `xlink:title`
 *    to be set on the grip.
 * @function module:path.addPointGrip
-* @param index
-* @param x
-* @param y
 */
 export const addPointGrip: typeof addPointGripMethod = addPointGripMethod
 
 /**
+* Return (creating if absent) the SVG group element that holds all path-edit grip elements.
 * @function module:path.getGripContainer
 */
 export const getGripContainer: typeof getGripContainerMethod = getGripContainerMethod
@@ -279,26 +276,24 @@ export const getGripContainer: typeof getGripContainerMethod = getGripContainerM
 * Requires prior call to `setUiStrings` if `xlink:title`
 *    to be set on the grip.
 * @function module:path.addCtrlGrip
-* @param id
 */
 export const addCtrlGrip: typeof addCtrlGripMethod = addCtrlGripMethod
 
 /**
+* Return (creating if absent) the SVG line element used to draw a control-point handle arm.
 * @function module:path.getCtrlLine
-* @param id
 */
 export const getCtrlLine: typeof getCtrlLineMethod = getCtrlLineMethod
 
 /**
+* Return the point-grip circle for a segment, optionally updating its position.
 * @function module:path.getPointGrip
-* @param seg
-* @param update
 */
 export const getPointGrip: typeof getPointGripMethod = getPointGripMethod
 
 /**
+* Build and display Bezier control-point grips and their connecting lines for a cubic segment.
 * @function module:path.getControlPoints
-* @param seg
 */
 export const getControlPoints: typeof getControlPointsMethod = getControlPointsMethod
 
@@ -306,16 +301,12 @@ export const getControlPoints: typeof getControlPointsMethod = getControlPointsM
 * This replaces the segment at the given index. Type is given as number.
 * @function module:path.replacePathSeg
 * @param type Possible values set during {@link module:path.init}
-* @param index
-* @param pts
-* @param elem
 */
 export const replacePathSeg: typeof replacePathSegMethod = replacePathSegMethod
 
 /**
+* Return (creating if absent) the highlight path element for a segment, optionally updating its geometry.
 * @function module:path.getSegSelector
-* @param seg
-* @param update
 */
 export const getSegSelector: typeof getSegSelectorMethod = getSegSelectorMethod
 
@@ -374,8 +365,8 @@ export const smoothControlPoints = (ct1: XYPoint, ct2: XYPoint, pt: XYPoint): SV
 }
 
 /**
+* Return the Path editing object for the given element, creating and caching it on first access.
 * @function module:path.getPath_
-* @param elem
 */
 export const getPath_ = (elem: SVGPathElement): Path => {
   let p = pathData[elem.id]
@@ -386,8 +377,8 @@ export const getPath_ = (elem: SVGPathElement): Path => {
 }
 
 /**
+* Remove the cached Path editing object for the given element ID.
 * @function module:path.removePath_
-* @param id
 */
 export const removePath_ = (id: string): void => {
   if (id in pathData) { delete pathData[id] }
@@ -431,6 +422,7 @@ const getRotVals = (x: number, y: number): XYPoint => {
 // This is because we want the path to remember its rotation
 
 /**
+* Re-apply the path's rotation transform, recalculating every point coordinate relative to the new center.
 * @function module:path.recalcRotatedPath
 * @todo This is still using ye olde transform methods, can probably
 * be optimized or even taken care of by `recalculateDimensions`
@@ -526,6 +518,7 @@ export const recalcRotatedPath = (): void => {
 // Public API starts here
 
 /**
+* Clear all cached Path editing objects, releasing references to DOM elements.
 * @function module:path.clearData
 */
 export const clearData = (): void => {
@@ -534,9 +527,8 @@ export const clearData = (): void => {
 
 // Making public for mocking
 /**
+* Remap gradient coordinates on an element to account for an applied transform matrix.
 * @function module:path.reorientGrads
-* @param elem
-* @param m
 */
 export const reorientGrads = (elem: Element, m: SVGMatrix): void => {
   const bb = getBBox(elem)
@@ -831,9 +823,6 @@ export const convertPath = (pth: SVGPathElement, toRel: boolean): string => {
  * TODO: refactor callers in `convertPath` to use `getPathDFromSegments` instead of this function.
  * Legacy code refactored from `svgcanvas.pathActions.convertPath`.
  * @param letter - path segment command (letter in potentially either case from {@link module:path.pathMap}; see [SVGPathSeg#pathSegTypeAsLetter]{@link https://www.w3.org/TR/SVG/single-page.html#paths-__svg__SVGPathSeg__pathSegTypeAsLetter})
- * @param points - x,y points
- * @param [morePoints] - additional numeric params
- * @param [lastPoint] - x,y point
  */
 const pathDSegment = (letter: string, points: number[][], morePoints?: number[], lastPoint?: number[]): string => {
   const floatPoints = points.map((pnt) => shortFloat(pnt as [number, number]))

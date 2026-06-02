@@ -42,6 +42,7 @@ const touchHandler = (ev: TouchEvent): void => {
   }
 }
 
+/** Registers touch-to-mouse event shims on the SVG root so touch devices behave like mouse input. */
 export const init = (svgCanvas: ISvgCanvas): void => {
   svgCanvas.svgroot.addEventListener('touchstart', touchHandler as EventListener)
   svgCanvas.svgroot.addEventListener('touchmove', touchHandler as EventListener)

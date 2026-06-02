@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (JSDoc conversion — packages/svgcanvas/ -- 2026-06-02)
+
+- Applied STYLE.md § 4 targeted-JSDoc rule across all 37 `.ts` files in `packages/svgcanvas/`.
+  Stripped type-only `@param`/`@returns` lines; kept semantic-info lines (allowed values, units,
+  ranges, null-handling, side effects) with `{type}` annotations dropped.
+- Backfilled 1-line summaries on exported declarations (and public class methods) that lacked them;
+  deleted JSDoc blocks left empty after stripping.
+- `@throws`/`@deprecated`/`@example`/`@see`/`@module`/`@license`/`@fires`/`@function` preserved
+  untouched. Comment-only — no code, signature, or import changes.
+- Sub-project 12.C PR-A of 3 (8 chunks). PRs B (editor shell + components) and C (dialogs + panels +
+  extensions) follow.
+
 ### Changed (Brand hygiene sweep — upstream attribution strip -- 2026-05-28)
 
 - Stripped upstream `@copyright` / `@author` JSDoc lines from 36 TypeScript source files (24 in

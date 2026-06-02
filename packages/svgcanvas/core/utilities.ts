@@ -646,7 +646,6 @@ export const getExtraAttributesForConvertToPath = (elem: Element): Record<string
  * @param elem - The DOM element to be probed
  * @param addSVGElementsFromJson - Function to add the path element to the current layer. See canvas.addSVGElementsFromJson
  * @param pathActions - If a transform exists, `pathActions.resetOrientation()` is used. See: canvas.pathActions.
- * @returns The resulting path's bounding box object.
  */
 /** Shape of pathActions object needed by getBBoxOfElementAsPath / convertToPath. */
 interface PathActions {
@@ -717,7 +716,6 @@ export const getBBoxOfElementAsPath = (
 /**
  * Convert selected element to a path.
  * @function module:utilities.convertToPath
- * @param elem - The DOM element to be converted
  * @param attrs - Apply attributes to new path. see canvas.convertToPath
  * @param addSVGElementsFromJson - Function to add the path element to the current layer. See canvas.addSVGElementsFromJson
  * @param pathActions - If a transform exists, pathActions.resetOrientation() is used. See: canvas.pathActions.
@@ -807,8 +805,6 @@ export const convertToPath = (elem: Element, attrs: Record<string, unknown>, svg
  * getBBox then apply the angle and any transforms.
  *
  * @param angle - The rotation angle in degrees
- * @param hasAMatrixTransform - True if there is a matrix transform
- * @returns True if the bbox can be optimized.
  */
 const bBoxCanBeOptimizedOverNativeGetBBox = (angle: number, hasAMatrixTransform: boolean): boolean => {
   const angleModulo90 = angle % 90
@@ -820,10 +816,8 @@ const bBoxCanBeOptimizedOverNativeGetBBox = (angle: number, hasAMatrixTransform:
 /**
  * Get bounding box that includes any transforms.
  * @function module:utilities.getBBoxWithTransform
- * @param elem - The DOM element to be converted
  * @param addSVGElementsFromJson - Function to add the path element to the current layer. See canvas.addSVGElementsFromJson
  * @param pathActions - If a transform exists, pathActions.resetOrientation() is used. See: canvas.pathActions.
- * @returns A single bounding box object
  */
 /** Get bounding box that includes any transforms. */
 export const getBBoxWithTransform = (
@@ -946,10 +940,8 @@ const getStrokeOffsetForBBox = (elem: Element): number => {
 /**
  * Get the bounding box for one or more stroked and/or transformed elements.
  * @function module:utilities.getStrokedBBox
- * @param elems - Array with DOM elements to check
  * @param addSVGElementsFromJson - Function to add the path element to the current layer. See canvas.addSVGElementsFromJson
  * @param pathActions - If a transform exists, pathActions.resetOrientation() is used. See: canvas.pathActions.
- * @returns A single bounding box object
  */
 // audit-flagged at :1126-1129: min/max asymmetry in getStrokedBBox — preserved as-is (todo #10)
 export const getStrokedBBox = (
@@ -1023,8 +1015,6 @@ export const getStrokedBBox = (
  * Note that 0-opacity, off-screen etc elements are still considered "visible"
  * for this function.
  * @function module:utilities.getVisibleElements
- * @param parentElement - The parent DOM element to search within
- * @returns All "visible" elements.
  */
 export const getVisibleElements = (parentElement?: Element | null): Element[] => {
   if (!parentElement) {
@@ -1061,8 +1051,6 @@ export const getVisibleElements = (parentElement?: Element | null): Element[] =>
 /**
  * Get the bounding box for one or more stroked and/or transformed elements.
  * @function module:utilities.getStrokedBBoxDefaultVisible
- * @param elems - Array with DOM elements to check
- * @returns A single bounding box object
  */
 export const getStrokedBBoxDefaultVisible = (elems?: Element[] | null): BBoxObject | false | null => {
   const resolvedElems = elems ?? getVisibleElements()
@@ -1076,7 +1064,6 @@ export const getStrokedBBoxDefaultVisible = (elems?: Element[] | null): BBoxObje
 /**
  * Get the rotation angle of the given transform list.
  * @function module:utilities.getRotationAngleFromTransformList
- * @param tlist - List of transforms
  * @param toRad - When true returns the value in radians rather than degrees
  * @returns The angle in degrees or radians
  */
@@ -1134,8 +1121,6 @@ export const getElement = (id: string): Element | null => {
 /**
  * Assigns multiple attributes to an element.
  * @function module:utilities.assignAttributes
- * @param elem - DOM element to apply new attribute values to
- * @param attrs - Object with attribute keys/values
  * @param [suspendLength] - Milliseconds to suspend redraw
  * @param [unitCheck=false] - Boolean to indicate the need to use units.setUnitAttr
  */
@@ -1175,7 +1160,6 @@ export const assignAttributes = (
 /**
  * Remove unneeded (default) attributes, making resulting SVG smaller.
  * @function module:utilities.cleanupElement
- * @param element - DOM element to clean up
  */
 export const cleanupElement = (element: Element): void => {
   const defaults: Record<string, string | number | undefined> = {
@@ -1208,7 +1192,6 @@ export const cleanupElement = (element: Element): void => {
 /**
  * Round value to for snapping.
  * @function module:utilities.snapToGrid
- * @param value
  */
 export const snapToGrid = (value: number): number => {
   const unit: string = svgCanvas.getBaseUnit()
@@ -1228,12 +1211,10 @@ export const preventClickDefault = (img: Element): void => {
 
 /**
  * @callback module:utilities.GetNextID
- * @returns The ID
  */
 
 /**
  * Whether a value is `null` or `undefined`.
- * @param val
  */
 /** Whether a value is `null` or `undefined`. */
 export const isNullish = (val: unknown): val is null | undefined => {
@@ -1274,9 +1255,13 @@ export const insertChildAtIndex = (parent: Element, child: string, index = 0): v
 }
 
 // shortcuts to common DOM functions
+/** Get a DOM element by ID. */
 export const $id = (id: string): HTMLElement | null => document.getElementById(id)
+/** Get the first element matching a CSS selector. */
 export const $qq = (sel: string): Element | null => document.querySelector(sel)
+/** Get all elements matching a CSS selector as an array. */
 export const $qa = (sel: string): Element[] => [...document.querySelectorAll(sel)]
+/** Attach a click handler to both click and touchend events for cross-device support. */
 export const $click = (element: EventTarget, handler: EventListenerOrEventListenerObject): void => {
   element.addEventListener('click', handler)
   element.addEventListener('touchend', handler)

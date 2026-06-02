@@ -34,8 +34,8 @@ let svgCanvas = null as unknown as ISvgCanvas
 let moveSelectionThresholdReached = false
 
 /**
+* Initializes this module by binding all mouse and scroll event handlers onto the canvas instance.
 * @function module:undo.init
-* @param eventContext
 */
 export const init = (canvas: ISvgCanvas): void => {
   svgCanvas = canvas
@@ -144,8 +144,6 @@ const applyFhPathLogic = (shape: SVGPolylineElement, realX: number, realY: numbe
 }
 
 /**
- *
- * @param evt
  * @fires module:svgcanvas.SvgCanvas#event:transition
  * @fires module:svgcanvas.SvgCanvas#event:ext_mouseMove
  */
@@ -604,8 +602,6 @@ const mouseOutEvent = (evt: MouseEvent): void => {
 // identified, a ChangeElementCommand is created and stored on the stack for those attrs
 // this is done in when we recalculate the selected dimensions()
 /**
-*
-* @param evt
 * @fires module:svgcanvas.SvgCanvas#event:zoomed
 * @fires module:svgcanvas.SvgCanvas#event:changed
 * @fires module:svgcanvas.SvgCanvas#event:ext_mouseUp
@@ -1084,7 +1080,6 @@ const dblClickEvent = (evt: MouseEvent): void => {
  *   action is not recorded until mousing up.
  * - When we are in select mode, select the element, remember the position
  *   and do nothing else.
- * @param evt
  * @fires module:svgcanvas.SvgCanvas#event:ext_mouseDown
  */
 const mouseDownEvent = (evt: MouseEvent): void => {
@@ -1461,7 +1456,6 @@ const mouseDownEvent = (evt: MouseEvent): void => {
   })
 }
 /**
- * @param e
  * @fires module:event.SvgCanvas#event:updateCanvas
  * @fires module:event.SvgCanvas#event:zoomDone
  */

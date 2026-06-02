@@ -25,6 +25,7 @@ import type { ISvgCanvas } from './svgcanvas-types.js'
 let svgCanvas = null as unknown as ISvgCanvas
 
 /**
+ * Initializes the selection module and binds mouse-target, selection, and extension methods onto the canvas.
  * @function module:selection.init
  */
 export const init = (canvas: ISvgCanvas): void => {

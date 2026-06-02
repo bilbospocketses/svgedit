@@ -30,7 +30,6 @@ class Layer {
   static CLASS_REGEX: RegExp = new RegExp(`(\\s|^)${Layer.CLASS_NAME}(\\s|$)`)
 
   /**
-  * @param name - Layer name
   * @param group - An existing SVG group element or null.
   *     If group and no svgElem, use group for this layer.
   *     If group and svgElem, create a new group element and insert it in the DOM after group.
@@ -67,7 +66,6 @@ class Layer {
 
   /**
    * Get the layer's name.
-   * @returns The layer name
    */
   getName (): string {
     return this.#name
@@ -75,7 +73,6 @@ class Layer {
 
   /**
    * Get the group element for this layer.
-   * @returns The layer SVG group
    */
   getGroup (): SVGGElement {
     return this.#group
@@ -109,7 +106,6 @@ class Layer {
 
   /**
    * Is this layer visible?
-   * @returns True if visible.
    */
   isVisible (): boolean {
     return this.#group.getAttribute('display') !== 'none'
@@ -117,7 +113,6 @@ class Layer {
 
   /**
    * Get layer opacity.
-   * @returns Opacity value.
    */
   getOpacity (): number {
     const opacity = this.#group.getAttribute('opacity')
@@ -137,7 +132,6 @@ class Layer {
 
   /**
    * Append children to this layer.
-   * @param children - The children to append to this layer.
    */
   appendChildren (children: Element[]): void {
     for (const child of children) {
@@ -145,6 +139,7 @@ class Layer {
     }
   }
 
+  /** Return the first `<title>` child element of this layer group, or null if absent. */
   getTitleElement (): SVGTitleElement | null {
     const len = this.#group.childNodes.length
     for (let i = 0; i < len; ++i) {
@@ -158,8 +153,6 @@ class Layer {
 
   /**
    * Set the name of this layer.
-   * @param name - The new name.
-   * @param [hrService] - History recording service
    * @returns The new name if changed; otherwise, null.
    */
   setName (name: string, hrService?: HistoryRecordingService): string | null {
@@ -192,8 +185,6 @@ class Layer {
 
   /**
    * Test whether an element is a layer or not.
-   * @param elem - The SVGGElement to test.
-   * @returns True if the element is a layer
    */
   static isLayer (elem: SVGGElement | null | undefined): boolean {
     return !!(elem && elem.tagName === 'g' && Layer.CLASS_REGEX.test(elem.getAttribute('class') ?? ''))
@@ -202,8 +193,6 @@ class Layer {
 
 /**
  * Add class `Layer.CLASS_NAME` to the element (usually `class='layer'`).
- *
- * @param elem - The SVG element to update
  */
 const addLayerClass = (elem: SVGGElement): void => {
   const classes = elem.getAttribute('class')

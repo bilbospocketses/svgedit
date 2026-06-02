@@ -7,12 +7,8 @@ interface PaintOptions {
   solidColor?: unknown
 }
 
-/**
- *
- */
+/** Represents a fill or stroke paint value: none, solid color, or gradient. */
 export default class Paint {
-  /**
-   */
   type: 'none' | 'solidColor' | 'linearGradient' | 'radialGradient'
   /**
    * Represents opacity (0-100).
@@ -22,11 +18,7 @@ export default class Paint {
    * Represents RRGGBB hex of color (without leading '#'), or null.
    */
   solidColor: string | null
-  /**
-   */
   linearGradient: SVGLinearGradientElement | null
-  /**
-   */
   radialGradient: SVGRadialGradientElement | null
 
   static #normalizeAlpha (alpha: unknown): number {
@@ -113,9 +105,6 @@ export default class Paint {
     return clone as SVGLinearGradientElement | SVGRadialGradientElement
   }
 
-  /**
-   * @param [opt]
-   */
   constructor (opt?: PaintOptions) {
     const options = opt ?? {}
     // Initialise all fields; branches below will overwrite as appropriate.

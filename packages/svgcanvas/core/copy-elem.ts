@@ -6,7 +6,6 @@ import dataStorage from './dataStorage.js'
  * @function module:utilities.copyElem
  * @param el - DOM element to clone
  * @param getNextId - The getter of the next unique ID.
- * @returns The cloned element
  */
 export const copyElem = (el: Element, getNextId: () => string): Element => {
   const ownerDocument = el?.ownerDocument || document

@@ -22,8 +22,8 @@ import type { ISvgCanvas } from './svgcanvas-types.js'
 let svgCanvas = null as unknown as ISvgCanvas
 
 /**
+* Initializes this module by binding all get/set methods onto the canvas instance.
 * @function module:elem-get-set.init
-* @param elemContext
 */
 export const init = (canvas: ISvgCanvas): void => {
   svgCanvas = canvas
@@ -87,7 +87,6 @@ const getResolutionMethod = (): { w: number; h: number; zoom: number } => {
 
 /**
 * @function module:elem-get-set.SvgCanvas#getTitle
-* @param [elem]
 */
 const getTitleMethod = (elem?: Element): string | undefined => {
   const selectedElements = svgCanvas.getSelectedElements()
@@ -270,7 +269,6 @@ const setResolutionMethod = (x: number | 'fit', y: number): boolean => {
 /**
 * Returns the editor's namespace URL.
 * @function module:elem-get-set.SvgCanvas#getEditorNS
-* @param [add]
 */
 const getEditorNSMethod = (add?: boolean): string => {
   if (add) {
@@ -791,9 +789,6 @@ const setLengthAdjustMethod = (value: string): void => {
   notifyTextChange(changedTextElements)
 }
 
-/**
- * @returns The current font family
- */
 const getFontFamilyMethod = (): string => {
   return svgCanvas.getCurText('font_family') as string
 }
@@ -827,16 +822,10 @@ const setFontColorMethod = (val: string): void => {
   notifyTextChange(changedTextElements)
 }
 
-/**
- * @returns The current font color
- */
 const getFontColorMethod = (): string => {
   return svgCanvas.getCurText('fill') as string
 }
 
-/**
- * @returns The current font size
- */
 const getFontSizeMethod = (): number => {
   return svgCanvas.getCurText('font_size') as number
 }
@@ -857,9 +846,6 @@ const setFontSizeMethod = (val: number): void => {
   notifyTextChange(changedTextElements)
 }
 
-/**
- * @returns The current text content of the selected element
- */
 const getTextMethod = (): string => {
   const selectedElements: (Element | null)[] = svgCanvas.getSelectedElements()
   const selected = selectedElements[0]

@@ -9,8 +9,7 @@ import { NS } from './namespaces.js'
 import { getHref, setHref, getRotationAngle, getBBox } from './utilities.js'
 import { getTransformList, transformListToTransform, transformPoint } from './math.js'
 
-// Attributes that affect an element's bounding box. Only these require
-// recalculating the rotation center when changed.
+/** SVG attributes that affect an element's bounding box; only these trigger rotation-center recalculation on change. */
 export const BBOX_AFFECTING_ATTRS: Set<string> = new Set([
   'x', 'y', 'x1', 'y1', 'x2', 'y2',
   'cx', 'cy', 'r', 'rx', 'ry',
@@ -66,9 +65,7 @@ function relocateRotationCenter (elem: Element, changedAttrs: string[]): void {
   }
 }
 
-/**
-* Group: Undo/Redo history management.
-*/
+/** Event type string constants fired before/after apply and unapply operations on history commands. */
 export const HistoryEventTypes: {
   BEFORE_APPLY: string
   AFTER_APPLY: string
@@ -98,7 +95,6 @@ export class Command {
   }
 
   /**
-   * @param handler
    * @param [applyFunction] - Subclass-supplied continuation that performs the actual apply.
    *   The base no-op apply on the abstract Command class is unused at runtime; subclasses
    *   override apply(handler) and call super.apply(handler, () => { ... }).
@@ -110,7 +106,6 @@ export class Command {
   }
 
   /**
-   * @param handler
    * @param [unapplyFunction]
   */
   unapply (handler: HistoryEventHandler | null, unapplyFunction?: () => void): void {
@@ -128,7 +123,7 @@ export class Command {
   }
 
   /**
-    * @returns String with element associated with this command
+    * Returns the command class name for display/debugging.
   */
   type (): string {
     return this.constructor.name
@@ -162,7 +157,6 @@ export class MoveElementCommand extends Command {
 
   /**
    * Re-positions the element.
-   * @param handler
   */
   apply (handler: HistoryEventHandler | null): void {
     super.apply(handler, () => {
@@ -178,7 +172,6 @@ export class MoveElementCommand extends Command {
 
   /**
    * Positions the element back to its original location.
-   * @param handler
   */
   unapply (handler: HistoryEventHandler | null): void {
     super.unapply(handler, () => {
@@ -212,7 +205,6 @@ export class InsertElementCommand extends Command {
 
   /**
   * Re-inserts the new element.
-  * @param handler
   */
   apply (handler: HistoryEventHandler | null): void {
     super.apply(handler, () => {
@@ -228,7 +220,6 @@ export class InsertElementCommand extends Command {
 
   /**
   * Removes the element.
-  * @param handler
   */
   unapply (handler: HistoryEventHandler | null): void {
     super.unapply(handler, () => {
@@ -261,7 +252,6 @@ export class RemoveElementCommand extends Command {
 
   /**
   * Re-removes the new element.
-  * @param handler
   */
   apply (handler: HistoryEventHandler | null): void {
     super.apply(handler, () => {
@@ -272,7 +262,6 @@ export class RemoveElementCommand extends Command {
 
   /**
   * Re-adds the new element.
-  * @param handler
   */
   unapply (handler: HistoryEventHandler | null): void {
     super.unapply(handler, () => {
@@ -320,7 +309,6 @@ export class ChangeElementCommand extends Command {
 
   /**
   * Performs the stored change action.
-  * @param handler
   */
   apply (handler: HistoryEventHandler | null): void {
     super.apply(handler, () => {
@@ -355,7 +343,6 @@ export class ChangeElementCommand extends Command {
 
   /**
   * Reverses the stored change action.
-  * @param handler
   */
   unapply (handler: HistoryEventHandler | null): void {
     super.unapply(handler, () => {
@@ -466,7 +453,7 @@ export class BatchCommand extends Command {
   }
 
   /**
-  * @returns Indicates whether or not the batch command is empty
+  * Returns true when no subcommands have been added.
   */
   isEmpty (): boolean {
     return !this.stack.length
@@ -480,6 +467,7 @@ interface UndoableChangeEntry {
   elements: (Element | null)[]
 }
 
+/** Manages the undo/redo command stack, supporting beginUndoableChange/finishUndoableChange for batch attr edits. */
 export class UndoManager {
   _handler: HistoryEventHandler | null
   maxHistory: number
@@ -489,7 +477,6 @@ export class UndoManager {
   undoableChangeStack: (UndoableChangeEntry | null)[]
 
   /**
-  * @param historyEventHandler
   * @param maxHistory - Maximum undo stack size (oldest entries trimmed when exceeded)
   */
   constructor (historyEventHandler: HistoryEventHandler | null, maxHistory: number = 100) {
@@ -511,28 +498,28 @@ export class UndoManager {
   }
 
   /**
-  * @returns Current size of the undo history stack
+  * Returns the number of commands available to undo.
   */
   getUndoStackSize (): number {
     return this.undoStackPointer
   }
 
   /**
-  * @returns Current size of the redo history stack
+  * Returns the number of commands available to redo.
   */
   getRedoStackSize (): number {
     return this.undoStack.length - this.undoStackPointer
   }
 
   /**
-  * @returns String associated with the next undo command
+  * Returns the display text of the next command that would be undone.
   */
   getNextUndoCommandText (): string {
     return this.undoStackPointer > 0 ? (this.undoStack[this.undoStackPointer - 1]?.getText() ?? '') : ''
   }
 
   /**
-  * @returns String associated with the next redo command
+  * Returns the display text of the next command that would be redone.
   */
   getNextRedoCommandText (): string {
     return this.undoStackPointer < this.undoStack.length ? (this.undoStack[this.undoStackPointer]?.getText() ?? '') : ''

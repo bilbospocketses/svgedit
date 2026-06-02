@@ -29,8 +29,8 @@ let svgCanvas = null as unknown as ISvgCanvas
 let path = null as unknown as Path
 
 /**
+* Initialize path-actions module with the canvas context and register keyboard shortcuts.
 * @function module:path-actions.init
-* @param pathActionsContext
 */
 export const init = (canvas: ISvgCanvas): void => {
   svgCanvas = canvas
@@ -312,10 +312,6 @@ export const convertPath = (pth: SVGPathElement, toRel: boolean): string => {
 /**
  * TODO: refactor callers in `convertPath` to use `getPathDFromSegments` instead of this function.
  * Legacy code refactored from `svgcanvas.pathActions.convertPath`.
- * @param letter - path segment command
- * @param points - x,y points
- * @param [morePoints] - additional numeric params
- * @param [lastPoint] - x,y point
  */
 const pathDSegment = (letter: string, points: number[][], morePoints?: number[], lastPoint?: number[]): string => {
   const parts: string[] = [
@@ -399,13 +395,6 @@ class PathActions {
     return el
   }
 
-  /**
-  * @param evt
-  * @param mouseTarget
-  * @param startX
-  * @param startY
-  */
-   
   mouseDown (evt: MouseEvent, _mouseTarget: Element, startX: number, startY: number): boolean | undefined {
     let id: string
     if (svgCanvas.getCurrentMode() === 'path') {
@@ -609,10 +598,6 @@ class PathActions {
     return undefined
   }
 
-  /**
-    * @param mouseX
-    * @param mouseY
-    */
   mouseMove (mouseX: number, mouseY: number): void {
     const zoom = svgCanvas.getZoom()
     this.#hasMoved = true
@@ -733,12 +718,6 @@ class PathActions {
     }
   }
 
-  /**
-    * @param evt
-    * @param element
-    * @param _mouseX
-    * @param _mouseY
-    */
   mouseUp (evt: MouseEvent, element: Element, _mouseX: number, _mouseY: number): { keep: boolean; element: Element } | undefined {
     const drawnPath = svgCanvas.getDrawnPath()
     if (svgCanvas.getCurrentMode() === 'path') {
@@ -783,9 +762,6 @@ class PathActions {
     return undefined
   }
 
-  /**
-    * @param element
-    */
   toEditMode (element: Element): void {
     path = svgCanvas.getPath_(element as SVGPathElement)
     svgCanvas.setCurrentMode('pathedit')
@@ -819,9 +795,6 @@ class PathActions {
     }
   }
 
-  /**
-    * @param on
-    */
   addSubPath (on: boolean): void {
     if (on) {
       svgCanvas.setCurrentMode('path')
@@ -832,9 +805,6 @@ class PathActions {
     }
   }
 
-  /**
-    * @param target
-    */
   select (target: Element): void {
     if (this.#currentPath === target) {
       pathActionsMethod.toEditMode(target)
@@ -900,9 +870,6 @@ class PathActions {
     if (path) { path.init().show(false) }
   }
 
-  /**
-    * @param [pth]
-    */
   resetOrientation (pth?: SVGPathElement | null): false | undefined {
     if (pth?.nodeName !== 'path') { return false }
     const tlist = getTransformList(pth)
@@ -1177,10 +1144,6 @@ class PathActions {
     path?.setSegType(v)
   }
 
-  /**
-  * @param attr
-  * @param newValue
-  */
   moveNode (attr: string, newValue: number): void {
     const selPts = path.selected_pts
     if (!selPts.length) { return }
@@ -1195,9 +1158,6 @@ class PathActions {
     path.endChanges('Move path point')
   }
 
-  /**
-  * @param elem
-  */
   fixEnd (elem: SVGPathElement): void {
     const fixData = getPathData(elem)
     const len = fixData.length
@@ -1261,6 +1221,6 @@ class PathActions {
   }
 }
 
-// Export singleton instance for backward compatibility
+/** Singleton PathActions instance exported for backward compatibility. */
 export const pathActionsMethod: PathActions = new PathActions()
 // end pathActions

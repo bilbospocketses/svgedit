@@ -10,15 +10,11 @@ let svgCanvas = null as unknown as ISvgCanvas
 
 /**
 * @function module:blur.init
-* @param canvas
 */
 export const init = (canvas: ISvgCanvas): void => {
   svgCanvas = canvas
 }
 
-/**
- * @param filterElem
- */
 const getFeGaussianBlurElem = (filterElem: Element): Element | null => {
   if (!filterElem || filterElem.nodeType !== 1) return null
   return filterElem.querySelector('feGaussianBlur') ?? filterElem.firstElementChild
@@ -27,7 +23,6 @@ const getFeGaussianBlurElem = (filterElem: Element): Element | null => {
 /**
 * Sets the `stdDeviation` blur value on the selected element without being undoable.
 * @function module:svgcanvas.SvgCanvas#setBlurNoUndo
-* @param val - The new `stdDeviation` value
 */
 export const setBlurNoUndo = (val: number): void => {
   const selectedElements = svgCanvas.getSelectedElements()

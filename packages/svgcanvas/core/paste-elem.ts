@@ -15,8 +15,8 @@ import type { ISvgCanvas } from './svgcanvas-types.js'
 let svgCanvas = null as unknown as ISvgCanvas
 
 /**
+* Initialize the paste-elem module with the active SVG canvas instance.
 * @function module:paste-elem.init
-* @param canvas
 */
 export const init = (canvas: ISvgCanvas): void => {
   svgCanvas = canvas
@@ -30,8 +30,8 @@ interface SVGAsJSON {
 }
 
 /**
+* Paste clipboard elements into the SVG canvas, reassigning IDs and repositioning to the target point or last click.
 * @function module:svgcanvas.SvgCanvas#pasteElements
-* @param type
 * @param x Expected if type is "point"
 * @param y Expected if type is "point"
 * @fires module:svgcanvas.SvgCanvas#event:changed
