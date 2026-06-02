@@ -1,16 +1,17 @@
 :root {
-  --main-bg-color: #72797A;
-  --text-color: #000000;
-  --border-color: #808080;
-  --canvas-bg-color: #B2B2B2;
-  --link-color: #19c;
-  --ruler-color: #B2B2B2;
-  --icon-bg-color: #72797A;
-  --icon-bg-color-hover: #2B3C45;
-  --input-color: #B2B2B2;
-  --orange-color: #f9bc01;
+  /* Legacy aliases → semantic tokens (transitional; references migrate to --se-* in later PRs) */
+  --main-bg-color: var(--se-bg);
+  --text-color: var(--se-text);
+  --border-color: var(--se-border);
+  --canvas-bg-color: var(--se-canvas);
+  --link-color: var(--se-accent);
+  --ruler-color: var(--se-surface-2);
+  --icon-bg-color: var(--se-surface);
+  --icon-bg-color-hover: var(--se-accent-subtle);
+  --input-color: var(--se-surface-2);
+  --orange-color: var(--se-accent);
   --global-se-spin-input-width: 82px;
-  --top-toolbar-min-height: 80px;
+  --top-toolbar-min-height: var(--se-toolbar-h);
 }
 
 .svg_editor * {
@@ -26,9 +27,9 @@
     "left corner rulerX rulerX side"
     "left rulerY workarea workarea side"
     "left bottom bottom bottom bottom";
-  font-size: 8pt;
+  font-size: var(--se-text-base);
   background: var(--main-bg-color);
-  font-family: Verdana, Helvetica, Arial;
+  font-family: var(--se-font-sans);
   color: var(--text-color);
   user-select: text;
   width: 100%;

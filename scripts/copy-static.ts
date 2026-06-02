@@ -12,6 +12,9 @@ const targets: Array<[string, string]> = [
   ['src/editor/xdomain-index.html', 'xdomain-index.html'],
   ['src/editor/iife-index.html', 'iife-index.html'],
   ['src/editor/svgedit.css', 'svgedit.css'],
+  // Design tokens stylesheet — index.html references ./styles/tokens.css (preserve subpath).
+  // Copy ONLY this file, not the whole styles/ dir (theme.ts is bundled into JS, not served raw).
+  ['src/editor/styles/tokens.css', 'styles/tokens.css'],
   ['src/editor/images', 'images'],
   ['src/editor/extensions', 'extensions'],
   // Test harness assets for Playwright (unit-style tests in browser)

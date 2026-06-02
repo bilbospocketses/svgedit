@@ -1,0 +1,84 @@
+/* src/editor/styles/tokens.css
+ * svgedit design tokens — two layers: primitives (raw palette) → semantic (role-based).
+ * Components use ONLY semantic tokens. Raw #hex is allowed in THIS FILE ONLY.
+ */
+:root {
+  color-scheme: light; /* rendering directive, not a token */
+  /* ===== Primitives (theme-independent) ===== */
+  /* Full ramps; not every shade is referenced yet — reserved for M2–M4 (hover/subtle/status states). */
+  /* Cool grey ramp */
+  --se-grey-25:#F2F4F4; --se-grey-50:#E6EAEA; --se-grey-100:#D3D9D9; --se-grey-150:#C6CCCC;
+  --se-grey-200:#C1C8C8; --se-grey-250:#B7BFBF; --se-grey-300:#A9B3B3; --se-grey-400:#94A0A0;
+  --se-grey-450:#6F817E; /* dark subtle text */
+  --se-grey-500:#6B7A77; --se-grey-550:#9AABA8; /* dark muted text */
+  --se-grey-600:#44514E; --se-grey-700:#3A4845; --se-grey-750:#293432;
+  --se-grey-800:#1C2625; --se-grey-850:#161E1D; --se-grey-900:#0E1413; --se-grey-950:#0A0F0E;
+  --se-ink:#131C1B;    /* light near-black text */
+  --se-paper:#E6ECE9;  /* dark near-white text */
+  /* Teal ramp */
+  --se-teal-100:#CCFBF1; --se-teal-200:#99F6E4; --se-teal-300:#5EEAD4; --se-teal-400:#2DD4BF;
+  --se-teal-500:#14B8A6; --se-teal-600:#0D9488; --se-teal-700:#0F766E; --se-teal-800:#115E59;
+  --se-teal-subtle:#B6E4DD;
+  /* Status */
+  --se-red-600:#DC2626; --se-red-400:#F87171; --se-amber-600:#D97706; --se-amber-400:#FBBF24;
+  --se-green-600:#16A34A; --se-green-400:#4ADE80; --se-sky-500:#0EA5E9; --se-sky-400:#38BDF8;
+
+  /* ===== Semantic (light) ===== */
+  --se-bg: var(--se-grey-150);
+  --se-surface: var(--se-grey-100);
+  --se-surface-2: var(--se-grey-200);
+  --se-canvas: var(--se-grey-250);
+  --se-border: var(--se-grey-300);
+  --se-border-strong: var(--se-grey-400);
+  --se-text: var(--se-ink);
+  --se-text-muted: var(--se-grey-600);
+  --se-text-subtle: var(--se-grey-500);
+  --se-accent: var(--se-teal-600);
+  --se-accent-hover: var(--se-teal-700);
+  --se-accent-active: var(--se-teal-800);
+  --se-accent-subtle: var(--se-teal-subtle);
+  --se-on-accent: #FFFFFF;
+  --se-danger: var(--se-red-600);
+  --se-warn: var(--se-amber-600);
+  --se-success: var(--se-green-600);
+  --se-info: var(--se-sky-500);
+  --se-focus-ring: color-mix(in srgb, var(--se-accent) 55%, transparent);
+  --se-scrim: rgba(15,25,23,.45);
+  --se-shadow-sm: 0 1px 2px rgba(10,22,20,.18);
+  --se-shadow-overlay: 0 10px 26px rgba(10,22,20,.3);
+
+  /* ===== Scales (theme-independent) ===== */
+  --se-font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --se-text-xs:11px; --se-text-sm:12px; --se-text-base:13px; --se-text-md:15px; --se-text-lg:18px;
+  --se-fw-normal:400; --se-fw-medium:500; --se-fw-semibold:600;
+  --se-lh-tight:1.25; --se-lh-normal:1.5;
+  --se-space-1:4px; --se-space-2:6px; --se-space-3:8px; --se-space-4:11px;
+  --se-space-5:14px; --se-space-6:18px; --se-space-7:24px;
+  --se-radius-sm:6px; --se-radius-md:8px; --se-radius-lg:10px; --se-radius-pill:999px;
+  --se-control-h:28px; --se-tool-size:26px; --se-toolbar-h:36px;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark; /* rendering directive, not a token */
+  --se-bg: var(--se-grey-900);
+  --se-surface: var(--se-grey-850);
+  --se-surface-2: var(--se-grey-800);
+  --se-canvas: var(--se-grey-950);
+  --se-border: var(--se-grey-750);
+  --se-border-strong: var(--se-grey-700);
+  --se-text: var(--se-paper);
+  --se-text-muted: var(--se-grey-550);
+  --se-text-subtle: var(--se-grey-450);
+  --se-accent: var(--se-teal-500);
+  --se-accent-hover: var(--se-teal-400);
+  --se-accent-active: var(--se-teal-300);
+  --se-accent-subtle: color-mix(in srgb, var(--se-teal-400) 16%, transparent);
+  --se-on-accent: #04211D;
+  --se-danger: var(--se-red-400);
+  --se-warn: var(--se-amber-400);
+  --se-success: var(--se-green-400);
+  --se-info: var(--se-sky-400);
+  --se-scrim: rgba(0,0,0,.6);
+  --se-shadow-sm: 0 1px 2px rgba(0,0,0,.5);
+  --se-shadow-overlay: 0 12px 32px rgba(0,0,0,.55);
+}

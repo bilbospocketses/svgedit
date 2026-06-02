@@ -19,6 +19,7 @@ import Rulers from './Rulers.js'
 import SvgCanvas from '@svgedit/svgcanvas'
 import type Editor from './Editor.js'
 import { typedDetail, type SeChangeDetail, type SeSvgSourceDetail, type SeCmenuDetail } from './typed-events.js'
+import { applyInitialTheme } from './styles/theme.js'
 
 const { $id, $click, convertUnit } = SvgCanvas
 
@@ -29,6 +30,7 @@ interface InitableElement extends HTMLElement {
 
 /** Wire up DOM, SvgCanvas, event listeners, extensions, and embed-API bridge for the editor. */
 export async function initEditor (editor: Editor): Promise<void> {
+  applyInitialTheme()
   if ('localStorage' in window) {
     editor.storage = window.localStorage
   }
