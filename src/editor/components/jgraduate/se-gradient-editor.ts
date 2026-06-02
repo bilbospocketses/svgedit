@@ -54,10 +54,10 @@ export class SeGradientEditor extends LitElement {
   static styles = css`
     :host {
       display: block;
-      font-family: Arial, sans-serif;
-      font-size: 12px;
-      background: #efefef;
-      border: 1px outset #666;
+      font-family: var(--se-font-sans);
+      font-size: var(--se-text-sm);
+      background: var(--se-surface);
+      border: 1px solid var(--se-border-strong);
       padding: 8px;
       min-width: 350px;
     }
@@ -71,17 +71,17 @@ export class SeGradientEditor extends LitElement {
     .tabs li {
       padding: 4px 10px;
       cursor: pointer;
-      border: 1px solid #999;
+      border: 1px solid var(--se-border);
       border-bottom: none;
-      background: #ddd;
-      font-size: 11px;
+      background: var(--se-surface-2);
+      font-size: var(--se-text-xs);
       margin-right: -1px;
       user-select: none;
     }
     .tabs li.active {
-      background: #efefef;
+      background: var(--se-surface);
       font-weight: bold;
-      border-bottom: 1px solid #efefef;
+      border-bottom: 1px solid var(--se-surface);
       position: relative;
       z-index: 1;
     }
@@ -89,7 +89,7 @@ export class SeGradientEditor extends LitElement {
       position: relative;
       width: 256px;
       height: 256px;
-      border: 1px solid #999;
+      border: 1px solid var(--se-border);
       margin-bottom: 6px;
     }
     .grad-container svg {
@@ -118,8 +118,8 @@ export class SeGradientEditor extends LitElement {
       height: 40px;
       margin: 4px 0 8px;
       cursor: crosshair;
-      border: 1px solid #ccc;
-      background: #f5f5f5;
+      border: 1px solid var(--se-border);
+      background: var(--se-surface-2);
       width: 256px;
     }
     .coord-section {
@@ -133,7 +133,7 @@ export class SeGradientEditor extends LitElement {
       gap: 2px;
     }
     .coord-group label {
-      font-size: 11px;
+      font-size: var(--se-text-xs);
       font-weight: bold;
     }
     .coord-row {
@@ -142,23 +142,23 @@ export class SeGradientEditor extends LitElement {
       gap: 4px;
     }
     .coord-row label {
-      font-size: 11px;
+      font-size: var(--se-text-xs);
       width: 12px;
     }
     .coord-row input[type="text"] {
       width: 40px;
       height: 18px;
-      font-size: 11px;
+      font-size: var(--se-text-xs);
       text-align: right;
       padding: 0 2px;
-      border: 1px solid #999;
+      border: 1px solid var(--se-border);
     }
     .focal-check {
       display: flex;
       align-items: center;
       gap: 4px;
       margin-bottom: 4px;
-      font-size: 11px;
+      font-size: var(--se-text-xs);
     }
     .focal-check input {
       margin: 0;
@@ -171,20 +171,20 @@ export class SeGradientEditor extends LitElement {
     }
     .slider-row .slider-label {
       width: 40px;
-      font-size: 11px;
+      font-size: var(--se-text-xs);
       text-align: right;
       flex-shrink: 0;
     }
     .slider-row input[type="text"] {
       width: 36px;
       height: 18px;
-      font-size: 11px;
+      font-size: var(--se-text-xs);
       text-align: right;
       padding: 0 2px;
-      border: 1px solid #999;
+      border: 1px solid var(--se-border);
     }
     .slider-row .slider-unit {
-      font-size: 11px;
+      font-size: var(--se-text-xs);
       width: 16px;
     }
     .spread-row {
@@ -194,10 +194,10 @@ export class SeGradientEditor extends LitElement {
       margin-bottom: 6px;
     }
     .spread-row label {
-      font-size: 11px;
+      font-size: var(--se-text-xs);
     }
     .spread-row select {
-      font-size: 11px;
+      font-size: var(--se-text-xs);
       height: 20px;
     }
     .buttons {
@@ -208,7 +208,7 @@ export class SeGradientEditor extends LitElement {
     .buttons input[type="button"] {
       flex: 1;
       height: 24px;
-      font-size: 11px;
+      font-size: var(--se-text-xs);
       cursor: pointer;
     }
     .color-picker-overlay {
@@ -216,8 +216,8 @@ export class SeGradientEditor extends LitElement {
       z-index: 100;
       left: 0;
       top: 0;
-      background: #efefef;
-      border: 1px solid #666;
+      background: var(--se-surface);
+      border: 1px solid var(--se-border-strong);
       padding: 4px;
     }
   `

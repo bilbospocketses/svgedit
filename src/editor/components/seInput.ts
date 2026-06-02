@@ -39,7 +39,7 @@ export class SeInput extends LitElement {
       right: -4px;
       position: relative;
       margin-right: 4px;
-      color: #fff;
+      color: var(--se-on-accent);
     }
     input {
       background-color: var(--input-color);

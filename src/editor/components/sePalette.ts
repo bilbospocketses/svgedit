@@ -46,7 +46,7 @@ export class SePalette extends LitElement {
     #palette_holder {
       overflow: hidden;
       padding: 4px;
-      background: #f0f0f0;
+      background: var(--se-surface);
       border-radius: 3px;
       z-index: 2;
     }
@@ -65,7 +65,7 @@ export class SePalette extends LitElement {
     }
 
     div.palette_item:first-child {
-      background: white;
+      background: var(--se-surface);
     }
 
     .palette_expand_btn {
@@ -81,7 +81,7 @@ export class SePalette extends LitElement {
     #palette_popup {
       padding: 4px;
       margin-left: 24px;
-      background: white;
+      background: var(--se-surface);
       min-width: 180px;
       max-width: 360px;
       min-height: 14px;

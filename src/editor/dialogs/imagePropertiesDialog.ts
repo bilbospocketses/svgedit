@@ -14,11 +14,11 @@ export class SeImgPropDialog extends LitElement {
 
     /* Force the scroll bar to appear so we see it hide when overlay opens. */
     body::-webkit-scrollbar {
-      background: lightgray;
+      background: var(--se-surface-2);
     }
 
     body::-webkit-scrollbar-thumb {
-      background: darkgray;
+      background: var(--se-border-strong);
     }
 
     dialog {
@@ -28,22 +28,22 @@ export class SeImgPropDialog extends LitElement {
     }
 
     dialog::backdrop {
-      background: rgba(0, 0, 0, 0.3);
+      background: var(--se-scrim);
     }
 
     #svg_docprops_container {
       padding: 10px;
-      background-color: #5a6162;
-      color: #c5c5c5;
-      border: 1px outset #777;
+      background-color: var(--se-border-strong);
+      color: var(--se-on-accent);
+      border: 1px solid var(--se-border);
       opacity: 1.0;
-      font-family: Verdana, Helvetica, sans-serif;
+      font-family: var(--se-font-sans);
       font-size: .8em;
       z-index: 20001;
     }
 
     .error {
-      border: 1px solid red;
+      border: 1px solid var(--se-danger);
       padding: 3px;
     }
 
@@ -75,7 +75,7 @@ export class SeImgPropDialog extends LitElement {
     #svg_docprops_container fieldset {
       padding: 5px;
       margin: 5px;
-      border: 1px solid #DDD;
+      border: 1px solid var(--se-surface);
     }
 
     #svg_docprops_container label {
@@ -186,7 +186,7 @@ export class SeImgPropDialog extends LitElement {
               if (embedEl) {
                 embedEl.setAttribute('title', data[1])
                 embedEl.setAttribute('disabled', 'disabled')
-                embedEl.style.color = '#666'
+                embedEl.style.color = 'var(--se-text-subtle)'
               }
             }
           }

@@ -23,9 +23,9 @@ export class SeExportDialog extends LitElement {
   static styles = css`
     #dialog_content {
       margin: 10px 10px 5px 10px;
-      background: #5a6162;
+      background: var(--se-border-strong);
       overflow: auto;
-      border: 1px solid #c8c8c8;
+      border: 1px solid var(--se-border);
     }
 
     #dialog_content p,
@@ -33,22 +33,22 @@ export class SeExportDialog extends LitElement {
     #dialog_content label {
       margin: 10px;
       line-height: 0.3em;
-      color: #fff;
+      color: var(--se-on-accent);
     }
 
     dialog {
       padding: 0;
-      font-family: Verdana, Helvetica, sans-serif;
+      font-family: var(--se-font-sans);
       text-align: center;
       max-width: 400px;
-      background: #5a6162;
-      border: 1px outset #777;
+      background: var(--se-border-strong);
+      border: 1px solid var(--se-border);
       font-size: 0.8em;
-      border-radius: 5px;
+      border-radius: var(--se-radius-sm);
     }
 
     dialog::backdrop {
-      background: rgba(0, 0, 0, 0.3);
+      background: var(--se-scrim);
     }
 
     #dialog_content {

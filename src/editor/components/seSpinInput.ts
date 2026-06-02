@@ -72,7 +72,7 @@ export class SESpinInput extends LitElement {
       position: relative;
       margin-left: -4px;
       margin-right: 1px;
-      color: #fff;
+      color: var(--se-on-accent);
     }
     input {
       background-color: var(--input-color);

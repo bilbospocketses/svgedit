@@ -103,7 +103,7 @@ export class SeExplorerButton extends LitElement {
       position: fixed;
       left: 34px;
       top: 30%;
-      background: #E8E8E8;
+      background: var(--se-surface);
       display: none;
       flex-wrap: wrap;
       flex-direction: row;
@@ -112,8 +112,8 @@ export class SeExplorerButton extends LitElement {
     .menu-item {
       line-height: 1em;
       padding: 0.5em;
-      border: 1px solid #5a6162;
-      background: #E8E8E8;
+      border: 1px solid var(--se-border-strong);
+      background: var(--se-surface);
       margin-bottom: -1px;
       white-space: nowrap;
     }

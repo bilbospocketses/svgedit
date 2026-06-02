@@ -114,16 +114,16 @@ export class SeZoom extends LitElement {
       display: flex;
       flex-direction: column;
       background-color: var(--icon-bg-color);
-      border: solid 1px white;
-      box-shadow: 0 0px 10px rgb(0 0 0 / 50%);
+      border: solid 1px var(--se-border);
+      box-shadow: var(--se-shadow-overlay);
     }
     ::slotted(*) {
       margin: 2px;
       padding: 3px;
-      color: white;
+      color: var(--se-on-accent);
     }
     ::slotted(*:hover) {
-      background-color: rgb(43, 60, 69);
+      background-color: var(--se-accent-subtle);
     }
   `
 

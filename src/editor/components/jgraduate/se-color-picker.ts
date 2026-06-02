@@ -21,10 +21,10 @@ export class SeColorPicker extends LitElement {
   static styles = css`
     :host {
       display: block;
-      font-family: Arial, sans-serif;
-      font-size: 12px;
-      background: #efefef;
-      border: 1px outset #666;
+      font-family: var(--se-font-sans);
+      font-size: var(--se-text-sm);
+      background: var(--se-surface);
+      border: 1px solid var(--se-border-strong);
       padding: 5px;
     }
     .layout {
@@ -36,8 +36,7 @@ export class SeColorPicker extends LitElement {
       position: relative;
       width: 260px;
       height: 260px;
-      border: 2px inset;
-      border-color: #9a9a9a #fff #fff #9a9a9a;
+      border: 1px solid var(--se-border);
       flex-shrink: 0;
     }
     .map-wrap canvas {
@@ -54,8 +53,7 @@ export class SeColorPicker extends LitElement {
       position: relative;
       width: 24px;
       height: 260px;
-      border: 2px inset;
-      border-color: #9a9a9a #fff #fff #9a9a9a;
+      border: 1px solid var(--se-border);
       flex-shrink: 0;
     }
     .bar-wrap canvas {
@@ -82,7 +80,7 @@ export class SeColorPicker extends LitElement {
     .preview-box {
       width: 60px;
       height: 30px;
-      border: 1px solid #888;
+      border: 1px solid var(--se-border-strong);
       position: relative;
       background: repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 0 0 / 8px 8px;
     }
@@ -92,7 +90,7 @@ export class SeColorPicker extends LitElement {
     }
     .preview-label {
       font-size: 10px;
-      color: #666;
+      color: var(--se-text-muted);
       text-align: center;
     }
     .channel-group {
@@ -107,16 +105,16 @@ export class SeColorPicker extends LitElement {
       margin: 0;
     }
     .channel-group label {
-      font-size: 11px;
+      font-size: var(--se-text-xs);
       cursor: pointer;
     }
     .channel-group input[type="text"] {
       width: 36px;
       height: 18px;
-      font-size: 11px;
+      font-size: var(--se-text-xs);
       text-align: right;
       padding: 0 2px;
-      border: 1px solid #999;
+      border: 1px solid var(--se-border);
     }
     .hex-row {
       display: flex;
@@ -125,14 +123,14 @@ export class SeColorPicker extends LitElement {
       margin-top: 4px;
     }
     .hex-row label {
-      font-size: 11px;
+      font-size: var(--se-text-xs);
     }
     .hex-row input {
       width: 60px;
       height: 18px;
-      font-size: 11px;
+      font-size: var(--se-text-xs);
       padding: 0 2px;
-      border: 1px solid #999;
+      border: 1px solid var(--se-border);
     }
     .buttons {
       display: flex;
@@ -142,7 +140,7 @@ export class SeColorPicker extends LitElement {
     .buttons button {
       flex: 1;
       height: 24px;
-      font-size: 11px;
+      font-size: var(--se-text-xs);
       cursor: pointer;
     }
   `

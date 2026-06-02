@@ -18,18 +18,18 @@ import { getSvgEditor } from '../svgEditorInstance.js'
 export class SeSvgSourceEditorDialog extends LitElement {
   static styles = css`
     dialog {
-      background-color: #5a6162;
-      color: #c5c5c5;
+      background-color: var(--se-border-strong);
+      color: var(--se-on-accent);
       opacity: 1.0;
       text-align: center;
-      border: 1px outset #777;
+      border: 1px solid var(--se-border);
       z-index: 6;
       padding: 1em;
-      border-radius: 5px;
+      border-radius: var(--se-radius-sm);
     }
 
     dialog::backdrop {
-      background: rgba(0, 0, 0, 0.3);
+      background: var(--se-scrim);
     }
 
     #save_output_btns {
@@ -61,7 +61,7 @@ export class SeSvgSourceEditorDialog extends LitElement {
 
     #tool_source_save {
       width: 20%;
-      background-color: #c79605;
+      background-color: var(--se-warn);
       margin-left: 30%;
       margin-top: 5px;
     }
@@ -82,7 +82,7 @@ export class SeSvgSourceEditorDialog extends LitElement {
 
     #tool_source_cancel {
       width: 20%;
-      background-color: #c8c8c8;
+      background-color: var(--se-surface);
     }
   `
 
