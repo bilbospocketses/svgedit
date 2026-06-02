@@ -16,7 +16,7 @@
 
 - The **spec + this plan** live on branch `docs/m1-design-system` → ship as the **spec/plan PR** (PR-0, `docs:`).
 - Implementation ships as a chain of `feat:` PRs, each branched from latest master, each green:
-  - **PR-1** = Tasks 1–5 (foundation: tokens, theme mechanism, `:root`/base migration, hex-guard in warn mode, theming tests)
+  - **PR-1** = Tasks 1–4 (foundation: tokens, theme mechanism, `:root`/base migration, hex-guard in warn mode, theming tests). *(Task numbering jumps 4→6; there is no Task 5.)*
   - **PR-2** = Task 6 (full `svgedit.css` chrome migration)
   - **PR-3** = Tasks 7–11 (Lit component/dialog `static styles` migration)
   - **PR-4** = Tasks 12–13 (extensions migration + exclusion audit + flip hex-guard to error)
@@ -73,6 +73,7 @@ Migration is mechanical but **role-based** — map each hardcoded value to the s
 
 ```ts
 // tests/unit/design-tokens.test.ts
+// @vitest-environment node — reads tokens.css from disk via import.meta.url (jsdom lacks a file:// import.meta.url)
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, it, expect } from 'vitest'
@@ -98,13 +99,13 @@ function block(selector: string): string {
 
 describe('design tokens', () => {
   const light = block(':root')
-  const dark = block('html\\[data-theme="dark"\\]')
+  const dark = block('html[data-theme="dark"]')
 
   it('defines every semantic token in light (:root)', () => {
     for (const t of SEMANTIC) expect(light, `missing ${t} in :root`).toContain(`${t}:`)
   })
 
-  it('remaps the color semantic tokens in dark', () => {
+  it('remaps all themeable semantic tokens in dark', () => {
     // focus-ring derives from --se-accent (which remaps), so dark need not redefine it
     const themeable = SEMANTIC.filter((t) => t !== '--se-focus-ring')
     for (const t of themeable) expect(dark, `missing ${t} in dark`).toContain(`${t}:`)
@@ -198,7 +199,7 @@ html[data-theme="dark"] {
   --se-accent: var(--se-teal-500);
   --se-accent-hover: var(--se-teal-400);
   --se-accent-active: var(--se-teal-300);
-  --se-accent-subtle: rgba(45,212,191,.16);
+  --se-accent-subtle: color-mix(in srgb, var(--se-teal-400) 16%, transparent);
   --se-on-accent: #04211D;
   --se-danger: var(--se-red-400);
   --se-warn: var(--se-amber-400);
