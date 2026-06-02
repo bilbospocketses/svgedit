@@ -10,24 +10,15 @@ const safeClick = (el: HTMLElement | null, handler: EventListenerOrEventListener
   if (el) $click(el, handler)
 }
 
-/**
- *
- */
 class LayersPanel {
   updateContextPanel: () => void
   editor: Editor
 
-  /**
-   * @param editor
-   */
   constructor (editor: Editor) {
     this.updateContextPanel = editor.topPanel.updateContextPanel.bind(editor.topPanel)
     this.editor = editor
   }
 
-  /**
-   * @param e event
-   */
   lmenuFunc (e: Event): void {
     const action = typedDetail<SeCmenuDetail>(e).trigger
     switch (action) {
@@ -48,8 +39,6 @@ class LayersPanel {
     }
   }
 
-  /**
-   */
   init () {
     const template = document.createElement('template')
     const { i18next } = this.editor
@@ -90,8 +79,6 @@ class LayersPanel {
     }
   }
 
-  /**
-   */
   newLayer (): void {
     let uniqName
     let i = this.editor.svgCanvas.getCurrentDrawing().getNumLayers()
@@ -117,9 +104,6 @@ class LayersPanel {
     this.populateLayers()
   }
 
-  /**
-   *
-   */
   deleteLayer () {
     if (this.editor.svgCanvas.deleteCurrentLayer()) {
       this.updateContextPanel()
@@ -134,9 +118,6 @@ class LayersPanel {
     }
   }
 
-  /**
-   *
-   */
   cloneLayer (): void {
     const name =
       this.editor.svgCanvas.getCurrentDrawing().getCurrentLayerName() + ' copy'
@@ -166,9 +147,6 @@ class LayersPanel {
     return Array.from(tbody.children).indexOf(el)
   }
 
-  /**
-   *
-   */
   mergeLayer (): void {
     if (
       (this.index(document.querySelector('#layerlist tr.layersel')) - 1) ===
@@ -181,9 +159,6 @@ class LayersPanel {
     this.populateLayers()
   }
 
-  /**
-   * @param pos
-   */
   moveLayer (pos: number): void {
     const curPos = this.editor.svgCanvas.indexCurrentLayer()
     if (curPos !== -1) {
@@ -192,8 +167,6 @@ class LayersPanel {
     }
   }
 
-  /**
-   */
   layerRename (): void {
     const ele = document.querySelector('#layerlist tr.layersel td.layername')
     const oldName = (ele) ? ele.textContent : ''
@@ -217,7 +190,6 @@ class LayersPanel {
   /**
    * This function highlights the layer passed in (by fading out the other layers).
    * If no layer is passed in, this function restores the other layers.
-   * @param [layerNameToHighlight]
    */
   toggleHighlightLayer (layerNameToHighlight?: string): void {
     let i
@@ -242,8 +214,6 @@ class LayersPanel {
     }
   }
 
-  /**
-   */
   populateLayers (): void {
     this.editor.svgCanvas.clearSelection()
     const layerlist = $id('layerlist')?.querySelector('tbody')

@@ -20,9 +20,6 @@ const safeClick = (el: HTMLElement | null, handler: EventListenerOrEventListener
 /*
  * register actions for left panel
  */
-/**
- *
- */
 class TopPanel {
   editor: Editor
 
@@ -33,44 +30,29 @@ class TopPanel {
     this.editor = editor
   }
 
-  /**
-   */
   displayTool (className: string): void {
     // default display is 'none' so removing the property will make the panel visible
     $qa(`.${className}`).forEach((el: Element) => (el as HTMLElement).style.removeProperty('display'))
   }
 
-  /**
-   */
   hideTool (className: string): void {
     $qa(`.${className}`).forEach((el: Element) => {
       ;(el as HTMLElement).style.display = 'none'
     })
   }
 
-  /**
-   */
   get selectedElement () {
     return this.editor.selectedElement
   }
 
-  /**
-   */
   get multiselected () {
     return this.editor.multiselected
   }
 
-  /**
-   */
   get path (): PathActionsLike {
     return this.editor.svgCanvas.pathActions
   }
 
-  /**
-   *
-   * @param opt
-   * @param changeElem
-   */
   setStrokeOpt (opt: HTMLElement, changeElem?: boolean): void {
     const { id } = opt
     const bits = id.split('_')
@@ -172,11 +154,6 @@ class TopPanel {
     this.editor.bottomPanel.updateToolButtonState()
   }
 
-  /**
-   * @param [opts={}]
-   * @param [opts.cancelDeletes=false]
-   * @returns Resolves to `undefined`
-   */
   promptImgURL ({ cancelDeletes = false } = {}) {
     const selectedEl = this.editor.selectedElement
     if (!selectedEl) return
@@ -271,11 +248,7 @@ class TopPanel {
             x = convertUnit(x ?? 0)
             y = convertUnit(y ?? 0)
           }
-          /**
-           * Updates the value of an input field if needed
-           * @param id - The ID of the input element to be updated.
-           * @param newValue - The new numeric value to set in the input field.
-           */
+          /** Updates the value of an input field if needed */
           const updateValue = (id: string, newValue: number) => {
             const el = $id(id) as SeValueElement | null
             if (!el) return
@@ -520,7 +493,6 @@ class TopPanel {
 
   /**
    * @param [e] Not used.
-   * @param forSaving
    */
   showSourceEditor (_e?: Event, forSaving?: boolean): void {
     const $editorDialog = $id('se-svg-editor-dialog')
@@ -532,9 +504,6 @@ class TopPanel {
     $editorDialog.setAttribute('applysec', String(!forSaving))
   }
 
-  /**
-   *
-   */
   clickWireframe () {
     const wfBtn = $id('tool_wireframe') as SeButtonElement | null
     if (wfBtn) wfBtn.pressed = !wfBtn.pressed
@@ -553,9 +522,6 @@ class TopPanel {
     this.editor.updateWireFrame()
   }
 
-  /**
-   *
-   */
   clickUndo () {
     const { undoMgr, textActions } = this.editor.svgCanvas
     if (undoMgr.getUndoStackSize() > 0) {
@@ -567,9 +533,6 @@ class TopPanel {
     }
   }
 
-  /**
-   *
-   */
   clickRedo () {
     const { undoMgr } = this.editor.svgCanvas
     if (undoMgr.getRedoStackSize() > 0) {
@@ -578,20 +541,14 @@ class TopPanel {
     }
   }
 
-  /**
-   */
   changeRectRadius (e: Event): void {
     this.editor.svgCanvas.setRectRadius((e.target as HTMLInputElement).value)
   }
 
-  /**
-   */
   changeFontSize (e: Event): void {
     this.editor.svgCanvas.setFontSize(Number((e.target as HTMLInputElement).value))
   }
 
-  /**
-   */
   changeRotationAngle (e: Event): void {
     const val = (e.target as HTMLInputElement).value
     this.editor.svgCanvas.setRotationAngle(val)
@@ -605,16 +562,10 @@ class TopPanel {
     }
   }
 
-  /**
-   * @param e
-   */
   changeBlur (e: Event): void {
     this.editor.svgCanvas.setBlur(Number((e.target as HTMLInputElement).value) / 10, true)
   }
 
-  /**
-   *
-   */
   clickGroup () {
     // group
     if (this.editor.multiselected) {
@@ -625,16 +576,10 @@ class TopPanel {
     }
   }
 
-  /**
-   *
-   */
   clickClone () {
     this.editor.svgCanvas.cloneSelectedElements(20, 20)
   }
 
-  /**
-   * @param evt
-   */
   clickAlignEle (evt: Event): void {
     this.editor.svgCanvas.alignSelectedElements(typedDetail<SeChangeDetail>(evt).value, 'page')
   }
@@ -650,9 +595,6 @@ class TopPanel {
     this.editor.svgCanvas.alignSelectedElements(pos, String(value))
   }
 
-  /**
-   *
-   */
   attrChanger (e: Event): boolean | void {
     const target = e.target as HTMLInputElement
     const attr = target.getAttribute('data-attr') ?? ''
@@ -690,18 +632,12 @@ class TopPanel {
     return true
   }
 
-  /**
-   *
-   */
   convertToPath () {
     if (this.editor.selectedElement) {
       this.editor.svgCanvas.convertToPath()
     }
   }
 
-  /**
-   *
-   */
   reorientPath () {
     if (this.editor.selectedElement) {
       this.path.reorient()
@@ -726,10 +662,6 @@ class TopPanel {
     }
   }
 
-  /**
-   *
-   * @returns Resolves to `undefined`
-   */
   makeHyperlink (): void {
     if (this.editor.selectedElement || this.multiselected) {
       // TODO: see todo #10 — native prompt(); replace with custom dialog
@@ -743,9 +675,6 @@ class TopPanel {
     }
   }
 
-  /**
-   *
-   */
   linkControlPoints () {
     const nodeLinkEl = $id('tool_node_link') as SeButtonElement | null
     if (nodeLinkEl) nodeLinkEl.pressed = !nodeLinkEl.pressed
@@ -753,27 +682,18 @@ class TopPanel {
     this.path.linkControlPoints(linked)
   }
 
-  /**
-   *
-   */
   clonePathNode () {
     if (this.path.getNodePoint()) {
       this.path.clonePathNode()
     }
   }
 
-  /**
-   *
-   */
   deletePathNode () {
     if (this.path.getNodePoint()) {
       this.path.deletePathNode()
     }
   }
 
-  /**
-   *
-   */
   addSubPath () {
     const button = $id('tool_add_subpath') as SeButtonElement | null
     const sp = !(button?.pressed ?? false)
@@ -782,9 +702,6 @@ class TopPanel {
     this.path.addSubPath(sp)
   }
 
-  /**
-   *
-   */
   opencloseSubPath () {
     this.path.opencloseSubPath()
   }
@@ -799,18 +716,12 @@ class TopPanel {
     }
   }
 
-  /**
-   *
-   */
   moveToTopSelected () {
     if (this.editor.selectedElement) {
       this.editor.svgCanvas.moveToTopSelectedElement()
     }
   }
 
-  /**
-   *
-   */
   moveToBottomSelected () {
     if (this.editor.selectedElement) {
       this.editor.svgCanvas.moveToBottomSelectedElement()
@@ -825,9 +736,6 @@ class TopPanel {
     return selected.filter((el): el is Element => el !== null).filter((el) => el.tagName === 'text').length > 0
   }
 
-  /**
-   *
-   */
   clickBold () {
     if (this.anyTextSelected) {
       this.editor.svgCanvas.setBold(!this.editor.svgCanvas.getBold())
@@ -836,9 +744,6 @@ class TopPanel {
     }
   }
 
-  /**
-   *
-   */
   clickItalic () {
     if (this.anyTextSelected) {
       this.editor.svgCanvas.setItalic(!this.editor.svgCanvas.getItalic())
@@ -849,9 +754,6 @@ class TopPanel {
 
   /**
    * Handles the click on the text decoration buttons
-   *
-   * @param value The text decoration value
-   * @returns false
    */
   clickTextDecoration (value: string): boolean | void {
     if (this.editor.svgCanvas.hasTextDecoration(value)) {
@@ -872,26 +774,18 @@ class TopPanel {
     return false
   }
 
-  /**
-   */
   changeLetterSpacing (e: Event): void {
     this.editor.svgCanvas.setLetterSpacing((e.target as HTMLInputElement).value)
   }
 
-  /**
-   */
   changeWordSpacing (e: Event): void {
     this.editor.svgCanvas.setWordSpacing((e.target as HTMLInputElement).value)
   }
 
-  /**
-   */
   changeTextLength (e: Event): void {
     this.editor.svgCanvas.setTextLength((e.target as HTMLInputElement).value)
   }
 
-  /**
-   */
   changeLengthAdjust (evt: Event): void {
     this.editor.svgCanvas.setLengthAdjust(typedDetail<SeChangeDetail>(evt).value)
   }
@@ -899,7 +793,6 @@ class TopPanel {
   /**
    * Set a selected image's URL.
    * @function module:SVGthis.setImageURL
-   * @param url
    */
   setImageURL (url: string): void {
     const { editor } = this
@@ -936,19 +829,12 @@ class TopPanel {
     }
   }
 
-  /**
-   *
-   */
   updateTitle (title?: string): void {
     if (title) this.editor.title = title
     const titleElement = $qa('#title_panel > p')[0]
     if (titleElement) titleElement.textContent = this.editor.title
   }
 
-  /**
-   * @param editmode
-   * @param elems
-   */
   togglePathEditMode (editMode: boolean, elems: Element[]): void {
     if (editMode) {
       this.displayTool('path_node_panel')
@@ -976,8 +862,6 @@ class TopPanel {
     }
   }
 
-  /**
-   */
   init () {
     // add Top panel
     const template = document.createElement('template')

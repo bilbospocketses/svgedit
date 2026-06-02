@@ -16,8 +16,6 @@ const { $id } = SvgCanvas
 /*
  * register actions for left panel
  */
-/**
- */
 class BottomPanel {
   editor: Editor
 
@@ -28,20 +26,14 @@ class BottomPanel {
     this.editor = editor
   }
 
-  /**
-   */
   get selectedElement () {
     return this.editor.selectedElement
   }
 
-  /**
-   */
   get multiselected () {
     return this.editor.multiselected
   }
 
-  /**
-   */
   changeStrokeWidth (e: Event): void {
     let val = Number((e.target as HTMLInputElement).value)
     if (
@@ -54,8 +46,6 @@ class BottomPanel {
     this.editor.svgCanvas.setStrokeWidth(val)
   }
 
-  /**
-   */
   changeZoom (value: string): void {
     switch (value) {
       case 'canvas':
@@ -140,30 +130,22 @@ class BottomPanel {
     })
   }
 
-  /**
-   */
   handleColorPicker (type: string, evt: Event): void {
     const { paint } = typedDetail<SePaintDetail>(evt)
     this.editor.svgCanvas.setPaint(type, paint)
     this.updateToolButtonState()
   }
 
-  /**
-   */
   handleStrokeAttr (type: string, evt: Event): void {
     this.editor.svgCanvas.setStrokeAttr(type, typedDetail<SeChangeDetail>(evt).value)
   }
 
-  /**
-   */
   handleOpacity (evt: Event): void {
     const target = evt.currentTarget as HTMLInputElement
     const val = Number.parseInt(target.value.split('%')[0] ?? '0')
     this.editor.svgCanvas.setOpacity(String(val / 100))
   }
 
-  /**
-   */
   handlePalette (e: Event): void {
     e.preventDefault()
     // shift key or right click for stroke
@@ -188,8 +170,6 @@ class BottomPanel {
     this.updateToolButtonState()
   }
 
-  /**
-   */
   init (): void {
     // register actions for Bottom panel
     const template = document.createElement('template')
@@ -236,8 +216,6 @@ class BottomPanel {
     ;($id('stroke_color') as SePaintPickerElement | null)?.init(i18next)
   }
 
-  /**
-   */
   updateColorpickers (apply: boolean): void {
     ;($id('fill_color') as SePaintPickerElement | null)?.updatePaint(
       this.editor.svgCanvas,
