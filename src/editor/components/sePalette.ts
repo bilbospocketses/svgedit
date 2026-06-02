@@ -2,54 +2,9 @@ import { LitElement, html, css } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import { ifDefined } from 'lit/directives/if-defined.js'
 import { getSvgEditor } from '../svgEditorInstance.js'
+import { getPalette, subscribePalette } from './palette-store.js'
 
 const NO_COLOR_SVG_DATA_URL = 'data:image/svg+xml;charset=utf-8;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjQgMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgY2xhc3M9InN2Z19pY29uIj48c3ZnIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+CiAgICA8bGluZSBmaWxsPSJub25lIiBzdHJva2U9IiNkNDAwMDAiIGlkPSJzdmdfOTAiIHkyPSIyNCIgeDI9IjI0IiB5MT0iMCIgeDE9IjAiLz4KICAgIDxsaW5lIGlkPSJzdmdfOTIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2Q0MDAwMCIgeTI9IjI0IiB4Mj0iMCIgeTE9IjAiIHgxPSIyNCIvPgogIDwvc3ZnPjwvc3ZnPg=='
-
-const palette = [
-  // Todo: Make into configuration item?
-  'none',
-  '#000000',
-  '#3f3f3f',
-  '#7f7f7f',
-  '#bfbfbf',
-  '#ffffff',
-  '#ff0000',
-  '#ff7f00',
-  '#ffff00',
-  '#7fff00',
-  '#00ff00',
-  '#00ff7f',
-  '#00ffff',
-  '#007fff',
-  '#0000ff',
-  '#7f00ff',
-  '#ff00ff',
-  '#ff007f',
-  '#7f0000',
-  '#7f3f00',
-  '#7f7f00',
-  '#3f7f00',
-  '#007f00',
-  '#007f3f',
-  '#007f7f',
-  '#003f7f',
-  '#00007f',
-  '#3f007f',
-  '#7f007f',
-  '#7f003f',
-  '#ffaaaa',
-  '#ffd4aa',
-  '#ffffaa',
-  '#d4ffaa',
-  '#aaffaa',
-  '#aaffd4',
-  '#aaffff',
-  '#aad4ff',
-  '#aaaaff',
-  '#d4aaff',
-  '#ffaaff',
-  '#ffaad4'
-]
 
 /**
  * SePalette — color palette strip + expandable popup custom element.
@@ -62,8 +17,8 @@ const palette = [
  *   - Dispatches `change` CustomEvent with **`bubbles: false`** (CRITICAL — listener at
  *     `BottomPanel.ts:189` attaches directly to host via `$id('palette').addEventListener`;
  *     NOT promoted to `bubbles: true, composed: true` "for consistency" — it's a contract)
- *   - 42-color hardcoded palette + audit-preserve `// Todo: Make into configuration item?`
- *     comment carried forward for future configurable-palette work (PR-2 audit Todo #10)
+ *   - Palette colors come from the configurable core `palette-store` (host-injectable
+ *     via the embed API). Resolves the former `// Todo: Make into configuration item?`.
  *
  * No host-id mirror needed: consumer uses `$id('palette')` which matches the host element
  * directly (no inner element selectors target a `#palette` id).
@@ -143,10 +98,16 @@ export class SePalette extends LitElement {
   @state() accessor isPopupOpen = false
 
   private _containerClickHandler: (() => void) | null = null
+  private _unsubscribePalette: (() => void) | null = null
 
   // External API: signature preserved for BottomPanel.ts:190 caller
   init(i18next: { t(key: string): string }) {
     this.setAttribute('ui-palette_info', i18next.t('ui.palette_info'))
+  }
+
+  connectedCallback() {
+    super.connectedCallback()
+    this._unsubscribePalette = subscribePalette(() => this.requestUpdate())
   }
 
   firstUpdated() {
@@ -160,6 +121,10 @@ export class SePalette extends LitElement {
 
   disconnectedCallback() {
     super.disconnectedCallback()
+    if (this._unsubscribePalette) {
+      this._unsubscribePalette()
+      this._unsubscribePalette = null
+    }
     if (this._containerClickHandler) {
       getSvgEditor().svgCanvas.container.removeEventListener('click', this._containerClickHandler)
       this._containerClickHandler = null
@@ -167,10 +132,11 @@ export class SePalette extends LitElement {
   }
 
   render() {
+    const swatches = getPalette()
     return html`
       <div id="palette_holder" title=${ifDefined(this.uiPaletteInfo || undefined)}>
         <div id="js-se-palette">
-          ${palette.map(rgb => this._renderSquare(rgb))}
+          ${swatches.map(rgb => this._renderSquare(rgb))}
         </div>
       </div>
       <button
@@ -179,7 +145,7 @@ export class SePalette extends LitElement {
         @click=${this._toggleExpand}
       >${this.isPopupOpen ? '▲' : '▼'}</button>
       <div id="palette_popup" style=${this.isPopupOpen ? 'display:flex' : 'display:none'}>
-        ${palette.map(rgb => this._renderSquare(rgb))}
+        ${swatches.map(rgb => this._renderSquare(rgb))}
       </div>
     `
   }

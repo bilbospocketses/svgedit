@@ -5,6 +5,7 @@ export type EmbedURLParams = {
   embedMode: boolean
   chrome: ChromePreset | undefined
   theme: string | undefined
+  palette: string[] | undefined
   allowedOrigins: string[]
   dialogTimeoutMs: number
 }
@@ -24,6 +25,10 @@ export function parseEmbedURLParams (params: URLSearchParams): EmbedURLParams {
   const themeRaw = params.get('theme')
   const theme = themeRaw && themeRaw.length > 0 ? themeRaw : undefined
 
+  const paletteRaw = params.get('palette')
+  const paletteList = (paletteRaw ?? '').split(',').map(c => c.trim()).filter(c => c.length > 0)
+  const palette = paletteList.length > 0 ? paletteList : undefined
+
   const allowedOrigins = parseAllowedOrigins(params.get('allowedOrigins') ?? '')
 
   const timeoutRaw = params.get('dialogTimeout')
@@ -32,5 +37,5 @@ export function parseEmbedURLParams (params: URLSearchParams): EmbedURLParams {
     ? timeoutParsed
     : DEFAULT_DIALOG_TIMEOUT_MS
 
-  return { embedMode, chrome, theme, allowedOrigins, dialogTimeoutMs }
+  return { embedMode, chrome, theme, palette, allowedOrigins, dialogTimeoutMs }
 }

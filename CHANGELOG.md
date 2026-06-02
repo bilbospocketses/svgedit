@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (Host palette injection -- 2026-06-02)
+
+- Hosts can inject a custom swatch palette into the embedded editor: a `?palette=<comma-separated
+  colors>` URL param (initial, no flash) and an `editor.setPalette(colors)` runtime method. Replaces
+  the built-in 42-color palette; `DEFAULT_PALETTE` is exported from `svgedit/embed` for host-side
+  append.
+- The palette is now a real editor setting (`Editor.setCustomPalette`) backed by a core
+  `palette-store`; `se-palette` reads and re-renders from it. Resolves the long-standing
+  `// Todo: Make into configuration item?`.
+- Invalid colors are dropped with a non-fatal `error` event (`source: 'invalid-palette-color'`); the
+  `none` swatch is always preserved. `'palette'` added to the embed `ready` capabilities.
+  (TODO #4 / #10 / #16)
+
 ### Changed (e2e preview server port 8000 → 9000 -- 2026-06-02)
 
 - Moved the Playwright e2e preview server and `baseURL` from port 8000 to 9000

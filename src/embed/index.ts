@@ -5,3 +5,4 @@ export { PROTOCOL_VERSION, ERROR_CODES } from './protocol.js'
 export type {
   EmbedEnvelope, EmbedEventName, ReadyPayload, ChromeState, ChromePreset, ElementHandle
 } from './protocol.js'
+export { DEFAULT_PALETTE } from './palette-defaults.js'

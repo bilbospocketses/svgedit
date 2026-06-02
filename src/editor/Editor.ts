@@ -25,6 +25,7 @@ import { getParentsUntil } from '@svgedit/svgcanvas/common/util.js'
 import { EmbedServer } from '../embed/server.js'
 import { setSvgEditor } from './svgEditorInstance.js'
 import { typedDetail } from './typed-events.js'
+import { setPaletteWithErrors } from './components/palette-store.js'
 
 /** Narrow i18next facade — matches the surface from locale.ts. */
 interface I18nextFacade {
@@ -1039,6 +1040,18 @@ class Editor {
       target.removeChild(target.firstChild)
     }
     target.appendChild(icon)
+  }
+
+  /**
+   * Replace the editor's swatch palette (the se-palette strip). Drives the core
+   * palette store; se-palette re-renders via its subscription. Non-array input is
+   * treated as empty (→ default palette). Invalid colours are dropped and surfaced
+   * to embed hosts via an `error` event (mirrors the missing-icon pattern above).
+   */
+  setCustomPalette (colors: readonly unknown[]): void {
+    setPaletteWithErrors(colors, (message) => {
+      this._embedServer?.emit('error', { message, source: 'invalid-palette-color' })
+    })
   }
 
   /**

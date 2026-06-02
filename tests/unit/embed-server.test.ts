@@ -48,6 +48,14 @@ describe('EmbedServer — constructor + listener setup', () => {
     activeServer = new EmbedServer(editor)
     expect(document.body.classList.contains('theme-dark')).toBe(true)
   })
+
+  it('applies URL-param palette on init via editor.setCustomPalette', () => {
+    window.history.replaceState({}, '', '/?embed=1&palette=%23ff0000,none')
+    const setCustomPalette = vi.fn()
+    const editor = { svgCanvas: {}, setCustomPalette }
+    activeServer = new EmbedServer(editor)
+    expect(setCustomPalette).toHaveBeenCalledWith(['#ff0000', 'none'])
+  })
 })
 
 describe('EmbedServer — call dispatch', () => {
@@ -192,7 +200,7 @@ describe('EmbedServer — event emission', () => {
     const readyEvent = sent.find(s => s.kind === 'event' && s.name === 'ready')
     expect(readyEvent).toBeDefined()
     expect(readyEvent.payload.protocolVersion).toBe(1)
-    expect(readyEvent.payload.capabilities).toEqual(expect.arrayContaining(['chrome', 'theme', 'dialog-hooks']))
+    expect(readyEvent.payload.capabilities).toEqual(expect.arrayContaining(['chrome', 'theme', 'dialog-hooks', 'palette']))
     server.dispose()
   })
 })
@@ -348,6 +356,24 @@ describe('EmbedServer — control messages', () => {
     await new Promise(r => setTimeout(r, 0))
 
     expect(document.body.classList.contains('no-menu')).toBe(false)
+    server.dispose()
+  })
+
+  it('__setPalette forwards args to editor.setCustomPalette and replies', async () => {
+    const setCustomPalette = vi.fn()
+    const editor = { svgCanvas: {}, setCustomPalette }
+    const server = new EmbedServer(editor)
+    const replies = []
+    vi.spyOn(window.parent, 'postMessage').mockImplementation((env) => replies.push(env))
+
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { ns: 'svgedit', v: 1, kind: 'call', id: 106, method: '__setPalette', args: [['#ff0000', 'none']] },
+      origin: 'https://host.test', source: window
+    }))
+    await new Promise(r => setTimeout(r, 0))
+
+    expect(setCustomPalette).toHaveBeenCalledWith(['#ff0000', 'none'])
+    expect(replies).toContainEqual({ ns: 'svgedit', v: 1, kind: 'result', id: 106, result: null })
     server.dispose()
   })
 

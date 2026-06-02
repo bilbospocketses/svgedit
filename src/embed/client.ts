@@ -167,6 +167,10 @@ export class SvgEditEmbed {
     return this.call('__setTheme', [theme])
   }
 
+  setPalette (colors: readonly string[]): Promise<unknown> {
+    return this.call('__setPalette', [colors])
+  }
+
   setChrome (state: ChromeState | ChromePreset): Promise<unknown> {
     return this.call('__setChrome', [state])
   }
