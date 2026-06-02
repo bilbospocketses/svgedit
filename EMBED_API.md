@@ -321,6 +321,37 @@ Implementation: the server applies CSS classes (`no-menu`, `no-toolbox`, etc.) t
 
 ---
 
+## Palette
+
+Replace the editor's color swatch strip (`se-palette`) with your own brand colors. Replace-semantics: your colors become the whole palette. The `none` (no-fill/no-stroke) swatch is always kept — it is prepended if you omit it.
+
+### URL param (initial state)
+
+```
+?embed=1&palette=%23ff0000,%23223344,none
+```
+
+Comma-separated CSS colors, URL-encoded. Applied before first paint — no flash of the default swatches.
+
+### Runtime API
+
+```js
+import { SvgEditEmbed, DEFAULT_PALETTE } from 'svgedit/embed'
+
+await editor.ready
+
+await editor.setPalette(['#ff0000', '#223344', '#00a3e0'])     // replace
+await editor.setPalette([...DEFAULT_PALETTE, '#00a3e0'])        // append (host-composed)
+```
+
+`DEFAULT_PALETTE` is the built-in 42-color array, exported for host-side composition.
+
+### Validation
+
+Each entry must be `none` or a valid CSS color. Invalid entries are dropped (the rest still apply); if any are dropped at runtime the editor emits an `error` event with `source: 'invalid-palette-color'`. If nothing valid remains, the default palette is restored. `'palette'` appears in the `ready` payload's `capabilities`.
+
+---
+
 ## Dialog hooks
 
 By default the editor shows its own built-in modal for `alert`, `confirm`, and `prompt` calls. Hosts can intercept these to render dialogs in their own design system.
