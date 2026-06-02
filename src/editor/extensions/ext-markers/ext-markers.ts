@@ -126,7 +126,7 @@ export default {
       })
 
       const mel = addElem(markerTypes[seType] as { element: string; attr: Record<string, string | number> })
-      const fillcolor = (seType.substr(-2) === '_o')
+      const fillcolor = (seType.slice(-2) === '_o')
         ? 'none'
         : color
 
@@ -245,7 +245,7 @@ export default {
         const url = el.getAttribute(markerName)
         if (url) {
           const len = el.id.length
-          const linkid = url.substr(-len - 1, len)
+          const linkid = url.slice(-len - 1, -1)
           if (el.id !== linkid) {
             const newMarkerId = 'mkr_' + pos + '_' + el.id
             addMarker(newMarkerId, marker.getAttribute('se_type')!)

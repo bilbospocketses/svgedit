@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (Text tool cursor stuck after editing -- 2026-06-02)
+
+- Leaving text-edit mode (`textActions.toSelectMode`) now notifies the editor of the mode
+  change, so the workarea cursor resets from the text I-beam back to the default instead of
+  staying stuck as a text cursor after placing or editing a text element.
+- Root cause: `toSelectMode` returned to `select` via the internal `setCurrentMode`, which
+  (unlike the public `setMode`) never dispatched the `modeChange` event the editor's cursor
+  styling listens for. Extracted the dispatch into a reusable `SvgCanvas.notifyModeChange()`
+  (now shared with `setMode`) and called it on text exit. Regression test added in
+  `tests/unit/text-actions.test.ts`. (TODO #10)
+
+### Changed (Deprecated DOM/JS API cleanup -- 2026-06-02)
+
+- Replaced deprecated `SVGMatrix.scaleNonUniform(x, y)` with `DOMMatrix.scale(x, y)` in
+  `selected-elem.ts` (flip transform).
+- Replaced all 11 deprecated `String.prototype.substr()` calls with `.slice()` across
+  `svg-exec.ts`, `units.ts`, `PaintBox.ts`, `BottomPanel.ts`, and `ext-markers.ts` (per-site,
+  accounting for length-vs-end semantics and negative indices).
+- Replaced the deprecated `escape`/`unescape` UTF-8 idiom in `utilities.ts`
+  (`encodeUTF8`/`decodeUTF8`) with `TextEncoder`/`TextDecoder`, preserving exact byte behaviour
+  including BOM handling and throw-on-malformed input; byte-exact characterization tests added.
+  Clears the TS6385/6387 deprecation warnings. (TODO #10)
+
 ### Changed (Docs — tutorials rewrite -- 2026-06-02)
 
 - Rewrote all 8 `docs/tutorials/*.md` accurate-concise for the current fork: dead
