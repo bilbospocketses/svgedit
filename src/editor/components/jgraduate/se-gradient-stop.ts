@@ -12,6 +12,7 @@ import { customElement, property } from 'lit/decorators.js'
 const PICKER_D =
   'M-6.2,0.9c3.6-4,6.7-4.3,6.7-12.4c-0.2,7.9,3.1,8.8,6.5,12.4c3.5,3.8,2.9,9.6,0,12.3c-3.1,2.8-10.4,2.7-13.2,0C-9.6,9.9-9.4,4.4-6.2,0.9z'
 
+/** Draggable teardrop marker for a single gradient stop; emits stop-select, stop-move, stop-edit, stop-delete */
 @customElement('se-gradient-stop')
 export class SeGradientStop extends LitElement {
   static styles = css`
