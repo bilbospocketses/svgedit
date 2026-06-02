@@ -11,12 +11,12 @@ let svgCanvas = null as unknown as ISvgCanvas
 
 /**
 * @function module:clear.init
-* @param canvas
 */
 export const init = (canvas: ISvgCanvas): void => {
   svgCanvas = canvas
 }
 
+/** Reset the SVG content element to initial state, clearing all children and resetting attributes */
 export const clearSvgContentElementInit = (): void => {
   const curConfig = svgCanvas.getCurConfig()
   const dimensions = curConfig.dimensions as [string, string]
