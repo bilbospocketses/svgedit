@@ -47,7 +47,7 @@ export class SeMenu extends LitElement {
     .menu-button {
       padding: 0.25em 0.30em;
       background-color: var(--icon-bg-color);
-      color: #fff;
+      color: var(--se-on-accent);
       cursor: pointer;
       display: inline-flex;
       align-items: center;
@@ -72,13 +72,13 @@ export class SeMenu extends LitElement {
       top: 100%;
       left: 0;
       background-color: var(--icon-bg-color);
-      color: #fff;
+      color: var(--se-on-accent);
       z-index: 1;
       min-width: 100%;
     }
     :host ::slotted([current]) {
       background-color: var(--icon-bg-color-hover) !important;
-      color: #fff;
+      color: var(--se-on-accent);
     }
     :host ::slotted(*) {
       padding: 0.25em 1.25em 0.25em 0.25em !important;

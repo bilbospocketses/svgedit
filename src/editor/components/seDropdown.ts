@@ -63,7 +63,7 @@ export class SeDropdown extends LitElement {
       padding: 0;
     }
     .source:focus-visible {
-      outline: 2px solid #5a6162;
+      outline: 2px solid var(--se-focus-ring);
       outline-offset: 1px;
     }
     img {
@@ -76,8 +76,8 @@ export class SeDropdown extends LitElement {
       left: 0;
       width: 150%;
       display: none;
-      background: #fff;
-      border: 1px solid #5a6162;
+      background: var(--se-surface);
+      border: 1px solid var(--se-border-strong);
       z-index: 10;
     }
     .popup.open {
@@ -85,8 +85,8 @@ export class SeDropdown extends LitElement {
     }
     ::slotted(*) {
       padding: 4px;
-      background: #E8E8E8;
-      border: 1px solid #5a6162;
+      background: var(--se-surface);
+      border: 1px solid var(--se-border-strong);
       width: 100%;
       display: block;
       box-sizing: border-box;
