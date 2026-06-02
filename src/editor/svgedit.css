@@ -37,7 +37,7 @@
 }
 
 #title_panel>p {
-  color: white;
+  color: var(--se-on-accent);
   padding-left: 5px;
   padding-right: 3px;
   font-weight: bold;
@@ -57,7 +57,7 @@
 
 #workarea {
   grid-area: workarea;
-  background-color: #A0A0A0;
+  background-color: var(--se-canvas);
   border: 1px solid var(--border-color);
   overflow: auto;
   text-align: center;
@@ -79,7 +79,7 @@
 #sidepanel_handle {
   writing-mode: vertical-rl;
   text-orientation: upright;
-  color: white;
+  color: var(--se-on-accent);
   position: absolute;
   cursor: pointer;
   top: 50%;
@@ -104,7 +104,7 @@ hr {
 }
 
 #layersLabel {
-  color: white;
+  color: var(--se-on-accent);
 }
 
 #layerpanel {
@@ -132,18 +132,18 @@ hr {
   width: 132px;
   border-collapse: collapse;
   border: 1px solid var(--border-color);
-  background-color: #FFFFFF;
+  background-color: var(--se-surface);
 }
 
 #layerlist tr.layer {
-  background-color: #FFFFFF;
+  background-color: var(--se-surface);
   margin: 0;
   padding: 0;
 }
 
 #layerlist tr.layersel {
   border: 1px solid var(--border-color);
-  background-color: #CCCCCC;
+  background-color: var(--se-accent-subtle);
 }
 
 #layerlist td.layervis {
@@ -169,7 +169,7 @@ hr {
 }
 
 #layerlist td.layername:hover {
-  color: blue;
+  color: var(--se-accent);
 }
 
 #layerlist tr.layersel td.layername {
@@ -191,8 +191,8 @@ hr {
 
 #main_button {
   grid-area: main;
-  color: #fff;
-  border-radius: 3px;
+  color: var(--se-on-accent);
+  border-radius: var(--se-radius-sm);
   padding-block: 2px;
   padding-left: 3px;
   height: 34px;
@@ -207,15 +207,13 @@ hr {
 }
 
 #main_icon:hover {
-  background: #eee !important;
+  background: var(--se-surface-2) !important;
 }
 
 #main_icon.buttondown {
-  background: #eee !important;
-  -moz-box-shadow: none !important;
-  -webkit-box-shadow: none !important;
+  background: var(--se-surface-2) !important;
   box-shadow: none !important;
-  border-radius: 3px 3px 0 0;
+  border-radius: var(--se-radius-sm) var(--se-radius-sm) 0 0;
 }
 
 #logo {
@@ -254,13 +252,11 @@ hr {
 
 #main_menu {
   z-index: 12;
-  background: #eee;
+  background: var(--se-surface-2);
   position: relative;
   width: 230px;
   padding: 5px;
-  -moz-box-shadow: #555 1px 1px 4px;
-  -webkit-box-shadow: #555 1px 1px 4px;
-  box-shadow: #555 1px 1px 4px;
+  box-shadow: var(--se-shadow-sm);
   font-size: 1.1em;
   display: none;
   overflow: hidden;
@@ -286,7 +282,7 @@ hr {
 }
 
 #main_menu li:hover {
-  background: #FFC;
+  background: var(--se-accent-subtle);
 }
 
 #main_menu li>div {
@@ -372,7 +368,7 @@ hr {
 
 #tools_left::-webkit-scrollbar-thumb,
 #tools_bottom::-webkit-scrollbar-thumb {
-  background-color: rgb(70, 70, 70);
+  background-color: var(--se-border-strong);
 }
 
 /* End scrollbar styling */
@@ -381,7 +377,7 @@ hr {
 
 #workarea.wireframe #svgcontent * {
   fill: none;
-  stroke: #000;
+  stroke: var(--se-text);
   stroke-width: 1px;
   stroke-opacity: 1.0;
   stroke-dasharray: 0;
@@ -391,12 +387,12 @@ hr {
 }
 
 #workarea.wireframe #svgcontent text {
-  fill: #000;
+  fill: var(--se-text);
   stroke: none;
 }
 
 #workarea.wireframe #canvasBackground>rect {
-  fill: #FFF !important;
+  fill: var(--se-surface) !important;
 }
 
 #cur_context_panel {
@@ -405,8 +401,8 @@ hr {
   overflow: auto;
   padding-left: 5px;
   font-size: 12px;
-  background: rgba(0, 0, 0, 0.8);
-  color: #ccc;
+  background: var(--se-scrim);
+  color: var(--se-text-muted);
 }
 
 #cur_context_panel a {
@@ -431,19 +427,13 @@ input[type=text] {
   height: 21px;
   margin: 6px 0 0 1px;
   padding: 0;
-  border-left: 1px solid #FFFFFF;
-  border-top: 1px solid #FFFFFF;
-  border-right: 1px solid var(--border-color);
-  border-bottom: 1px solid var(--border-color);
-  background-color: #E8E8E8;
+  border: 1px solid var(--se-border);
+  background-color: var(--se-surface);
 }
 
 .dropdown button.down {
-  border-left: 1px solid var(--border-color);
-  border-top: 1px solid var(--border-color);
-  border-right: 1px solid #FFFFFF;
-  border-bottom: 1px solid #FFFFFF;
-  background-color: #5a6162;
+  border: 1px solid var(--se-border-strong);
+  background-color: var(--se-surface-2);
 }
 
 .dropdown ul {
@@ -466,14 +456,14 @@ input[type=text] {
   display: block;
   width: 120px;
   padding: 4px;
-  background: #E8E8E8;
-  border: 1px solid #5a6162;
+  background: var(--se-surface);
+  border: 1px solid var(--se-border);
   margin: 0 0 -1px 0;
   line-height: 16px;
 }
 
 .dropdown li:hover {
-  background-color: #FFC;
+  background-color: var(--se-accent-subtle);
 }
 
 .dropdown li.special {
@@ -481,7 +471,7 @@ input[type=text] {
 }
 
 .dropdown li.special:hover {
-  background: #FFC;
+  background: var(--se-accent-subtle);
 }
 
 #font_family_dropdown-list li {
@@ -522,7 +512,7 @@ input[type=text] {
 }
 
 .tool_sep {
-  border-left: 1px outset #EEE;
+  border-left: 1px solid var(--se-border);
   margin: 5px 1px;
   height: 30px;
 }
@@ -567,7 +557,7 @@ input[type=text] {
   content: '>>';
   letter-spacing: -3px;
   font-weight: bold;
-  color: #666;
+  color: var(--se-text-muted);
 }
 
 .expanded #toggle_stroke_tools:before {
@@ -575,7 +565,7 @@ input[type=text] {
 }
 
 #toggle_stroke_tools:hover {
-  background: white;
+  background: var(--se-surface);
 }
 
 #tool_opacity {
@@ -587,7 +577,7 @@ input[type=text] {
 }
 
 ul li.current {
-  background-color: #F4E284;
+  background-color: var(--se-accent-subtle);
 }
 
 #copyright {
@@ -601,7 +591,7 @@ ul li.current {
   right: 0;
   left: 0;
   bottom: 0;
-  background-color: black;
+  background-color: var(--se-scrim);
   opacity: 0.6;
   z-index: 5;
 }
