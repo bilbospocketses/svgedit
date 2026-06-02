@@ -17,26 +17,26 @@ export default class SePlainAlertDialog extends LitElement {
   static styles = css`
     dialog {
       padding: 1em;
-      background: #CCC;
+      background: var(--se-surface);
       width: 300px;
-      border: 1px outset #777;
+      border: 1px solid var(--se-border);
       font-size: 0.8em;
-      font-family: Verdana, Helvetica, sans-serif;
-      border-radius: 5px;
+      font-family: var(--se-font-sans);
+      border-radius: var(--se-radius-sm);
     }
 
     dialog::backdrop {
-      background: rgba(0, 0, 0, 0.3);
+      background: var(--se-scrim);
     }
 
     #se-content-alert {
       height: 95px;
-      background: #DDD;
+      background: var(--se-surface-2);
       overflow: auto;
       text-align: left;
-      border: 1px solid #5a6162;
+      border: 1px solid var(--se-border-strong);
       padding: 1em;
-      border-radius: 5px;
+      border-radius: var(--se-radius-sm);
     }
 
     #choiceButtonContainer {

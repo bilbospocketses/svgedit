@@ -13,16 +13,13 @@ export class SeCMenuCanvasDialog extends LitElement {
     .contextMenu {
       position: absolute;
       z-index: 99999;
-      border: solid 1px rgba(0, 0, 0, .33);
-      background: rgba(255, 255, 255, .95);
+      border: solid 1px var(--se-border);
+      background: var(--se-surface);
       padding: 5px 0;
       margin: 0px;
-      font: 12px/15px Lucida Sans, Helvetica, Verdana, sans-serif;
-      border-radius: 5px;
-      -moz-border-radius: 5px;
-      -moz-box-shadow: 2px 5px 10px rgba(0, 0, 0, .3);
-      -webkit-box-shadow: 2px 5px 10px rgba(0, 0, 0, .3);
-      box-shadow: 2px 5px 10px rgba(0, 0, 0, .3);
+      font: 12px/15px var(--se-font-sans);
+      border-radius: var(--se-radius-sm);
+      box-shadow: var(--se-shadow-overlay);
     }
 
     .contextMenu li {
@@ -41,7 +38,7 @@ export class SeCMenuCanvasDialog extends LitElement {
       -moz-user-select: none;
       -webkit-user-select: none;
       user-select: none;
-      color: #222;
+      color: var(--se-text);
       text-decoration: none;
       display: block;
       line-height: 20px;
@@ -53,13 +50,13 @@ export class SeCMenuCanvasDialog extends LitElement {
     }
 
     .contextMenu li.hover a {
-      background-color: #2e5dea;
-      color: white;
+      background-color: var(--se-accent);
+      color: var(--se-on-accent);
       cursor: default;
     }
 
     .contextMenu li.disabled a {
-      color: #999;
+      color: var(--se-text-muted);
       pointer-events: none;
     }
 
@@ -68,7 +65,7 @@ export class SeCMenuCanvasDialog extends LitElement {
     }
 
     .contextMenu li.separator {
-      border-top: solid 1px #E3E3E3;
+      border-top: solid 1px var(--se-border);
       padding-top: 5px;
       margin-top: 5px;
     }
