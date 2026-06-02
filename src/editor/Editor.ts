@@ -25,7 +25,7 @@ import { getParentsUntil } from '@svgedit/svgcanvas/common/util.js'
 import { EmbedServer } from '../embed/server.js'
 import { setSvgEditor } from './svgEditorInstance.js'
 import { typedDetail } from './typed-events.js'
-import { setPalette } from './components/palette-store.js'
+import { setPaletteWithErrors } from './components/palette-store.js'
 
 /** Narrow i18next facade — matches the surface from locale.ts. */
 interface I18nextFacade {
@@ -1049,16 +1049,9 @@ class Editor {
    * to embed hosts via an `error` event (mirrors the missing-icon pattern above).
    */
   setCustomPalette (colors: readonly unknown[]): void {
-    const safeColors = Array.isArray(colors) ? colors : []
-    const { dropped } = setPalette(safeColors)
-    if (dropped.length > 0) {
-      const preview = dropped.slice(0, 5).map(v => v.slice(0, 80)).join(', ')
-      const suffix = dropped.length > 5 ? ` and ${dropped.length - 5} more` : ''
-      this._embedServer?.emit('error', {
-        message: `palette: ${dropped.length} invalid colour(s) dropped: ${preview}${suffix}`,
-        source: 'invalid-palette-color'
-      })
-    }
+    setPaletteWithErrors(colors, (message) => {
+      this._embedServer?.emit('error', { message, source: 'invalid-palette-color' })
+    })
   }
 
   /**
