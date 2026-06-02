@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (JSDoc conversion — editor shell + components -- 2026-06-02)
+
+- Applied STYLE.md § 4 targeted-JSDoc rule across `src/editor/` shell files (`Editor.ts`, `ConfigObj`,
+  `contextmenu`, `editorInit`, `locale`, `MainMenu`, `Rulers`, `svgEditorInstance`, `common/shortcut`)
+  and `src/editor/components/` (including `jgraduate/`).
+- Stripped type-only `@param`/`@returns`; kept semantic-info lines with `{type}` dropped; backfilled
+  1-line summaries on exported declarations + Lit `@customElement` classes; deleted empty JSDoc blocks.
+- Comment-only — no code, signature, or import changes. Sub-project 12.C PR-B of 3.
+
 ### Changed (JSDoc conversion — packages/svgcanvas/ -- 2026-06-02)
 
 - Applied STYLE.md § 4 targeted-JSDoc rule across all 37 `.ts` files in `packages/svgcanvas/`.
