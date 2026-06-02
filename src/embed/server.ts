@@ -112,6 +112,8 @@ export class EmbedServer {
 
     if (params.theme) applyTheme(document.body, params.theme)
 
+    if (params.palette) this.callEditorPalette(params.palette)
+
     this.listener = (e: MessageEvent) => { void this.handleMessage(e) }
     window.addEventListener('message', this.listener)
   }
@@ -154,6 +156,11 @@ export class EmbedServer {
     }
     if (env.method === '__setTheme') {
       applyTheme(document.body, env.args[0] as string)
+      this.reply({ ns: 'svgedit', v: 1, kind: 'result', id: env.id, result: null })
+      return
+    }
+    if (env.method === '__setPalette') {
+      this.callEditorPalette(env.args[0])
       this.reply({ ns: 'svgedit', v: 1, kind: 'result', id: env.id, result: null })
       return
     }
@@ -200,11 +207,18 @@ export class EmbedServer {
     window.parent.postMessage(env, targetOrigin)
   }
 
+  private callEditorPalette (colors: unknown): void {
+    const ed = this.editor as Record<string, unknown>
+    if (typeof ed.setCustomPalette === 'function') {
+      (ed.setCustomPalette as (colors: unknown) => unknown)(colors)
+    }
+  }
+
   emit (name: import('./protocol.js').EmbedEventName, payload: unknown): void {
     this.reply({ ns: 'svgedit', v: 1, kind: 'event', name, payload })
   }
 
-  ready (capabilities: string[] = ['chrome', 'theme', 'dialog-hooks']): void {
+  ready (capabilities: string[] = ['chrome', 'theme', 'dialog-hooks', 'palette']): void {
     this.emit('ready', { version: this.version, protocolVersion: PROTOCOL_VERSION, capabilities })
   }
 
