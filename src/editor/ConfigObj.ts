@@ -3,7 +3,6 @@ import { mergeDeep } from '@svgedit/svgcanvas/common/util.js'
 /**
 * Escapes special characters in a regular expression.
 * @function regexEscape
-* @param str
 */
 export const regexEscape = function (str: string): string {
   // Originally from: http://phpjs.org/functions
@@ -89,9 +88,6 @@ export default class ConfigObj {
   /** Whether preferences dialog is open. */
   preferences = false
 
-  /**
-   * @param editor
-   */
   constructor (editor: EditorInstance) {
     /**
       * Preferences.
@@ -294,6 +290,7 @@ export default class ConfigObj {
   }
 
   /**
+   * Merges defaultPrefs with any curPrefs already set, giving curPrefs priority.
    * @function setupCurPrefs
    */
   setupCurPrefs () {
@@ -462,9 +459,6 @@ export default class ConfigObj {
 */
   setConfig (opts: Record<string, unknown>, cfgCfg: { overwrite?: boolean; allowInitialUserOverride?: boolean } = {}) {
     /**
-     *
-     * @param cfgObj
-     * @param key
      * @param val See {@link module:SVGEditor.Config} or {@link module:SVGEditor.Prefs}
      */
     const extendOrAdd = (cfgObj: Record<string, unknown>, key: string, val: unknown) => {
@@ -550,6 +544,7 @@ export default class ConfigObj {
   }
 
   /**
+   * Triggers URL config loading then finalises current preferences.
    * @function load load Config
    */
   load () {

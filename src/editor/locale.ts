@@ -36,8 +36,6 @@ const interpolate = (str: unknown, vars?: Record<string, unknown>): string => {
  * `'namespace:key.path'` against extension-registered bundles. Optional
  * `vars` object replaces `{{name}}` placeholders.
  *
- * @param key
- * @param [vars]
  */
 export const t = (keyArg: string | string[], vars?: Record<string, unknown>): string => {
   const key: string = Array.isArray(keyArg) ? (keyArg[0] ?? '') : keyArg

@@ -21,16 +21,13 @@ interface MenuItem {
 
 let contextMenuExtensions: Record<string, MenuItem> = {}
 
-/**
-* @param menuItem
-*/
 const menuItemIsValid = function (menuItem: MenuItem): boolean {
   return Boolean(menuItem && menuItem.id && menuItem.label && menuItem.action && typeof menuItem.action === 'function')
 }
 
 /**
+* Register a custom context menu item; throws if invalid or duplicate id.
 * @function module:contextmenu.add
-* @param menuItem
 * @throws {Error|TypeError}
 */
 export const add = function (menuItem: MenuItem): void {
@@ -50,16 +47,16 @@ export const add = function (menuItem: MenuItem): void {
 }
 
 /**
+* Return true if a custom handler is registered for the given key.
 * @function module:contextmenu.hasCustomHandler
-* @param handlerKey
 */
 export const hasCustomHandler = function (handlerKey: string): boolean {
   return Boolean(contextMenuExtensions[handlerKey])
 }
 
 /**
+* Retrieve the action callback for a registered custom handler; throws if not found.
 * @function module:contextmenu.getCustomHandler
-* @param handlerKey
 */
 export const getCustomHandler = function (handlerKey: string): MenuItemAction {
   const ext = contextMenuExtensions[handlerKey]
@@ -67,9 +64,6 @@ export const getCustomHandler = function (handlerKey: string): MenuItemAction {
   return ext.action
 }
 
-/**
-* @param menuItem
-*/
 const injectExtendedContextMenuItemIntoDom = function (menuItem: MenuItem): void {
   const host = $id('cmenu_canvas')
   if (!host) return
@@ -82,6 +76,7 @@ const injectExtendedContextMenuItemIntoDom = function (menuItem: MenuItem): void
 }
 
 /**
+* Inject all registered extension context menu items into the canvas context menu DOM.
 * @function module:contextmenu.injectExtendedContextMenuItemsIntoDom
 */
 export const injectExtendedContextMenuItemsIntoDom = function (): void {
@@ -90,6 +85,7 @@ export const injectExtendedContextMenuItemsIntoDom = function (): void {
   })
 }
 /**
+* Clear all registered custom context menu extensions; used between editor resets.
 * @function module:contextmenu.resetCustomMenus
 */
 export const resetCustomMenus = function (): void { contextMenuExtensions = {} }

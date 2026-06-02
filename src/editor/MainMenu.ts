@@ -31,9 +31,7 @@ interface EditorInstance {
   setBackground: (color: string, url: string) => void
 }
 
-/**
- *
- */
+/** Manages the main SVG-edit menu bar: doc properties, preferences, export, and homepage. */
 class MainMenu {
   editor: EditorInstance
 
@@ -42,14 +40,10 @@ class MainMenu {
    */
   constructor (editor: EditorInstance) {
     this.editor = editor
-    /**
-     */
     this.editor.exportWindowCt = 0
   }
 
-  /**
-   *
-   */
+  /** Close the document-properties dialog and reset the img_save preference display. */
   hideDocProperties (): void {
     const $imgDialog = $id('se-img-prop')
     if (!$imgDialog) return
@@ -58,9 +52,7 @@ class MainMenu {
     this.editor.docprops = false
   }
 
-  /**
-   *
-   */
+  /** Close the editor-preferences dialog and clear the preferences-open flag. */
   hidePreferences (): void {
     const $editDialog = $id('se-edit-prefs')
     if (!$editDialog) return
@@ -68,10 +60,7 @@ class MainMenu {
     this.editor.configObj.preferences = false
   }
 
-  /**
-   * @param e
-   * @returns Whether there were problems saving the document properties
-   */
+  /** Apply title, dimensions, and img_save preference from the doc-properties dialog event; returns false on invalid input. */
   saveDocProperties (e: CustomEvent): boolean {
     // set title
     const { title, w, h, save } = typedDetail<SeImgPropDetail>(e)
@@ -101,7 +90,6 @@ class MainMenu {
 
   /**
    * Save user preferences based on current values in the UI.
-   * @param e
    * @function module:SVGthis.savePreferences
    */
   // eslint-disable-next-line @typescript-eslint/require-await
@@ -139,11 +127,7 @@ class MainMenu {
     this.hidePreferences()
   }
 
-  /**
-   *
-   * @param e
-   * @returns Resolves to `undefined`
-   */
+  /** Handle the export-dialog confirm event; dispatches PDF or raster export via svgCanvas. */
   async clickExport (e?: Event | { detail: SeExportDetail }): Promise<void> {
     const detail: SeExportDetail | undefined = e ? (e as CustomEvent<SeExportDetail>).detail : undefined
     if (!detail || detail.trigger !== 'ok' || detail.imgType === undefined) {
@@ -154,9 +138,6 @@ class MainMenu {
     // Open placeholder window (prevents popup)
     let exportWindowName: string | undefined
 
-    /**
-     *
-     */
     const openExportWindow = () => {
       if (this.editor.configObj.curConfig.exportWindowType === 'new') {
         this.editor.exportWindowCt++
@@ -182,9 +163,7 @@ class MainMenu {
     }
   }
 
-  /**
-   *
-   */
+  /** Open the document-properties dialog, populating current resolution and save settings. */
   showDocProperties (): void {
     if (this.editor.docprops) {
       return
@@ -208,9 +187,7 @@ class MainMenu {
     $imgDialog.setAttribute('dialog', 'open')
   }
 
-  /**
-   *
-   */
+  /** Open the editor-preferences dialog, pre-filling current grid, ruler, and background values. */
   showPreferences (): void {
     if (this.editor.configObj.preferences) {
       return
@@ -240,15 +217,12 @@ class MainMenu {
     $editDialog.setAttribute('dialog', 'open')
   }
 
-  /**
-   *
-   */
+  /** Navigate to the SVG-edit project homepage in a new browser tab. */
   openHomePage (): void {
     window.open(homePage, '_blank')
   }
 
-  /**
-   */
+  /** Inject the main menu template into the editor DOM and bind all menu-item click handlers. */
   init (): void {
     // add Top panel
     const template = document.createElement('template')
