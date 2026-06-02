@@ -1,9 +1,7 @@
 import SvgCanvas from '@svgedit/svgcanvas'
 import type { ISvgCanvas } from '@svgedit/svgcanvas'
 import type Paint from '@svgedit/svgcanvas/core/paint.js'
-/**
- *
- */
+/** Manages an SVG paint swatch element, syncing fill/stroke color and opacity to a canvas Paint object. */
 class PaintBox {
   rect: Element
   defs: Element
@@ -14,10 +12,6 @@ class PaintBox {
   _paintOpacity: number
   static ctr: number
 
-  /**
-     * @param container
-     * @param type
-     */
   constructor (container: Element, type: string) {
     // set up gradients to be used for the buttons
     const svgdocbox = new DOMParser().parseFromString(
@@ -42,9 +36,6 @@ class PaintBox {
     this.type = type
   }
 
-  /**
-     * @param paint
-     */
   setPaint (paint: Paint): void {
     this.paint = paint
 
@@ -76,12 +67,6 @@ class PaintBox {
     this.rect.setAttribute('opacity', String(opac))
   }
 
-  /**
-   * @param svgCanvas
-  * @param color
-  * @param opac
-  * @param type
-  */
   static getPaint (svgCanvas: ISvgCanvas, color: string, opac: number, type: string): Paint {
     // update the editor's fill paint
     if (color.startsWith('url(#')) {
@@ -107,10 +92,6 @@ class PaintBox {
     return new SvgCanvas.Paint({ alpha: opac })
   }
 
-  /**
-     * @param svgcanvas
-     * @param selectedElement
-     */
   update (svgcanvas: ISvgCanvas, selectedElement: Element | null): Paint | null {
     if (!selectedElement) { return null }
 
