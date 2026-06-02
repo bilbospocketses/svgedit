@@ -146,9 +146,9 @@ export const convertAttrs = (element: Element): void => {
 export const convertToNum = (attr: string, val: string): number => {
   // Return a number if that's what it already is
   if (!isNaN(Number(val))) { return Number(val) }
-  if (val.substr(-1) === '%') {
+  if (val.slice(-1) === '%') {
     // Deal with percentage, depends on attribute
-    const num = Number(val.substr(0, val.length - 1)) / 100
+    const num = Number(val.slice(0, -1)) / 100
     const width = elementContainer_.getWidth()
     const height = elementContainer_.getHeight()
 

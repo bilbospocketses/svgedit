@@ -87,7 +87,7 @@ class PaintBox {
       return new SvgCanvas.Paint({ alpha: opac })
     }
     if (color.startsWith('#')) {
-      return new SvgCanvas.Paint({ alpha: opac, solidColor: color.substr(1) })
+      return new SvgCanvas.Paint({ alpha: opac, solidColor: color.slice(1) })
     }
     return new SvgCanvas.Paint({ alpha: opac })
   }

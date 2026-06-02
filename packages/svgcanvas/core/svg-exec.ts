@@ -1000,7 +1000,7 @@ const uniquifyElemsMethod = (g: Element): void => {
         const attrnode = el.getAttributeNode(attr)
         if (attrnode) {
           const url = svgCanvas.getUrlFromAttr(attrnode.value)
-          const refid = url ? url.substr(1) : null
+          const refid = url ? url.slice(1) : null
           if (refid) {
             if (!(refid in ids)) {
               ids[refid] = { elem: null, attrs: [], hrefs: [] }
@@ -1014,7 +1014,7 @@ const uniquifyElemsMethod = (g: Element): void => {
       // Audit-flagged: image/a internal refs not handled (svg-exec.ts:1117) — preserve
       const href = svgCanvas.getHref(el)
       if (href && refElems.includes(el.nodeName)) {
-        const refid = href.substr(1)
+        const refid = href.slice(1)
         if (refid) {
           if (!(refid in ids)) {
             ids[refid] = { elem: null, attrs: [], hrefs: [] }
@@ -1075,7 +1075,7 @@ const setUseDataMethod = (parent: Element): void => {
     if (!href || !href.startsWith('#')) {
       return
     }
-    const id = href.substr(1)
+    const id = href.slice(1)
     const refElem = svgCanvas.getElement(id)
     if (!refElem) {
       return
@@ -1123,14 +1123,14 @@ const removeUnusedDefElemsMethod = (): number => {
     for (j = 0; j < alen; j++) {
       const ref = svgCanvas.getUrlFromAttr(el.getAttribute(attrs[j] ?? ''))
       if (ref) {
-        defelemUses.push(ref.substr(1))
+        defelemUses.push(ref.slice(1))
       }
     }
 
     // gradients can refer to other gradients
     const href = getHref(el)
     if (href && href.startsWith('#')) {
-      defelemUses.push(href.substr(1))
+      defelemUses.push(href.slice(1))
     }
   }
 

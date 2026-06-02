@@ -472,6 +472,7 @@ class TextActions {
    */
   toSelectMode (selectElem?: boolean | Element): void {
     svgCanvas.setCurrentMode('select')
+    svgCanvas.notifyModeChange()
     if (this.#blinker !== null) {
       clearInterval(this.#blinker)
     }

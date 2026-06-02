@@ -595,7 +595,7 @@ const flipSelectedElements = (scaleX: number, scaleY: number): void => {
     const flipMatrix = svgRoot
       .createSVGMatrix()
       .translate(cx, cy)
-      .scaleNonUniform(scaleX, scaleY)
+      .scale(scaleX, scaleY)
       .translate(-cx, -cy)
 
     const tlist = getTransformList(selected)

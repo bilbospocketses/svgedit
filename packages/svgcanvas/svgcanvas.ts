@@ -1087,9 +1087,7 @@ class SvgCanvas implements ISvgCanvas {
         : this.curShape
     this.currentMode = name
 
-    if (this.modeEvent) {
-      document.dispatchEvent(this.modeEvent)
-    }
+    this.notifyModeChange()
   }
 
   /**
@@ -1531,6 +1529,17 @@ class SvgCanvas implements ISvgCanvas {
   modeChangeEvent (): void {
     const modeEvent = new CustomEvent('modeChange', { detail: { getMode: () => this.getMode() } })
     this.modeEvent = modeEvent
+  }
+
+  /**
+   * Dispatches the modeChange event so observers (e.g. the editor's workarea cursor
+   * styling) react to the current mode. Called by setMode, and by mode transitions
+   * that bypass setMode (e.g. leaving text-edit via textActions.toSelectMode).
+   */
+  notifyModeChange (): void {
+    if (this.modeEvent) {
+      document.dispatchEvent(this.modeEvent)
+    }
   }
 } // End class
 

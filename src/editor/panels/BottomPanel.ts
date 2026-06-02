@@ -154,7 +154,7 @@ class BottomPanel {
     const paint =
       color === 'none'
         ? new SvgCanvas.Paint()
-        : new SvgCanvas.Paint({ alpha: 100, solidColor: color.substr(1) })
+        : new SvgCanvas.Paint({ alpha: 100, solidColor: color.slice(1) })
     if (picker === 'fill') {
       ;($id('fill_color') as SePaintPickerElement | null)?.setPaint(paint)
     } else {

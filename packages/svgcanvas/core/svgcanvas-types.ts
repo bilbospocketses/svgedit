@@ -477,4 +477,5 @@ export interface ISvgCanvas {
   cutSelectedElements (): void
   initializeSvgCanvasMethods (): void
   modeChangeEvent (): void
+  notifyModeChange (): void
 }

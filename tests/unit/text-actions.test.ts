@@ -62,6 +62,7 @@ describe('TextActions', () => {
       getSvgContent: () => svgContent,
       getZoom: () => 1,
       setCurrentMode: vi.fn(),
+      notifyModeChange: vi.fn(),
       clearSelection: vi.fn(),
       addToSelection: vi.fn(),
       deleteSelectedElements: vi.fn(),
@@ -215,6 +216,14 @@ describe('TextActions', () => {
       textActionsMethod.toSelectMode(false)
 
       expect(svgCanvas.deleteSelectedElements).toHaveBeenCalled()
+    })
+
+    it('notifies the editor of the mode change so the workarea cursor refreshes', () => {
+      textActionsMethod.start(textElement)
+      textActionsMethod.toSelectMode(true)
+
+      expect(svgCanvas.setCurrentMode).toHaveBeenCalledWith('select')
+      expect(svgCanvas.notifyModeChange).toHaveBeenCalled()
     })
   })
 

@@ -109,11 +109,28 @@ export const hashCode = (word: string): number => {
   return hash
 }
 
-/** Decodes a UTF-8 encoded string. */
-export const decodeUTF8 = (argString: string): string => decodeURIComponent(escape(argString))
+// Reused across calls. `ignoreBOM` keeps a leading U+FEFF (matching the previous
+// escape/unescape behaviour); `fatal` throws on malformed input as decodeURIComponent did.
+const utf8Decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true })
+const utf8Encoder = new TextEncoder()
 
-/** Encodes a string to UTF-8. */
-export const encodeUTF8 = (argString: string): string => unescape(encodeURIComponent(argString))
+/** Decodes a binary string of UTF-8 bytes to a JS string. */
+export const decodeUTF8 = (argString: string): string => {
+  const bytes = new Uint8Array(argString.length)
+  for (let i = 0; i < argString.length; i++) {
+    bytes[i] = argString.charCodeAt(i)
+  }
+  return utf8Decoder.decode(bytes)
+}
+
+/** Encodes a JS string to UTF-8 as a binary string (one character per UTF-8 byte). */
+export const encodeUTF8 = (argString: string): string => {
+  let result = ''
+  for (const byte of utf8Encoder.encode(argString)) {
+    result += String.fromCharCode(byte)
+  }
+  return result
+}
 
 /** Convert dataURL to object URL. Returns empty string on failure. */
 export const dataURLToObjectURL = (dataurl: string): string => {
