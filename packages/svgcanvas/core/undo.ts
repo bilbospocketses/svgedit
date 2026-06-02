@@ -21,16 +21,14 @@ import type { ISvgCanvas } from './svgcanvas-types.js'
 
 let svgCanvas = null as unknown as ISvgCanvas
 
-/**
-* @function module:undo.init
-* @param canvas
-*/
+/** Initialize the undo module with the canvas context and creates the undo manager. */
 export const init = (canvas: ISvgCanvas): void => {
   svgCanvas = canvas
    
   svgCanvas.undoMgr = getUndoManager()
 }
 
+/** Create and return an UndoManager wired to the current canvas, using configured maxUndoHistory. */
 export const getUndoManager = (): InstanceType<typeof UndoManager> => {
   const maxHistory: number = svgCanvas?.configObj?.curConfig?.maxUndoHistory ?? 100
   return new UndoManager({
@@ -129,7 +127,6 @@ export const getUndoManager = (): InstanceType<typeof UndoManager> => {
 * @todo Test for this bug on load and add it to "support" object instead of
 * browser sniffing
 * @param elem - The (text) DOM element to clone
-* @returns Cloned element
 */
 export const ffClone = (elem: Element): Element => {
   if (!isGecko()) { return elem }
@@ -145,9 +142,6 @@ export const ffClone = (elem: Element): Element => {
 /**
 * This function makes the changes to the elements. It does not add the change
 * to the history stack.
-* @param attr - Attribute name
-* @param newValue - String or number with the new attribute value
-* @param elems - The DOM elements to apply the change to
 */
 export const changeSelectedAttributeNoUndoMethod = (attr: string, newValue: string | number, elems?: (Element | null)[]): void => {
   if (attr === 'id') {
@@ -291,9 +285,6 @@ export const changeSelectedAttributeNoUndoMethod = (attr: string, newValue: stri
 * If you want to change only a subset of `selectedElements`, then send the
 * subset to this function in the `elems` argument.
 * @function module:svgcanvas.SvgCanvas#changeSelectedAttribute
-* @param attr - String with the attribute name
-* @param val - String or number with the new attribute value
-* @param [elems] - The DOM elements to apply the change to
 */
 export const changeSelectedAttributeMethod = (attr: string, val: string | number, elems?: (Element | null)[]): void => {
   const selectedElements: (Element | null)[] = svgCanvas.getSelectedElements()
