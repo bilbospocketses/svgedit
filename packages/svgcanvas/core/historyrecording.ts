@@ -140,7 +140,6 @@ class HistoryRecordingService {
   /**
    * Private function to add a command to the history or current batch command.
    * @private
-   * @param cmd
    */
   #addCommand (cmd: BatchCommand | MoveElementCommand | InsertElementCommand | RemoveElementCommand | ChangeElementCommand): undefined {
     if (!this.#undoManager) { return undefined }
