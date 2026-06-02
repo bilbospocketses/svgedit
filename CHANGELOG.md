@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (Docs — tutorials rewrite -- 2026-06-02)
+
+- Rewrote all 8 `docs/tutorials/*.md` accurate-concise for the current fork: dead
+  `{@tutorial}`/`{@link}` JSDoc-link syntax → markdown links; jQuery, old
+  filenames, and version cruft removed; `Events` documents the real
+  `svgEditorReady` CustomEvent; `ConfigOptions` drops the removed `stylesheets`
+  and config-file mechanisms; `ExtensionDocs` uses a current example (`ext-grid`)
+  and the per-extension locale mechanism; `LocaleDocs` documents the English-only
+  `locale.ts` shim.
+- Brought `docs/tutorials/**` under markdownlint (`npm run lint`).
+- Sub-project 12.D COMPLETE — TODO #12 (document review) fully closed (12.A–D).
+
 ### Changed (JSDoc conversion — editor dialogs + panels + extensions -- 2026-06-02)
 
 - Applied STYLE.md § 4 targeted-JSDoc rule across `src/editor/dialogs/`, `src/editor/panels/`, and
