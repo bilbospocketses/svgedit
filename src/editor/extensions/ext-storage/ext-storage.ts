@@ -28,7 +28,6 @@ const removeStoragePrefCookie = () => {
 }
 /**
  * Set the cookie to expire.
- * @param cookie
  */
 const expireCookie = (cookie: string) => {
   document.cookie =
@@ -37,7 +36,6 @@ const expireCookie = (cookie: string) => {
 
 /**
  * Replace `storagePrompt` parameter within URL.
- * @param val
  * @todo Replace the string manipulation with `searchParams.set`
  */
 const replaceStoragePrompt = (val?: string) => {
@@ -160,7 +158,6 @@ export default {
     /**
      * Sets SVG content as a string with "svgedit-" and the current
      *   canvas name as namespace.
-     * @param svgString
      */
     const setSvgContentStorage = (svgString: string) => {
       if (!storage) return
