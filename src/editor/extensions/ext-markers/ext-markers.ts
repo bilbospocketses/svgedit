@@ -63,8 +63,6 @@ export default {
 
     /**
     * @param elem - A graphic element will have an attribute like marker-start
-    * @param attr
-    * @returns The marker element that is linked to the graphic element
     */
     const getLinked = (elem: Element, attr: string) => {
       const str = elem.getAttribute(attr)
@@ -79,7 +77,6 @@ export default {
 
     /**
      * Toggles context tool panel off/on.
-     * @param on
     */
     const showPanel = (on: boolean, elem?: Element) => {
       $id('marker_panel')!.style.display = (on) ? 'block' : 'none'
@@ -96,10 +93,6 @@ export default {
       }
     }
 
-    /**
-    * @param id
-    * @param seType
-    */
     const addMarker = (id: string, seType: string) => {
       const selElems = svgCanvas.getSelectedElements()
       let marker = svgCanvas.getElement(id)
@@ -152,9 +145,6 @@ export default {
       return marker
     }
 
-    /**
-    * @param elem
-    */
     const convertline = (elem: Element) => {
       // this routine came from the connectors extension
       // it is needed because midpoint markers don't work with line elements
@@ -225,7 +215,6 @@ export default {
     /**
      * Called when the main system modifies an object. This routine changes
      *   the associated markers to be the same color.
-     * @param elem
     */
     const colorChanged = (elem: Element) => {
       const color = elem.getAttribute('stroke')
@@ -246,7 +235,6 @@ export default {
     /**
     * Called when the main system creates or modifies an object.
     * Its primary purpose is to create new markers for cloned objects.
-    * @param el
     */
     const updateReferences = (el: Element) => {
       const selElems = svgCanvas.getSelectedElements()

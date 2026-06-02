@@ -7,8 +7,6 @@
  */
 
 /**
-   * @param wind
-   * @param svg The SVG source
    * @listens module:svgcanvas.SvgCanvas#event:saved
    */
 import { fileOpen, fileSave } from 'browser-fs-access'
@@ -37,9 +35,6 @@ export default {
     const svgCanvas = svgEditor.svgCanvas
     const { $id, $click } = svgCanvas
     await loadExtensionTranslation()
-    /**
-    * @param e
-    */
     const importImage = (e: Event) => {
       // This handler runs for both file-input `change` events (e.target is HTMLInputElement)
       // and `drop` events on the drop zone (e is DragEvent with e.dataTransfer).
@@ -95,8 +90,6 @@ export default {
           const result = ev2.target?.result as string
           /**
               * Insert the new image until we know its dimensions.
-              * @param imageWidth
-              * @param imageHeight
               */
           const insertNewImage = (imageWidth: number, imageHeight: number) => {
             const newImage = svgCanvas.addSVGElementsFromJson({

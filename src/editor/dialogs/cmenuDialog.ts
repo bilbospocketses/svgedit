@@ -6,6 +6,7 @@ import SvgCanvas from '@svgedit/svgcanvas'
 
 const { $id } = SvgCanvas
 
+/** Context menu dialog for canvas operations, mapping right-click position and actions to edit commands */
 @customElement('se-cmenu_canvas-dialog')
 export class SeCMenuCanvasDialog extends LitElement {
   static styles = css`

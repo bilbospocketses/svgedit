@@ -71,10 +71,6 @@ export default {
       }
     }
 
-    /**
-     *
-     * @param opts
-     */
     const getStyle = (opts: { multiselected?: boolean; elems: (Element | null)[] }) => {
       let elem: Element | null = null
       if (!opts.multiselected && opts.elems[0] &&

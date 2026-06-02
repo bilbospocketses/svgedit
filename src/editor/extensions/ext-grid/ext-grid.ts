@@ -89,10 +89,6 @@ export default {
     })
     $id('canvasGrid')!.appendChild(gridBox)
 
-    /**
-     *
-     * @param zoom
-     */
     const updateGrid = (zoom: number) => {
       // TODO: Try this with <line> elements, then compare performance difference
       const unit = units[svgEditor.configObj.curConfig.baseUnit] ?? 1 // 1 = 1px

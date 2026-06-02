@@ -4,9 +4,7 @@ import SvgCanvas from '@svgedit/svgcanvas'
 
 const { isValidUnit } = SvgCanvas
 
-/**
- * @class SeImgPropDialog
- */
+/** Dialog for editing document/image properties: title, canvas dimensions, and image-save mode (embed vs. reference). */
 @customElement('se-img-prop-dialog')
 export class SeImgPropDialog extends LitElement {
   static styles = css`

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (JSDoc conversion — editor dialogs + panels + extensions -- 2026-06-02)
+
+- Applied STYLE.md § 4 targeted-JSDoc rule across `src/editor/dialogs/`, `src/editor/panels/`, and
+  `src/editor/extensions/`. Stripped type-only `@param`/`@returns`; kept semantic-info lines with
+  `{type}` dropped; backfilled summaries; deleted empty JSDoc blocks.
+- Comment-only — no code, signature, or import changes. **Sub-project 12.C COMPLETE** — PR-A
+  (svgcanvas), PR-B (editor shell/components), and PR-C (dialogs/panels/extensions) all merged.
+  12.D (publish-quality tutorials) now unblocked.
+
 ### Changed (JSDoc conversion — editor shell + components -- 2026-06-02)
 
 - Applied STYLE.md § 4 targeted-JSDoc rule across `src/editor/` shell files (`Editor.ts`, `ConfigObj`,

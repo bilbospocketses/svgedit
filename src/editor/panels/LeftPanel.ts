@@ -13,8 +13,6 @@ const safeClick = (el: HTMLElement | null, handler: EventListenerOrEventListener
 /*
  * register actions for left panel
  */
-/**
- */
 class LeftPanel {
   editor: Editor
 
@@ -32,7 +30,6 @@ class LeftPanel {
    * - Adds the the pressed button  to the button passed in.
    * @function this.updateLeftPanel
    * @param button The DOM element or string selector representing the toolbar button
-   * @returns Whether the button was disabled or not
    */
   updateLeftPanel (button: string): boolean {
     const btnEl = $id(button) as SeButtonElement | null
@@ -58,90 +55,60 @@ class LeftPanel {
     }
   }
 
-  /**
-   *
-   */
   clickFHPath () {
     if (this.updateLeftPanel('tool_fhpath')) {
       this.editor.svgCanvas.setMode('fhpath')
     }
   }
 
-  /**
-   *
-   */
   clickLine () {
     if (this.updateLeftPanel('tool_line')) {
       this.editor.svgCanvas.setMode('line')
     }
   }
 
-  /**
-   *
-   */
   clickSquare () {
     if (this.updateLeftPanel('tool_square')) {
       this.editor.svgCanvas.setMode('square')
     }
   }
 
-  /**
-   *
-   */
   clickRect () {
     if (this.updateLeftPanel('tool_rect')) {
       this.editor.svgCanvas.setMode('rect')
     }
   }
 
-  /**
-   *
-   */
   clickFHRect () {
     if (this.updateLeftPanel('tool_fhrect')) {
       this.editor.svgCanvas.setMode('fhrect')
     }
   }
 
-  /**
-   *
-   */
   clickCircle () {
     if (this.updateLeftPanel('tool_circle')) {
       this.editor.svgCanvas.setMode('circle')
     }
   }
 
-  /**
-   *
-   */
   clickEllipse () {
     if (this.updateLeftPanel('tool_ellipse')) {
       this.editor.svgCanvas.setMode('ellipse')
     }
   }
 
-  /**
-   *
-   */
   clickFHEllipse () {
     if (this.updateLeftPanel('tool_fhellipse')) {
       this.editor.svgCanvas.setMode('fhellipse')
     }
   }
 
-  /**
-   *
-   */
   clickImage () {
     if (this.updateLeftPanel('tool_image')) {
       this.editor.svgCanvas.setMode('image')
     }
   }
 
-  /**
-   *
-   */
   clickZoom () {
     if (this.updateLeftPanel('tool_zoom')) {
       this.editor.svgCanvas.setMode('zoom')
@@ -149,9 +116,6 @@ class LeftPanel {
     }
   }
 
-  /**
-   *
-   */
   dblclickZoom () {
     if (this.updateLeftPanel('tool_zoom')) {
       this.editor.zoomImage()
@@ -159,26 +123,18 @@ class LeftPanel {
     }
   }
 
-  /**
-   *
-   */
   clickText () {
     if (this.updateLeftPanel('tool_text')) {
       this.editor.svgCanvas.setMode('text')
     }
   }
 
-  /**
-   *
-   */
   clickPath () {
     if (this.updateLeftPanel('tool_path')) {
       this.editor.svgCanvas.setMode('path')
     }
   }
 
-  /**
-   */
   add (id: string, handler: () => void): void {
     safeClick($id(id), () => {
       if (this.updateLeftPanel(id)) {
@@ -187,8 +143,6 @@ class LeftPanel {
     })
   }
 
-  /**
-   */
   init (): void {
     // add Left panel
     const template = document.createElement('template')
