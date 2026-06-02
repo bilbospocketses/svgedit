@@ -10,9 +10,9 @@ There is no generated API site.
 
 ## Methods surfaced to extensions
 
-Extensions receive a set of canvas methods and properties as the first
-argument to their `init` function. See [ExtensionDocs](ExtensionDocs.md) for
-that object's shape and an example.
+Extensions reach the canvas through `getSvgEditor().svgCanvas` (some also
+receive a context object as their `init` argument). See
+[ExtensionDocs](ExtensionDocs.md).
 
 ## Canvas events
 
