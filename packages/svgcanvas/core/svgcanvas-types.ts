@@ -71,6 +71,7 @@ import type {
   mergeDeep
 } from '../common/util.js'
 
+/** Public contract of SvgCanvas; core modules import this type to avoid a circular dependency on the class */
 export interface ISvgCanvas {
   // ── Escape-hatch for dynamic property access ──────────────────────────
   [key: string]: any

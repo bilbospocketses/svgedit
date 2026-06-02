@@ -84,21 +84,25 @@ const browser: BrowserDetector = new BrowserDetector()
 
 // Export as functions for backward compatibility
 /**
+ * Returns true if the current browser is Gecko-based (e.g., Firefox)
  * @function module:browser.isGecko
  */
 export const isGecko = (): boolean => browser.isGecko
 
 /**
+ * Returns true if the current browser is Chrome-based
  * @function module:browser.isChrome
  */
 export const isChrome = (): boolean => browser.isChrome
 
 /**
+ * Returns true if the current platform is macOS
  * @function module:browser.isMac
  */
 export const isMac = (): boolean => browser.isMac
 
 /**
+ * Returns true if the browser accurately positions SVG text characters (used to gate workarounds)
  * @function module:browser.supportsGoodTextCharPos
  */
 export const supportsGoodTextCharPos = (): boolean => browser.supportsGoodTextCharPos

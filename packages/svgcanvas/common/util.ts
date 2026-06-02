@@ -1,6 +1,5 @@
 /**
  * Returns the cumulative offsetLeft/offsetTop of an element.
- * @param obj
  */
 export const findPos = (obj: HTMLElement | null): { left: number; top: number } => {
   let left = 0
@@ -18,9 +17,11 @@ export const findPos = (obj: HTMLElement | null): { left: number; top: number } 
   return { left, top }
 }
 
+/** Type guard — returns true if item is a plain (non-array) object */
 export const isObject = (item: unknown): item is Record<string, unknown> =>
   item !== null && typeof item === 'object' && !Array.isArray(item)
 
+/** Recursively merge source into target, returning a new object (does not mutate target) */
 export const mergeDeep = (
   target: Record<string, unknown>,
   source: Record<string, unknown>
@@ -49,9 +50,8 @@ type ElementMatcher = (el: Element, sel: string) => boolean | undefined
 /**
  * Get the closest matching element up the DOM tree.
  * Uses native Element.closest() when possible for better performance.
- * @param elem     Starting element
  * @param selector Selector to match against (class, ID, data attribute, or tag)
- * @return {Element|null}     Returns null if no match found
+ * @return Returns null if no match found
  */
 export const getClosest = (elem: Element | null, selector: string): Element | null => {
   // Use native closest for standard CSS selectors
@@ -92,9 +92,8 @@ export const getClosest = (elem: Element | null, selector: string): Element | nu
 
 /**
  * Get all DOM elements up the tree that match a selector
- * @param elem The base element
  * @param [selector] The class, id, data attribute, or tag to look for
- * @return {Node[] | null} Array of matching nodes or null if no match
+ * @return Array of matching nodes or null if no match
  */
 export const getParents = (elem: Node | null, selector?: string): Node[] | null => {
   const parents: Node[] = []
@@ -119,6 +118,7 @@ export const getParents = (elem: Node | null, selector?: string): Node[] | null 
   return parents.length > 0 ? parents : null
 }
 
+/** Collect ancestor nodes matching selector, stopping before (not including) the first ancestor matching parent */
 export const getParentsUntil = (
   elem: Node | null,
   parent?: string,

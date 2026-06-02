@@ -36,7 +36,6 @@ const config: LoggerConfig = {
 
 /**
  * Set the logging level
- * @param level - The log level to set
  */
 export const setLogLevel = (level: LogLevelValue): void => {
   if ((Object.values(LogLevel) as LogLevelValue[]).includes(level)) {
@@ -46,7 +45,6 @@ export const setLogLevel = (level: LogLevelValue): void => {
 
 /**
  * Enable or disable logging
- * @param enabled - Whether logging should be enabled
  */
 export const setLoggingEnabled = (enabled: boolean): void => {
   config.enabled = Boolean(enabled)
@@ -54,7 +52,6 @@ export const setLoggingEnabled = (enabled: boolean): void => {
 
 /**
  * Set the log prefix
- * @param prefix - The prefix to use for log messages
  */
 export const setLogPrefix = (prefix: string): void => {
   config.prefix = String(prefix)
@@ -62,9 +59,7 @@ export const setLogPrefix = (prefix: string): void => {
 
 /**
  * Format a log message with prefix and context
- * @param message - The log message
- * @param [context=''] - Optional context information
- * @returns Formatted message
+ * @param [context=''] - Optional context string prepended in brackets
  */
 const formatMessage = (message: string, context = ''): string => {
   const contextStr = context ? ` [${context}]` : ''
@@ -73,8 +68,7 @@ const formatMessage = (message: string, context = ''): string => {
 
 /**
  * Log an error message
- * @param message - The error message
- * @param [errorData] - Optional error object or additional data
+ * @param [errorData] - Optional error object or additional data to log separately
  * @param [context=''] - Optional context (e.g., module name)
  */
 export const error = (message: string, errorData?: unknown, context = ''): void => {
@@ -88,8 +82,7 @@ export const error = (message: string, errorData?: unknown, context = ''): void 
 
 /**
  * Log a warning message
- * @param message - The warning message
- * @param [data] - Optional additional data
+ * @param [data] - Optional additional data to log separately
  * @param [context=''] - Optional context (e.g., module name)
  */
 export const warn = (message: string, data?: unknown, context = ''): void => {
@@ -103,8 +96,7 @@ export const warn = (message: string, data?: unknown, context = ''): void => {
 
 /**
  * Log an info message
- * @param message - The info message
- * @param [data] - Optional additional data
+ * @param [data] - Optional additional data to log separately
  * @param [context=''] - Optional context (e.g., module name)
  */
 export const info = (message: string, data?: unknown, context = ''): void => {
@@ -118,8 +110,7 @@ export const info = (message: string, data?: unknown, context = ''): void => {
 
 /**
  * Log a debug message
- * @param message - The debug message
- * @param [data] - Optional additional data
+ * @param [data] - Optional additional data to log separately
  * @param [context=''] - Optional context (e.g., module name)
  */
 export const debug = (message: string, data?: unknown, context = ''): void => {
@@ -133,7 +124,6 @@ export const debug = (message: string, data?: unknown, context = ''): void => {
 
 /**
  * Get current logger configuration
- * @returns Current configuration
  */
 export const getConfig = (): LoggerConfig => ({ ...config })
 
