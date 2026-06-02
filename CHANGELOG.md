@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (e2e preview server port 8000 → 9000 -- 2026-06-02)
+
+- Moved the Playwright e2e preview server and `baseURL` from port 8000 to 9000
+  (`package.json` `start:e2e`; `playwright.config.mjs` `webServer.url` + `use.baseURL`).
+- Avoids a collision with other local dev servers on port 8000 (e.g. ws-scrcpy-web):
+  Playwright's `reuseExistingServer` would otherwise latch onto a foreign server already
+  listening on 8000 instead of starting svgedit, causing every e2e test to time out. The
+  dev server (`npm start`) and IIFE preview (`start:iife`) intentionally remain on 8000.
+  (TODO #20)
+
 ### Fixed (Text tool cursor stuck after editing -- 2026-06-02)
 
 - Leaving text-edit mode (`textActions.toSelectMode`) now notifies the editor of the mode
