@@ -196,10 +196,7 @@ export class SeEditPrefsDialog extends LitElement {
     return [...super.observedAttributes, 'lang', 'canvasbg', 'bgurl', 'gridsnappingon', 'gridsnappingstep', 'gridcolor', 'showrulers', 'baseunit']
   }
 
-  /**
-   * @function init
-   * @param i18next - i18next instance
-   */
+  /** @function init */
   init (i18next: { t: (key: string) => string }): void {
     this._labelOk = i18next.t('common.ok')
     this._labelCancel = i18next.t('common.cancel')

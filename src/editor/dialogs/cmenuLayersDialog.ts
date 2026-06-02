@@ -5,6 +5,7 @@ import SvgCanvas from '@svgedit/svgcanvas'
 
 const { $id } = SvgCanvas
 
+/** Context menu dialog for layer operations, mapping right-click actions to layer commands */
 @customElement('se-cmenu-layers')
 export class SeCMenuLayersDialog extends LitElement {
   static styles = css`
