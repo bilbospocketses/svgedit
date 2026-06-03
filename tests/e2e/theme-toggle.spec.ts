@@ -25,4 +25,17 @@ test.describe('M2 theme toggle', () => {
     await page.waitForSelector('#theme_toggle')
     expect(await theme()).toBe(flipped) // persisted across reload
   })
+
+  test('?theme=dark starts in dark mode', async ({ page }) => {
+    // Start from a clean storage state so the result is driven by the URL param,
+    // not a leftover svg-edit-theme pref from another test.
+    await page.goto('about:blank')
+    await page.context().clearCookies()
+    await page.goto('/index.html')
+    await page.evaluate(() => { localStorage.clear(); sessionStorage.clear() })
+    // Per spec §4.4 precedence: ?theme= URL param wins over stored pref + system.
+    await page.goto('/index.html?theme=dark')
+    await page.waitForSelector('.svg_editor')
+    expect(await page.evaluate(() => document.documentElement.getAttribute('data-theme'))).toBe('dark')
+  })
 })

@@ -34,7 +34,11 @@ export async function initEditor (editor: Editor): Promise<void> {
     editor.storage = window.localStorage
   }
   editor.configObj.load()
-  applyInitialTheme(editor.configObj.pref('theme') as string)
+  // Theme precedence (spec §4.4): ?theme= URL param > stored pref > system.
+  // The URL value is a per-load override and is NOT persisted; resolveInitialTheme
+  // (inside applyInitialTheme) normalizes any invalid value back to the system theme.
+  const urlTheme = new URLSearchParams(window.location.search).get('theme')
+  applyInitialTheme(urlTheme || (editor.configObj.pref('theme') as string))
   const { i18next } = await putLocale(editor.configObj.pref('lang'), editor.goodLangs)
   editor.i18next = i18next
   await import('./components/index.js')
