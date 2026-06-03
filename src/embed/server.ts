@@ -4,7 +4,7 @@ import type { EmbedEnvelope, EmbedCall, ElementHandle, ChromeState, ChromePreset
 import { isOriginAllowed } from './origin.js'
 import { parseEmbedURLParams } from './url-params.js'
 import { applyChrome, resolveChromePreset } from './chrome.js'
-import { applyTheme, resolveInitialTheme } from '../editor/styles/theme.js'
+import { applyTheme, resolveInitialTheme } from './theme.js'
 
 export type DialogKind = 'prompt' | 'alert' | 'confirm'
 export type DialogHandlers = {
