@@ -30,11 +30,11 @@ interface InitableElement extends HTMLElement {
 
 /** Wire up DOM, SvgCanvas, event listeners, extensions, and embed-API bridge for the editor. */
 export async function initEditor (editor: Editor): Promise<void> {
-  applyInitialTheme()
   if ('localStorage' in window) {
     editor.storage = window.localStorage
   }
   editor.configObj.load()
+  applyInitialTheme(editor.configObj.pref('theme') as string)
   const { i18next } = await putLocale(editor.configObj.pref('lang'), editor.goodLangs)
   editor.i18next = i18next
   await import('./components/index.js')
