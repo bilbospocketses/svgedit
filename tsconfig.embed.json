@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "rootDir": "src/embed",
+    "rootDir": "src",
     "outDir": "dist/embed",
     "declaration": true,
     "declarationMap": true,

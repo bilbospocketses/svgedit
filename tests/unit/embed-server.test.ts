@@ -10,6 +10,7 @@ describe('EmbedServer — constructor + listener setup', () => {
   let activeServer = null
   beforeEach(() => {
     document.body.className = ''
+    document.documentElement.removeAttribute('data-theme')
     window.history.replaceState({}, '', '/')
     activeServer = null
   })
@@ -46,7 +47,7 @@ describe('EmbedServer — constructor + listener setup', () => {
     window.history.replaceState({}, '', '/?embed=1&theme=dark')
     const editor = makeFakeEditor()
     activeServer = new EmbedServer(editor)
-    expect(document.body.classList.contains('theme-dark')).toBe(true)
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark')
   })
 
   it('applies URL-param palette on init via editor.setCustomPalette', () => {
@@ -279,6 +280,7 @@ describe('EmbedServer — dialog hook', () => {
 describe('EmbedServer — control messages', () => {
   beforeEach(() => {
     document.body.className = ''
+    document.documentElement.removeAttribute('data-theme')
     window.history.replaceState({}, '', '/?embed=1&allowedOrigins=https://host.test')
   })
 
@@ -313,7 +315,7 @@ describe('EmbedServer — control messages', () => {
     server.dispose()
   })
 
-  it('__setTheme applies theme via theme module', async () => {
+  it('__setTheme applies theme via M1 html[data-theme]', async () => {
     const editor = { svgCanvas: {} }
     const server = new EmbedServer(editor)
     vi.spyOn(window.parent, 'postMessage').mockImplementation(() => {})
@@ -324,7 +326,7 @@ describe('EmbedServer — control messages', () => {
     }))
     await new Promise(r => setTimeout(r, 0))
 
-    expect(document.body.classList.contains('theme-dark')).toBe(true)
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark')
     server.dispose()
   })
 
