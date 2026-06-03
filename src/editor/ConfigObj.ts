@@ -117,7 +117,9 @@ export default class ConfigObj {
       // ALERT NOTICES
       // Only shows in UI as far as alert notices, but useful to remember, so keeping as pref
       save_notice_done: false,
-      export_notice_done: false
+      export_notice_done: false,
+      // THEME (M2): '' = no explicit choice → follow OS (prefers-color-scheme)
+      theme: ''
     }
     /**
       * @tutorial ConfigOptions

@@ -40,6 +40,8 @@ class Rulers {
     this.rulerX = $idInner('ruler_x')
     this.rulerY = $idInner('ruler_y')
     this.rulerCorner = $idInner('ruler_corner')
+    // Redraw rulers whenever the theme changes so tick ink follows --se-text.
+    document.addEventListener('svgedit-themechange', () => this.updateRulers())
   }
 
   display (on: boolean): void {
@@ -223,9 +225,22 @@ class Rulers {
         }
         rulerD += bigInt
       }
-      ctx.strokeStyle = '#000'
+      ctx.strokeStyle = this._inkColor()
       ctx.stroke()
     }
+  }
+
+  private _inkColor (): string {
+    // Canvas 2D can't take var(); resolve --se-text to a concrete color.
+    // getPropertyValue returns the raw var() chain (not a concrete color), so we
+    // probe via a hidden element whose computed .color is always rgb(...).
+    const probe = document.createElement('span')
+    probe.style.color = 'var(--se-text)'
+    probe.style.display = 'none'
+    document.body.appendChild(probe)
+    const color = getComputedStyle(probe).color
+    probe.remove()
+    return color || 'rgb(0,0,0)'
   }
 }
 

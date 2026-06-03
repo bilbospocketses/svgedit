@@ -3,17 +3,22 @@ import { expect, test } from '@playwright/test'
 import { openEmbedHost } from './embed-helpers.js'
 
 test.describe('embed: theme sync', () => {
-  test('URL param ?theme=dark applies theme-dark class', async ({ page }) => {
+  // M2: embed theming routes through M1's html[data-theme] token mechanism
+  // (editor/styles/theme.ts), not the retired body.classList theme-* scheme.
+  const frameTheme = (page) =>
+    page.frameLocator('#svge').locator(':root').evaluate(el => el.getAttribute('data-theme'))
+
+  test('URL param ?theme=dark applies html[data-theme="dark"]', async ({ page }) => {
     await openEmbedHost(page, { editorSrc: '/index.html?embed=1&theme=dark' })
-    const cls = await page.frameLocator('#svge').locator('body').evaluate(b => Array.from(b.classList).find(c => c.startsWith('theme-')))
-    expect(cls).toBe('theme-dark')
+    expect(await frameTheme(page)).toBe('dark')
   })
 
-  test('runtime setTheme("light") replaces theme-dark with theme-light', async ({ page }) => {
+  test('runtime setTheme("light") switches html[data-theme] to light', async ({ page }) => {
     await openEmbedHost(page, { editorSrc: '/index.html?embed=1&theme=dark' })
+    // Await the postMessage round-trip: __setTheme resolves only after the
+    // embed server has applied the theme inside the iframe.
     await page.evaluate(() => window.__svgeditEmbed.setTheme('light'))
-    const cls = await page.frameLocator('#svge').locator('body').evaluate(b => Array.from(b.classList).find(c => c.startsWith('theme-')))
-    expect(cls).toBe('theme-light')
+    await expect.poll(() => frameTheme(page)).toBe('light')
   })
 
   test('host-call setTheme does NOT emit theme-changed (echo-loop prevention)', async ({ page }) => {

@@ -1,19 +1,16 @@
-const THEME_CLASS_PREFIX = 'theme-'
+// src/embed/theme.ts
+// Self-contained theme applier for the embed bundle. Deliberately mirrors
+// editor/styles/theme.ts's html[data-theme] + svgedit-themechange contract so
+// the embed bundle stays self-contained (importing editor/* widened rootDir and
+// broke the dist/embed output structure). Keep in sync with editor/styles/theme.ts.
+export type Theme = 'light' | 'dark'
 
-export function applyTheme (body: HTMLElement, theme: string): void {
-  const trimmed = theme.trim()
-  if (trimmed.length === 0) throw new Error('applyTheme: theme name cannot be empty')
-  for (const cls of Array.from(body.classList)) {
-    if (cls.startsWith(THEME_CLASS_PREFIX)) body.classList.remove(cls)
-  }
-  body.classList.add(`${THEME_CLASS_PREFIX}${trimmed}`)
+export function resolveInitialTheme (stored?: string | null): Theme {
+  if (stored === 'light' || stored === 'dark') return stored
+  return globalThis.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
-export function getCurrentTheme (body: HTMLElement): string | null {
-  for (const cls of Array.from(body.classList)) {
-    if (cls.startsWith(THEME_CLASS_PREFIX)) {
-      return cls.substring(THEME_CLASS_PREFIX.length)
-    }
-  }
-  return null
+export function applyTheme (theme: Theme): void {
+  document.documentElement.setAttribute('data-theme', theme)
+  document.dispatchEvent(new CustomEvent('svgedit-themechange', { detail: { theme } }))
 }

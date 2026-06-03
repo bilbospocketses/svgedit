@@ -4,7 +4,7 @@ import type { EmbedEnvelope, EmbedCall, ElementHandle, ChromeState, ChromePreset
 import { isOriginAllowed } from './origin.js'
 import { parseEmbedURLParams } from './url-params.js'
 import { applyChrome, resolveChromePreset } from './chrome.js'
-import { applyTheme } from './theme.js'
+import { applyTheme, resolveInitialTheme } from './theme.js'
 
 export type DialogKind = 'prompt' | 'alert' | 'confirm'
 export type DialogHandlers = {
@@ -110,7 +110,7 @@ export class EmbedServer {
     if (params.chrome) applyChrome(document.body, resolveChromePreset(params.chrome))
     else applyChrome(document.body, resolveChromePreset('none'))
 
-    if (params.theme) applyTheme(document.body, params.theme)
+    if (params.theme) applyTheme(resolveInitialTheme(params.theme))
 
     if (params.palette) this.callEditorPalette(params.palette)
 
@@ -155,7 +155,7 @@ export class EmbedServer {
       return
     }
     if (env.method === '__setTheme') {
-      applyTheme(document.body, env.args[0] as string)
+      applyTheme(resolveInitialTheme(env.args[0] as string))
       this.reply({ ns: 'svgedit', v: 1, kind: 'result', id: env.id, result: null })
       return
     }
