@@ -16,25 +16,25 @@ export class SeStorageDialog extends LitElement {
   static styles = css`
     dialog {
       padding: 0;
-      background: #5a6162;
+      background: var(--se-bg);
       max-width: 440px;
-      border: 1px outset #777;
-      font-family: Verdana, Helvetica, sans-serif;
+      border: 1px solid var(--se-border-strong);
+      font-family: var(--se-font-sans);
       font-size: 0.8em;
       border-radius: 5px;
       text-align: center;
     }
 
     dialog::backdrop {
-      background: rgba(0, 0, 0, 0.3);
+      background: var(--se-scrim);
     }
 
     #dialog_content {
       margin: 10px 10px 5px 10px;
-      background: #DDD;
+      background: var(--se-surface);
       overflow: auto;
       text-align: left;
-      border: 1px solid #5a6162;
+      border: 1px solid var(--se-border-strong);
       border-radius: 5px;
     }
 

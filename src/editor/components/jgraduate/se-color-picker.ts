@@ -82,7 +82,7 @@ export class SeColorPicker extends LitElement {
       height: 30px;
       border: 1px solid var(--se-border-strong);
       position: relative;
-      background: repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 0 0 / 8px 8px;
+      background: repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 0 0 / 8px 8px; /* hex-guard-allow: alpha checkerboard — neutral grey/white tiles must not use tokens so any semitransparent color shows through correctly */
     }
     .preview-box .swatch {
       position: absolute;
