@@ -232,7 +232,8 @@ class MainMenu {
         <se-menu-item id="tool_docprops" label="tools.docprops" shortcut="shift+D" src="docprop.svg"></se-menu-item>
         <se-menu-item id="tool_editor_prefs" label="config.editor_prefs" src="editPref.svg"></se-menu-item>
         <se-menu-item id="tool_editor_homepage" label="tools.editor_homepage" src="logo.svg"></se-menu-item>
-    </se-menu>`
+    </se-menu>
+    <se-theme-toggle id="theme_toggle"></se-theme-toggle>`
     this.editor.$svgEditor.append(template.content.cloneNode(true))
 
     // register action to main menu entries
@@ -283,6 +284,9 @@ class MainMenu {
         }
       })
     )
+    $id('theme_toggle')?.addEventListener('toggle-theme', (e) => {
+      this.editor.configObj.pref('theme', (e as CustomEvent<{ theme: string }>).detail.theme)
+    })
   }
 }
 
