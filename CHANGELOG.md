@@ -10,28 +10,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added (M2 -- light/dark theme toggle + persistence -- 2026-06-02)
 
 - New top-bar `se-theme-toggle` (sun/moon) — one-click light/dark switch. (M2 / #96)
-- Theme choice persisted via `ConfigObj.pref('theme')` → `ext-storage`/localStorage (a stored choice wins over the OS; first run follows `prefers-color-scheme`; gated on the storage opt-in). (M2 / #96)
-- `?theme=light|dark` URL param honored at standalone startup (precedence: URL > stored pref > system). (M2 / #96)
-- `theme.ts` gains `getCurrentTheme`/`toggleTheme`/`resolveInitialTheme`; `applyTheme` now dispatches a `svgedit-themechange` CustomEvent. (M2 / #96)
+- Theme choice persisted via `ConfigObj.pref('theme')` → `ext-storage`/localStorage (a stored
+  choice wins over the OS; first run follows `prefers-color-scheme`; gated on the storage
+  opt-in). (M2 / #96)
+- `?theme=light|dark` URL param honored at standalone startup (precedence: URL > stored pref >
+  system). (M2 / #96)
+- `theme.ts` gains `getCurrentTheme`/`toggleTheme`/`resolveInitialTheme`; `applyTheme` now
+  dispatches a `svgedit-themechange` CustomEvent. (M2 / #96)
 
 ### Changed (M2 -- embed theming + rulers follow the theme -- 2026-06-02)
 
-- Embed `__setTheme` and `?theme=`/`params.theme` now set `html[data-theme]` (activating the design tokens) instead of toggling a `body` CSS class. (M2 / #96)
-- Rulers (Canvas 2D) re-resolve their ink from `--se-text` and redraw on `svgedit-themechange`, so ruler ticks are legible in dark mode. (M2 / #96)
+- Embed `__setTheme` and `?theme=`/`params.theme` now set `html[data-theme]` (activating the
+  design tokens) instead of toggling a `body` CSS class. (M2 / #96)
+- Rulers (Canvas 2D) re-resolve their ink from `--se-text` and redraw on `svgedit-themechange`,
+  so ruler ticks are legible in dark mode. (M2 / #96)
 
 ### Removed (M2 -- 2026-06-02)
 
-- Legacy class-based `src/embed/theme.ts` (`body.theme-*`) mechanism, superseded by `html[data-theme]` token theming. (M2 / #96)
+- Legacy class-based `src/embed/theme.ts` (`body.theme-*`) mechanism, superseded by
+  `html[data-theme]` token theming. (M2 / #96)
 
 ### Added (M1 -- design-system token foundation + light/dark -- 2026-06-02)
 
-- New `src/editor/styles/tokens.css` — two-layer CSS custom-property design tokens (primitives → semantic), with light (`:root`) and dark (`html[data-theme="dark"]`) value sets and type/space/radius/elevation scales. (M1 / #91)
-- New `src/editor/styles/theme.ts` — sets `html[data-theme]` from `prefers-color-scheme` at startup and sets `color-scheme` per theme. (M1 / #91)
-- `scripts/check-no-raw-hex.mjs` — CI guard (CSS-scoped; hex/`rgb()`/keyword-aware; `hex-guard-allow` escape hatch) enforcing that raw colors live only in `tokens.css`; chained into `npm run lint`. (M1 / #91, #94)
+- New `src/editor/styles/tokens.css` — two-layer CSS custom-property design tokens (primitives →
+  semantic), with light (`:root`) and dark (`html[data-theme="dark"]`) value sets and
+  type/space/radius/elevation scales. (M1 / #91)
+- New `src/editor/styles/theme.ts` — sets `html[data-theme]` from `prefers-color-scheme` at
+  startup and sets `color-scheme` per theme. (M1 / #91)
+- `scripts/check-no-raw-hex.mjs` — CI guard (CSS-scoped; hex/`rgb()`/keyword-aware;
+  `hex-guard-allow` escape hatch) enforcing that raw colors live only in `tokens.css`; chained
+  into `npm run lint`. (M1 / #91, #94)
 
 ### Changed (M1 -- editor chrome migrated to design tokens -- 2026-06-02)
 
-- Migrated the entire editor chrome — `svgedit.css`, all Lit component/dialog `static styles`, and extension styles — from hardcoded colors + Win9x bevels to the semantic tokens; flat and light/dark themeable. User/functional color (color pickers, gradients, palette swatches, contrast-critical handles) intentionally preserved. (M1 / #92, #93, #94)
+- Migrated the entire editor chrome — `svgedit.css`, all Lit component/dialog `static styles`,
+  and extension styles — from hardcoded colors + Win9x bevels to the semantic tokens; flat
+  and light/dark themeable. User/functional color (color pickers, gradients, palette swatches,
+  contrast-critical handles) intentionally preserved. (M1 / #92, #93, #94)
 - Base typography from 8pt Verdana to a 13px system-font stack (`--se-font-sans`). (M1 / #91)
 
 ### Added (Host palette injection -- 2026-06-02)

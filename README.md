@@ -12,7 +12,8 @@ toward standalone desktop distribution and iframe-embeddable use inside
 Active redevelopment. The fork is being shaped per a locked scope directive:
 
 - **Standalone distribution** — Velopack installers (Windows + Linux) and a Docker image
-- **Light/dark theming** — token-driven design system with a one-click light/dark toggle (persisted; follows the OS preference by default)
+- **Light/dark theming** — token-driven design system with a one-click light/dark toggle
+  (persisted; follows the OS preference by default)
 - **Iframe-embeddable** — clean drop-in for Control Menu and other hosts, with a documented
   `EMBED_API.md` (postMessage RPC, two-way theme sync, swatch-palette injection)
 - **Core JS → TypeScript** migration committed
