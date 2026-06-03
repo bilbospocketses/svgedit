@@ -42,7 +42,7 @@ All params are optional. Apply them to the editor iframe `src`.
 |---|---|---|---|
 | `embed` | `1` | absent | Activates embed mode. Enables the postMessage listener and chrome system. Without this param the editor runs in standalone mode and ignores all embed messages. |
 | `chrome` | `full` \| `minimal` \| `none` | `none` when `embed=1` | Initial chrome preset. Set before first paint — no flash of unwanted chrome. See [Chrome control](#chrome-control). |
-| `theme` | `light` \| `dark` \| any string | editor's persisted default | Initial theme applied as a `theme-<value>` CSS class on `<body>`. |
+| `theme` | `light` \| `dark` | editor's persisted choice, else OS `prefers-color-scheme` | Initial theme, applied as `html[data-theme="<value>"]` (drives the design tokens). An invalid value falls back to the OS preference. |
 | `allowedOrigins` | comma-separated origins | same-origin only | Origins the editor will accept postMessages from. `*` accepts any origin (logs a console warning). |
 | `dialogTimeout` | integer (ms) | `30000` | How long (ms) the editor waits for a host dialog handler to respond before falling back to its own internal modal. |
 
