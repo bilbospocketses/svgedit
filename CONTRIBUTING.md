@@ -45,7 +45,7 @@ npm run lint       # lint only
 packages/svgcanvas/         svgcanvas workspace package (core SVG manipulation)
 src/editor/                 editor UI shell (chrome, panels, dialogs)
 src/editor/extensions/      built-in editor extensions
-scripts/                    build + copy-static helpers, run-e2e.mjs
+scripts/                    build + copy-static helpers, run-e2e.ts
 tests/                      Vitest unit suite + Playwright e2e
 docs/                       AUDIT, design specs, plans, manual checklists
 ```
@@ -60,10 +60,11 @@ TODO #19.
 
 General conventions:
 
-- Vanilla DOM + web components — no React; new code avoids jQuery (legacy jQuery files are being
-  migrated out).
+- Vanilla DOM + web components — no React, no jQuery.
 - ES modules throughout; no CommonJS.
 - 2-space indentation, single quotes.
+- Colors/theming: use the semantic design tokens — see [`THEMING.md`](./THEMING.md). The hex-guard
+  blocks raw color outside `tokens.css`.
 
 ## Tests
 
@@ -97,7 +98,7 @@ See [`STYLE.md` § 6](./STYLE.md#6-commit-messages) for conventions.
 ## Branch Strategy
 
 - `master` — releases and stable work
-- `feat/ts-migration` — the ongoing JS → TS migration (long-lived feature branch, draft PR #1)
+- `feat/ts-migration` — the now-merged JS → TS migration, kept for historical reference
 - Short-lived feature branches off `master` for everything else
 
 ## Reporting Bugs

@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (Theming guide -- 2026-06-04)
+
+- New top-level `THEMING.md` documents the two-layer design-token system
+  (`src/editor/styles/tokens.css`), the runtime `html[data-theme]` light/dark model
+  (`theme.ts`, `se-theme-toggle`, `svgedit-themechange`, startup precedence, persistence),
+  and the `hex-guard` tokens-only color policy with its `hex-guard-allow` escape hatch.
+  Cross-linked from `README`, `CONTRIBUTING`, and `STYLE` §8; added to markdownlint.
+
+### Changed (Documentation accuracy pass -- 2026-06-04)
+
+- Reconciled the fork docs with the shipped code: `README` (tutorials no longer "rewrite
+  pending"; e2e is Chromium + Firefox), `CONTRIBUTING` (`scripts/run-e2e.ts`;
+  `feat/ts-migration` marked historical; no jQuery), `SECURITY` (`elix` → `lit`), and `STYLE`
+  §8/§9 (markdownlint scope; that it runs in `npm run lint`; 12.B–D doc sweep complete).
+  `Events.md` now states the embed API has shipped.
+- Reconciled `EMBED_API.md` with `src/embed`: theme applies via `html[data-theme]` (not the
+  removed `body.theme-*`) and is `light`/`dark` only; the default `prompt` returns its default
+  value with no built-in input dialog (hosts must register a handler); documented `setPalette`
+  and `__setPalette`; corrected the wildcard-origin and error-code text to match the code.
+- `EMBED_API.md` and `SECURITY.md` brought under markdownlint (reflowed to the 100-col cap;
+  tables, headings, and fences normalized) — all fork Markdown docs are now linted.
+
+### Removed (Dead jPickerShim -- 2026-06-04)
+
+- Deleted `src/editor/components/jgraduate/jPickerShim.ts` — orphaned by the jGraduate Lit
+  rewrite, with zero importers anywhere in the repo. The color picker reaches `se-color-picker`
+  directly through `se-gradient-editor`.
+
+### Fixed (Embed API — error codes + wildcard warning -- 2026-06-04)
+
+- The embed client and server now `console.warn` when `allowedOrigins` includes the wildcard `*`
+  (origin checking disabled — dev/test only). (`src/embed/client.ts`, `src/embed/server.ts`)
+- `ERROR_CODES.PROTOCOL_VERSION_MISMATCH` is now attached to the `editor.ready` rejection, and
+  `DIALOG_HANDLER_TIMEOUT` to the timeout `error` event — both were defined but never attached.
+
+**Verification:** `npm run lint` clean — eslint, markdownlint (16 files), hex-guard; 84/84 embed
+unit tests pass (`vitest run embed`).
+
 ### Added (M2 -- light/dark theme toggle + persistence -- 2026-06-02)
 
 - New top-bar `se-theme-toggle` (sun/moon) — one-click light/dark switch. (M2 / #96)

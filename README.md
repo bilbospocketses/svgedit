@@ -13,7 +13,7 @@ Active redevelopment. The fork is being shaped per a locked scope directive:
 
 - **Standalone distribution** — Velopack installers (Windows + Linux) and a Docker image
 - **Light/dark theming** — token-driven design system with a one-click light/dark toggle
-  (persisted; follows the OS preference by default)
+  (persisted; follows the OS preference by default). See [THEMING.md](THEMING.md).
 - **Iframe-embeddable** — clean drop-in for Control Menu and other hosts, with a documented
   `EMBED_API.md` (postMessage RPC, two-way theme sync, swatch-palette injection)
 - **Core JS → TypeScript** migration committed
@@ -42,10 +42,10 @@ npm test           # lint + vitest unit suite + Playwright e2e
 | `src/editor/` | Editor shell — top-level UI, menus, panels, dialogs, extensions, locale shim |
 | `packages/svgcanvas/` | Core SVG canvas engine (the engine the editor sits on top of) |
 | `tests/unit/` | Vitest unit tests (jsdom) |
-| `tests/e2e/` | Playwright end-to-end tests (Chromium) |
+| `tests/e2e/` | Playwright end-to-end tests (Chromium + Firefox) |
 | `scripts/` | Build / test runner scripts |
 | `_reference/embed-api-v6/` | Preserved V6-era embed API code, kept as design input for the upcoming V7+ embed API |
-| `docs/tutorials/` | Editor / Canvas / API / Events / FAQ tutorials (rewrite pending — see TODO #12.D) |
+| `docs/tutorials/` | Editor / Canvas / API / Events / FAQ tutorials |
 | `CHANGELOG.md` | Keep a Changelog format; live source of what's changed |
 
 ## Path tool keys
