@@ -9,6 +9,9 @@
     "CONTRIBUTING.md",
     "AGENTS.md",
     "CHANGELOG.md",
+    "THEMING.md",
+    "EMBED_API.md",
+    "SECURITY.md",
     "docs/tutorials/*.md"
   ],
   "ignores": [

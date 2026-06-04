@@ -23,7 +23,8 @@ When reporting, please provide:
 
 - **Acknowledgement:** within **72 hours** of receipt
 - **Triage and initial assessment:** within one week
-- **Fix and disclosure timeline:** discussed with the reporter on a per-issue basis, depending on severity and complexity
+- **Fix and disclosure timeline:** discussed with the reporter on a per-issue basis,
+  depending on severity and complexity
 
 ## Supported Versions
 
@@ -31,12 +32,18 @@ Security fixes target the latest commit on `master`. Older commits and pre-relea
 
 ## Scope
 
-In scope: the svgedit SVG editor web app, its build pipeline (Vite, `scripts/`), the extension loader, the embed/iframe entry points, and the export modules (SVG, PNG, PDF).
+In scope: the svgedit SVG editor web app, its build pipeline (Vite, `scripts/`), the extension
+loader, the embed/iframe entry points, and the export modules (SVG, PNG, PDF).
 
 Out of scope:
-- Vulnerabilities in upstream dependencies (jspdf, dompurify, elix, vite, etc.) that have not been amplified by svgedit's usage — report those upstream to the respective project.
-- Browser engine bugs (XSS, sandbox escapes, etc.) that surface in any web app, not specifically svgedit.
-- Self-XSS or issues requiring the victim to paste attacker-controlled SVG into devtools or the source editor.
-- Issues affecting only the upstream [SVG-Edit/svgedit](https://github.com/SVG-Edit/svgedit) project that haven't been carried into this fork — report those upstream.
+
+- Vulnerabilities in upstream dependencies (jspdf, dompurify, lit, vite, etc.) that have not been
+  amplified by svgedit's usage — report those upstream to the respective project.
+- Browser engine bugs (XSS, sandbox escapes, etc.) that surface in any web app, not
+  specifically svgedit.
+- Self-XSS or issues requiring the victim to paste attacker-controlled SVG into devtools or the
+  source editor.
+- Issues affecting only the upstream [SVG-Edit/svgedit](https://github.com/SVG-Edit/svgedit)
+  project that haven't been carried into this fork — report those upstream.
 
 Thanks for helping keep the project safe.

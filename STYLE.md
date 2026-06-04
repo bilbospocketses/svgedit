@@ -277,12 +277,15 @@ Honor system primary. Tooling catches markdown-formatting drift on files we choo
 
 **Tools:**
 
-- **markdownlint-cli2** — config in `.markdownlint.jsonc`; runner config in
-  `.markdownlint-cli2.jsonc`. Currently scoped to `STYLE.md` only; sub-project 12.B
-  expands to README, CONTRIBUTING, `docs/tutorials/`.
+- **markdownlint-cli2** — style rules in `.markdownlint.jsonc`; runner globs in
+  `.markdownlint-cli2.jsonc` (the authoritative scope list). Covers the fork's top-level
+  Markdown docs and `docs/tutorials/*.md`; `node_modules/`, `dist/`, and `docs/superpowers/**`
+  are excluded.
 - **eslint** — existing config covers TS/JS line length and comment formatting.
-- **No new required CI checks.** Lint runs locally via `npm run lint:md`; not yet
-  wired into `npm run lint` (avoids day-one CI failures on existing docs).
+- **hex-guard** — `scripts/check-no-raw-hex.mjs` (run as `npm run lint:hex`) fails on raw
+  colors outside `src/editor/styles/tokens.css`. See [`THEMING.md`](./THEMING.md).
+- **`npm run lint`** chains `eslint .` → `markdownlint-cli2` → `npm run lint:hex`, and runs as
+  the `pretest` step, so `npm test` gates on it. `npm run lint:md` runs markdownlint alone.
 
 **Contributor workflow:**
 
@@ -303,6 +306,6 @@ The following are NOT governed by this guide:
   already enforces.
 - **Third-party JSDoc** in `node_modules/` — obviously.
 
-Existing docs (`README.md`, `CONTRIBUTING.md`, `docs/tutorials/*.md`, in-tree
-JSDoc) are NOT retro-edited as part of the initial STYLE.md ship. Sub-project 12.B
-applies these rules to existing docs in a follow-up sweep.
+Existing docs (`README.md`, `CONTRIBUTING.md`, `docs/tutorials/*.md`, in-tree JSDoc) were
+brought under these rules by the follow-up sweeps — sub-project 12.B (brand hygiene:
+README/CONTRIBUTING), 12.C (targeted JSDoc → TS conversion), and 12.D (tutorials rewrite).

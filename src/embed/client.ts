@@ -1,4 +1,4 @@
-import { PROTOCOL_VERSION, isValidEnvelope } from './protocol.js'
+import { PROTOCOL_VERSION, isValidEnvelope, ERROR_CODES } from './protocol.js'
 import type { ReadyPayload, EmbedEventName, ChromeState, ChromePreset } from './protocol.js'
 import { isOriginAllowed } from './origin.js'
 
@@ -27,6 +27,9 @@ export class SvgEditEmbed {
   constructor (iframe: HTMLIFrameElement, opts: SvgEditEmbedOptions = {}) {
     this.iframe = iframe
     this.allowedOrigins = opts.allowedOrigins ?? [new URL(iframe.src, window.location.href).origin]
+    if (this.allowedOrigins.includes('*')) {
+      console.warn('SvgEditEmbed: wildcard origin enabled — only safe for dev/test')
+    }
 
     this._ready = new Promise<ReadyPayload>((resolve, reject) => {
       this._resolveReady = resolve
@@ -77,7 +80,7 @@ export class SvgEditEmbed {
     if (env.kind === 'event' && env.name === 'ready') {
       const payload = env.payload as ReadyPayload
       if (payload.protocolVersion !== PROTOCOL_VERSION) {
-        this._rejectReady(new Error(`svgedit embed: protocolVersion mismatch — host expects ${PROTOCOL_VERSION}, editor reports ${payload.protocolVersion}`))
+        this._rejectReady(Object.assign(new Error(`svgedit embed: protocolVersion mismatch — host expects ${PROTOCOL_VERSION}, editor reports ${payload.protocolVersion}`), { code: ERROR_CODES.PROTOCOL_VERSION_MISMATCH }))
         return
       }
       this.isReady = true

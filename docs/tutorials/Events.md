@@ -21,8 +21,9 @@ document.addEventListener('svgEditorReady', () => {
 })
 ```
 
-A clean host-facing API for driving the embedded editor is planned separately
-(the embed-API work; it will ship as `EMBED_API.md`).
+A clean host-facing API for driving the embedded editor ships separately as
+`EMBED_API.md` at the repo root (postMessage RPC, chrome control, two-way theme sync,
+dialog hooks).
 
 ## Within-frame editor callbacks (`svgEditor.ready`)
 

@@ -107,6 +107,10 @@ export class EmbedServer {
 
     if (!embedMode) return
 
+    if (this.allowedOrigins.includes('*')) {
+      console.warn('EmbedServer: wildcard origin enabled — only safe for dev/test')
+    }
+
     if (params.chrome) applyChrome(document.body, resolveChromePreset(params.chrome))
     else applyChrome(document.body, resolveChromePreset('none'))
 
@@ -243,7 +247,7 @@ export class EmbedServer {
     const winner = await Promise.race([responsePromise, timeoutPromise])
     if (typeof winner === 'object' && winner !== null && 'timeout' in winner) {
       this.pendingDialogReplies.delete(id)
-      this.emit('error', { message: 'dialog handler timed out', source: 'dialog-handler-timeout' })
+      this.emit('error', { message: 'dialog handler timed out', source: 'dialog-handler-timeout', code: ERROR_CODES.DIALOG_HANDLER_TIMEOUT })
       return this.invokeDefaultDialog(kind, args)
     }
     return winner

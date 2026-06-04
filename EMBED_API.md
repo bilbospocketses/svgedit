@@ -1,6 +1,7 @@
 # svgedit Embed API
 
-**protocolVersion 1** — v1 scope: iframe embed, postMessage RPC, chrome control, two-way theme sync, dialog hooks, typed events.
+**protocolVersion 1** — v1 scope: iframe embed, postMessage RPC, chrome control, two-way theme
+sync, dialog hooks, typed events.
 
 ## Quickstart
 
@@ -30,7 +31,8 @@ Drop svgedit into any host page with four lines:
 </script>
 ```
 
-Calls issued before `await editor.ready` are queued and flushed automatically once the editor reports ready — no manual gating required.
+Calls issued before `await editor.ready` are queued and flushed automatically once the editor
+reports ready — no manual gating required.
 
 ---
 
@@ -39,16 +41,16 @@ Calls issued before `await editor.ready` are queued and flushed automatically on
 All params are optional. Apply them to the editor iframe `src`.
 
 | Param | Type | Default | Effect |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `embed` | `1` | absent | Activates embed mode. Enables the postMessage listener and chrome system. Without this param the editor runs in standalone mode and ignores all embed messages. |
 | `chrome` | `full` \| `minimal` \| `none` | `none` when `embed=1` | Initial chrome preset. Set before first paint — no flash of unwanted chrome. See [Chrome control](#chrome-control). |
 | `theme` | `light` \| `dark` | editor's persisted choice, else OS `prefers-color-scheme` | Initial theme, applied as `html[data-theme="<value>"]` (drives the design tokens). An invalid value falls back to the OS preference. |
-| `allowedOrigins` | comma-separated origins | same-origin only | Origins the editor will accept postMessages from. `*` accepts any origin (logs a console warning). |
+| `allowedOrigins` | comma-separated origins | same-origin only | Origins the editor will accept postMessages from. `*` accepts any origin — logs a dev-only console warning; use only for local dev/test. |
 | `dialogTimeout` | integer (ms) | `30000` | How long (ms) the editor waits for a host dialog handler to respond before falling back to its own internal modal. |
 
 **Examples:**
 
-```
+```text
 /index.html?embed=1
 /index.html?embed=1&chrome=minimal&theme=dark
 /index.html?embed=1&chrome=none&allowedOrigins=https://app.example.com
@@ -79,10 +81,11 @@ new SvgEditEmbed(iframe: HTMLIFrameElement, opts?: SvgEditEmbedOptions)
 `SvgEditEmbedOptions`:
 
 | Field | Type | Default | Description |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `allowedOrigins` | `string[]` | `[new URL(iframe.src).origin]` | Origins the host will accept messages from. Pass `['*']` only for local dev. |
 
-Constructing `SvgEditEmbed` immediately attaches a `window.message` listener. The handshake with the editor begins as soon as the iframe loads.
+Constructing `SvgEditEmbed` immediately attaches a `window.message` listener. The handshake with
+the editor begins as soon as the iframe loads.
 
 ### Public API
 
@@ -105,6 +108,9 @@ class SvgEditEmbed {
   // Theme control (runtime)
   setTheme(theme: string): Promise<void>
 
+  // Palette control (runtime) — replace the swatch palette
+  setPalette(colors: readonly string[]): Promise<void>
+
   // Dialog hooks
   setDialogHandler(
     kind: 'prompt' | 'alert' | 'confirm',
@@ -125,7 +131,7 @@ class SvgEditEmbed {
 type ReadyPayload = {
   version: string          // editor's package version (e.g. "7.5.0")
   protocolVersion: number  // always 1 for v1
-  capabilities: string[]   // e.g. ["chrome", "theme", "dialog-hooks"]
+  capabilities: string[]   // e.g. ["chrome", "theme", "dialog-hooks", "palette"]
 }
 ```
 
@@ -135,7 +141,8 @@ type ReadyPayload = {
 
 ### The Proxy pattern
 
-`editor.editor` is an ES `Proxy`. Any property access returns a function that sends a postMessage `call` envelope to the iframe and resolves a Promise when the result arrives:
+`editor.editor` is an ES `Proxy`. Any property access returns a function that sends a postMessage
+`call` envelope to the iframe and resolves a Promise when the result arrives:
 
 ```js
 await editor.ready
@@ -150,7 +157,9 @@ await editor.editor.loadFromString('<svg xmlns="http://www.w3.org/2000/svg"><cir
 await editor.editor.loadFromURL('https://example.com/drawing.svg')
 ```
 
-The editor-side dispatcher checks `svgCanvas` first, then the `Editor` instance. Every call returns a `Promise` regardless of whether the underlying method is synchronous — postMessage is always async.
+The editor-side dispatcher checks `svgCanvas` first, then the `Editor` instance. Every call
+returns a `Promise` regardless of whether the underlying method is synchronous — postMessage is
+always async.
 
 ### TypeScript typed access
 
@@ -174,7 +183,9 @@ const result: string = await canvas.getSvgString()
 
 ### Element handle round-trip rules
 
-Methods that return `Element` objects (such as `getElem`, `getSelectedElements`) cannot transfer DOM nodes across the iframe boundary. The editor-side serializer replaces each `Element` with an opaque handle object:
+Methods that return `Element` objects (such as `getElem`, `getSelectedElements`) cannot transfer
+DOM nodes across the iframe boundary. The editor-side serializer replaces each `Element` with an
+opaque handle object:
 
 ```js
 // host receives a handle, not a real Element
@@ -187,16 +198,18 @@ const id = await editor.editor.getId(handle)
 
 Handle lifecycle rules:
 
-- Handles are valid until the editor removes the element (e.g. via `loadFromString` replacing the entire document).
+- Handles are valid until the editor removes the element (e.g. via `loadFromString` replacing the
+  entire document).
 - Using a stale handle returns `ELEMENT_NOT_FOUND` (see [Error codes](#error-codes)).
-- There is no automatic garbage collection of handles — they survive until the document is replaced.
+- There is no automatic garbage collection of handles — they survive until the document is
+  replaced.
 
 ### JSON serialization caveats
 
 postMessage uses the structured-clone algorithm (superset of JSON). Three things to watch for:
 
 | Type | Behavior |
-|---|---|
+| --- | --- |
 | `undefined` return value | Arrives as `null` on the host side (JSON limitation). |
 | `Function` in args or return | Silently dropped — functions cannot be cloned. Subscribe to events instead. |
 | `Element` / `Node` | Replaced by a handle object (see above). |
@@ -207,26 +220,31 @@ postMessage uses the structured-clone algorithm (superset of JSON). Three things
 
 ### Event allowlist
 
-The embed API fires twelve typed events. Internal editor events are not forwarded to avoid leaking implementation detail.
+The embed API fires twelve typed events. Internal editor events are not forwarded to avoid
+leaking implementation detail.
 
 | Event | When | Payload |
-|---|---|---|
+| --- | --- | --- |
 | `ready` | Once, when editor fully initialized | `{ version: string, protocolVersion: number, capabilities: string[] }` |
 | `change` | After content change, debounced 200 ms | `{}` — deliberately empty; call `getSvgString()` when you need the bytes |
 | `save` | User triggered save via editor chrome | `{ svgString: string }` |
 | `selection-changed` | Selection updated | `{ count: number, ids: string[] }` |
 | `theme-changed` | User toggled theme inside editor | `{ theme: string }` |
 | `extension-error` | An extension threw on load or execution | `{ name: string, message: string, stack?: string }` |
-| `error` | Generic editor runtime error worth surfacing | `{ message: string, source: string, stack?: string }` |
+| `error` | Generic editor runtime error worth surfacing | `{ message: string, source: string, stack?: string, code?: string }` |
 | `destroy` | Editor is shutting down (pagehide / unload) | `{}` |
 | `before-group` | Fires immediately before `groupSelectedElements` runs (v1.1) | `{}` — call `getSelectedElements()` if details needed |
 | `after-group` | Fires immediately after `groupSelectedElements` completes (v1.1) | `{}` |
 | `before-move` | Fires immediately before `moveSelectedElements` runs (v1.1) | `{}` |
 | `after-move` | Fires immediately after `moveSelectedElements` completes (v1.1) | `{}` |
 
-The four `before-*` / `after-*` group/move events are also exposed on svgCanvas's internal event bus (`svgCanvas.bind('before-group', fn)`), which extensions like `ext-connector` subscribe to in order to react to group/move lifecycle without monkey-patching svgCanvas methods. The embed channel mirrors those events so external hosts get the same signal.
+The four `before-*` / `after-*` group/move events are also exposed on svgCanvas's internal event
+bus (`svgCanvas.bind('before-group', fn)`), which extensions like `ext-connector` subscribe to in
+order to react to group/move lifecycle without monkey-patching svgCanvas methods. The embed
+channel mirrors those events so external hosts get the same signal.
 
-`change` is intentionally payload-free — sending the full SVG string on every stroke would be expensive. Pull with `getSvgString()` when you actually need it (e.g. on an autosave timer).
+`change` is intentionally payload-free — sending the full SVG string on every stroke would be
+expensive. Pull with `getSvgString()` when you actually need it (e.g. on an autosave timer).
 
 ### `on` / `off` / `once` examples
 
@@ -263,20 +281,21 @@ editor.on('extension-error', ({ name, message }) => {
 
 ## Chrome control
 
-Chrome refers to the editor's surrounding UI: toolbars, menus, layer panel, palette, status bar, and header. In embed mode you choose which pieces to show.
+Chrome refers to the editor's surrounding UI: toolbars, menus, layer panel, palette, status bar,
+and header. In embed mode you choose which pieces to show.
 
 ### URL params (initial state)
 
 Set chrome before first paint — no flash of unwanted UI:
 
-```
+```text
 ?embed=1&chrome=full      # all UI visible
 ?embed=1&chrome=minimal   # toolbox only; menu/layers/palette/statusbar/header hidden
 ?embed=1&chrome=none      # no UI at all — canvas only
 ?embed=1                  # shorthand for chrome=none
 ```
 
-### Runtime API
+### Runtime API (chrome)
 
 Toggle chrome live after the editor is ready:
 
@@ -312,28 +331,32 @@ type ChromeState = {
 Preset resolution:
 
 | Preset | menu | toolbox | layers | palette | statusbar | header |
-|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- |
 | `full` | true | true | true | true | true | true |
 | `minimal` | false | true | false | false | false | false |
 | `none` | false | false | false | false | false | false |
 
-Implementation: the server applies CSS classes (`no-menu`, `no-toolbox`, etc.) to `<body>`. The `embed` class is always added when embed mode is active.
+Implementation: the server applies CSS classes (`no-menu`, `no-toolbox`, etc.) to `<body>`. The
+`embed` class is always added when embed mode is active.
 
 ---
 
 ## Palette
 
-Replace the editor's color swatch strip (`se-palette`) with your own brand colors. Replace-semantics: your colors become the whole palette. The `none` (no-fill/no-stroke) swatch is always kept — it is prepended if you omit it.
+Replace the editor's color swatch strip (`se-palette`) with your own brand colors.
+Replace-semantics: your colors become the whole palette. The `none` (no-fill/no-stroke) swatch is
+always kept — it is prepended if you omit it.
 
 ### URL param (initial state)
 
-```
+```text
 ?embed=1&palette=%23ff0000,%23223344,none
 ```
 
-Comma-separated CSS colors, URL-encoded. Applied before first paint — no flash of the default swatches.
+Comma-separated CSS colors, URL-encoded. Applied before first paint — no flash of the default
+swatches.
 
-### Runtime API
+### Runtime API (palette)
 
 ```js
 import { SvgEditEmbed, DEFAULT_PALETTE } from 'svgedit/embed'
@@ -348,13 +371,19 @@ await editor.setPalette([...DEFAULT_PALETTE, '#00a3e0'])        // append (host-
 
 ### Validation
 
-Each entry must be `none` or a valid CSS color. Invalid entries are dropped (the rest still apply); if any are dropped at runtime the editor emits an `error` event with `source: 'invalid-palette-color'`. If nothing valid remains, the default palette is restored. `'palette'` appears in the `ready` payload's `capabilities`.
+Each entry must be `none` or a valid CSS color. Invalid entries are dropped (the rest still
+apply); if any are dropped at runtime the editor emits an `error` event with
+`source: 'invalid-palette-color'`. If nothing valid remains, the default palette is restored.
+`'palette'` appears in the `ready` payload's `capabilities`.
 
 ---
 
 ## Dialog hooks
 
-By default the editor shows its own built-in modal for `alert`, `confirm`, and `prompt` calls. Hosts can intercept these to render dialogs in their own design system.
+By default the editor handles `alert` and `confirm` with its own built-in modals (`seAlert` /
+`seConfirm`). `prompt` has no built-in input dialog yet — its default handler just returns the
+supplied default value (or `null`), so a host needing real prompt input MUST register a `prompt`
+handler. Hosts can intercept any of the three to render dialogs in their own design system.
 
 ### Registering handlers
 
@@ -385,7 +414,8 @@ unregAlert()  // editor uses its own modal again for alert
 
 ### Timeout behavior
 
-If a registered handler does not resolve within the configured timeout (default 30 seconds, configurable via `?dialogTimeout=<ms>` URL param or `editor.setDialogTimeout(ms)`), the editor:
+If a registered handler does not resolve within the configured timeout (default 30 seconds,
+configurable via `?dialogTimeout=<ms>` URL param or `editor.setDialogTimeout(ms)`), the editor:
 
 1. Falls back to its own built-in modal for that dialog call.
 2. Emits an `error` event with `source: 'dialog-handler-timeout'`.
@@ -404,7 +434,10 @@ editor.on('error', ({ source, message }) => {
 
 ### sePromptDialog rename note
 
-The V7 editor has a component named `sePromptDialog` that actually functions as a status-display modal (not an interactive prompt-with-input). The embed dialog hook system uses the correct `prompt` / `alert` / `confirm` naming and wires to the appropriate components. The `sePromptDialog` rename is tracked separately as a UI cleanup item and does not affect the embed API contract.
+The V7 editor has a component named `sePromptDialog` that actually functions as a status-display
+modal (not an interactive prompt-with-input). The embed dialog hook system uses the correct
+`prompt` / `alert` / `confirm` naming and wires to the appropriate components. The `sePromptDialog`
+rename is tracked separately as a UI cleanup item and does not affect the embed API contract.
 
 ---
 
@@ -414,7 +447,7 @@ Theme state flows both directions. Last write wins — there is no acknowledgeme
 
 ### Setting the initial theme
 
-```
+```text
 ?embed=1&theme=dark
 ?embed=1&theme=light
 ```
@@ -424,14 +457,16 @@ Or at runtime after `ready`:
 ```js
 await editor.setTheme('dark')
 await editor.setTheme('light')
-await editor.setTheme('my-custom-theme')
 ```
 
-The theme value is applied as `theme-<value>` on the editor's `<body>`.
+The theme value is applied as `html[data-theme="<value>"]` on the editor's document, which
+activates the design tokens. Only `light` and `dark` are supported; any other value falls back
+to the OS `prefers-color-scheme`.
 
 ### Listening for editor-initiated theme changes
 
-When a user clicks a theme toggle inside the editor (visible only when chrome includes it), the editor emits `theme-changed`:
+When a user clicks a theme toggle inside the editor (visible only when chrome includes it), the
+editor emits `theme-changed`:
 
 ```js
 editor.on('theme-changed', ({ theme }) => {
@@ -441,7 +476,9 @@ editor.on('theme-changed', ({ theme }) => {
 
 ### Echo-loop prevention
 
-When the host calls `editor.setTheme(t)`, the editor applies the theme but does **not** emit a `theme-changed` event back. The event only fires for user-initiated changes inside the editor. This prevents the ping-pong loop: host applies → editor emits → host re-applies.
+When the host calls `editor.setTheme(t)`, the editor applies the theme but does **not** emit a
+`theme-changed` event back. The event only fires for user-initiated changes inside the editor.
+This prevents the ping-pong loop: host applies → editor emits → host re-applies.
 
 ### Typical two-way sync pattern
 
@@ -464,21 +501,27 @@ document.getElementById('my-theme-toggle').addEventListener('change', async (e) 
 
 ## Security: allowedOrigins
 
-The embed API validates origins on both sides independently. A bug on one side does not break the boundary.
+The embed API validates origins on both sides independently. A bug on one side does not break the
+boundary.
 
 ### Host side (SvgEditEmbed)
 
-- Constructor option `allowedOrigins` defaults to `[new URL(iframe.src).origin]` — the iframe's own origin.
-- Every inbound message is validated: `event.origin` must be in `allowedOrigins` AND `event.source` must be `iframe.contentWindow`. The second check prevents impersonation from other iframes in the page.
+- Constructor option `allowedOrigins` defaults to `[new URL(iframe.src).origin]` — the iframe's
+  own origin.
+- Every inbound message is validated: `event.origin` must be in `allowedOrigins` AND
+  `event.source` must be `iframe.contentWindow`. The second check prevents impersonation from
+  other iframes in the page.
 - Outbound messages use `iframe.contentWindow.postMessage(env, iframeOrigin)` — never `'*'`.
-- Wildcard `'*'` is accepted but logs: `SvgEditEmbed: wildcard origin enabled — only safe for dev/test`.
+- Wildcard `'*'` is accepted but logs a warning and disables origin checking (dev/test only).
 
 ### Editor side (server.ts)
 
 - URL param `?allowedOrigins=origin1,origin2` (comma-separated). Default is same-origin only.
-- Inbound messages from unauthorized origins are silently dropped plus `console.warn`. The editor does not reply — it does not leak its existence to foreign origins.
-- Outbound to `window.parent` uses the first allowed origin as `targetOrigin` (or `'*'` in wildcard mode).
-- Wildcard `*` is accepted, warns.
+- Inbound messages from unauthorized origins are silently dropped plus `console.warn`. The editor
+  does not reply — it does not leak its existence to foreign origins.
+- Outbound to `window.parent` uses the first allowed origin as `targetOrigin` (or `'*'` in
+  wildcard mode).
+- Wildcard `*` is accepted; logs a warning and disables origin checking.
 
 ### Recommended iframe sandbox attributes
 
@@ -494,54 +537,67 @@ The embed API validates origins on both sides independently. A bug on one side d
 
 Caveats:
 
-- `allow-same-origin` is required for the editor's localStorage persistence to work. Omitting it breaks the editor's settings save.
+- `allow-same-origin` is required for the editor's localStorage persistence to work. Omitting it
+  breaks the editor's settings save.
 - `allow-downloads` is needed for the editor's SVG export / save-to-disk functionality.
-- `allow-modals` is needed only if you have **not** registered dialog handlers for all three dialog kinds (`alert`, `confirm`, `prompt`). If you register all three, you can omit it.
-- `allow-top-navigation` is not needed and should be omitted — the embed API uses postMessage, not navigation.
+- `allow-modals` is needed only if you have **not** registered dialog handlers for all three
+  dialog kinds (`alert`, `confirm`, `prompt`). If you register all three, you can omit it.
+- `allow-top-navigation` is not needed and should be omitted — the embed API uses postMessage, not
+  navigation.
 - Do not add `allow-popups` unless your use case requires it.
 
 ---
 
 ## Versioning
 
-The postMessage envelope carries `v: 1` (the `protocolVersion`). This is separate from the editor's package version (its semver).
+The postMessage envelope carries `v: 1` (the `protocolVersion`). This is separate from the
+editor's package version (its semver).
 
 ### What protocolVersion covers
 
-The envelope shape — `ns`, `v`, `kind`, `id`, field names — is the versioned contract. Method names on the canvas surface are not versioned; new methods auto-expose via the generic forwarder, and unknown method names return `METHOD_NOT_FOUND`.
+The envelope shape — `ns`, `v`, `kind`, `id`, field names — is the versioned contract. Method
+names on the canvas surface are not versioned; new methods auto-expose via the generic forwarder,
+and unknown method names return `METHOD_NOT_FOUND`.
 
 ### Backward compatibility (editor evolves, host stays on v1 library)
 
 - New `svgCanvas` methods appear automatically — no host library update needed.
-- New capabilities appear in the `ready` payload's `capabilities` array. Feature-detect rather than version-sniff:
+- New capabilities appear in the `ready` payload's `capabilities` array. Feature-detect rather
+  than version-sniff:
+
   ```js
   const { capabilities } = await editor.ready
   if (capabilities.includes('my-future-capability')) { /* ... */ }
   ```
-- Unknown method names → `METHOD_NOT_FOUND` error code — hosts can test for a method's existence without try/catch at every call site.
+
+- Unknown method names → `METHOD_NOT_FOUND` error code — hosts can test for a method's existence
+  without try/catch at every call site.
 
 ### Forward compatibility (host upgrades first, editor reports v2)
 
-If the editor reports `protocolVersion: 2` but the host proxy library expects `1`, the proxy rejects the `ready` promise with a clear error:
+If the editor reports `protocolVersion: 2` but the host proxy library expects `1`, the proxy
+rejects the `ready` promise with a clear error:
 
-```
+```text
 svgedit embed: protocolVersion mismatch — host expects 1, editor reports 2
 ```
 
-Update the host's `SvgEditEmbed` library to match the new editor version before enabling the upgraded editor.
+Update the host's `SvgEditEmbed` library to match the new editor version before enabling the
+upgraded editor.
 
 ---
 
 ## Error codes
 
-All errors arrive as a rejected Promise on the call site. The error object has a `code` property when the failure is typed.
+All errors arrive as a rejected Promise on the call site. The error object has a `code` property
+when the failure is typed.
 
 | Code | When |
-|---|---|
+| --- | --- |
 | `METHOD_NOT_FOUND` | The method name does not exist on `svgCanvas` or `Editor`. |
 | `ELEMENT_NOT_FOUND` | An element handle was passed but the element it referred to no longer exists in the document. |
-| `PROTOCOL_VERSION_MISMATCH` | Editor and host proxy library disagree on `protocolVersion`. The proxy rejects `editor.ready`. |
-| `DIALOG_HANDLER_TIMEOUT` | A registered dialog handler did not resolve within the timeout. The editor fell back to its own modal and emitted an `error` event. |
+| `PROTOCOL_VERSION_MISMATCH` | Editor and host proxy library disagree on `protocolVersion`. The proxy rejects `editor.ready`; the rejection `Error` carries this `code`. |
+| `DIALOG_HANDLER_TIMEOUT` | A registered dialog handler did not resolve within the timeout. Surfaced as an `error` event carrying `source: 'dialog-handler-timeout'` and this `code`; the editor falls back to its own modal. |
 
 Catching errors:
 
@@ -568,11 +624,13 @@ editor.editor.getElem('deleted-element-id')
 
 ## Rolling your own client
 
-If your host cannot use the JavaScript proxy library (non-JS host, WebAssembly, server-side rendering, etc.), you can speak the protocol directly via postMessage.
+If your host cannot use the JavaScript proxy library (non-JS host, WebAssembly, server-side
+rendering, etc.), you can speak the protocol directly via postMessage.
 
 ### Envelope shape
 
-All messages share `ns: 'svgedit'` and `v: 1`. Foreign messages (wrong `ns` or `v`) are silently dropped by both sides.
+All messages share `ns: 'svgedit'` and `v: 1`. Foreign messages (wrong `ns` or `v`) are silently
+dropped by both sides.
 
 ```ts
 // Host → Editor
@@ -586,12 +644,18 @@ All messages share `ns: 'svgedit'` and `v: 1`. Foreign messages (wrong `ns` or `
 { ns: 'svgedit', v: 1, kind: 'dialog-request',  id: number, dialog: 'prompt' | 'alert' | 'confirm', args: unknown[] }
 ```
 
-`id` is your correlation token. Use a monotonically increasing integer. Match a `result` or `error` back to a `call` by `id`. Match a `dialog-response` to a `dialog-request` by `id`. Events have no `id` — they are fire-and-forget.
+`id` is your correlation token. Use a monotonically increasing integer. Match a `result` or
+`error` back to a `call` by `id`. Match a `dialog-response` to a `dialog-request` by `id`. Events
+have no `id` — they are fire-and-forget.
 
 ### targetOrigin rules
 
-- **Host → Editor:** `iframe.contentWindow.postMessage(env, iframeOrigin)` where `iframeOrigin` is the editor host's origin. Never use `'*'` in production — it exposes the message to any embedded frame that may be co-resident.
-- **Editor → Host:** the editor sends to `window.parent` with `targetOrigin` set to the first entry in `allowedOrigins` (or `'*'` in wildcard mode). Your host page must be at that origin to receive the message.
+- **Host → Editor:** `iframe.contentWindow.postMessage(env, iframeOrigin)` where `iframeOrigin` is
+  the editor host's origin. Never use `'*'` in production — it exposes the message to any embedded
+  frame that may be co-resident.
+- **Editor → Host:** the editor sends to `window.parent` with `targetOrigin` set to the first
+  entry in `allowedOrigins` (or `'*'` in wildcard mode). Your host page must be at that origin to
+  receive the message.
 
 ### Minimal raw-protocol example
 
@@ -643,21 +707,24 @@ await call('loadFromString', ['<svg xmlns="http://www.w3.org/2000/svg"><circle r
 
 ### Named operations via special method names
 
-The generic `call` forwarder dispatches to `svgCanvas` first, then `Editor`. A small set of `__prefixed` method names route to built-in embed operations:
+The generic `call` forwarder dispatches to `svgCanvas` first, then `Editor`. A small set of
+`__prefixed` method names route to built-in embed operations:
 
 | Method name | Effect |
-|---|---|
-| `__setTheme` | Apply theme to editor body (string arg) |
+| --- | --- |
+| `__setTheme` | Apply theme via `html[data-theme]` (`'light'` / `'dark'` arg) |
 | `__setChrome` | Apply chrome state (string preset or ChromeState object) |
+| `__setPalette` | Replace the swatch palette (array of CSS colors) |
 | `__setDialogTimeout` | Update dialog fallback timeout (number ms) |
 | `__registerDialogHandler` | Tell the editor you are handling a dialog kind |
 | `__unregisterDialogHandler` | Tell the editor you stopped handling a dialog kind |
 
-You only need these if you are building your own dialog hook system. The `SvgEditEmbed` proxy library handles them transparently.
+You only need these if you are building your own dialog hook system. The `SvgEditEmbed` proxy
+library handles them transparently.
 
 ---
 
-## Recommended iframe sandbox attributes
+## Sandbox attributes summary
 
 Summary of the sandbox attributes discussed in [Security: allowedOrigins](#security-allowedorigins):
 
@@ -675,7 +742,7 @@ Summary of the sandbox attributes discussed in [Security: allowedOrigins](#secur
 ```
 
 | Attribute | Required? | Why |
-|---|---|---|
+| --- | --- | --- |
 | `allow-scripts` | Always | The editor is a JavaScript application. |
 | `allow-same-origin` | Strongly recommended | Needed for localStorage (editor settings persistence). Without it, every session starts from defaults. |
 | `allow-downloads` | If export / save needed | SVG export / save-to-disk triggers a browser download. |
