@@ -35,4 +35,52 @@ test.describe('Dialog helpers', () => {
 
     expect(created).toBe(true)
   })
+
+  test('se-prompt-dialog resolves the typed value on OK (Enter)', async ({ page }) => {
+    await page.goto('/index.html')
+    await page.waitForFunction(() => typeof window.sePrompt === 'function')
+
+    await page.evaluate(() => {
+      window.__promptResult = window.sePrompt('Enter value', 'seed')
+    })
+
+    const input = page.locator('se-prompt-dialog input')
+    await expect(input).toBeFocused()
+    await expect(input).toHaveValue('seed')
+    await input.fill('typed')
+    await input.press('Enter')
+
+    const value = await page.evaluate(() => window.__promptResult)
+    expect(value).toBe('typed')
+  })
+
+  test('se-prompt-dialog resolves null on Cancel', async ({ page }) => {
+    await page.goto('/index.html')
+    await page.waitForFunction(() => typeof window.sePrompt === 'function')
+
+    await page.evaluate(() => {
+      window.__promptResult = window.sePrompt('Enter value', 'seed')
+    })
+
+    await page.locator('se-prompt-dialog button[value="cancel"]').click()
+
+    const value = await page.evaluate(() => window.__promptResult)
+    expect(value).toBeNull()
+  })
+
+  test('se-prompt-dialog resolves null on Escape', async ({ page }) => {
+    await page.goto('/index.html')
+    await page.waitForFunction(() => typeof window.sePrompt === 'function')
+
+    await page.evaluate(() => {
+      window.__promptResult = window.sePrompt('Enter value', 'seed')
+    })
+
+    const input = page.locator('se-prompt-dialog input')
+    await expect(input).toBeFocused()
+    await input.press('Escape')
+
+    const value = await page.evaluate(() => window.__promptResult)
+    expect(value).toBeNull()
+  })
 })
