@@ -40,9 +40,14 @@ test.describe('Dialog helpers', () => {
     await page.goto('/index.html')
     await page.waitForFunction(() => typeof window.sePrompt === 'function')
 
+    // Kick off sePrompt without awaiting (it blocks on user interaction); __promptResult
+    // holds the Promise, read back after the dialog closes.
     await page.evaluate(() => {
       window.__promptResult = window.sePrompt('Enter value', 'seed')
     })
+    await page.waitForFunction(
+      () => document.querySelector('se-prompt-dialog')?.shadowRoot?.querySelector('dialog')?.open === true
+    )
 
     const input = page.locator('se-prompt-dialog input')
     await expect(input).toBeFocused()
@@ -61,6 +66,9 @@ test.describe('Dialog helpers', () => {
     await page.evaluate(() => {
       window.__promptResult = window.sePrompt('Enter value', 'seed')
     })
+    await page.waitForFunction(
+      () => document.querySelector('se-prompt-dialog')?.shadowRoot?.querySelector('dialog')?.open === true
+    )
 
     await page.locator('se-prompt-dialog button[value="cancel"]').click()
 
@@ -75,6 +83,9 @@ test.describe('Dialog helpers', () => {
     await page.evaluate(() => {
       window.__promptResult = window.sePrompt('Enter value', 'seed')
     })
+    await page.waitForFunction(
+      () => document.querySelector('se-prompt-dialog')?.shadowRoot?.querySelector('dialog')?.open === true
+    )
 
     const input = page.locator('se-prompt-dialog input')
     await expect(input).toBeFocused()
