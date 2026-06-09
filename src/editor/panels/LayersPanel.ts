@@ -23,7 +23,7 @@ class LayersPanel {
     const action = typedDetail<SeCmenuDetail>(e).trigger
     switch (action) {
       case 'dupe':
-        this.cloneLayer()
+        void this.cloneLayer()
         break
       case 'delete':
         this.deleteLayer()
@@ -58,11 +58,11 @@ class LayersPanel {
     menuLayerBox.setAttribute('leftclick', 'false')
     this.editor.$container.append(menuLayerBox)
     menuLayerBox.init(i18next)
-    safeClick($id('layer_new'), this.newLayer.bind(this))
+    safeClick($id('layer_new'), () => { void this.newLayer() })
     safeClick($id('layer_delete'), this.deleteLayer.bind(this))
     safeClick($id('layer_up'), () => this.moveLayer.bind(this)(-1))
     safeClick($id('layer_down'), () => this.moveLayer.bind(this)(1))
-    safeClick($id('layer_rename'), this.layerRename.bind(this))
+    safeClick($id('layer_rename'), () => { void this.layerRename() })
     $id('se-cmenu-layers-more')?.addEventListener('change', this.lmenuFunc.bind(this))
     $id('se-cmenu-layers-list')?.addEventListener('change', (e: Event) => { this.lmenuFunc(e) })
     safeClick($id('sidepanel_handle'), () => this.toggleSidePanel())
@@ -79,15 +79,14 @@ class LayersPanel {
     }
   }
 
-  newLayer (): void {
+  async newLayer (): Promise<void> {
     let uniqName
     let i = this.editor.svgCanvas.getCurrentDrawing().getNumLayers()
     do {
       uniqName = this.editor.i18next.t('layers.layer') + ' ' + ++i
     } while (this.editor.svgCanvas.getCurrentDrawing().hasLayer(uniqName))
 
-    // TODO: see todo #10 — native prompt(); replace with custom dialog
-    const newName = prompt(
+    const newName = await sePrompt(
       this.editor.i18next.t('notification.enterUniqueLayerName'),
       uniqName
     )
@@ -117,12 +116,11 @@ class LayersPanel {
     }
   }
 
-  cloneLayer (): void {
+  async cloneLayer (): Promise<void> {
     const name =
       this.editor.svgCanvas.getCurrentDrawing().getCurrentLayerName() + ' copy'
 
-    // TODO: see todo #10 — native prompt(); replace with custom dialog
-    const newName = prompt(
+    const newName = await sePrompt(
       this.editor.i18next.t('notification.enterUniqueLayerName'),
       name
     )
@@ -165,11 +163,10 @@ class LayersPanel {
     }
   }
 
-  layerRename (): void {
+  async layerRename (): Promise<void> {
     const ele = document.querySelector('#layerlist tr.layersel td.layername')
     const oldName = (ele) ? ele.textContent : ''
-    // TODO: see todo #10 — native prompt(); replace with custom dialog
-    const newName = prompt(this.editor.i18next.t('notification.enterNewLayerName'), '')
+    const newName = await sePrompt(this.editor.i18next.t('notification.enterNewLayerName'), '')
     if (!newName) {
       return
     }
