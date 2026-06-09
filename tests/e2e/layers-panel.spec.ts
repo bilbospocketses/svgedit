@@ -27,13 +27,21 @@ test.describe('Layers panel', () => {
     const initialNames = await layerNames(page)
     expect(initialNames.length).toBeGreaterThan(0)
 
-    page.once('dialog', (dialog) => dialog.accept('Layer 2'))
     await page.click('#layer_new')
+    await page.waitForFunction(
+      () => Array.from(document.querySelectorAll('se-prompt-dialog')).some(el => el.shadowRoot?.querySelector('dialog')?.open === true)
+    )
+    await page.locator('se-prompt-dialog input').fill('Layer 2')
+    await page.locator('se-prompt-dialog input').press('Enter')
     await expect.poll(() => layerNames(page)).resolves.toContain('Layer 2')
 
     await page.locator('#layerlist td.layername', { hasText: 'Layer 2' }).click()
-    page.once('dialog', (dialog) => dialog.accept('Renamed Layer'))
     await page.click('#layer_rename')
+    await page.waitForFunction(
+      () => Array.from(document.querySelectorAll('se-prompt-dialog')).some(el => el.shadowRoot?.querySelector('dialog')?.open === true)
+    )
+    await page.locator('se-prompt-dialog input').last().fill('Renamed Layer')
+    await page.locator('se-prompt-dialog input').last().press('Enter')
     await expect.poll(() => layerNames(page)).resolves.toContain('Renamed Layer')
 
     await toggleVisibilityFor(page, 'Renamed Layer')
@@ -50,5 +58,15 @@ test.describe('Layers panel', () => {
     await page.locator('#layerlist td.layername', { hasText: 'Renamed Layer' }).click()
     await page.click('#layer_delete')
     await expect.poll(() => layerNames(page)).resolves.not.toContain('Renamed Layer')
+  })
+
+  test('cancelling the new-layer prompt creates no layer', async ({ page }) => {
+    const before = await layerNames(page)
+    await page.click('#layer_new')
+    await page.waitForFunction(
+      () => Array.from(document.querySelectorAll('se-prompt-dialog')).some(el => el.shadowRoot?.querySelector('dialog')?.open === true)
+    )
+    await page.locator('se-prompt-dialog input').press('Escape')
+    await expect.poll(() => layerNames(page)).resolves.toEqual(before)
   })
 })

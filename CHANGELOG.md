@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (M3 — native dialogs → modals -- 2026-06-08)
+
+- **`SePromptDialog` (`se-prompt-dialog`) + `sePrompt(text, defaultValue?)`** — a themed, in-app
+  modal text prompt (token-styled for light/dark, Enter-to-submit, Esc/Cancel → `null`),
+  replacing the last native `prompt()` calls. Completes the UI-Modernization program's M3 (#13).
+
+### Changed (M3 — native dialogs → modals -- 2026-06-08)
+
+- The 4 remaining native `alert()` calls (layer duplicate-name guards; invalid attribute value)
+  now use the in-app `seAlert()`; the 5 native `prompt()` calls (new/clone/rename layer, image
+  URL, make-hyperlink) now use the new `sePrompt()` modal.
+- The embed default `prompt` handler now opens `SePromptDialog` instead of returning the supplied
+  default unchanged, closing the EMBED_API prompt-default gap. The browser-owned `beforeunload`
+  dialog remains the one dialog outside the in-app system (noted in `EMBED_API.md`).
+
 ### Added (Theming guide -- 2026-06-04)
 
 - New top-level `THEMING.md` documents the two-layer design-token system

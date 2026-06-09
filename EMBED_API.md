@@ -380,10 +380,14 @@ apply); if any are dropped at runtime the editor emits an `error` event with
 
 ## Dialog hooks
 
-By default the editor handles `alert` and `confirm` with its own built-in modals (`seAlert` /
-`seConfirm`). `prompt` has no built-in input dialog yet — its default handler just returns the
-supplied default value (or `null`), so a host needing real prompt input MUST register a `prompt`
-handler. Hosts can intercept any of the three to render dialogs in their own design system.
+By default the editor handles all three dialogs with its own built-in modals: `alert` →
+`seAlert`, `confirm` → `seConfirm`, and `prompt` → `sePrompt` (a `SePromptDialog` text-input
+modal returning the entered string, or `null` on cancel). Hosts can intercept any of the three
+to render dialogs in their own design system.
+
+> **Known limitation:** the browser's `beforeunload` ("Leave site?") confirmation is owned by
+> the browser and cannot be replaced by an in-app modal — it is the one dialog outside this hook
+> system.
 
 ### Registering handlers
 
@@ -432,12 +436,12 @@ editor.on('error', ({ source, message }) => {
 })
 ```
 
-### sePromptDialog rename note
+### Prompt dialog component
 
-The V7 editor has a component named `sePromptDialog` that actually functions as a status-display
-modal (not an interactive prompt-with-input). The embed dialog hook system uses the correct
-`prompt` / `alert` / `confirm` naming and wires to the appropriate components. The `sePromptDialog`
-rename is tracked separately as a UI cleanup item and does not affect the embed API contract.
+The `prompt` hook's default in-app modal is `SePromptDialog` (`se-prompt-dialog`) — an
+interactive text-input dialog added in M3 (#13). A separate, legacy status-display component that
+was once also named `sePromptDialog` has been renamed to `seStatusDialog`; the two are now
+distinct and the naming overlap is resolved.
 
 ---
 
