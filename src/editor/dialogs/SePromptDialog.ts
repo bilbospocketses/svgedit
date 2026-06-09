@@ -120,6 +120,9 @@ export default class SePromptDialog extends LitElement {
       this._resolve({ value: accepted ? (input?.value ?? '') : null })
       this._resolve = null
     }
+    // Remove from the DOM so per-call instances don't accumulate over a session
+    // (open() appended this element; globalDialogs.ts makes a fresh one per call).
+    this.remove()
   }
 
   render () {

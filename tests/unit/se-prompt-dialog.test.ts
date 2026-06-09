@@ -60,4 +60,14 @@ describe('se-prompt-dialog close → resolve mapping', () => {
     await flushRender(el)
     expect(el.shadowRoot.querySelector('input').value).toBe('default-text')
   })
+
+  it('removes itself from the DOM after the dialog closes', async () => {
+    await flushRender(el)
+    expect(el.isConnected).toBe(true)
+    const closed = el.whenClosed()
+    closeWith(el, 'ok', 'typed-name')
+    await closed
+    expect(el.isConnected).toBe(false)
+    expect(document.body.contains(el)).toBe(false)
+  })
 })
