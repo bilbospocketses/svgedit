@@ -39,6 +39,12 @@ export class SePaintPicker extends LitElement {
       height: 18px;
       width: 18px;
     }
+    .se-icon {
+      background-color: var(--se-icon);
+      -webkit-mask-position: center; mask-position: center;
+      -webkit-mask-size: contain; mask-size: contain;
+      -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+    }
     #block {
       height: 17px;
       width: 14px;
@@ -149,7 +155,7 @@ export class SePaintPicker extends LitElement {
 
     return html`
       <div id="picker" @click=${this._onTriggerClick} title=${t(this.label)}>
-        <img id="logo" src=${imgSrc} alt="icon">
+        <span id="logo" class="se-icon" role="img" aria-label="icon" style=${`-webkit-mask-image:url("${imgSrc}");mask-image:url("${imgSrc}")`}></span>
         <label title=${t('config.pick_paint_opavity')}></label>
         <div id="block"></div>
       </div>

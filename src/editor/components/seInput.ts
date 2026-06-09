@@ -29,17 +29,23 @@ export class SeInput extends LitElement {
       margin: 5px 1px;
       padding: 3px;
     }
-    img {
+    .se-icon {
       top: 2px;
       left: 4px;
       position: relative;
+      width: 12px;
+      height: 12px;
+      background-color: var(--se-icon);
+      -webkit-mask-position: center; mask-position: center;
+      -webkit-mask-size: contain; mask-size: contain;
+      -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
     }
     #label {
       bottom: 1px;
       right: -4px;
       position: relative;
       margin-right: 4px;
-      color: var(--se-on-accent);
+      color: var(--se-text);
     }
     input {
       background-color: var(--input-color);
@@ -58,7 +64,7 @@ export class SeInput extends LitElement {
     return html`
       <div class="wrap" title=${t(this.title)}>
         ${this.src && !this.label
-          ? html`<img alt="icon" width="12" height="12" src=${this.src} part="icon" />`
+          ? html`<span class="se-icon" part="icon" role="img" aria-label="icon" style=${`-webkit-mask-image:url("${this.src}");mask-image:url("${this.src}")`}></span>`
           : nothing}
         ${this.label
           ? html`<span id="label" part="label">${t(this.label)}</span>`

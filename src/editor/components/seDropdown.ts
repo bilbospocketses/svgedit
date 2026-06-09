@@ -66,9 +66,13 @@ export class SeDropdown extends LitElement {
       outline: 2px solid var(--se-focus-ring);
       outline-offset: 1px;
     }
-    img {
+    .se-icon {
       width: 18px;
       height: 18px;
+      background-color: var(--se-icon);
+      -webkit-mask-position: center; mask-position: center;
+      -webkit-mask-size: contain; mask-size: contain;
+      -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
     }
     .popup {
       position: absolute;
@@ -125,7 +129,7 @@ export class SeDropdown extends LitElement {
         aria-expanded=${this._open ? 'true' : 'false'}
         @click=${this._onToggle}
       >
-        <img src=${this.src} alt="icon" part="icon" />
+        <span class="se-icon" part="icon" role="img" aria-label="icon" style=${`-webkit-mask-image:url("${this.src}");mask-image:url("${this.src}")`}></span>
       </button>
       <div
         class=${classMap({ popup: true, open: this._open })}

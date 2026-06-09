@@ -59,6 +59,14 @@ export class SeList extends LitElement {
     #options-container {
       position: fixed;
     }
+    .se-icon {
+      display: inline-block;
+      background-color: var(--se-icon);
+      -webkit-mask-position: center; mask-position: center;
+      -webkit-mask-size: contain; mask-size: contain;
+      -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+      vertical-align: middle;
+    }
   `
 
   @property() accessor label = ''
@@ -103,11 +111,13 @@ export class SeList extends LitElement {
         if (src) {
           const imgHeight = el.getAttribute('img-height') ?? ''
           const titleAttr = el.getAttribute('title') ?? ''
-          return html`<img
-            src=${imgPath + '/' + src}
-            style=${imgHeight ? `height:${imgHeight}` : ''}
+          return html`<span
+            class="se-icon"
+            role="img"
+            aria-label="icon"
             title=${t(titleAttr)}
-          />`
+            style=${`width:${imgHeight || '24px'};height:${imgHeight || '24px'};-webkit-mask-image:url("${imgPath + '/' + src}");mask-image:url("${imgPath + '/' + src}")`}
+          ></span>`
         } else {
           return html`${t(el.getAttribute('option') ?? '')}`
         }
