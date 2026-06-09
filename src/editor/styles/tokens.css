@@ -42,6 +42,8 @@
   --se-warn: var(--se-amber-600);
   --se-success: var(--se-green-600);
   --se-info: var(--se-sky-500);
+  --se-icon: var(--se-grey-600);
+  --se-icon-hover: var(--se-ink);
   --se-focus-ring: color-mix(in srgb, var(--se-accent) 55%, transparent);
   --se-scrim: rgba(15,25,23,.45);
   --se-shadow-sm: 0 1px 2px rgba(10,22,20,.18);
@@ -78,6 +80,8 @@ html[data-theme="dark"] {
   --se-warn: var(--se-amber-400);
   --se-success: var(--se-green-400);
   --se-info: var(--se-sky-400);
+  --se-icon: var(--se-grey-300);
+  --se-icon-hover: var(--se-paper);
   --se-scrim: rgba(0,0,0,.6);
   --se-shadow-sm: 0 1px 2px rgba(0,0,0,.5);
   --se-shadow-overlay: 0 12px 32px rgba(0,0,0,.55);
