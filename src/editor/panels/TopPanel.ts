@@ -220,6 +220,9 @@ class TopPanel {
         this.editor.svgCanvas.getMode() === 'image' &&
         !(this.editor.svgCanvas.getHref(elem) ?? '').startsWith('data:')
       ) {
+        // Fire-and-forget: updateContextPanel stays synchronous. `addedNew` is cleared later
+        // in this method, so the modal resolving asynchronously (setImageURL / delete) re-triggers
+        // updateContextPanel without re-prompting the user.
         void this.promptImgURL({ cancelDeletes: true })
       }
 
