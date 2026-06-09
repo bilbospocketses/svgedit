@@ -154,13 +154,12 @@ class TopPanel {
     this.editor.bottomPanel.updateToolButtonState()
   }
 
-  promptImgURL ({ cancelDeletes = false } = {}) {
+  async promptImgURL ({ cancelDeletes = false } = {}): Promise<void> {
     const selectedEl = this.editor.selectedElement
     if (!selectedEl) return
     let curhref = this.editor.svgCanvas.getHref(selectedEl) ?? ''
     curhref = curhref.startsWith('data:') ? '' : curhref
-    // TODO: see todo #10 — native prompt(); replace with custom dialog
-    const url = prompt(
+    const url = await sePrompt(
       this.editor.i18next.t('notification.enterNewImgURL'),
       curhref
     )
@@ -221,7 +220,7 @@ class TopPanel {
         this.editor.svgCanvas.getMode() === 'image' &&
         !(this.editor.svgCanvas.getHref(elem) ?? '').startsWith('data:')
       ) {
-        /* await */ this.promptImgURL({ cancelDeletes: true })
+        void this.promptImgURL({ cancelDeletes: true })
       }
 
       if (!isNode && currentMode !== 'pathedit') {
@@ -661,10 +660,9 @@ class TopPanel {
     }
   }
 
-  makeHyperlink (): void {
+  async makeHyperlink (): Promise<void> {
     if (this.editor.selectedElement || this.multiselected) {
-      // TODO: see todo #10 — native prompt(); replace with custom dialog
-      const url = prompt(
+      const url = await sePrompt(
         this.editor.i18next.t('notification.enterNewLinkURL'),
         'http://'
       )
@@ -888,8 +886,8 @@ class TopPanel {
     safeClick($id('tool_move_top'), this.moveToTopSelected.bind(this))
     safeClick($id('tool_move_bottom'), this.moveToBottomSelected.bind(this))
     safeClick($id('tool_topath'), this.convertToPath.bind(this))
-    safeClick($id('tool_make_link'), this.makeHyperlink.bind(this))
-    safeClick($id('tool_make_link_multi'), this.makeHyperlink.bind(this))
+    safeClick($id('tool_make_link'), () => { void this.makeHyperlink() })
+    safeClick($id('tool_make_link_multi'), () => { void this.makeHyperlink() })
     safeClick($id('tool_reorient'), this.reorientPath.bind(this))
     safeClick($id('tool_flip_h'), this.clickFlipHorizontal.bind(this))
     safeClick($id('tool_flip_v'), this.clickFlipVertical.bind(this))
