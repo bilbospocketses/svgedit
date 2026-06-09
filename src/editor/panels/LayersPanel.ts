@@ -95,8 +95,7 @@ class LayersPanel {
       return
     }
     if (this.editor.svgCanvas.getCurrentDrawing().hasLayer(newName)) {
-      // TODO: see todo #10 — native alert(); replace with seAlert
-      alert(this.editor.i18next.t('notification.dupeLayerName'))
+      seAlert(this.editor.i18next.t('notification.dupeLayerName'))
       return
     }
     this.editor.svgCanvas.createLayer(newName)
@@ -131,8 +130,7 @@ class LayersPanel {
       return
     }
     if (this.editor.svgCanvas.getCurrentDrawing().hasLayer(newName)) {
-      // TODO: see todo #10 — native alert(); replace with seAlert
-      alert(this.editor.i18next.t('notification.dupeLayerName'))
+      seAlert(this.editor.i18next.t('notification.dupeLayerName'))
       return
     }
     this.editor.svgCanvas.cloneLayer(newName)
@@ -179,8 +177,7 @@ class LayersPanel {
       oldName === newName ||
       this.editor.svgCanvas.getCurrentDrawing().hasLayer(newName)
     ) {
-      // TODO: see todo #10 — native alert(); replace with seAlert
-      alert(this.editor.i18next.t('notification.layerHasThatName'))
+      seAlert(this.editor.i18next.t('notification.layerHasThatName'))
       return
     }
     this.editor.svgCanvas.renameCurrentLayer(newName)

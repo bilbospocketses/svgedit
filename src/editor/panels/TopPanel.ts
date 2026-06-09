@@ -603,8 +603,7 @@ class TopPanel {
 
     if (!valid) {
       target.value = this.selectedElement?.getAttribute(attr) ?? ''
-      // TODO: see todo #10 — native alert(); replace with seAlert
-      alert(this.editor.i18next.t('notification.invalidAttrValGiven'))
+      seAlert(this.editor.i18next.t('notification.invalidAttrValGiven'))
       return false
     }
 
