@@ -29,7 +29,7 @@ test.describe('Layers panel', () => {
 
     await page.click('#layer_new')
     await page.waitForFunction(
-      () => Array.from(document.querySelectorAll('se-prompt-dialog')).some(el => el.shadowRoot?.querySelector('dialog')?.open === true)
+      () => document.querySelector('se-prompt-dialog')?.shadowRoot?.querySelector('dialog')?.open === true
     )
     await page.locator('se-prompt-dialog input').fill('Layer 2')
     await page.locator('se-prompt-dialog input').press('Enter')
@@ -38,10 +38,10 @@ test.describe('Layers panel', () => {
     await page.locator('#layerlist td.layername', { hasText: 'Layer 2' }).click()
     await page.click('#layer_rename')
     await page.waitForFunction(
-      () => Array.from(document.querySelectorAll('se-prompt-dialog')).some(el => el.shadowRoot?.querySelector('dialog')?.open === true)
+      () => document.querySelector('se-prompt-dialog')?.shadowRoot?.querySelector('dialog')?.open === true
     )
-    await page.locator('se-prompt-dialog input').last().fill('Renamed Layer')
-    await page.locator('se-prompt-dialog input').last().press('Enter')
+    await page.locator('se-prompt-dialog input').fill('Renamed Layer')
+    await page.locator('se-prompt-dialog input').press('Enter')
     await expect.poll(() => layerNames(page)).resolves.toContain('Renamed Layer')
 
     await toggleVisibilityFor(page, 'Renamed Layer')
@@ -64,7 +64,7 @@ test.describe('Layers panel', () => {
     const before = await layerNames(page)
     await page.click('#layer_new')
     await page.waitForFunction(
-      () => Array.from(document.querySelectorAll('se-prompt-dialog')).some(el => el.shadowRoot?.querySelector('dialog')?.open === true)
+      () => document.querySelector('se-prompt-dialog')?.shadowRoot?.querySelector('dialog')?.open === true
     )
     await page.locator('se-prompt-dialog input').press('Escape')
     await expect.poll(() => layerNames(page)).resolves.toEqual(before)

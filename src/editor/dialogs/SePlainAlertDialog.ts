@@ -129,6 +129,9 @@ export default class SePlainAlertDialog extends LitElement {
       this._resolve({ choice })
       this._resolve = null
     }
+    // Remove from the DOM so per-call instances don't accumulate over a session
+    // (open() appended this element; globalDialogs.ts makes a fresh one per call).
+    this.remove()
   }
 
   render() {

@@ -22,18 +22,31 @@ test.describe('Dialog helpers', () => {
     expect(result.hasCloseAttr).toBe(false)
   })
 
-  test('seAlert creates alert dialog', async ({ page }) => {
+  test('seAlert opens an alert dialog and removes it from the DOM on close', async ({ page }) => {
     await page.goto('/index.html')
     await page.waitForFunction(() => typeof window.seAlert === 'function')
 
-    const created = await page.evaluate(() => {
-      const before = document.querySelectorAll('se-plain-alert-dialog').length
-      window.seAlert('Cover alert dialog')
-      const after = document.querySelectorAll('se-plain-alert-dialog').length
-      return after > before
-    })
+    const before = await page.evaluate(
+      () => document.querySelectorAll('se-plain-alert-dialog').length
+    )
 
-    expect(created).toBe(true)
+    await page.evaluate(() => window.seAlert('Cover alert dialog'))
+    await page.waitForFunction(
+      () => document.querySelector('se-plain-alert-dialog')?.shadowRoot?.querySelector('dialog')?.open === true
+    )
+    expect(
+      await page.evaluate(() => document.querySelectorAll('se-plain-alert-dialog').length)
+    ).toBe(before + 1)
+
+    // Closing the alert (single "Ok" choice) must remove the element from the DOM.
+    await page.locator('se-plain-alert-dialog button', { hasText: 'Ok' }).click()
+    await page.waitForFunction(
+      (b) => document.querySelectorAll('se-plain-alert-dialog').length === b,
+      before
+    )
+    expect(
+      await page.evaluate(() => document.querySelectorAll('se-plain-alert-dialog').length)
+    ).toBe(before)
   })
 
   test('se-prompt-dialog resolves the typed value on OK (Enter)', async ({ page }) => {
