@@ -363,11 +363,8 @@ class Editor {
       defaultDialogHandlers: {
         alert: (msg) => { seAlert(msg); return Promise.resolve() },
         confirm: async (msg) => Boolean(await seConfirm(msg)),
-        prompt: (_msg, def) => {
-          // V7 lacks a real prompt-with-input (audit input #4 — seStatusDialog (formerly sePromptDialog) is status-display).
-          // Until #13 adds a real prompt, return the default; hosts that need real prompts must register a handler.
-          return Promise.resolve(def ?? null)
-        }
+        // M3 (#13): the in-app SePromptDialog is the default; hosts may still register their own handler.
+        prompt: (msg, def) => sePrompt(msg, def ?? '')
       }
     })
   } // end Constructor
