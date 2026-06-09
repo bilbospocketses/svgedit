@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (M4 Phase 2 — Lucide icon set -- 2026-06-09)
+
+- The common-tool toolbar icons are now a uniform **Lucide**-based 2px-line monochrome set
+  (81 glyphs remapped at their existing filenames), painted theme-aware by the Phase-1 mask
+  pipeline. Raw sources are vendored under `vendor/lucide/` (pinned tag `1.17.0`); the Lucide
+  ISC + Feather-MIT notices are recorded in `THIRD-PARTY-NOTICES.md`. A few svg-editor-specific
+  glyphs were hand-drawn to Lucide's grid — the straight-line tool, the `ellipse` + dashed
+  freehand `fh_rect`/`fh_ellipse`, and the align-to-page trigger (#107, #109).
+- `scripts/icon-contact-sheet.mjs` — a per-batch light/dark × 24/14px contact-sheet renderer for
+  reviewing the icon art (#107).
+
+### Changed (M4 Phase 2 — icon-component mask migration -- 2026-06-09)
+
+- Every icon-bearing component now paints via the `.se-icon` CSS mask + `--se-icon` token instead
+  of `<img>`, so the Lucide `currentColor` glyphs follow the light/dark theme: `SeButton`
+  (Phase 1) plus `seFlyingButton`, `seMenuItem`, `seZoom` (#108) and `seExplorerButton`,
+  `seListItem`, `seSpinInput`, `seList`, `seInput`, `seDropdown`, `se-paint-picker` (#109). The
+  svgedit logo (`seMenu`) and the no-color swatch (`sePalette`) intentionally stay `<img>`. An e2e
+  guard now fails if any converted component leaks an `<img>`.
+
+### Fixed (M4 Phase 2 follow-ups -- 2026-06-09)
+
+- Left-toolbar tool highlight is now **exclusive** — selecting a tool clears the previous one.
+  `seButton.pressed` did not reflect to an attribute, so `LeftPanel.updateLeftPanel`'s
+  `#tools_left *[pressed]` clear-loop matched nothing and accent highlights accumulated (#108).
+- The document title (`#title_panel`) and form-field labels used `--se-on-accent` (the
+  text-on-accent color) → dark-on-dark in dark mode; now use `--se-text` (#109).
+- The light/dark **theme toggle** is now pinned to the top-right of the menu bar, and its sun/moon
+  icon renders — it was built with Lit's `html` tag (HTML-namespaced, zero geometry, invisible) and
+  now uses the `svg` tag (#109, #110).
+
 ### Changed (M4 Phase 1 — icon theming pipeline -- 2026-06-09)
 
 - Toolbar icons are now **theme-aware**: `SeButton` paints each icon via a CSS `mask` + a new
