@@ -85,3 +85,7 @@ This fork is licensed under **GPL-3.0-only** (see `LICENSE`).
 
 Inherited upstream code retains its original licenses (MIT, Apache-2.0, ISC, LGPL-3.0-or-later,
 X11) — see `LICENSE-MIT.txt` and the per-file headers in the codebase.
+
+Bundled third-party assets (the toolbar icons, adapted from [Lucide](https://lucide.dev) — ISC,
+plus a Feather-derived MIT subset) are credited in `THIRD-PARTY-NOTICES.md`; the pinned upstream
+sources live under `vendor/lucide/`.
