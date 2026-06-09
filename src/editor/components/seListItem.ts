@@ -1,6 +1,5 @@
 import { LitElement, html, css, nothing } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
-import { ifDefined } from 'lit/directives/if-defined.js'
 import { t } from '../locale.js'
 import { getSvgEditor } from '../svgEditorInstance.js'
 
@@ -38,6 +37,14 @@ export class SeListItem extends LitElement {
     .selected {
       background-color: var(--icon-bg-color-hover);
     }
+    .se-icon {
+      display: inline-block;
+      background-color: var(--se-icon);
+      -webkit-mask-position: center; mask-position: center;
+      -webkit-mask-size: contain; mask-size: contain;
+      -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+      vertical-align: middle;
+    }
   `
 
   @property() accessor option = ''
@@ -55,7 +62,13 @@ export class SeListItem extends LitElement {
         @mousedown=${this._onMousedown}
       >
         ${this.src
-          ? html`<img alt="icon" src=${imgPath + '/' + this.src} title=${t(this.title)} height=${ifDefined(this.imgHeight || undefined)} />`
+          ? html`<span
+              class="se-icon"
+              role="img"
+              aria-label="icon"
+              title=${t(this.title)}
+              style=${`width:${this.imgHeight || '24px'};height:${this.imgHeight || '24px'};-webkit-mask-image:url("${imgPath + '/' + this.src}");mask-image:url("${imgPath + '/' + this.src}")`}
+            ></span>`
           : nothing}
         ${this.option ? t(this.option) : nothing}
         <slot></slot>

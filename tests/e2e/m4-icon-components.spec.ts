@@ -70,4 +70,26 @@ test.describe('M4 icon components', () => {
     expect(dark).not.toBeNull()
     expect(light).not.toBe(dark)
   })
+
+  test('no icon component leaks an <img> — every glyph paints via the mask token', async ({ page }) => {
+    // The converted components must not fall back to <img>, which renders Lucide
+    // currentColor glyphs black and ignores the theme. seMenu (svgedit logo) and
+    // sePalette (no-color swatch) legitimately use <img> and are excluded here.
+    const tags = [
+      'se-button', 'se-flyingbutton', 'se-menu-item', 'se-zoom', 'se-explorerbutton',
+      'se-list-item', 'se-spin-input', 'se-list', 'se-input', 'se-dropdown', 'se-colorpicker'
+    ]
+    const leaks = await page.evaluate((tagList) => {
+      const out: Record<string, number> = {}
+      for (const tag of tagList) {
+        let n = 0
+        for (const el of document.querySelectorAll(tag)) {
+          n += el.shadowRoot?.querySelectorAll('img').length ?? 0
+        }
+        if (n) out[tag] = n
+      }
+      return out
+    }, tags)
+    expect(leaks).toEqual({})
+  })
 })

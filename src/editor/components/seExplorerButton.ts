@@ -53,15 +53,21 @@ export class SeExplorerButton extends LitElement {
     .menu-item:hover {
       background-color: var(--icon-bg-color-hover);
     }
-    img {
-      border: none;
-      width: 24px;
-      height: 24px;
+    .se-icon {
+      display: block;
+      width: 100%;
+      height: 100%;
+      background-color: var(--se-icon);
+      -webkit-mask-position: center; mask-position: center;
+      -webkit-mask-size: contain; mask-size: contain;
+      -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
     }
-    .overall.pressed .button-icon,
     .overall.pressed,
     .menu-item.pressed {
       background-color: var(--icon-bg-color-hover) !important;
+    }
+    .overall.pressed .se-icon {
+      background-color: var(--se-accent);
     }
     .overall.pressed .menu-button {
       background-color: var(--icon-bg-color-hover) !important;
@@ -88,8 +94,6 @@ export class SeExplorerButton extends LitElement {
       bottom: 0px;
       right: 0px;
       background-image: var(--handle-bg-url);
-    }
-    .button-icon {
     }
     .menu {
       position: fixed;
@@ -179,6 +183,7 @@ export class SeExplorerButton extends LitElement {
 
   render() {
     const imgPath = getSvgEditor().configObj.curConfig.imgPath
+    const iconSrc = this._activeSrc || 'explorer.svg'
     const shortcut = this.getAttribute('shortcut')
     const titleText = `${this.title}${shortcut ? ` [${shortcut}]` : ''}`
 
@@ -186,7 +191,12 @@ export class SeExplorerButton extends LitElement {
       <style>:host { --handle-bg-url: url(${imgPath}/handle.svg); }</style>
       <div class=${classMap({ overall: true, pressed: this.pressed, disabled: this.disabled })}>
         <div class="menu-button" title=${titleText}>
-          <img class="button-icon" src=${this._activeSrc || 'explorer.svg'} alt="icon" />
+          <span
+            class="se-icon"
+            role="img"
+            aria-label="icon"
+            style=${`-webkit-mask-image:url("${iconSrc}");mask-image:url("${iconSrc}")`}
+          ></span>
           <div class="handle" @click=${this._onClick}></div>
         </div>
         <div class=${classMap({ 'image-lib': true, 'open-lib': this._opened })}>

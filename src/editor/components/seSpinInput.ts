@@ -61,18 +61,24 @@ export class SESpinInput extends LitElement {
     div.imginside {
       width: var(--global-se-spin-input-width);
     }
-    img {
+    .se-icon {
       position: relative;
       right: -4px;
       top: 2px;
+      width: 24px;
+      height: 24px;
+      background-color: var(--se-icon);
+      -webkit-mask-position: center; mask-position: center;
+      -webkit-mask-size: contain; mask-size: contain;
+      -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
     }
-    span {
+    span#label {
       bottom: -0.5em;
       right: -4px;
       position: relative;
       margin-left: -4px;
       margin-right: 1px;
-      color: var(--se-on-accent);
+      color: var(--se-text);
     }
     input {
       background-color: var(--input-color);
@@ -104,7 +110,7 @@ export class SESpinInput extends LitElement {
     return html`
       <div class=${divClass} title=${divTitle}>
         ${showImg
-          ? html`<img alt="icon" width="24" height="24" aria-labelledby="label" src=${ifDefined(imgSrc)} />`
+          ? html`<span class="se-icon" role="img" aria-label="icon" style=${`-webkit-mask-image:url("${imgSrc}");mask-image:url("${imgSrc}")`}></span>`
           : nothing}
         ${showLabel
           ? html`<span id="label" part="label">${t(this.label)}</span>`
