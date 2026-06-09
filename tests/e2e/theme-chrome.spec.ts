@@ -79,4 +79,17 @@ test.describe('M1 theming', () => {
     expect(activeBg).not.toBe(light)                 // active (accent) differs from default ink
     expect(activeBg).not.toBe('rgba(0, 0, 0, 0)')    // ...and is an actual painted color (not a broken/transparent token)
   })
+
+  test('toolbar icon is exempt from the button hover animation', async ({ page }) => {
+    // Regression (M4 Phase 1): the btnHover animation colors the button BOX background and
+    // must NOT apply to the masked icon span — otherwise hovering re-colors the icon ink with
+    // a container background. The icon must carry no animation.
+    await page.locator('#tool_select').hover()
+    const iconAnim = await page.evaluate(() =>
+      getComputedStyle(
+        document.querySelector('#tool_select')!.shadowRoot!.querySelector('.se-icon')!
+      ).animationName
+    )
+    expect(iconAnim).toBe('none')
+  })
 })

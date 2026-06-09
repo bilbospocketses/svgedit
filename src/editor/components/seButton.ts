@@ -40,7 +40,7 @@ export class SeButton extends LitElement {
         background-color: var(--icon-bg-color-hover);
       }
     }
-    :host(:hover) :not(.disabled)
+    :host(:hover) div:not(.disabled)
     {
       animation: btnHover 0.2s forwards;
     }
@@ -69,7 +69,7 @@ export class SeButton extends LitElement {
       -webkit-mask-size: contain; mask-size: contain;
       -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
     }
-    :host(:hover) :not(.disabled) .se-icon { background-color: var(--se-icon-hover); }
+    :host(:hover) div:not(.disabled):not(.pressed) .se-icon { background-color: var(--se-icon-hover); }
     .pressed .se-icon { background-color: var(--se-accent); }
     .pressed {
       background-color: var(--icon-bg-color-hover);
