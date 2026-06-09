@@ -1,6 +1,5 @@
 import { LitElement, html, css } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
-import { ifDefined } from 'lit/directives/if-defined.js'
 import { styleMap } from 'lit/directives/style-map.js'
 import { getSvgEditor } from '../svgEditorInstance.js'
 
@@ -60,6 +59,13 @@ export class SeZoom extends LitElement {
     #icon {
       margin-bottom: 1px;
     }
+    .se-icon {
+      display: inline-block;
+      background-color: var(--se-icon);
+      -webkit-mask-position: center; mask-position: center;
+      -webkit-mask-size: contain; mask-size: contain;
+      -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+    }
     #spinner {
       display: flex;
       flex-direction: column;
@@ -106,7 +112,7 @@ export class SeZoom extends LitElement {
       border-radius: 0px 3px 3px 0px;
       margin: 2px 5px 0px 1px;
     }
-    #down > img {
+    #down > .se-icon {
       margin-top: 2px;
     }
     #options-container {
@@ -190,7 +196,7 @@ export class SeZoom extends LitElement {
 
     return html`
       <div id="tool-wrapper">
-        <img id="icon" alt="icon" width="18" height="18" src=${ifDefined(iconSrc)} />
+        <span id="icon" class="se-icon" style=${`width:18px;height:18px;${iconSrc ? `-webkit-mask-image:url("${iconSrc}");mask-image:url("${iconSrc}")` : ''}`}></span>
         <input
           .value=${this.value}
           @click=${this._handleInputClick}
@@ -214,7 +220,7 @@ export class SeZoom extends LitElement {
           >&#x25BC;</div>
         </div>
         <div id="down" @click=${this._handleClick}>
-          <img width="16" height="8" src=${arrowDownSrc} alt="Zoom dropdown" />
+          <span class="se-icon" style=${`width:16px;height:8px;-webkit-mask-image:url("${arrowDownSrc}");mask-image:url("${arrowDownSrc}")`}></span>
         </div>
       </div>
       <div id="options-container" style=${optionsStyle}>

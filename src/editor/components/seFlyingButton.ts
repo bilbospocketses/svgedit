@@ -59,17 +59,23 @@ export class SeFlyingButton extends LitElement {
     .overall .menu-button:hover {
       animation: btnHover 0.2s forwards;
     }
-    img {
-      border: none;
-      width: 24px;
-      height: 24px;
+    .se-icon {
+      display: block;
+      width: 100%;
+      height: 100%;
+      background-color: var(--se-icon);
+      -webkit-mask-position: center; mask-position: center;
+      -webkit-mask-size: contain; mask-size: contain;
+      -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
     }
-    .overall.pressed .button-icon,
     .overall.pressed .handle {
       background-color: var(--icon-bg-color-hover) !important;
     }
     .overall.pressed .menu-button {
       background-color: var(--icon-bg-color-hover) !important;
+    }
+    .overall.pressed .se-icon {
+      background-color: var(--se-accent);
     }
     .disabled {
       opacity: 0.3;
@@ -93,8 +99,6 @@ export class SeFlyingButton extends LitElement {
       bottom: 0px;
       right: 0px;
       background-image: var(--handle-bg-url);
-    }
-    .button-icon {
     }
     .menu {
       position: fixed;
@@ -167,6 +171,7 @@ export class SeFlyingButton extends LitElement {
 
   render() {
     const imgPath = getSvgEditor().configObj.curConfig.imgPath
+    const iconSrc = imgPath + '/' + this._activeSlotSrc
     const shortcut = this.getAttribute('shortcut')
     const titleText = `${t(this.title)} ${shortcut ? `[${t(shortcut)}]` : ''}`.trim()
 
@@ -177,7 +182,12 @@ export class SeFlyingButton extends LitElement {
           <slot></slot>
         </div>
         <div class="menu-button" title=${titleText}>
-          <img class="button-icon" src=${imgPath + '/' + this._activeSlotSrc} alt="icon" />
+          <span
+            class="se-icon"
+            role="img"
+            aria-label="icon"
+            style=${`-webkit-mask-image:url("${iconSrc}");mask-image:url("${iconSrc}")`}
+          ></span>
           <div class="handle" @click=${this._onClick}></div>
         </div>
       </div>

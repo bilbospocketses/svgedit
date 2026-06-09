@@ -1,6 +1,5 @@
 import { LitElement, html, css, nothing } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
-import { ifDefined } from 'lit/directives/if-defined.js'
 import { t } from '../locale.js'
 import { matchShortcut } from '../common/shortcut.js'
 import { getSvgEditor } from '../svgEditorInstance.js'
@@ -36,8 +35,17 @@ export class SeMenuItem extends LitElement {
       text-align: left;
       cursor: pointer;
     }
-    :host button > span {
+    :host button > span[part='label'] {
       margin-left: 7px;
+    }
+    .se-icon {
+      flex: none;
+      width: 24px;
+      height: 24px;
+      background-color: var(--se-icon);
+      -webkit-mask-position: center; mask-position: center;
+      -webkit-mask-size: contain; mask-size: contain;
+      -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
     }
   `
 
@@ -52,7 +60,7 @@ export class SeMenuItem extends LitElement {
     return html`
       <button type="button" role="menuitem" part="item">
         ${this.src
-          ? html`<img alt="icon" width="24" src=${ifDefined(imgSrc)} />`
+          ? html`<span class="se-icon" role="img" aria-label="icon" style=${`-webkit-mask-image:url("${imgSrc}");mask-image:url("${imgSrc}")`}></span>`
           : nothing}
         <span part="label">${labelText}</span>
       </button>
