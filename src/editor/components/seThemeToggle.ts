@@ -1,4 +1,4 @@
-import { LitElement, html, css } from 'lit'
+import { LitElement, html, css, svg } from 'lit'
 import { customElement, state } from 'lit/decorators.js'
 import { getCurrentTheme, toggleTheme, type Theme } from '../styles/theme.js'
 
@@ -42,8 +42,10 @@ export default class SeThemeToggle extends LitElement {
   }
 
   render () {
-    const moon = html`<path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/>`
-    const sun = html`<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/>`
+    // SVG fragments MUST use Lit's `svg` tag, not `html` — `html` creates the
+    // <circle>/<path> in the HTML namespace (inert, zero geometry, invisible).
+    const moon = svg`<path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/>`
+    const sun = svg`<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/>`
     return html`
       <button type="button" title="Toggle light/dark theme" aria-label="Toggle light/dark theme" @click=${this._onClick}>
         <svg viewBox="0 0 24 24" aria-hidden="true">${this._theme === 'dark' ? sun : moon}</svg>
