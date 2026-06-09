@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (M4 Phase 1 — icon theming pipeline -- 2026-06-09)
+
+- Toolbar icons are now **theme-aware**: `SeButton` paints each icon via a CSS `mask` + a new
+  `--se-icon` design token (`--se-icon-hover` on hover; `--se-accent` on the active tool) instead
+  of an `<img>`, so icons follow the light/dark theme. Icon files and the `src="…"` button API are
+  unchanged — this is the rendering/token foundation for the M4 icon-set overhaul (#23, Phase 1 of 5).
+
+### Fixed (-- 2026-06-09)
+
+- The in-app dialogs (`seAlert` / `seConfirm` / `seSelect` / `sePrompt`) now remove their element
+  from the DOM on close, preventing one dead element accumulating per call over a session (#24).
+
+### Changed (Embed docs -- 2026-06-09)
+
+- `EMBED_API.md`: corrected the `allow-modals` sandbox guidance — the editor's dialogs are in-app
+  `<dialog>.showModal()` modals (empirically verified to open without the flag); `allow-modals`
+  only gates the native `beforeunload` "Leave site?" warning, so it is optional (#25).
+
 ### Added (M3 — native dialogs → modals -- 2026-06-08)
 
 - **`SePromptDialog` (`se-prompt-dialog`) + `sePrompt(text, defaultValue?)`** — a themed, in-app
