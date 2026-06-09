@@ -544,8 +544,11 @@ Caveats:
 - `allow-same-origin` is required for the editor's localStorage persistence to work. Omitting it
   breaks the editor's settings save.
 - `allow-downloads` is needed for the editor's SVG export / save-to-disk functionality.
-- `allow-modals` is needed only if you have **not** registered dialog handlers for all three
-  dialog kinds (`alert`, `confirm`, `prompt`). If you register all three, you can omit it.
+- `allow-modals` is **optional**. The editor's `alert` / `confirm` / `prompt` / `select` dialogs are
+  in-app `<dialog>.showModal()` modals that work with or without it, and an unregistered dialog
+  handler falls back to those same in-app modals (not native `window.*` dialogs). The one thing this
+  flag still gates is the browser-native `beforeunload` "Leave site?" unsaved-changes warning — omit
+  it and that browser-owned prompt simply won't appear (already a documented limitation).
 - `allow-top-navigation` is not needed and should be omitted — the embed API uses postMessage, not
   navigation.
 - Do not add `allow-popups` unless your use case requires it.
@@ -750,6 +753,6 @@ Summary of the sandbox attributes discussed in [Security: allowedOrigins](#secur
 | `allow-scripts` | Always | The editor is a JavaScript application. |
 | `allow-same-origin` | Strongly recommended | Needed for localStorage (editor settings persistence). Without it, every session starts from defaults. |
 | `allow-downloads` | If export / save needed | SVG export / save-to-disk triggers a browser download. |
-| `allow-modals` | If not intercepting all dialogs | Required for native `alert` / `confirm` / `prompt` fallbacks. Omit only if you register all three dialog handlers. |
+| `allow-modals` | Optional | The editor's dialogs are in-app `<dialog>.showModal()` modals that work without it (verified); an unregistered handler falls back to those same in-app modals, not native `window.*`. It gates only the browser-native `beforeunload` unsaved-changes prompt. |
 | `allow-popups` | Rarely | Not required by the embed API. Add only if an extension you load needs it. |
 | `allow-top-navigation` | No | The embed API uses postMessage only. Do not add this. |
