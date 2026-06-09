@@ -56,27 +56,25 @@ test.describe('M1 theming', () => {
   })
 
   test('toolbar icons follow data-theme; active tool differs', async ({ page }) => {
-    const iconBg = (theme: string) => page.evaluate((t) => {
+    // Use #tool_rect (a non-default tool). #tool_select is the active tool on load — its button
+    // is already `pressed`, so it would read the accent color even in its "unpressed" state.
+    const readIcon = (theme: string, pressed: boolean) => page.evaluate(async ({ t, p }) => {
       document.documentElement.setAttribute('data-theme', t)
-      const icon = document.querySelector('#tool_select')?.shadowRoot?.querySelector('.se-icon')
-      return icon ? getComputedStyle(icon).backgroundColor : null
-    }, theme)
-
-    const light = await iconBg('light')
-    const dark = await iconBg('dark')
-    expect(light).not.toBeNull()
-    expect(dark).not.toBeNull()
-    expect(light).not.toBe(dark)            // icon ink re-themes between light and dark
-
-    // Active/selected tool: the .pressed icon resolves to a different (accent) color.
-    const activeBg = await page.evaluate(async () => {
-      document.documentElement.setAttribute('data-theme', 'light')
-      const btn = document.querySelector('#tool_select') as HTMLElement & { pressed: boolean; updateComplete: Promise<unknown> }
-      btn.pressed = true                    // drive Lit's property (real press path), not the class directly
+      const btn = document.querySelector('#tool_rect') as HTMLElement & { pressed: boolean; updateComplete: Promise<unknown> }
+      btn.pressed = p
       await btn.updateComplete
-      return getComputedStyle(btn.shadowRoot!.querySelector('.se-icon')!).backgroundColor
-    })
-    expect(activeBg).not.toBe(light)                 // active (accent) differs from default ink
+      const icon = btn.shadowRoot!.querySelector('.se-icon')
+      return icon ? getComputedStyle(icon).backgroundColor : null
+    }, { t: theme, p: pressed })
+
+    const lightInk = await readIcon('light', false)
+    const darkInk = await readIcon('dark', false)
+    expect(lightInk).not.toBeNull()
+    expect(darkInk).not.toBeNull()
+    expect(lightInk).not.toBe(darkInk)               // default icon ink re-themes between light and dark
+
+    const activeBg = await readIcon('light', true)
+    expect(activeBg).not.toBe(lightInk)              // active (accent) differs from default ink
     expect(activeBg).not.toBe('rgba(0, 0, 0, 0)')    // ...and is an actual painted color (not a broken/transparent token)
   })
 
