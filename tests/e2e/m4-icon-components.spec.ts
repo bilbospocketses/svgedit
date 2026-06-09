@@ -92,4 +92,19 @@ test.describe('M4 icon components', () => {
     }, tags)
     expect(leaks).toEqual({})
   })
+
+  test('theme toggle renders visible SVG geometry (svg tag, not inert html namespace)', async ({ page }) => {
+    // Regression: seThemeToggle built its sun/moon with Lit's `html` tag, so the
+    // <circle>/<path> landed in the HTML namespace — inert, zero geometry, invisible.
+    // getBBox() must report real dimensions (it is 0x0 for html-namespace nodes).
+    const bbox = await page.evaluate(() => {
+      const svg = document.getElementById('theme_toggle')?.shadowRoot?.querySelector('svg') as SVGGraphicsElement | null
+      if (!svg) return null
+      const b = svg.getBBox()
+      return { w: b.width, h: b.height }
+    })
+    expect(bbox).not.toBeNull()
+    expect(bbox!.w).toBeGreaterThan(0)
+    expect(bbox!.h).toBeGreaterThan(0)
+  })
 })
