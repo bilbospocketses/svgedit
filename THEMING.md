@@ -16,9 +16,9 @@ Tokens live in `src/editor/styles/tokens.css` in two layers:
   status hues (`--se-red-*`, `--se-amber-*`, `--se-green-*`, `--se-sky-*`). Theme-independent.
 - **Semantic** — role-based tokens mapped onto primitives: `--se-bg`, `--se-surface`,
   `--se-surface-2`, `--se-canvas`, `--se-border`, `--se-border-strong`, `--se-text`,
-  `--se-text-muted`, `--se-text-subtle`, `--se-accent` (+ `-hover` / `-active` / `-subtle`),
-  `--se-on-accent`, `--se-danger`, `--se-warn`, `--se-success`, `--se-info`, `--se-focus-ring`,
-  `--se-scrim`, and `--se-shadow-*`.
+  `--se-text-muted`, `--se-text-subtle`, `--se-icon` (+ `-hover`),
+  `--se-accent` (+ `-hover` / `-active` / `-subtle`), `--se-on-accent`, `--se-danger`,
+  `--se-warn`, `--se-success`, `--se-info`, `--se-focus-ring`, `--se-scrim`, and `--se-shadow-*`.
 
 **Components consume semantic tokens only.** Theming works by remapping the semantic layer:
 `:root` holds the light values, and `html[data-theme="dark"]` re-points the *same* semantic
