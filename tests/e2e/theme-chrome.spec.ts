@@ -54,4 +54,29 @@ test.describe('M1 theming', () => {
     expect(artLight).toBe(artDark)
     expect(artLight).toContain('255, 0, 0')
   })
+
+  test('toolbar icons follow data-theme; active tool differs', async ({ page }) => {
+    const iconBg = (theme: string) => page.evaluate((t) => {
+      document.documentElement.setAttribute('data-theme', t)
+      const icon = document.querySelector('#tool_select')?.shadowRoot?.querySelector('.se-icon')
+      return icon ? getComputedStyle(icon).backgroundColor : null
+    }, theme)
+
+    const light = await iconBg('light')
+    const dark = await iconBg('dark')
+    expect(light).not.toBeNull()
+    expect(dark).not.toBeNull()
+    expect(light).not.toBe(dark)            // icon ink re-themes between light and dark
+
+    // Active/selected tool: the .pressed icon resolves to a different (accent) color.
+    const activeBg = await page.evaluate(async () => {
+      document.documentElement.setAttribute('data-theme', 'light')
+      const btn = document.querySelector('#tool_select') as HTMLElement & { pressed: boolean; updateComplete: Promise<unknown> }
+      btn.pressed = true                    // drive Lit's property (real press path), not the class directly
+      await btn.updateComplete
+      return getComputedStyle(btn.shadowRoot!.querySelector('.se-icon')!).backgroundColor
+    })
+    expect(activeBg).not.toBe(light)                 // active (accent) differs from default ink
+    expect(activeBg).not.toBe('rgba(0, 0, 0, 0)')    // ...and is an actual painted color (not a broken/transparent token)
+  })
 })
