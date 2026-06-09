@@ -28,6 +28,24 @@ import { getSvgEditor } from '../svgEditorInstance.js'
  * @property() accessor style. Forward host's `style` attribute to inner div via
  * `this.getAttribute('style')` in render().
  */
+
+/**
+ * Reflecting Boolean attribute converter: emit the string `'true'` (not Lit's
+ * default empty string) so DOM queries like `#tools_left *[pressed]` — used by
+ * LeftPanel.updateLeftPanel to clear the previously-active tool's highlight —
+ * actually match. Mirrors the converter in seFlyingButton; the two MUST agree
+ * because updateLeftPanel clears highlights via the [pressed] attribute selector.
+ * Without reflection, a button set `pressed` via the property never grows the
+ * attribute, so the clear-loop matches nothing and tool highlights accumulate.
+ */
+const boolAttr = {
+  reflect: true,
+  converter: {
+    fromAttribute: (v: string | null) => v !== null,
+    toAttribute: (v: boolean) => (v ? 'true' : null)
+  }
+} as const
+
 @customElement('se-button')
 export class SeButton extends LitElement {
   static styles = css`
@@ -82,7 +100,7 @@ export class SeButton extends LitElement {
 
   @property() accessor title = ''
   @property() accessor src = ''
-  @property({ type: Boolean }) accessor pressed = false
+  @property(boolAttr) accessor pressed = false
   @property({ type: Boolean }) accessor disabled = false
   @property() accessor size = ''
 
