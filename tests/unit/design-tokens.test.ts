@@ -14,6 +14,7 @@ const SEMANTIC = [
   '--se-text', '--se-text-muted', '--se-text-subtle',
   '--se-accent', '--se-accent-hover', '--se-accent-active', '--se-accent-subtle', '--se-on-accent',
   '--se-danger', '--se-warn', '--se-success', '--se-info',
+  '--se-icon', '--se-icon-hover',
   '--se-focus-ring', '--se-scrim', '--se-shadow-sm', '--se-shadow-overlay'
 ]
 

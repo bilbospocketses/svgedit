@@ -40,7 +40,7 @@ export class SeButton extends LitElement {
         background-color: var(--icon-bg-color-hover);
       }
     }
-    :host(:hover) :not(.disabled)
+    :host(:hover) div:not(.disabled)
     {
       animation: btnHover 0.2s forwards;
     }
@@ -60,11 +60,17 @@ export class SeButton extends LitElement {
       padding: 1px;
       border-radius: 1px;
     }
-    img {
-      border: none;
+    .se-icon {
+      display: block;
       width: 100%;
       height: 100%;
+      background-color: var(--se-icon);
+      -webkit-mask-position: center; mask-position: center;
+      -webkit-mask-size: contain; mask-size: contain;
+      -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
     }
+    :host(:hover) div:not(.disabled):not(.pressed) .se-icon { background-color: var(--se-icon-hover); }
+    .pressed .se-icon { background-color: var(--se-accent); }
     .pressed {
       background-color: var(--icon-bg-color-hover);
     }
@@ -108,7 +114,12 @@ export class SeButton extends LitElement {
         class=${divClass}
         style=${ifDefined(hostStyle ?? undefined)}
       >
-        <img alt="icon" src=${ifDefined(imgSrc)} />
+        <span
+          class="se-icon"
+          role="img"
+          aria-label="icon"
+          style=${imgSrc ? `-webkit-mask-image:url("${imgSrc}");mask-image:url("${imgSrc}")` : ''}
+        ></span>
       </div>
     `
   }
