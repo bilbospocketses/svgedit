@@ -60,7 +60,7 @@ export class SeMenuItem extends LitElement {
     return html`
       <button type="button" role="menuitem" part="item">
         ${this.src
-          ? html`<span class="se-icon" role="img" aria-label="icon" style=${`-webkit-mask-image:url("${imgSrc}");mask-image:url("${imgSrc}")`}></span>`
+          ? html`<span class="se-icon" aria-hidden="true" style=${`-webkit-mask-image:url("${imgSrc}");mask-image:url("${imgSrc}")`}></span>`
           : nothing}
         <span part="label">${labelText}</span>
       </button>

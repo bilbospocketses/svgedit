@@ -51,7 +51,7 @@ export class SeExplorerButton extends LitElement {
     .menu-button:hover,
     se-button:hover,
     .menu-item:hover {
-      background-color: var(--icon-bg-color-hover);
+      background-color: var(--se-accent-subtle);
     }
     .se-icon {
       display: block;
@@ -64,13 +64,13 @@ export class SeExplorerButton extends LitElement {
     }
     .overall.pressed,
     .menu-item.pressed {
-      background-color: var(--icon-bg-color-hover) !important;
+      background-color: var(--se-accent-subtle) !important;
     }
     .overall.pressed .se-icon {
       background-color: var(--se-accent);
     }
     .overall.pressed .menu-button {
-      background-color: var(--icon-bg-color-hover) !important;
+      background-color: var(--se-accent-subtle) !important;
     }
     .disabled {
       opacity: 0.3;
@@ -81,7 +81,7 @@ export class SeExplorerButton extends LitElement {
       width: 24px;
       margin: 2px 1px 4px;
       padding: 3px;
-      background-color: var(--icon-bg-color);
+      background-color: var(--se-surface);
       cursor: pointer;
       position: relative;
       border-radius: 3px;
@@ -93,7 +93,9 @@ export class SeExplorerButton extends LitElement {
       position: absolute;
       bottom: 0px;
       right: 0px;
-      background-image: var(--handle-bg-url);
+      background-color: var(--se-icon);
+      -webkit-mask: var(--handle-bg-url) center / contain no-repeat;
+      mask: var(--handle-bg-url) center / contain no-repeat;
     }
     .menu {
       position: fixed;
@@ -193,8 +195,7 @@ export class SeExplorerButton extends LitElement {
         <div class="menu-button" title=${titleText}>
           <span
             class="se-icon"
-            role="img"
-            aria-label="icon"
+            aria-hidden="true"
             style=${`-webkit-mask-image:url("${iconSrc}");mask-image:url("${iconSrc}")`}
           ></span>
           <div class="handle" @click=${this._onClick}></div>

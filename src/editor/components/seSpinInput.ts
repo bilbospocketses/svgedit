@@ -81,7 +81,7 @@ export class SESpinInput extends LitElement {
       color: var(--se-text);
     }
     input {
-      background-color: var(--input-color);
+      background-color: var(--se-surface-2);
       border-radius: 3px;
       height: 20px;
       margin-top: 1px;
@@ -110,7 +110,7 @@ export class SESpinInput extends LitElement {
     return html`
       <div class=${divClass} title=${divTitle}>
         ${showImg
-          ? html`<span class="se-icon" role="img" aria-label="icon" style=${`-webkit-mask-image:url("${imgSrc}");mask-image:url("${imgSrc}")`}></span>`
+          ? html`<span class="se-icon" aria-hidden="true" style=${`-webkit-mask-image:url("${imgSrc}");mask-image:url("${imgSrc}")`}></span>`
           : nothing}
         ${showLabel
           ? html`<span id="label" part="label">${t(this.label)}</span>`

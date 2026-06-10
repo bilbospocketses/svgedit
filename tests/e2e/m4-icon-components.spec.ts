@@ -107,4 +107,25 @@ test.describe('M4 icon components', () => {
     expect(bbox!.w).toBeGreaterThan(0)
     expect(bbox!.h).toBeGreaterThan(0)
   })
+
+  test('icon spans are decorative — aria-hidden, not a generic role="img" label', async ({ page }) => {
+    // The masked .se-icon spans carry no semantic content (the button title is the
+    // accessible name), so every one must be aria-hidden — never role="img"
+    // aria-label="icon", which announces a meaningless "icon" to screen readers.
+    const a11y = await page.evaluate(() => {
+      const spans = [...document.querySelectorAll(
+        'se-button, se-flyingbutton, se-menu-item, se-zoom, se-explorerbutton, se-list-item, se-spin-input, se-list, se-input, se-dropdown, se-colorpicker'
+      )].flatMap((el) => [...((el as HTMLElement).shadowRoot?.querySelectorAll('.se-icon') ?? [])])
+      return {
+        total: spans.length,
+        hidden: spans.filter((s) => s.getAttribute('aria-hidden') === 'true').length,
+        roleImg: spans.filter((s) => s.getAttribute('role') === 'img').length,
+        labelled: spans.filter((s) => s.getAttribute('aria-label') === 'icon').length
+      }
+    })
+    expect(a11y.total).toBeGreaterThan(0)
+    expect(a11y.roleImg).toBe(0)
+    expect(a11y.labelled).toBe(0)
+    expect(a11y.hidden).toBe(a11y.total)
+  })
 })

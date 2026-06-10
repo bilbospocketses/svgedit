@@ -18,7 +18,7 @@ import { t } from '../locale.js'
  * Substrate notes:
  *   - Drops `import 'elix/define/Input.js'` — 1 of the 12 elix-bound deps killed.
  *   - Inner <input> owned directly; no elix wrapping.
- *   - Theme variable preserved verbatim: `--input-color`.
+ *   - Input background uses the `--se-surface-2` theme token.
  *   - `accessor` keyword required on @property declarations (TC39 standard decorators + Lit 3).
  */
 @customElement('se-input')
@@ -48,7 +48,7 @@ export class SeInput extends LitElement {
       color: var(--se-text);
     }
     input {
-      background-color: var(--input-color);
+      background-color: var(--se-surface-2);
       border-radius: 3px;
       height: 24px;
     }
@@ -64,7 +64,7 @@ export class SeInput extends LitElement {
     return html`
       <div class="wrap" title=${t(this.title)}>
         ${this.src && !this.label
-          ? html`<span class="se-icon" part="icon" role="img" aria-label="icon" style=${`-webkit-mask-image:url("${this.src}");mask-image:url("${this.src}")`}></span>`
+          ? html`<span class="se-icon" part="icon" aria-hidden="true" style=${`-webkit-mask-image:url("${this.src}");mask-image:url("${this.src}")`}></span>`
           : nothing}
         ${this.label
           ? html`<span id="label" part="label">${t(this.label)}</span>`

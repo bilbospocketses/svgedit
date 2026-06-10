@@ -23,7 +23,7 @@ export class SePaintPicker extends LitElement {
       display: inline-block;
     }
     #picker {
-      background: var(--input-color);
+      background: var(--se-surface-2);
       height: 23px;
       line-height: 23px;
       border-radius: 3px;
@@ -155,7 +155,7 @@ export class SePaintPicker extends LitElement {
 
     return html`
       <div id="picker" @click=${this._onTriggerClick} title=${t(this.label)}>
-        <span id="logo" class="se-icon" role="img" aria-label="icon" style=${`-webkit-mask-image:url("${imgSrc}");mask-image:url("${imgSrc}")`}></span>
+        <span id="logo" class="se-icon" aria-hidden="true" style=${`-webkit-mask-image:url("${imgSrc}");mask-image:url("${imgSrc}")`}></span>
         <label title=${t('config.pick_paint_opavity')}></label>
         <div id="block"></div>
       </div>

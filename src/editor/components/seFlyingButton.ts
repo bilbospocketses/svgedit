@@ -53,7 +53,7 @@ export class SeFlyingButton extends LitElement {
       }
 
       to {
-        background-color: var(--icon-bg-color-hover);
+        background-color: var(--se-accent-subtle);
       }
     }
     .overall .menu-button:hover {
@@ -69,10 +69,10 @@ export class SeFlyingButton extends LitElement {
       -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
     }
     .overall.pressed .handle {
-      background-color: var(--icon-bg-color-hover) !important;
+      background-color: var(--se-accent-subtle) !important;
     }
     .overall.pressed .menu-button {
-      background-color: var(--icon-bg-color-hover) !important;
+      background-color: var(--se-accent-subtle) !important;
     }
     .overall.pressed .se-icon {
       background-color: var(--se-accent);
@@ -86,7 +86,7 @@ export class SeFlyingButton extends LitElement {
       width: 24px;
       margin: 2px 1px 4px;
       padding: 3px;
-      background-color: var(--icon-bg-color);
+      background-color: var(--se-surface);
       cursor: pointer;
       position: relative;
       border-radius: 3px;
@@ -98,7 +98,9 @@ export class SeFlyingButton extends LitElement {
       position: absolute;
       bottom: 0px;
       right: 0px;
-      background-image: var(--handle-bg-url);
+      background-color: var(--se-icon);
+      -webkit-mask: var(--handle-bg-url) center / contain no-repeat;
+      mask: var(--handle-bg-url) center / contain no-repeat;
     }
     .menu {
       position: fixed;
@@ -184,8 +186,7 @@ export class SeFlyingButton extends LitElement {
         <div class="menu-button" title=${titleText}>
           <span
             class="se-icon"
-            role="img"
-            aria-label="icon"
+            aria-hidden="true"
             style=${`-webkit-mask-image:url("${iconSrc}");mask-image:url("${iconSrc}")`}
           ></span>
           <div class="handle" @click=${this._onClick}></div>

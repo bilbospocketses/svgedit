@@ -12,7 +12,7 @@ test.describe('M1 theming', () => {
 
   test('chrome surface follows data-theme; artwork does not', async ({ page }) => {
     // ── Invariant 1: chrome re-themes ──────────────────────────────────────
-    // .svg_editor has `background: var(--main-bg-color)` → var(--se-bg),
+    // .svg_editor has `background: var(--se-bg)` → var(--se-bg),
     // which differs between light (:root) and dark (html[data-theme="dark"]).
     const surfaceBgLight = await page.evaluate(() => {
       document.documentElement.setAttribute('data-theme', 'light')

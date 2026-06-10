@@ -51,11 +51,11 @@ export class SeButton extends LitElement {
   static styles = css`
     @keyframes btnHover {
       from {
-        background-color: var(--main-bg-color);
+        background-color: var(--se-bg);
       }
 
       to {
-        background-color: var(--icon-bg-color-hover);
+        background-color: var(--se-accent-subtle);
       }
     }
     :host(:hover) div:not(.disabled)
@@ -68,7 +68,7 @@ export class SeButton extends LitElement {
       width: 24px;
       margin: 4px 1px 4px;
       padding: 3px;
-      background-color: var(--icon-bg-color);
+      background-color: var(--se-surface);
       cursor: pointer;
       border-radius: 3px;
     }
@@ -90,7 +90,7 @@ export class SeButton extends LitElement {
     :host(:hover) div:not(.disabled):not(.pressed) .se-icon { background-color: var(--se-icon-hover); }
     .pressed .se-icon { background-color: var(--se-accent); }
     .pressed {
-      background-color: var(--icon-bg-color-hover);
+      background-color: var(--se-accent-subtle);
     }
     .disabled {
       opacity: 0.3;
@@ -134,8 +134,7 @@ export class SeButton extends LitElement {
       >
         <span
           class="se-icon"
-          role="img"
-          aria-label="icon"
+          aria-hidden="true"
           style=${imgSrc ? `-webkit-mask-image:url("${imgSrc}");mask-image:url("${imgSrc}")` : ''}
         ></span>
       </div>
