@@ -27,7 +27,7 @@ export class SeSelect extends LitElement {
   static styles = css`
     select {
       margin-top: 8px;
-      background-color: var(--input-color);
+      background-color: var(--se-surface-2);
       appearance: none;
       outline: none;
       padding: 3px;

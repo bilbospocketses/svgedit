@@ -1,17 +1,5 @@
 :root {
-  /* Legacy aliases → semantic tokens (transitional; references migrate to --se-* in later PRs) */
-  --main-bg-color: var(--se-bg);
-  --text-color: var(--se-text);
-  --border-color: var(--se-border);
-  --canvas-bg-color: var(--se-canvas);
-  --link-color: var(--se-accent);
-  --ruler-color: var(--se-surface-2);
-  --icon-bg-color: var(--se-surface);
-  --icon-bg-color-hover: var(--se-accent-subtle);
-  --input-color: var(--se-surface-2);
-  --orange-color: var(--se-accent);
   --global-se-spin-input-width: 82px;
-  --top-toolbar-min-height: var(--se-toolbar-h);
 }
 
 .svg_editor * {
@@ -20,7 +8,7 @@
 
 .svg_editor {
   display: grid;
-  grid-template-rows: minmax(var(--top-toolbar-min-height), auto) 15px 1fr 40px;
+  grid-template-rows: minmax(var(--se-toolbar-h), auto) 15px 1fr 40px;
   grid-template-columns: 40px 15px 50px 1fr 15px;
   grid-template-areas:
     "main main   main top top"
@@ -28,9 +16,9 @@
     "left rulerY workarea workarea side"
     "left bottom bottom bottom bottom";
   font-size: var(--se-text-base);
-  background: var(--main-bg-color);
+  background: var(--se-bg);
   font-family: var(--se-font-sans);
-  color: var(--text-color);
+  color: var(--se-text);
   user-select: text;
   width: 100%;
   height: 100%;
@@ -67,7 +55,7 @@
 #workarea {
   grid-area: workarea;
   background-color: var(--se-canvas);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--se-border);
   overflow: auto;
   text-align: center;
 }
@@ -75,7 +63,7 @@
 #svgcanvas {
   line-height: normal;
   display: inline-block;
-  background: var(--canvas-bg-color);
+  background: var(--se-canvas);
   text-align: center;
   vertical-align: middle;
   position: relative;
@@ -99,12 +87,12 @@
 }
 
 a {
-  color: var(--link-color);
+  color: var(--se-accent);
 }
 
 hr {
   border: none;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--se-border);
 }
 
 #linkLabel>svg {
@@ -140,7 +128,7 @@ hr {
   padding: 0;
   width: 132px;
   border-collapse: collapse;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--se-border);
   background-color: var(--se-surface);
 }
 
@@ -151,7 +139,7 @@ hr {
 }
 
 #layerlist tr.layersel {
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--se-border);
   background-color: var(--se-accent-subtle);
 }
 
@@ -312,15 +300,15 @@ hr {
   flex-wrap: wrap;
   align-items: flex-start;
   align-content: flex-start;
-  background-color: var(--main-bg-color);
-  min-height: var(--top-toolbar-min-height);
+  background-color: var(--se-bg);
+  min-height: var(--se-toolbar-h);
 }
 
 #tools_top>* {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-  background-color: var(--main-bg-color);
+  background-color: var(--se-bg);
 }
 
 /*—————————————————————————————*/
@@ -347,8 +335,8 @@ hr {
 }
 
 #zoom {
-  color: var(--text-color);
-  background-color: var(--main-bg-color);
+  color: var(--se-text);
+  background-color: var(--se-bg);
   border: none;
 }
 

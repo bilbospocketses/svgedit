@@ -36,11 +36,11 @@ export class SeList extends LitElement {
     }
 
     #select-container:hover {
-      background-color: var(--icon-bg-color-hover);
+      background-color: var(--se-accent-subtle);
     }
 
     #select-container::part(value) {
-      background-color: var(--main-bg-color);
+      background-color: var(--se-bg);
     }
 
     #select-container::part(popup-toggle) {
@@ -113,8 +113,7 @@ export class SeList extends LitElement {
           const titleAttr = el.getAttribute('title') ?? ''
           return html`<span
             class="se-icon"
-            role="img"
-            aria-label="icon"
+            aria-hidden="true"
             title=${t(titleAttr)}
             style=${`width:${imgHeight || '24px'};height:${imgHeight || '24px'};-webkit-mask-image:url("${imgPath + '/' + src}");mask-image:url("${imgPath + '/' + src}")`}
           ></span>`

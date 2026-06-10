@@ -294,8 +294,6 @@ class TopPanel {
           }
         }
 
-        // Show open/close button based on selected point
-        // setIcon('#tool_openclose_path', path.closed_subpath ? 'open_path' : 'close_path');
 
         if (point) {
           const segType = $id('seg_type') as SeValueElement | null

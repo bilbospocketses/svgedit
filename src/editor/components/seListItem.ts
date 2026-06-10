@@ -29,13 +29,13 @@ export class SeListItem extends LitElement {
   static styles = css`
     [aria-label="option"] {
       padding: 0.25rem 0.125rem !important;
-      background-color: var(--icon-bg-color);
+      background-color: var(--se-surface);
     }
     [aria-label="option"]:hover {
-      background-color: var(--icon-bg-color-hover);
+      background-color: var(--se-accent-subtle);
     }
     .selected {
-      background-color: var(--icon-bg-color-hover);
+      background-color: var(--se-accent-subtle);
     }
     .se-icon {
       display: inline-block;
@@ -64,8 +64,7 @@ export class SeListItem extends LitElement {
         ${this.src
           ? html`<span
               class="se-icon"
-              role="img"
-              aria-label="icon"
+              aria-hidden="true"
               title=${t(this.title)}
               style=${`width:${this.imgHeight || '24px'};height:${this.imgHeight || '24px'};-webkit-mask-image:url("${imgPath + '/' + this.src}");mask-image:url("${imgPath + '/' + this.src}")`}
             ></span>`

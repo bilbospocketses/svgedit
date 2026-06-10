@@ -129,7 +129,7 @@ export class SeDropdown extends LitElement {
         aria-expanded=${this._open ? 'true' : 'false'}
         @click=${this._onToggle}
       >
-        <span class="se-icon" part="icon" role="img" aria-label="icon" style=${`-webkit-mask-image:url("${this.src}");mask-image:url("${this.src}")`}></span>
+        <span class="se-icon" part="icon" aria-hidden="true" style=${`-webkit-mask-image:url("${this.src}");mask-image:url("${this.src}")`}></span>
       </button>
       <div
         class=${classMap({ popup: true, open: this._open })}

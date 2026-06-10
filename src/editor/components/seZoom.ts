@@ -39,7 +39,7 @@ export class SeZoom extends LitElement {
   static styles = css`
     input {
       border: unset;
-      background-color: var(--input-color);
+      background-color: var(--se-surface-2);
       min-width: unset;
       width: 40px;
       height: 23px;
@@ -79,7 +79,7 @@ export class SeZoom extends LitElement {
       font-size: 7px;
       border-left: solid 1px transparent;
       border-right: solid 1px transparent;
-      background-color: var(--input-color);
+      background-color: var(--se-surface-2);
     }
     #arrow-up {
       height: 9px;
@@ -92,11 +92,11 @@ export class SeZoom extends LitElement {
     @keyframes hover-arrows {
       from {
         background: transparent;
-        color: var(--icon-bg-color-hover);
+        color: var(--se-accent-subtle);
       }
       to {
-        background: var(--icon-bg-color-hover);
-        color: var(--orange-color);
+        background: var(--se-accent-subtle);
+        color: var(--se-accent);
       }
     }
     #arrow-up:hover, #arrow-down:hover {
@@ -108,7 +108,7 @@ export class SeZoom extends LitElement {
       display: flex;
       align-items: center;
       justify-content: center;
-      background-color: var(--input-color);
+      background-color: var(--se-surface-2);
       border-radius: 0px 3px 3px 0px;
       margin: 2px 5px 0px 1px;
     }
@@ -119,7 +119,7 @@ export class SeZoom extends LitElement {
       position: fixed;
       display: flex;
       flex-direction: column;
-      background-color: var(--icon-bg-color);
+      background-color: var(--se-surface);
       border: solid 1px var(--se-border);
       box-shadow: var(--se-shadow-overlay);
     }
@@ -196,7 +196,7 @@ export class SeZoom extends LitElement {
 
     return html`
       <div id="tool-wrapper">
-        <span id="icon" class="se-icon" style=${`width:18px;height:18px;${iconSrc ? `-webkit-mask-image:url("${iconSrc}");mask-image:url("${iconSrc}")` : ''}`}></span>
+        <span id="icon" class="se-icon" aria-hidden="true" style=${`width:18px;height:18px;${iconSrc ? `-webkit-mask-image:url("${iconSrc}");mask-image:url("${iconSrc}")` : ''}`}></span>
         <input
           .value=${this.value}
           @click=${this._handleInputClick}
@@ -220,7 +220,7 @@ export class SeZoom extends LitElement {
           >&#x25BC;</div>
         </div>
         <div id="down" @click=${this._handleClick}>
-          <span class="se-icon" style=${`width:16px;height:8px;-webkit-mask-image:url("${arrowDownSrc}");mask-image:url("${arrowDownSrc}")`}></span>
+          <span class="se-icon" aria-hidden="true" style=${`width:16px;height:8px;-webkit-mask-image:url("${arrowDownSrc}");mask-image:url("${arrowDownSrc}")`}></span>
         </div>
       </div>
       <div id="options-container" style=${optionsStyle}>
