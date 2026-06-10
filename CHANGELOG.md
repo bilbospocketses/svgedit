@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (M4 Phase 3 — hand-drawn special glyphs -- 2026-06-10)
+
+- The remaining **31 svg-editor-specific toolbar glyphs** are redrawn by hand to Lucide's
+  24px/2px grid, so the entire icon set is now one uniform monochrome family painted
+  theme-aware by the mask pipeline: stroke caps/joins (`linecap_*`, `linejoin_*`),
+  path-node editing (`tool_node_*`, `select_node`, `tool_add_subpath`,
+  `tool_openclose_path`, `unlink_use`, `to_path`, `reorient`), marker previews
+  (`nomarker`, `mcircle`, `mcircle_o`) + the connector (`conn`), text anchor & spacing
+  (`anchor_*`, `letter_spacing`, `word_spacing`, `text_length`,
+  `text_decoration_overline`), and property icons (`angle`, `blur`, `c_radius`,
+  `stroke`, `opacity`) (#23).
+
+### Changed (M4 Phase 3 — a11y, tokens, handle -- 2026-06-10)
+
+- Icon `.se-icon` mask spans are now `aria-hidden="true"` (decorative — the button
+  `title` is the accessible name) instead of a generic `role="img" aria-label="icon"`
+  that announced a meaningless "icon" to screen readers.
+- The legacy color-alias layer (`--main-bg-color`, `--icon-bg-color`,
+  `--icon-bg-color-hover`, `--text-color`, `--border-color`, `--canvas-bg-color`,
+  `--link-color`, `--ruler-color`, `--input-color`, `--orange-color`,
+  `--top-toolbar-min-height`) is fully migrated to the `--se-*` semantic tokens across the
+  components, `svgedit.css`, and `rulersTemplate.html`, and the alias block is removed.
+- The flyout/explorer corner **handle** indicator now paints via the `.se-icon` mask
+  (`var(--se-icon)`) so it themes; it was a `background-image` that rendered its own white
+  fill (invisible in light mode). `handle.svg` is redrawn as a clean corner triangle.
+
+### Removed (M4 Phase 3 -- 2026-06-10)
+
+- 22 dead icon assets, verified unreferenced across the tracked codebase: the bare
+  `node_clone`/`node_delete`/`add_subpath` (the panel uses the `tool_*` variants),
+  `link_controls`, `edit_foreign`, `tool_foreign`, `closepath_icons`, `openpath.png`,
+  `no_color` (the palette uses an inline `<rect fill="none">`), the non-`markerTypes`
+  `textmarker(_top/_bottom)` + `forwardslash`/`reverseslash`/`verticalslash` +
+  `mkr_markers_(dimension/label/off)`, the commented-out `open_path`/`close_path`, and the
+  unused `width`/`height` icon files (#23).
+
 ### Added (M4 Phase 2 — Lucide icon set -- 2026-06-09)
 
 - The common-tool toolbar icons are now a uniform **Lucide**-based 2px-line monochrome set
