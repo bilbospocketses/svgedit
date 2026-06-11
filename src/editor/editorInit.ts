@@ -20,6 +20,7 @@ import SvgCanvas from '@svgedit/svgcanvas'
 import type Editor from './Editor.js'
 import { typedDetail, type SeChangeDetail, type SeSvgSourceDetail, type SeCmenuDetail } from './typed-events.js'
 import { applyInitialTheme } from './styles/theme.js'
+import { registerForeignHtml } from './foreignHtml.js'
 
 const { $id, $click, convertUnit } = SvgCanvas
 
@@ -181,6 +182,9 @@ export async function initEditor (editor: Editor): Promise<void> {
 
   editor.svgCanvas.bind('beforeClear', editor.beforeClear.bind(editor))
   editor.svgCanvas.bind('afterClear', editor.afterClear.bind(editor))
+
+  // foreignObject HTML authoring: wire foreignCreate/foreignEdit -> dialog -> setForeignContent.
+  registerForeignHtml(editor)
 
   editor.svgCanvas.textActions.setInputElem($id('text') as HTMLInputElement)
 
