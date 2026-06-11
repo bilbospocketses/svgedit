@@ -172,6 +172,14 @@ export const sanitizeSvg = (node: Node): void => {
     return
   }
 
+  // HTML content inside a foreignObject takes a separate ruleset (the SVG path below
+  // is left untouched). Detected by the XHTML namespace — also resolves the a/title/style
+  // shared-tag-name ambiguity between SVG and HTML.
+  if (elem.namespaceURI === NS.HTML) {
+    sanitizeForeignHtml(elem)
+    return
+  }
+
   const allowedAttrs = svgWhiteList_[elem.nodeName]
   const allowedAttrsNS = svgWhiteListNS_[elem.nodeName]
   // if this element is supported, sanitize it
@@ -324,3 +332,34 @@ export const sanitizeSvg = (node: Node): void => {
     }
   }
 }
+
+/** Sanitize one HTML element living inside a foreignObject (XHTML namespace). */
+const sanitizeForeignHtml = (elem: Element): void => {
+  const parent = elem.parentNode
+  const tag = elem.localName
+  if (!parent) return
+
+  // Unknown tag -> unwrap: promote children before this node, then remove it.
+  if (!FOREIGN_HTML_TAGS.has(tag)) {
+    const children: Node[] = []
+    while (elem.firstChild) children.push(parent.insertBefore(elem.firstChild, elem))
+    elem.remove()
+    for (let i = children.length; i--;) {
+      const c = children[i]
+      if (c) sanitizeSvg(c)
+    }
+    return
+  }
+
+  sanitizeForeignAttrs(elem, tag)
+
+  // recurse to children (snapshot first; sanitize may unwrap and mutate the live list)
+  const kids = [...elem.childNodes]
+  for (let i = kids.length; i--;) {
+    const c = kids[i]
+    if (c) sanitizeSvg(c)
+  }
+}
+
+// Fleshed out in A4/A5 (attribute allowlist + filtered style + link hardening).
+const sanitizeForeignAttrs = (_elem: Element, _tag: string): void => { /* A4/A5 */ }
