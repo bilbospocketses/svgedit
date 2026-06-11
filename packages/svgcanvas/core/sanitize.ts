@@ -361,5 +361,31 @@ const sanitizeForeignHtml = (elem: Element): void => {
   }
 }
 
-// Fleshed out in A4/A5 (attribute allowlist + filtered style + link hardening).
-const sanitizeForeignAttrs = (_elem: Element, _tag: string): void => { /* A4/A5 */ }
+const filterForeignStyle = (value: string): string => {
+  const kept: string[] = []
+  for (const decl of value.split(';')) {
+    const idx = decl.indexOf(':')
+    if (idx < 0) continue
+    const prop = decl.slice(0, idx).trim().toLowerCase()
+    const val = decl.slice(idx + 1).trim()
+    if (!FOREIGN_STYLE_PROPS.has(prop)) continue
+    if (/url\(|expression\(/i.test(val)) continue
+    kept.push(`${prop}: ${val}`)
+  }
+  return kept.join('; ')
+}
+
+const sanitizeForeignAttrs = (elem: Element, tag: string): void => {
+  const allowed: string[] = FOREIGN_HTML_ATTRS[tag] ?? FOREIGN_HTML_ATTRS['*'] ?? []
+  for (let i = elem.attributes.length; i--;) {
+    const attr = elem.attributes.item(i)
+    if (!attr) continue
+    const name = attr.name.toLowerCase()
+    if (!allowed.includes(name)) { elem.removeAttribute(attr.name); continue }
+    if (name === 'style') {
+      const filtered = filterForeignStyle(attr.value)
+      if (filtered) elem.setAttribute('style', filtered)
+      else elem.removeAttribute('style')
+    }
+  }
+}
