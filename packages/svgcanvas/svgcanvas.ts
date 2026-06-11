@@ -336,7 +336,7 @@ class SvgCanvas implements ISvgCanvas {
   declare remapElement: typeof remapElement
   declare recalculateDimensions: typeof recalculateDimensions
   declare sanitizeSvg: typeof sanitizeSvg
-  declare setForeignContent: (fo: Element, htmlString: string) => void
+  declare setForeignContent: (fo: Element, htmlString: string, parentBatch?: InstanceType<typeof history.BatchCommand>) => void
   declare pasteElements: typeof pasteElementsMethod
   declare identifyLayers: typeof draw.identifyLayers
   declare createLayer: typeof draw.createLayer
@@ -1492,7 +1492,7 @@ class SvgCanvas implements ISvgCanvas {
     this.remapElement = remapElement
     this.recalculateDimensions = recalculateDimensions
     this.sanitizeSvg = sanitizeSvg
-    this.setForeignContent = (fo, htmlString) => setForeignContentMethod(this, fo, htmlString)
+    this.setForeignContent = (fo, htmlString, parentBatch) => setForeignContentMethod(this, fo, htmlString, parentBatch)
     this.pasteElements = pasteElementsMethod
     this.identifyLayers = draw.identifyLayers
     this.createLayer = draw.createLayer

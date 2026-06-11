@@ -361,12 +361,37 @@ const sanitizeForeignHtml = (elem: Element): void => {
   }
 }
 
-const isSafeForeignHref = (href: string): boolean => {
+/**
+ * Whether an `<a>` href is safe to keep on foreignObject HTML content.
+ * Fragment / absolute-path / relative hrefs and scheme-less values pass; otherwise
+ * only the {@link FOREIGN_HREF_SCHEMES} (http/https) are allowed — `javascript:`,
+ * `data:`, etc. are rejected. Exported so the editor's pre-injection `serialize`
+ * pass can mirror the sanitizer rather than duplicate the rule.
+ */
+export const isSafeForeignHref = (href: string): boolean => {
   const v = href.trim()
   if (v.startsWith('#') || v.startsWith('/') || v.startsWith('./') || v.startsWith('../')) return true
   const m = /^([a-z][a-z0-9+.-]*:)/i.exec(v)
   if (!m) return true // scheme-less relative
   return FOREIGN_HREF_SCHEMES.has((m[1] ?? '').toLowerCase())
+}
+
+/**
+ * Harden a foreignObject `<a>`: strip an unsafe href (per {@link isSafeForeignHref}),
+ * and on any surviving href force `target="_blank" rel="noopener noreferrer"`
+ * (else clear stray target/rel). Shared by the canvas sanitizer and the editor's
+ * `serialize` pre-injection pass so both sides apply identical link policy.
+ */
+export const hardenForeignAnchor = (a: Element): void => {
+  const href = a.getAttribute('href')
+  if (href !== null && !isSafeForeignHref(href)) a.removeAttribute('href')
+  if (a.hasAttribute('href')) {
+    a.setAttribute('target', '_blank')
+    a.setAttribute('rel', 'noopener noreferrer')
+  } else {
+    a.removeAttribute('target')
+    a.removeAttribute('rel')
+  }
 }
 
 const filterForeignStyle = (value: string): string => {
@@ -397,17 +422,5 @@ const sanitizeForeignAttrs = (elem: Element, tag: string): void => {
     }
   }
 
-  if (tag === 'a') {
-    const href = elem.getAttribute('href')
-    if (href !== null) {
-      const safe = isSafeForeignHref(href)
-      if (!safe) elem.removeAttribute('href')
-    }
-    if (elem.hasAttribute('href')) {
-      elem.setAttribute('target', '_blank')
-      elem.setAttribute('rel', 'noopener noreferrer')
-    } else {
-      elem.removeAttribute('target'); elem.removeAttribute('rel')
-    }
-  }
+  if (tag === 'a') hardenForeignAnchor(elem)
 }

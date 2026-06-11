@@ -838,10 +838,14 @@ const mouseUpEvent = (evt: MouseEvent): void => {
       if (element) {
         if (Number(element.getAttribute('width')) < 2) { element.setAttribute('width', '240') }
         if (Number(element.getAttribute('height')) < 2) { element.setAttribute('height', '120') }
-        keep = true
         // Notify the editor to open the HTML-authoring dialog for this new foreignObject.
-        // The element is committed to history + selected by the post-switch finalization below.
         svgCanvas.call('foreignCreate', element)
+        // Deliberately do NOT let the generic shape finalizer commit an
+        // InsertElementCommand for this foreignObject: the box stays in the DOM but
+        // out of history until the controller records the insert atomically on OK.
+        // Cancel/empty-OK removes the box, so nothing is left to redo-resurrect.
+        // (keep stays false + element is nulled so neither mouseUp finalize branch runs.)
+        element = null
       }
       break
     }

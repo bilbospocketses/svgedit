@@ -1,5 +1,5 @@
 import { NS } from '@svgedit/svgcanvas/core/namespaces.js'
-import { FOREIGN_HTML_TAGS, FOREIGN_HTML_ATTRS, FOREIGN_STYLE_PROPS } from '@svgedit/svgcanvas/core/sanitize.js'
+import { FOREIGN_HTML_TAGS, FOREIGN_HTML_ATTRS, FOREIGN_STYLE_PROPS, hardenForeignAnchor } from '@svgedit/svgcanvas/core/sanitize.js'
 
 export const FOREIGN_ROOT_CLASS: string = 'se-fo-root'
 
@@ -28,6 +28,9 @@ const prune = (node: Element): void => {
         if (f) child.setAttribute('style', f); else child.removeAttribute('style')
       }
     }
+    // Mirror the canvas sanitizer's link policy: drop javascript:/data: hrefs and
+    // force target/rel on survivors — same shared helper, no duplicated logic.
+    if (tag === 'a') hardenForeignAnchor(child)
     prune(child)
   }
 }

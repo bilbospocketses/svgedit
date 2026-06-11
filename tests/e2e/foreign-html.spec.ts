@@ -189,6 +189,54 @@ test.describe('foreignObject HTML authoring', () => {
     await expect(page.locator('#svgcontent foreignObject')).not.toContainText('Second')
   })
 
+  test('cancel then undo+redo never resurrects the cancelled box', async ({ page }) => {
+    await drawForeignBox(page)
+    await expect.poll(() => foreignCount(page)).toBe(1)
+
+    // Capture errors raised by the cancel/undo/redo sequence itself.
+    const errors: string[] = []
+    const onConsole = (msg: { type: () => string, text: () => string }): void => {
+      if (msg.type() === 'error' && !BENIGN_ERROR.test(msg.text())) errors.push(msg.text())
+    }
+    const onPageError = (err: Error): void => {
+      if (!BENIGN_ERROR.test(err.message)) errors.push(err.message)
+    }
+    page.on('console', onConsole)
+    page.on('pageerror', onPageError)
+
+    // Cancel removes the just-drawn (uncommitted) box.
+    await page.locator(CANCEL).click()
+    await expect(page.locator(DIALOG)).toHaveCount(0)
+    await expect.poll(() => foreignCount(page)).toBe(0)
+
+    // Undo then redo: because the cancelled box was never committed to history,
+    // redo must NOT bring it back (the old deferred-insert bug).
+    await page.locator('#svgcanvas').click({ position: { x: 5, y: 5 } })
+    await page.keyboard.press('ControlOrMeta+z')
+    await page.keyboard.press('ControlOrMeta+y')
+    await page.waitForTimeout(200)
+    expect(await foreignCount(page)).toBe(0)
+    expect(errors, `unexpected console errors: ${errors.join(' | ')}`).toEqual([])
+
+    page.off('console', onConsole)
+    page.off('pageerror', onPageError)
+  })
+
+  test('insert content then a single undo removes the whole foreignObject (atomic)', async ({ page }) => {
+    await drawForeignBox(page)
+    await typeInEditor(page, 'Atomic')
+    await page.locator(OK).click()
+    const fo = page.locator('#svgcontent foreignObject')
+    await expect(fo).toHaveCount(1)
+    await expect(fo).toContainText('Atomic')
+
+    // One Ctrl+Z must remove the entire box (insert + content are one batch),
+    // not just the content (which would leave an empty foreignObject behind).
+    await fo.click()
+    await page.keyboard.press('ControlOrMeta+z')
+    await expect.poll(() => foreignCount(page)).toBe(0)
+  })
+
   test('save -> reload round-trip preserves the foreignObject content', async ({ page }) => {
     await drawForeignBox(page)
     await typeInEditor(page, 'Persist me')

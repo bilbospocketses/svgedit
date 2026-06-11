@@ -21,6 +21,24 @@ describe('foreign-html serialize/deserialize', () => {
     expect(out).not.toContain('<script')
   })
 
+  it('strips a javascript: href on an <a> (editor-side mirror of the sanitizer)', () => {
+    const editor = document.createElement('div')
+    editor.innerHTML = '<a href="javascript:alert(1)">x</a>'
+    const out = serialize(editor)
+    expect(out).not.toContain('javascript:')
+    expect(out).not.toContain('href')
+    expect(out).toContain('>x</a>')
+  })
+
+  it('keeps a safe href and forces target=_blank rel=noopener noreferrer', () => {
+    const editor = document.createElement('div')
+    editor.innerHTML = '<a href="https://ex.com">x</a>'
+    const out = serialize(editor)
+    expect(out).toContain('href="https://ex.com"')
+    expect(out).toContain('target="_blank"')
+    expect(out).toContain('rel="noopener noreferrer"')
+  })
+
   it('deserialize returns a fragment of the root\'s children', () => {
     const html = `<div xmlns="${NS.HTML}" class="${FOREIGN_ROOT_CLASS}"><p>hi</p></div>`
     const frag = deserialize(html)

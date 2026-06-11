@@ -19,7 +19,9 @@
  * @module foreignHtml
  */
 
+import { NS } from '@svgedit/svgcanvas/core/namespaces.js'
 import type Editor from './Editor.js'
+import { FOREIGN_ROOT_CLASS } from './dialogs/foreign-html-serialize.js'
 
 /** Wire the foreignObject create/edit authoring flow to the canvas events. */
 export const registerForeignHtml = (editor: Editor): void => {
@@ -34,24 +36,41 @@ export const registerForeignHtml = (editor: Editor): void => {
   const currentContent = (fo: Element): string => {
     const root = fo.firstElementChild
     return root
-      ? `<div xmlns="http://www.w3.org/1999/xhtml" class="se-fo-root">${root.innerHTML}</div>`
+      ? `<div xmlns="${NS.HTML}" class="${FOREIGN_ROOT_CLASS}">${root.innerHTML}</div>`
       : ''
   }
 
-  /** Author content for a freshly-drawn (empty) foreignObject. */
+  /**
+   * Author content for a freshly-drawn (empty) foreignObject.
+   *
+   * The box was drawn into the DOM by the canvas but deliberately NOT committed to
+   * history (see the `foreign` mouseUp in `core/event.ts`). So on cancel/empty-OK we
+   * just remove it — nothing was recorded, nothing can be redo-resurrected. On a real
+   * OK we record the foreignObject insertion AND its content as one atomic
+   * `BatchCommand`, so a single Ctrl+Z removes the whole box.
+   */
   const authorNew = async (fo: Element): Promise<void> => {
     const result = await seForeignHtml('')
     if (result === null || result.trim() === '') {
       fo.remove()
     } else {
-      canvas.setForeignContent(fo, result)
-      canvas.sanitizeSvg(fo)
+      const { BatchCommand, InsertElementCommand } = canvas.history
+      const batch = new BatchCommand('Insert HTML')
+      batch.addSubCommand(new InsertElementCommand(fo))
+      // setForeignContent appends its (sanitize + content + height) sub-commands to
+      // our batch instead of self-committing, keeping the insert a single undo unit.
+      canvas.setForeignContent(fo, result, batch)
+      canvas.addCommandToHistory(batch)
       selectFo(fo)
     }
     canvas.setMode('select')
   }
 
-  /** Author content for an existing foreignObject opened via double-click. */
+  /**
+   * Author content for an existing foreignObject opened via double-click.
+   * `setForeignContent` self-commits one change batch and sanitizes the injected
+   * content internally, so no separate backstop pass is needed here.
+   */
   const authorEdit = async (fo: Element): Promise<void> => {
     const result = await seForeignHtml(currentContent(fo))
     if (result === null) {
@@ -62,7 +81,6 @@ export const registerForeignHtml = (editor: Editor): void => {
       return
     }
     canvas.setForeignContent(fo, result)
-    canvas.sanitizeSvg(fo)
   }
 
   // `call` invokes handlers as (window, arg); the foreignObject element is arg.
