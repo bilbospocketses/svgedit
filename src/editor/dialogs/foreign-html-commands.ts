@@ -5,6 +5,27 @@ export type FontPreset = 'S' | 'M' | 'L' | 'XL'
 
 const FONT_PX: Record<Exclude<FontPreset, 'M'>, string> = { S: '12px', L: '24px', XL: '36px' }
 
+// createElement must only ever receive a LITERAL tag name. These switch helpers map the
+// DOM-sourced (toolbar <select>) tag back onto a constant so no tainted string flows into
+// document.createElement — the values are already allowlisted, but this keeps the sink clean.
+const createBlockEl = (tag: BlockTag): HTMLElement => {
+  switch (tag) {
+    case 'h1': return document.createElement('h1')
+    case 'h2': return document.createElement('h2')
+    case 'h3': return document.createElement('h3')
+    default: return document.createElement('p')
+  }
+}
+
+const createInlineEl = (tag: InlineTag): HTMLElement => {
+  switch (tag) {
+    case 'em': return document.createElement('em')
+    case 'u': return document.createElement('u')
+    case 's': return document.createElement('s')
+    default: return document.createElement('strong')
+  }
+}
+
 const activeRange = (root: Element): Range | null => {
   const sel = (root.ownerDocument.defaultView ?? window).getSelection()
   if (!sel || sel.rangeCount === 0) return null
@@ -42,12 +63,12 @@ export const toggleInline = (root: Element, tag: InlineTag): void => {
     if (parent) { while (existing.firstChild) parent.insertBefore(existing.firstChild, existing); existing.remove() }
     return
   }
-  wrap(root, document.createElement(tag))
+  wrap(root, createInlineEl(tag))
 }
 
 export const setBlock = (root: Element, tag: BlockTag): void => {
   for (const block of blocksInRange(root)) {
-    const repl = document.createElement(tag)
+    const repl = createBlockEl(tag)
     const style = block.getAttribute('style')
     if (style) repl.setAttribute('style', style)
     while (block.firstChild) repl.appendChild(block.firstChild)
@@ -59,7 +80,8 @@ export const toggleList = (root: Element, kind: 'ul' | 'ol'): void => {
   const blocks = blocksInRange(root)
   const first = blocks[0]
   if (!first) return
-  const list = document.createElement(kind)
+  // Literal createElement — no DOM-sourced `kind` string flows into the sink.
+  const list = kind === 'ol' ? document.createElement('ol') : document.createElement('ul')
   first.replaceWith(list)
   for (const b of blocks) {
     const li = document.createElement('li')

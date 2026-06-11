@@ -43,11 +43,46 @@ export const serialize = (editorRoot: Element): string => {
   return `<div xmlns="${NS.HTML}" class="${FOREIGN_ROOT_CLASS}">${inner}</div>`
 }
 
-/** foreignObject child HTML → a fragment of editor DOM for edit mode. */
+/**
+ * Move the (already-pruned) children of `source` into a fresh DocumentFragment,
+ * importing each node into the main document. Shared tail of the inert-parse helpers.
+ */
+const fragmentFromChildren = (source: Element): DocumentFragment => {
+  const frag = document.createDocumentFragment()
+  for (const node of Array.from(source.childNodes)) {
+    frag.appendChild(document.importNode(node, true))
+  }
+  return frag
+}
+
+/**
+ * Parse a raw HTML string INERTLY (no script execution, no resource/`onerror` loads)
+ * and prune it to the allowlist, returning a DocumentFragment of clean editor DOM.
+ *
+ * `DOMParser().parseFromString(html, 'text/html')` builds an inert document: `<img>`
+ * never requests its `src`, so `onerror` never fires, and `<script>` never runs. This
+ * is deliberately NOT an `innerHTML` assignment — feeding an untrusted source-mode
+ * string here cannot trigger script or resource-based XSS the way `el.innerHTML = …`
+ * would. `prune` then strips everything outside the allowlist before the nodes are
+ * imported into the live document.
+ */
+export const parseToEditorFragment = (html: string): DocumentFragment => {
+  const doc = new DOMParser().parseFromString(html, 'text/html')
+  prune(doc.body)
+  return fragmentFromChildren(doc.body)
+}
+
+/**
+ * foreignObject child HTML → a fragment of editor DOM for edit mode.
+ *
+ * Input is normally our own `serialize` output, but parse it inertly (via DOMParser,
+ * not `innerHTML`) and prune anyway — uniform defense-in-depth with the source-mode
+ * path. Unwraps the `FOREIGN_ROOT_CLASS` wrapper when present so only its children
+ * land in the editor.
+ */
 export const deserialize = (html: string): DocumentFragment => {
-  const tpl = document.createElement('template')
-  const tmp = document.createElement('div'); tmp.innerHTML = html
-  const root = tmp.querySelector(`.${FOREIGN_ROOT_CLASS}`) ?? tmp
-  tpl.innerHTML = root.innerHTML
-  return tpl.content
+  const doc = new DOMParser().parseFromString(html, 'text/html')
+  const root = doc.body.querySelector(`.${FOREIGN_ROOT_CLASS}`) ?? doc.body
+  prune(root)
+  return fragmentFromChildren(root)
 }

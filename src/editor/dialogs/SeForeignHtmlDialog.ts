@@ -1,6 +1,6 @@
 import { LitElement, html, css, type PropertyValues } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
-import { serialize, deserialize } from './foreign-html-serialize.js'
+import { serialize, deserialize, parseToEditorFragment } from './foreign-html-serialize.js'
 import type { BlockTag, Align, FontPreset } from './foreign-html-commands.js'
 import * as cmd from './foreign-html-commands.js'
 
@@ -173,7 +173,8 @@ export default class SeForeignHtmlDialog extends LitElement {
       if (editor) {
         const srcEl = this._sourceEl
         if (this.source && srcEl) {
-          editor.innerHTML = srcEl.value
+          // Inert parse + prune the raw source string (no innerHTML sink, no onerror).
+          editor.replaceChildren(parseToEditorFragment(srcEl.value))
         }
         out = serialize(editor)
       } else {
@@ -195,14 +196,13 @@ export default class SeForeignHtmlDialog extends LitElement {
     if (!srcEl) return
     const rawValue = srcEl.value
     if (rawValue.trim() === '') return // empty textarea — WYSIWYG-delete path, let it close
-    // Compute the would-be serialized content without mutating the live editor.
+    // Compute the would-be content without mutating the live editor and without any
+    // innerHTML write: inert-parse + prune the raw source into a detached scratch div.
     const scratch = document.createElement('div')
-    scratch.innerHTML = rawValue
-    const serialized = serialize(scratch)
-    // Parse the wrapper to inspect inner content.
-    const tmp = document.createElement('div')
-    tmp.innerHTML = serialized
-    const inner = tmp.firstElementChild?.innerHTML ?? ''
+    scratch.appendChild(parseToEditorFragment(rawValue))
+    // `scratch` now holds exactly the pruned markup `serialize` would wrap; reading its
+    // innerHTML (a getter, not a sink) tells us whether anything survived sanitisation.
+    const inner = scratch.innerHTML
     if (inner.trim() !== '') return // valid content — let it close normally
     // Non-empty source that serializes to nothing: warn and block.
     e.preventDefault()
@@ -223,7 +223,8 @@ export default class SeForeignHtmlDialog extends LitElement {
     if (!this.source) {
       src.value = serialize(editor)
     } else {
-      editor.innerHTML = src.value
+      // Inert parse + prune the raw source string (no innerHTML sink, no onerror).
+      editor.replaceChildren(parseToEditorFragment(src.value))
     }
     this.source = !this.source
   }

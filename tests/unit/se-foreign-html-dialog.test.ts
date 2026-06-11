@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import '../../src/editor/dialogs/SeForeignHtmlDialog.ts'
+import { parseToEditorFragment } from '../../src/editor/dialogs/foreign-html-serialize.ts'
 
 const flush = async (el: any) => {
   await customElements.whenDefined('se-foreign-html-dialog')
@@ -47,6 +48,61 @@ describe('se-foreign-html-dialog', () => {
     el.value = '<p><strong>seed</strong></p>'
     await flush(el)
     expect(el.shadowRoot.querySelector('[part="editor"]').textContent).toContain('seed')
+  })
+
+  describe('source-mode XSS hardening (inert parse, no innerHTML sink)', () => {
+    it('parseToEditorFragment strips an <img onerror=…> without throwing', () => {
+      // The dangerous markup must be inert-parsed (no resource load / onerror) and pruned.
+      let frag!: DocumentFragment
+      expect(() => { frag = parseToEditorFragment('<img src=x onerror="window.__xss=1">hi') }).not.toThrow()
+      const host = document.createElement('div')
+      host.appendChild(frag)
+      // <img> is not on the foreign allowlist → removed entirely; no onerror attribute survives.
+      expect(host.querySelector('img')).toBeNull()
+      expect(host.innerHTML).not.toContain('onerror')
+      expect((window as any).__xss).toBeUndefined()
+      expect(host.textContent).toContain('hi') // benign text is preserved
+    })
+
+    it('parseToEditorFragment drops <script> and event-handler attrs but keeps allowlisted markup', () => {
+      const host = document.createElement('div')
+      host.appendChild(parseToEditorFragment('<p onclick="evil()">a</p><script>steal()</' + 'script>'))
+      expect(host.querySelector('script')).toBeNull()
+      expect(host.innerHTML).not.toContain('onclick')
+      expect(host.innerHTML).not.toContain('evil')
+      expect(host.querySelector('p')?.textContent).toBe('a') // the safe <p> survives, unwrapped of its handler
+    })
+
+    it('source-mode OK serializes sanitised content — the onerror img never reaches the canvas string', async () => {
+      await flush(el)
+      el.source = true
+      await el.updateComplete
+      const srcEl: HTMLTextAreaElement = el.shadowRoot.querySelector('textarea')
+      srcEl.value = '<p>safe</p><img src=x onerror="window.__xss2=1">'
+      const closed = el.whenClosed()
+      closeWith(el, 'ok')
+      const { html } = await closed
+      expect(html).toContain('safe')
+      expect(html).not.toContain('<img')
+      expect(html).not.toContain('onerror')
+      expect((window as any).__xss2).toBeUndefined()
+    })
+
+    it('toggling source -> WYSIWYG loads sanitised DOM (no <img>/onerror) into the live editor', async () => {
+      await flush(el)
+      el.source = true
+      await el.updateComplete
+      const srcEl: HTMLTextAreaElement = el.shadowRoot.querySelector('textarea')
+      srcEl.value = '<p>kept</p><img src=x onerror="window.__xss3=1">'
+      // Toggle back to WYSIWYG: the editor must be populated via inert parse, not innerHTML.
+      el.shadowRoot.querySelector('button[title="HTML source"]').click()
+      await el.updateComplete
+      const editor = el.shadowRoot.querySelector('[part="editor"]')
+      expect(editor.querySelector('img')).toBeNull()
+      expect(editor.innerHTML).not.toContain('onerror')
+      expect(editor.textContent).toContain('kept')
+      expect((window as any).__xss3).toBeUndefined()
+    })
   })
 
   describe('source-mode empty-guard', () => {
