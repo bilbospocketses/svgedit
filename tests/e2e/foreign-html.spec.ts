@@ -255,4 +255,73 @@ test.describe('foreignObject HTML authoring', () => {
     await expect(fo).toContainText('Persist me')
     await expect(fo.locator('.se-fo-root')).toHaveCount(1)
   })
+
+  // ---------------------------------------------------------------------------
+  // Behavioral XSS guards. These run in a REAL browser, so an `<img onerror>` or
+  // an inline `<script>` in source-mode markup that reaches an innerHTML sink will
+  // actually execute and flip `window.__xssFired`. The unit tests assert the DOM is
+  // pruned; these assert nothing *fires* — catching the regression locally in seconds
+  // instead of waiting on the CodeQL workflow. The fix (inert DOMParser parse + prune
+  // in foreign-html-serialize.ts) keeps the flag false and strips the <img>/<script>.
+  // ---------------------------------------------------------------------------
+
+  // Payload: an onerror image + an inline script (both would set the flag if executed),
+  // plus a benign marker that MUST survive sanitisation and render on the canvas.
+  const XSS_PAYLOAD =
+    '<img src="x" onerror="window.__xssFired=true"><script>window.__xssFired=true</' +
+    'script><p>safe-marker</p>'
+
+  /** Reset the flag on the live page (the payload runs against the already-loaded window). */
+  async function armXssFlag (page: Page): Promise<void> {
+    // Cover any future navigation/reload too, then set it on the current document.
+    await page.addInitScript(() => { (window as Window & { __xssFired?: boolean }).__xssFired = false })
+    await page.evaluate(() => { (window as Window & { __xssFired?: boolean }).__xssFired = false })
+  }
+
+  /** Fill the source textarea (dialog already in source mode) with the payload and OK. */
+  async function injectSourcePayload (page: Page): Promise<void> {
+    await page.locator(SOURCE_BTN).click()
+    await expect(page.locator(SOURCE)).toBeVisible()
+    await page.locator(SOURCE).fill(XSS_PAYLOAD)
+    await page.locator(OK).click()
+  }
+
+  /** Assert no script/onerror fired and the markup was rendered inert (marker only). */
+  async function expectInertResult (page: Page): Promise<void> {
+    await expect(page.locator(DIALOG)).toHaveCount(0)
+    const fo = page.locator('#svgcontent foreignObject')
+    await expect(fo).toHaveCount(1)
+    // The benign marker survives; the dangerous nodes are gone.
+    await expect(fo).toContainText('safe-marker')
+    await expect(page.locator('foreignObject img')).toHaveCount(0)
+    await expect(page.locator('foreignObject script')).toHaveCount(0)
+    // onerror is async — give the browser a beat before reading the flag.
+    await page.waitForTimeout(150)
+    expect(await page.evaluate(() => (window as Window & { __xssFired?: boolean }).__xssFired)).toBe(false)
+  }
+
+  test('source-mode XSS payload neither executes nor renders', async ({ page }) => {
+    await armXssFlag(page)
+    await drawForeignBox(page)
+    await injectSourcePayload(page)
+    await expectInertResult(page)
+  })
+
+  test('edit-mode source XSS payload neither executes nor renders', async ({ page }) => {
+    await armXssFlag(page)
+    // Insert a benign box first.
+    await drawForeignBox(page)
+    await typeInEditor(page, 'benign')
+    await page.locator(OK).click()
+    const fo = page.locator('#svgcontent foreignObject')
+    await expect(fo).toHaveCount(1)
+    await expect(fo).toContainText('benign')
+
+    // Re-open via double-click, then inject the payload through source mode.
+    await page.locator('#tool_select').click()
+    await fo.dblclick()
+    await expect(page.locator(DIALOG)).toBeAttached()
+    await injectSourcePayload(page)
+    await expectInertResult(page)
+  })
 })
