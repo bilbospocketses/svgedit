@@ -116,3 +116,31 @@ describe('sanitizeForeignHtml — links', () => {
     expect(root.textContent).toContain('b')
   })
 })
+
+describe('sanitize — SVG path unaffected + idempotence', () => {
+  beforeEach(() => { console.warn = () => {} })
+
+  it('does not touch an SVG rect with style (still maps to attrs)', () => {
+    const svg = document.createElementNS(NS.SVG, 'svg')
+    const rect = document.createElementNS(NS.SVG, 'rect')
+    rect.setAttribute('style', 'stroke: blue; stroke-width: 4')
+    svg.appendChild(rect); document.body.appendChild(svg)
+    sanitize.sanitizeSvg(rect)
+    expect(rect.getAttribute('stroke')).toBe('blue')   // SVG branch still rewrites style->attr
+    expect(rect.hasAttribute('style')).toBe(false)
+    document.body.textContent = ''
+  })
+
+  it('is idempotent for already-clean foreign content', () => {
+    const svg = document.createElementNS(NS.SVG, 'svg')
+    const fo = document.createElementNS(NS.SVG, 'foreignObject')
+    const root = document.createElementNS(NS.HTML, 'div')
+    root.innerHTML = '<p><strong>a</strong> <span style="color: red">b</span></p>'
+    fo.appendChild(root); svg.appendChild(fo); document.body.appendChild(svg)
+    sanitize.sanitizeSvg(root)
+    const once = root.innerHTML
+    sanitize.sanitizeSvg(root)
+    expect(root.innerHTML).toBe(once)
+    document.body.textContent = ''
+  })
+})

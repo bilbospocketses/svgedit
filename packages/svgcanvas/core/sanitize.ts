@@ -366,7 +366,7 @@ const isSafeForeignHref = (href: string): boolean => {
   if (v.startsWith('#') || v.startsWith('/') || v.startsWith('./') || v.startsWith('../')) return true
   const m = /^([a-z][a-z0-9+.-]*:)/i.exec(v)
   if (!m) return true // scheme-less relative
-  return FOREIGN_HREF_SCHEMES.has(m[1]!.toLowerCase())
+  return FOREIGN_HREF_SCHEMES.has((m[1] ?? '').toLowerCase())
 }
 
 const filterForeignStyle = (value: string): string => {
