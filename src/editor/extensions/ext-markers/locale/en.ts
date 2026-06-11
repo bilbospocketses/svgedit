@@ -5,15 +5,10 @@ export default {
     { id: 'leftarrow', title: 'Left Arrow' },
     { id: 'rightarrow', title: 'Right Arrow' },
     { id: 'box', title: 'Box' },
-    { id: 'star', title: 'Star' },
-    { id: 'xmark', title: 'X' },
-    { id: 'triangle', title: 'Triangle' },
     { id: 'mcircle', title: 'Circle' },
     { id: 'leftarrow_o', title: 'Open Left Arrow' },
     { id: 'rightarrow_o', title: 'Open Right Arrow' },
     { id: 'box_o', title: 'Open Box' },
-    { id: 'star_o', title: 'Open Star' },
-    { id: 'triangle_o', title: 'Open Triangle' },
     { id: 'mcircle_o', title: 'Open Circle' }
   ],
   contextTools: [
