@@ -1,6 +1,7 @@
 import { defineConfig } from 'eslint/config'
 import tseslint from 'typescript-eslint'
 import globals from 'globals'
+import nounsanitized from 'eslint-plugin-no-unsanitized'
 
 export default defineConfig([
   {
@@ -91,6 +92,13 @@ export default defineConfig([
     rules: {
       '@typescript-eslint/no-non-null-assertion': 'off'
     }
+  },
+  // DOM-XSS sink guard: no-unsanitized scoped to user-HTML-handling files only.
+  // These are the files that accept user-authored HTML (foreignObject dialog + serializer).
+  // Repo-wide would flag legitimate template uses (LeftPanel, panels, extensions, etc.).
+  {
+    ...nounsanitized.configs.recommended,
+    files: ['src/editor/dialogs/**/*.ts', 'src/editor/foreignHtml.ts']
   },
   // Disable type-checked rules for test files and config files
   {
