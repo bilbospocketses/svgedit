@@ -96,6 +96,28 @@ const svgWhiteList_: Record<string, string[]> = {
   h6: []
 }
 
+// === foreignObject HTML content allowlist (co-designed with the editor) ===
+// Exported so the editor's serialize layer emits exactly what is permitted here.
+export const FOREIGN_HTML_TAGS: Set<string> = new Set<string>([
+  'div', 'span', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+  'ul', 'ol', 'li', 'pre', 'hr', 'br',
+  'strong', 'em', 'u', 's', 'b', 'i', 'sub', 'sup', 'a', 'blockquote'
+])
+
+// Per-tag attribute allowlist; '*' = applies to every allowed tag.
+export const FOREIGN_HTML_ATTRS: Record<string, string[]> = {
+  '*': ['class', 'id', 'style'],
+  a: ['class', 'id', 'style', 'href', 'target', 'rel']
+}
+
+export const FOREIGN_STYLE_PROPS: Set<string> = new Set<string>([
+  'color', 'text-align', 'font-size', 'font-weight',
+  'font-style', 'text-decoration', 'list-style-type'
+])
+
+// Allowed href schemes for <a>. Relative / fragment hrefs (no scheme) are also allowed.
+export const FOREIGN_HREF_SCHEMES: Set<string> = new Set<string>(['http:', 'https:'])
+
 // add generic attributes to all elements of the whitelist
 for (const [element, attrs] of Object.entries(svgWhiteList_)) {
   svgWhiteList_[element] = [...attrs, ...svgGenericWhiteList]
