@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (M4 Phase 4 — cursors -- 2026-06-11)
+
+- The six shape-tool cursors (`circle`/`ellipse`/`rect`/`square`/`polygon`/`star`) are
+  redrawn to match the new icon set, each with a **theme-agnostic contrast outline** (a dark
+  core with a white halo) so the pointer and its tool badge stay legible on both the light
+  and dark canvas. The `(0,0)` hotspot and the `crosshair` fallback are unchanged. This
+  completes the M1–M4 UI-modernization program (#114).
+
 ### Added (M4 Phase 3 — hand-drawn special glyphs -- 2026-06-10)
 
 - The remaining **31 svg-editor-specific toolbar glyphs** are redrawn by hand to Lucide's
