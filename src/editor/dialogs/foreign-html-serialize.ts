@@ -1,7 +1,25 @@
+import DOMPurify from 'dompurify'
 import { NS } from '@svgedit/svgcanvas/core/namespaces.js'
 import { FOREIGN_HTML_TAGS, FOREIGN_HTML_ATTRS, FOREIGN_STYLE_PROPS, hardenForeignAnchor } from '@svgedit/svgcanvas/core/sanitize.js'
 
 export const FOREIGN_ROOT_CLASS: string = 'se-fo-root'
+
+// DOMPurify allow-lists, derived from the shared canvas-side constants so the
+// sanitizer and the editor agree on exactly one tag/attribute allowlist (the
+// co-design). FOREIGN_HTML_TAGS / FOREIGN_HTML_ATTRS are the single source of truth.
+const ALLOWED_TAGS: string[] = [...FOREIGN_HTML_TAGS]
+const ALLOWED_ATTR: string[] = [...new Set(Object.values(FOREIGN_HTML_ATTRS).flat())] // class,id,style,href,target,rel
+
+/**
+ * Sanitize a raw HTML string through DOMPurify and return the resulting `<body>`.
+ * DOMPurify is a vetted sanitizer (and one CodeQL recognises as a taint barrier for
+ * `js/xss-through-dom`): it drops `<script>`, event handlers (`onerror` etc.) and any
+ * tag/attribute outside our shared allowlist, parsing inertly so no `src`/`onerror`
+ * ever fires. `RETURN_DOM: true` yields a sanitized `<body>` HTMLElement in the
+ * current document for our `prune` pass to finish.
+ */
+const sanitizeToBody = (html: string): HTMLElement =>
+  DOMPurify.sanitize(html, { ALLOWED_TAGS, ALLOWED_ATTR, RETURN_DOM: true }) as HTMLElement
 
 const filterStyle = (value: string): string =>
   value.split(';').map((d) => {
@@ -45,7 +63,7 @@ export const serialize = (editorRoot: Element): string => {
 
 /**
  * Move the (already-pruned) children of `source` into a fresh DocumentFragment,
- * importing each node into the main document. Shared tail of the inert-parse helpers.
+ * importing each node into the main document. Shared tail of the sanitize helpers.
  */
 const fragmentFromChildren = (source: Element): DocumentFragment => {
   const frag = document.createDocumentFragment()
@@ -56,33 +74,32 @@ const fragmentFromChildren = (source: Element): DocumentFragment => {
 }
 
 /**
- * Parse a raw HTML string INERTLY (no script execution, no resource/`onerror` loads)
- * and prune it to the allowlist, returning a DocumentFragment of clean editor DOM.
+ * Parse a raw HTML string through DOMPurify and prune it to the allowlist, returning
+ * a DocumentFragment of clean editor DOM.
  *
- * `DOMParser().parseFromString(html, 'text/html')` builds an inert document: `<img>`
- * never requests its `src`, so `onerror` never fires, and `<script>` never runs. This
- * is deliberately NOT an `innerHTML` assignment — feeding an untrusted source-mode
- * string here cannot trigger script or resource-based XSS the way `el.innerHTML = …`
- * would. `prune` then strips everything outside the allowlist before the nodes are
- * imported into the live document.
+ * DOMPurify removes `<script>`, inline event handlers and disallowed tags/attributes
+ * (CodeQL recognises it as a sanitizer, so feeding an untrusted source-mode string
+ * here breaks the `js/xss-through-dom` taint flow). `prune` then re-applies our finer
+ * rules — the {@link FOREIGN_STYLE_PROPS} style-property allowlist and `<a>` href
+ * scheme / target-rel hardening — keeping the canvas-side sanitizer co-design and
+ * giving defense-in-depth before the nodes are imported into the live document.
  */
 export const parseToEditorFragment = (html: string): DocumentFragment => {
-  const doc = new DOMParser().parseFromString(html, 'text/html')
-  prune(doc.body)
-  return fragmentFromChildren(doc.body)
+  const body = sanitizeToBody(html)
+  prune(body)
+  return fragmentFromChildren(body)
 }
 
 /**
  * foreignObject child HTML → a fragment of editor DOM for edit mode.
  *
- * Input is normally our own `serialize` output, but parse it inertly (via DOMParser,
- * not `innerHTML`) and prune anyway — uniform defense-in-depth with the source-mode
- * path. Unwraps the `FOREIGN_ROOT_CLASS` wrapper when present so only its children
- * land in the editor.
+ * Input is normally our own `serialize` output, but sanitize it via DOMPurify and
+ * prune anyway — uniform defense-in-depth with the source-mode path. Unwraps the
+ * `FOREIGN_ROOT_CLASS` wrapper when present so only its children land in the editor.
  */
 export const deserialize = (html: string): DocumentFragment => {
-  const doc = new DOMParser().parseFromString(html, 'text/html')
-  const root = doc.body.querySelector(`.${FOREIGN_ROOT_CLASS}`) ?? doc.body
+  const body = sanitizeToBody(html)
+  const root = body.querySelector(`.${FOREIGN_ROOT_CLASS}`) ?? body
   prune(root)
   return fragmentFromChildren(root)
 }
