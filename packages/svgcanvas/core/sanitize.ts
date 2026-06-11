@@ -361,6 +361,14 @@ const sanitizeForeignHtml = (elem: Element): void => {
   }
 }
 
+const isSafeForeignHref = (href: string): boolean => {
+  const v = href.trim()
+  if (v.startsWith('#') || v.startsWith('/') || v.startsWith('./') || v.startsWith('../')) return true
+  const m = /^([a-z][a-z0-9+.-]*:)/i.exec(v)
+  if (!m) return true // scheme-less relative
+  return FOREIGN_HREF_SCHEMES.has(m[1]!.toLowerCase())
+}
+
 const filterForeignStyle = (value: string): string => {
   const kept: string[] = []
   for (const decl of value.split(';')) {
@@ -386,6 +394,20 @@ const sanitizeForeignAttrs = (elem: Element, tag: string): void => {
       const filtered = filterForeignStyle(attr.value)
       if (filtered) elem.setAttribute('style', filtered)
       else elem.removeAttribute('style')
+    }
+  }
+
+  if (tag === 'a') {
+    const href = elem.getAttribute('href')
+    if (href !== null) {
+      const safe = isSafeForeignHref(href)
+      if (!safe) elem.removeAttribute('href')
+    }
+    if (elem.hasAttribute('href')) {
+      elem.setAttribute('target', '_blank')
+      elem.setAttribute('rel', 'noopener noreferrer')
+    } else {
+      elem.removeAttribute('target'); elem.removeAttribute('rel')
     }
   }
 }

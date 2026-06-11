@@ -76,3 +76,43 @@ describe('sanitizeForeignHtml — attrs + style', () => {
     expect(p.hasAttribute('data-x')).toBe(false)
   })
 })
+
+describe('sanitizeForeignHtml — links', () => {
+  const h = (tag: string) => document.createElementNS(NS.HTML, tag)
+  let root: Element
+  beforeEach(() => {
+    console.warn = () => {}
+    const svg = document.createElementNS(NS.SVG, 'svg')
+    const fo = document.createElementNS(NS.SVG, 'foreignObject')
+    root = h('div'); fo.appendChild(root); svg.appendChild(fo)
+    document.body.appendChild(svg)
+  })
+  afterEach(() => { document.body.textContent = '' })
+
+  it('keeps http(s) links and forces target/rel', () => {
+    root.innerHTML = '<a href="https://example.com">x</a>'
+    sanitize.sanitizeSvg(root)
+    const a = root.querySelector('a')!
+    expect(a.getAttribute('href')).toBe('https://example.com')
+    expect(a.getAttribute('target')).toBe('_blank')
+    expect(a.getAttribute('rel')).toBe('noopener noreferrer')
+  })
+
+  it('keeps fragment + relative hrefs', () => {
+    root.innerHTML = '<a href="#sec">x</a><a href="/page">y</a>'
+    sanitize.sanitizeSvg(root)
+    const as = root.querySelectorAll('a')
+    expect(as[0].getAttribute('href')).toBe('#sec')
+    expect(as[1].getAttribute('href')).toBe('/page')
+  })
+
+  it('strips javascript:/data:/mailto: hrefs (keeps the link text)', () => {
+    root.innerHTML = '<a href="javascript:alert(1)">a</a><a href="mailto:x@y.z">b</a>'
+    sanitize.sanitizeSvg(root)
+    for (const a of root.querySelectorAll('a')) {
+      expect(a.hasAttribute('href')).toBe(false)
+    }
+    expect(root.textContent).toContain('a')
+    expect(root.textContent).toContain('b')
+  })
+})
