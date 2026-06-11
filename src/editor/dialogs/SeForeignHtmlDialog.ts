@@ -187,6 +187,28 @@ export default class SeForeignHtmlDialog extends LitElement {
     this.remove()
   }
 
+  private _onFormSubmit = (e: SubmitEvent): void => {
+    const submitter = e.submitter as HTMLButtonElement | null
+    if (submitter?.value !== 'ok') return
+    if (!this.source) return
+    const srcEl = this._sourceEl
+    if (!srcEl) return
+    const rawValue = srcEl.value
+    if (rawValue.trim() === '') return // empty textarea — WYSIWYG-delete path, let it close
+    // Compute the would-be serialized content without mutating the live editor.
+    const scratch = document.createElement('div')
+    scratch.innerHTML = rawValue
+    const serialized = serialize(scratch)
+    // Parse the wrapper to inspect inner content.
+    const tmp = document.createElement('div')
+    tmp.innerHTML = serialized
+    const inner = tmp.firstElementChild?.innerHTML ?? ''
+    if (inner.trim() !== '') return // valid content — let it close normally
+    // Non-empty source that serializes to nothing: warn and block.
+    e.preventDefault()
+    void seAlert('The HTML you entered has no content that can be displayed. Please revise or cancel.')
+  }
+
   private _onPaste = (e: ClipboardEvent): void => {
     e.preventDefault()
     const text = e.clipboardData?.getData('text/plain') ?? ''
@@ -273,7 +295,7 @@ export default class SeForeignHtmlDialog extends LitElement {
         </div>
         <div part="editor" contenteditable="true" @paste=${this._onPaste}></div>
         <textarea part="source"></textarea>
-        <form method="dialog" class="foot">
+        <form method="dialog" class="foot" @submit=${this._onFormSubmit}>
           <span></span>
           <span>
             <button value="cancel">Cancel</button>
