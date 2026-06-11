@@ -96,6 +96,28 @@ const svgWhiteList_: Record<string, string[]> = {
   h6: []
 }
 
+// === foreignObject HTML content allowlist (co-designed with the editor) ===
+// Exported so the editor's serialize layer emits exactly what is permitted here.
+export const FOREIGN_HTML_TAGS: Set<string> = new Set<string>([
+  'div', 'span', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+  'ul', 'ol', 'li', 'pre', 'hr', 'br',
+  'strong', 'em', 'u', 's', 'b', 'i', 'sub', 'sup', 'a', 'blockquote'
+])
+
+// Per-tag attribute allowlist; '*' = applies to every allowed tag.
+export const FOREIGN_HTML_ATTRS: Record<string, string[]> = {
+  '*': ['class', 'id', 'style'],
+  a: ['class', 'id', 'style', 'href', 'target', 'rel']
+}
+
+export const FOREIGN_STYLE_PROPS: Set<string> = new Set<string>([
+  'color', 'text-align', 'font-size', 'font-weight',
+  'font-style', 'text-decoration', 'list-style-type'
+])
+
+// Allowed href schemes for <a>. Relative / fragment hrefs (no scheme) are also allowed.
+export const FOREIGN_HREF_SCHEMES: Set<string> = new Set<string>(['http:', 'https:'])
+
 // add generic attributes to all elements of the whitelist
 for (const [element, attrs] of Object.entries(svgWhiteList_)) {
   svgWhiteList_[element] = [...attrs, ...svgGenericWhiteList]
@@ -147,6 +169,14 @@ export const sanitizeSvg = (node: Node): void => {
   const parent = elem.parentNode
   // can parent ever be null here?  I think the root node's parent is the document...
   if (!doc || !parent) {
+    return
+  }
+
+  // HTML content inside a foreignObject takes a separate ruleset (the SVG path below
+  // is left untouched). Detected by the XHTML namespace — also resolves the a/title/style
+  // shared-tag-name ambiguity between SVG and HTML.
+  if (elem.namespaceURI === NS.HTML) {
+    sanitizeForeignHtml(elem)
     return
   }
 
@@ -301,4 +331,96 @@ export const sanitizeSvg = (node: Node): void => {
       if (child) sanitizeSvg(child)
     }
   }
+}
+
+/** Sanitize one HTML element living inside a foreignObject (XHTML namespace). */
+const sanitizeForeignHtml = (elem: Element): void => {
+  const parent = elem.parentNode
+  const tag = elem.localName
+  if (!parent) return
+
+  // Unknown tag -> unwrap: promote children before this node, then remove it.
+  if (!FOREIGN_HTML_TAGS.has(tag)) {
+    const children: Node[] = []
+    while (elem.firstChild) children.push(parent.insertBefore(elem.firstChild, elem))
+    elem.remove()
+    for (let i = children.length; i--;) {
+      const c = children[i]
+      if (c) sanitizeSvg(c)
+    }
+    return
+  }
+
+  sanitizeForeignAttrs(elem, tag)
+
+  // recurse to children (snapshot first; sanitize may unwrap and mutate the live list)
+  const kids = [...elem.childNodes]
+  for (let i = kids.length; i--;) {
+    const c = kids[i]
+    if (c) sanitizeSvg(c)
+  }
+}
+
+/**
+ * Whether an `<a>` href is safe to keep on foreignObject HTML content.
+ * Fragment / absolute-path / relative hrefs and scheme-less values pass; otherwise
+ * only the {@link FOREIGN_HREF_SCHEMES} (http/https) are allowed — `javascript:`,
+ * `data:`, etc. are rejected. Exported so the editor's pre-injection `serialize`
+ * pass can mirror the sanitizer rather than duplicate the rule.
+ */
+export const isSafeForeignHref = (href: string): boolean => {
+  const v = href.trim()
+  if (v.startsWith('#') || v.startsWith('/') || v.startsWith('./') || v.startsWith('../')) return true
+  const m = /^([a-z][a-z0-9+.-]*:)/i.exec(v)
+  if (!m) return true // scheme-less relative
+  return FOREIGN_HREF_SCHEMES.has((m[1] ?? '').toLowerCase())
+}
+
+/**
+ * Harden a foreignObject `<a>`: strip an unsafe href (per {@link isSafeForeignHref}),
+ * and on any surviving href force `target="_blank" rel="noopener noreferrer"`
+ * (else clear stray target/rel). Shared by the canvas sanitizer and the editor's
+ * `serialize` pre-injection pass so both sides apply identical link policy.
+ */
+export const hardenForeignAnchor = (a: Element): void => {
+  const href = a.getAttribute('href')
+  if (href !== null && !isSafeForeignHref(href)) a.removeAttribute('href')
+  if (a.hasAttribute('href')) {
+    a.setAttribute('target', '_blank')
+    a.setAttribute('rel', 'noopener noreferrer')
+  } else {
+    a.removeAttribute('target')
+    a.removeAttribute('rel')
+  }
+}
+
+const filterForeignStyle = (value: string): string => {
+  const kept: string[] = []
+  for (const decl of value.split(';')) {
+    const idx = decl.indexOf(':')
+    if (idx < 0) continue
+    const prop = decl.slice(0, idx).trim().toLowerCase()
+    const val = decl.slice(idx + 1).trim()
+    if (!FOREIGN_STYLE_PROPS.has(prop)) continue
+    if (/url\(|expression\(/i.test(val)) continue
+    kept.push(`${prop}: ${val}`)
+  }
+  return kept.join('; ')
+}
+
+const sanitizeForeignAttrs = (elem: Element, tag: string): void => {
+  const allowed: string[] = FOREIGN_HTML_ATTRS[tag] ?? FOREIGN_HTML_ATTRS['*'] ?? []
+  for (let i = elem.attributes.length; i--;) {
+    const attr = elem.attributes.item(i)
+    if (!attr) continue
+    const name = attr.name.toLowerCase()
+    if (!allowed.includes(name)) { elem.removeAttribute(attr.name); continue }
+    if (name === 'style') {
+      const filtered = filterForeignStyle(attr.value)
+      if (filtered) elem.setAttribute('style', filtered)
+      else elem.removeAttribute('style')
+    }
+  }
+
+  if (tag === 'a') hardenForeignAnchor(elem)
 }

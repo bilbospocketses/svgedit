@@ -157,6 +157,7 @@ export default {
     mode_path: 'Path Tool',
     mode_text: 'Text Tool',
     mode_image: 'Image Tool',
+    mode_foreign: 'Insert HTML',
     mode_zoom: 'Zoom Tool',
     no_embed: 'NOTE: This image cannot be embedded. It will depend on this path to be displayed',
     undo: 'Undo',

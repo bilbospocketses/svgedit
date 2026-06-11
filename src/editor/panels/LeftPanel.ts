@@ -135,6 +135,12 @@ class LeftPanel {
     }
   }
 
+  clickForeign () {
+    if (this.updateLeftPanel('tool_foreign')) {
+      this.editor.svgCanvas.setMode('foreign')
+    }
+  }
+
   add (id: string, handler: () => void): void {
     safeClick($id(id), () => {
       if (this.updateLeftPanel(id)) {
@@ -153,6 +159,7 @@ class LeftPanel {
     safeClick($id('tool_fhpath'), this.clickFHPath.bind(this))
     safeClick($id('tool_text'), this.clickText.bind(this))
     safeClick($id('tool_image'), this.clickImage.bind(this))
+    safeClick($id('tool_foreign'), this.clickForeign.bind(this))
     safeClick($id('tool_zoom'), this.clickZoom.bind(this))
     $id('tool_zoom')?.addEventListener('dblclick', this.dblclickZoom.bind(this))
     safeClick($id('tool_path'), this.clickPath.bind(this))

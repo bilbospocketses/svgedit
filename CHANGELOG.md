@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (foreignObject HTML authoring -- 2026-06-11)
+
+- **Insert HTML tool** — author rich HTML (headings, bold/italic/underline/strikethrough,
+  bulleted & numbered lists, links, text color, alignment, font size) inside a
+  `foreignObject`, via a themed modal editor with a WYSIWYG surface and an HTML source
+  toggle. Double-click an inserted block to re-edit; content round-trips through
+  save/reload. **Known limitation:** `foreignObject` content renders in the editor's
+  browser canvas but is not drawn by all SVG raster/export paths, nor by non-browser SVG
+  renderers such as librsvg.
+
 ### Changed (M4 Phase 4 — cursors -- 2026-06-11)
 
 - The six shape-tool cursors (`circle`/`ellipse`/`rect`/`square`/`polygon`/`star`) are

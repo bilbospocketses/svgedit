@@ -21,6 +21,7 @@ import * as draw from './draw.js'
 import * as pathModule from './path.js'
 import * as hstry from './history.js'
 import { findPos } from '../common/util.js'
+import { NS } from './namespaces.js'
 
 const {
   InsertElementCommand,
@@ -416,6 +417,7 @@ const mouseMoveEvent = (evt: MouseEvent): void => {
       shape.setAttribute('y2', String(y2))
       break
     }
+    case 'foreign': // fall through — foreign-insert mode sizes its foreignObject like a rect
     case 'foreignObject': // fall through
     case 'square':
     case 'rect':
@@ -830,6 +832,23 @@ const mouseUpEvent = (evt: MouseEvent): void => {
       keep = (x1 !== x2 || y1 !== y2)
     }
       break
+    case 'foreign': {
+      // A freshly drawn foreignObject (the HTML-authoring tool). If the user clicked
+      // without dragging, give it a sensible default box so there's something to edit.
+      if (element) {
+        if (Number(element.getAttribute('width')) < 2) { element.setAttribute('width', '240') }
+        if (Number(element.getAttribute('height')) < 2) { element.setAttribute('height', '120') }
+        // Notify the editor to open the HTML-authoring dialog for this new foreignObject.
+        svgCanvas.call('foreignCreate', element)
+        // Deliberately do NOT let the generic shape finalizer commit an
+        // InsertElementCommand for this foreignObject: the box stays in the DOM but
+        // out of history until the controller records the insert atomically on OK.
+        // Cancel/empty-OK removes the box, so nothing is left to redo-resurrect.
+        // (keep stays false + element is nulled so neither mouseUp finalize branch runs.)
+        element = null
+      }
+      break
+    }
     case 'foreignObject':
     case 'square':
     case 'rect':
@@ -1045,6 +1064,13 @@ const dblClickEvent = (evt: MouseEvent): void => {
   if (tagName === 'text' && svgCanvas.getCurrentMode() !== 'textedit') {
     const pt = transformPoint(evt.clientX, evt.clientY, svgCanvas.getRootSctm()!)
     svgCanvas.textActions.select(mouseTarget as SVGTextElement, pt.x, pt.y)
+  }
+
+  // Double-clicking a foreignObject opens the HTML-authoring dialog preloaded with
+  // its current content (the editor binds 'foreignEdit'). Mirrors text double-click.
+  if (tagName === 'foreignObject' && mouseTarget) {
+    svgCanvas.call('foreignEdit', mouseTarget)
+    return
   }
 
   // Do nothing if already in current group
@@ -1311,6 +1337,32 @@ const mouseDownEvent = (evt: MouseEvent): void => {
       })
       setHref(newImage, svgCanvas.getLastGoodImgUrl())
       preventClickDefault(newImage)
+      break
+    } case 'foreign': {
+      // HTML-authoring tool: create an empty foreignObject sized 1x1 at the start
+      // point, seeded with an empty XHTML root. It sizes like a rect on drag and the
+      // editor's dialog (opened on mouseUp via 'foreignCreate') fills in the content.
+      svgCanvas.setStarted(true)
+      svgCanvas.setStartX(x)
+      svgCanvas.setStartY(y)
+      const fo = svgCanvas.addSVGElementsFromJson({
+        element: 'foreignObject',
+        curStyles: false,
+        attr: {
+          x,
+          y,
+          width: 1,
+          height: 1,
+          id: svgCanvas.getNextId()
+        }
+      })
+      if (fo) {
+        // createElementNS(NS.HTML, …) already carries the XHTML namespace — do NOT
+        // also set an xmlns attribute (doubling produces invalid XML on round-trip).
+        const root = document.createElementNS(NS.HTML, 'div')
+        root.setAttribute('class', 'se-fo-root')
+        fo.appendChild(root)
+      }
       break
     } case 'square':
     // TODO: once we create the rect, we lose information that this was a square

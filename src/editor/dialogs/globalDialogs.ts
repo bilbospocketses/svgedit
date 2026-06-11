@@ -1,5 +1,6 @@
 import SePlainAlertDialog from './SePlainAlertDialog.js'
 import SePromptDialog from './SePromptDialog.js'
+import SeForeignHtmlDialog from './SeForeignHtmlDialog.js'
 
 /** Augment Window so seAlert / seConfirm / seSelect are globally accessible. */
 declare global {
@@ -8,6 +9,7 @@ declare global {
     seConfirm: (text: string, choices?: string[]) => Promise<string>
     seSelect: (text: string, choices: string[]) => Promise<string>
     sePrompt: (text: string, defaultValue?: string) => Promise<string | null>
+    seForeignHtml: (initialHtml?: string) => Promise<string | null>
   }
 }
 
@@ -45,7 +47,15 @@ const sePrompt = async (text: string, defaultValue = ''): Promise<string | null>
   return response.value
 }
 
+const seForeignHtml = async (initialHtml = ''): Promise<string | null> => {
+  const dialog = new SeForeignHtmlDialog()
+  dialog.value = initialHtml
+  dialog.open()
+  return (await dialog.whenClosed()).html
+}
+
 window.seAlert = seAlert
 window.seConfirm = seConfirm
 window.seSelect = seSelect
 window.sePrompt = sePrompt
+window.seForeignHtml = seForeignHtml
