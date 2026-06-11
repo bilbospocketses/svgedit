@@ -285,6 +285,7 @@ export interface ISvgCanvas {
   remapElement: typeof remapElement
   recalculateDimensions: typeof recalculateDimensions
   sanitizeSvg: typeof sanitizeSvg
+  setForeignContent: (fo: Element, htmlString: string) => void
   pasteElements: typeof pasteElementsMethod
   identifyLayers: typeof draw.identifyLayers
   createLayer: typeof draw.createLayer
