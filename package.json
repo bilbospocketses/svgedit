@@ -21,6 +21,7 @@
     "pretest": "npm run lint",
     "test": "vitest run --coverage && tsx scripts/run-e2e.ts",
     "typecheck": "tsc --build packages/svgcanvas",
+    "typecheck:editor": "tsc --build packages/svgcanvas && tsc --noEmit -p tsconfig.json",
     "build:embed": "tsc --project tsconfig.embed.json",
     "build": "npm run typecheck && vite build packages/svgcanvas && vite build && npm run build:embed",
     "postbuild": "tsx scripts/copy-static.ts && tsx scripts/build-extensions.ts",

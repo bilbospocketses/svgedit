@@ -1,5 +1,6 @@
 import { test, expect } from './fixtures.js'
 import { visitAndApproveStorage } from './helpers.js'
+import type { SvgEditorWindow } from './svg-editor-window.js'
 
 /**
  * Platform-contract assertions — the specific browser SVG/DOM behaviors svgedit
@@ -14,11 +15,6 @@ import { visitAndApproveStorage } from './helpers.js'
  * `browser-canary` workflow re-runs the whole e2e (this file included) against Chrome
  * Beta for early warning of an upcoming regression.
  */
-
-/** Minimal shape of the `window.svgEditor` global these tests drive. */
-type SvgEditorWindow = Window & {
-  svgEditor: { svgCanvas: { setSvgString: (s: string) => unknown; getSvgString: () => string } }
-}
 
 const SVG_NS = 'http://www.w3.org/2000/svg'
 const XHTML_NS = 'http://www.w3.org/1999/xhtml'
