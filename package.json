@@ -64,6 +64,7 @@
     "dompurify": "^3.4.0",
     "jspdf": "4.2.1",
     "lit": "^3.3.3",
+    "sirv": "^3.0.2",
     "svg2pdf.js": "2.7.0"
   },
   "devDependencies": {
