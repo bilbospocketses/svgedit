@@ -1,4 +1,5 @@
 mod config;
+mod log;
 mod paths;
 
 fn main() {
