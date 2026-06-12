@@ -31,7 +31,6 @@ export function webPortOverride (env: string | undefined): number | null {
 export async function findAvailablePort (start: number, end: number): Promise<number | null> {
   if (!Number.isInteger(start) || !Number.isInteger(end) || start > end) return null
   for (let port = start; port <= end; port++) {
-    // eslint-disable-next-line no-await-in-loop -- sequential probing is intentional
     const free = await tryPort(port)
     if (free) return port
   }

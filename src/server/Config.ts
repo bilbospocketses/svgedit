@@ -30,7 +30,7 @@ export function readConfig (dataRoot: string = resolveDataRoot()): FlatConfig {
     const raw = fs.readFileSync(configPath(dataRoot), 'utf8')
     const parsed: unknown = JSON.parse(raw)
     if (parsed !== null && typeof parsed === 'object' && 'webPort' in parsed) {
-      const wp = (parsed as { webPort: unknown }).webPort
+      const wp = parsed.webPort
       if (typeof wp === 'number' && Number.isInteger(wp)) return { webPort: wp }
     }
     return {}
