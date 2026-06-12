@@ -6,6 +6,7 @@ mod paths;
 mod single_instance;
 mod spawn;
 #[cfg(windows)] mod job_object;
+#[cfg(windows)] mod install_acl;
 
 fn main() {
     println!("svgedit launcher (0b scaffold)");
