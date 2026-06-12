@@ -2,6 +2,9 @@ use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
 
 pub struct Paths {
+    // Read only on Windows (the PerMachine ACL grant in main.rs); reserved for
+    // the Linux install layout (#7/#27), so unused on non-Windows in 0b.
+    #[cfg_attr(not(windows), allow(dead_code))]
     pub install_root: PathBuf,
     pub data_root: PathBuf,
     pub deps_path: PathBuf,
