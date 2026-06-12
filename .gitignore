@@ -1,6 +1,9 @@
 node_modules
 dist
 
+# svgedit server dev data root (sticky webPort, etc.)
+.svgedit-data/
+
 # TypeScript incremental-build state file (emitted by `tsc --build`)
 *.tsbuildinfo
 
