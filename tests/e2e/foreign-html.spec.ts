@@ -1,11 +1,7 @@
 import { test, expect } from './fixtures.js'
 import type { Page } from '@playwright/test'
 import { visitAndApproveStorage } from './helpers.js'
-
-/** Minimal shape of the `window.svgEditor` global used by the round-trip test. */
-type SvgEditorWindow = Window & {
-  svgEditor: { svgCanvas: { getSvgString: () => string; setSvgString: (s: string) => unknown } }
-}
+import type { SvgEditorWindow } from './svg-editor-window.js'
 
 /**
  * Runtime validation gate for the foreignObject HTML-authoring flow (Phases A-C).
