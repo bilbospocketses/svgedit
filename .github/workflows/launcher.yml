@@ -15,14 +15,15 @@
 name: launcher
 
 on:
+  # build-and-test is a REQUIRED status check on master. A required check must
+  # report on every PR, or GitHub blocks the PR "waiting for status" — so the
+  # pull_request trigger runs on ALL PRs (no paths filter). The push trigger
+  # stays path-filtered for master-push efficiency.
   push:
     paths:
       - 'launcher/**'
       - '.github/workflows/launcher.yml'
   pull_request:
-    paths:
-      - 'launcher/**'
-      - '.github/workflows/launcher.yml'
 
 permissions:
   contents: read
