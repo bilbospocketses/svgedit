@@ -2,6 +2,7 @@ mod config;
 mod hooks;
 mod log;
 mod paths;
+mod single_instance;
 mod spawn;
 #[cfg(windows)] mod job_object;
 

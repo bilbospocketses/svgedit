@@ -30,7 +30,7 @@ windows = { version = "0.58", features = [
 ] }
 
 [target.'cfg(unix)'.dependencies]
-rustix = { version = "1", features = ["fs"] }
+rustix = { version = "1", features = ["fs", "process"] }
 
 [build-dependencies]
 winresource = "0.1"
