@@ -38,13 +38,15 @@ the current code with `Read`, `Grep`, or `git -C "<repo-root>" log`.
 ## Quick commands
 
 ```bash
-npm start          # vite dev → http://localhost:8000/src/editor/index.html
-npm run build      # build to dist/editor
+npm start          # vite dev → http://localhost:8100/src/editor/index.html
+npm run build      # build to dist/editor + dist/server
+npm run serve      # build + run the Node server (production serve) → http://localhost:8100/
 npm test           # lint + vitest + Playwright e2e
 npm run lint       # eslint + markdownlint-cli2
 npm run lint:md    # markdownlint only
 npm run typecheck  # tsc --build — packages/svgcanvas ONLY (see below)
-npm run typecheck:editor  # svgcanvas decls + editor (src/editor) typecheck — self-contained
+npm run typecheck:editor  # svgcanvas decls + editor (src/editor + src/server) typecheck — self-contained
+npm run typecheck:server  # server (src/server) typecheck via tsconfig.server.json
 ```
 
 ## Typecheck scope (gotcha)

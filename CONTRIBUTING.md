@@ -26,15 +26,15 @@ if the work is substantial.
 git clone https://github.com/bilbospocketses/svgedit.git
 cd svgedit
 npm install
-npm start          # vite dev → http://localhost:8000/src/editor/index.html
+npm start          # vite dev → http://localhost:8100/src/editor/index.html
 ```
 
 ## Development Workflow
 
 ```bash
-npm start          # vite dev server
-npm run build      # build to dist/editor
-npm run start:iife # build + preview the IIFE bundle
+npm start          # vite dev server (http://localhost:8100/)
+npm run build      # build to dist/editor + dist/server
+npm run serve      # build + run the Node server on http://localhost:8100/
 npm test           # lint + vitest unit suite + Playwright e2e
 npm run lint       # lint only
 ```

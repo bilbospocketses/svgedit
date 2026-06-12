@@ -20,18 +20,20 @@ const htmlStringPlugin = string({
 })
 htmlStringPlugin.enforce = 'post'
 
+const devPort = Number(process.env.SVGEDIT_WEB_PORT) || 8100
+
 export default defineConfig({
   root: '.',
   appType: 'mpa',
   base: './',
   server: {
     host: '0.0.0.0',
-    port: 8000,
+    port: devPort,
     strictPort: true
   },
   preview: {
     host: '0.0.0.0',
-    port: 8000,
+    port: devPort,
     strictPort: true
   },
   plugins: [
