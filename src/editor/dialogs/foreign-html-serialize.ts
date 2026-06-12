@@ -62,6 +62,15 @@ export const serialize = (editorRoot: Element): string => {
 }
 
 /**
+ * True when an editor subtree has no displayable content: blank text and no `<hr>`.
+ * `<hr>` is the only no-text element on the foreign allowlist (`<img>` is stripped),
+ * so blank text + no `<hr>` means nothing would render. The dialog uses this to report
+ * an emptied box as `''` so the controller deletes it instead of writing an empty wrapper.
+ */
+export const isForeignContentEmpty = (editorRoot: Element): boolean =>
+  (editorRoot.textContent ?? '').trim() === '' && editorRoot.querySelector('hr') === null
+
+/**
  * Move the (already-pruned) children of `source` into a fresh DocumentFragment,
  * importing each node into the main document. Shared tail of the sanitize helpers.
  */

@@ -37,6 +37,13 @@ describe('se-foreign-html-dialog', () => {
     expect(html).toContain('hi')
   })
 
+  it('resolves empty string on OK when the editor is empty (delete path)', async () => {
+    await flush(el) // no value seeded -> editor empty
+    const closed = el.whenClosed()
+    closeWith(el, 'ok')
+    await expect(closed).resolves.toEqual({ html: '' })
+  })
+
   it('resolves null on cancel', async () => {
     await flush(el)
     const closed = el.whenClosed()
