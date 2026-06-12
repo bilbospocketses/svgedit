@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (foreignObject HTML authoring follow-ups -- 2026-06-12)
+
+- **List editing produces valid structure.** Applying a paragraph or heading style to a
+  list item now lifts it out of the list (splitting the list around it) instead of leaving
+  a block as an invalid child of `<ul>`/`<ol>`. The list button is a true toggle: it wraps
+  plain blocks into a list, unwraps list items back to paragraphs, and converts between
+  bulleted and numbered lists, without nesting a list inside a list (#118).
+- **Clear-formatting preserves blocks.** Clearing formatting across several paragraphs or
+  headings now keeps them as separate blocks instead of collapsing the selection into a
+  single run of text (#118).
+- **Emptying a box deletes it, undoably.** Removing all content from an HTML box and
+  confirming now deletes the box instead of leaving an empty one behind, and the deletion
+  can be undone (#118).
+
 ### Added (foreignObject HTML authoring -- 2026-06-11)
 
 - **Insert HTML tool** — author rich HTML (headings, bold/italic/underline/strikethrough,
