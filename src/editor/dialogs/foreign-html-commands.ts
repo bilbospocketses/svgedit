@@ -88,6 +88,12 @@ const liftItem = (li: HTMLElement, block: HTMLElement): void => {
     const tail = list.localName === 'ol' ? document.createElement('ol') : document.createElement('ul')
     const style = list.getAttribute('style')
     if (style) tail.setAttribute('style', style)
+    if (list.localName === 'ol') {
+      // Continue the numbering: the tail's first item keeps its original number.
+      const start = Number(list.getAttribute('start')) || 1
+      const index = [...list.children].indexOf(li)
+      tail.setAttribute('start', String(start + index + 1))
+    }
     for (const node of after) tail.appendChild(node)
     block.after(tail)
   }
@@ -120,11 +126,29 @@ export const setBlock = (root: Element, tag: BlockTag): void => {
  */
 const wrapInList = (blocks: HTMLElement[], kind: 'ul' | 'ol'): void => {
   const first = blocks[0]
-  if (!first) return
+  const last = blocks[blocks.length - 1]
+  if (!first || !last) return
   // Literal createElement — `kind` is a typed union, never a DOM-sourced string.
   const list = kind === 'ol' ? document.createElement('ol') : document.createElement('ul')
-  const anchor = first.localName === 'li' ? (first.parentElement ?? first) : first
-  anchor.parentNode?.insertBefore(list, anchor)
+  // When every selected block is an item of one source list, split that list IN PLACE
+  // (before-items stay, the new list goes here, after-items become a tail of the source
+  // kind) so a partial retype keeps document order instead of jumping ahead of the list.
+  const sourceList = first.localName === 'li' ? first.parentElement : null
+  if (sourceList && blocks.every((b) => b.parentElement === sourceList)) {
+    const after: ChildNode[] = []
+    for (let n = last.nextSibling; n; n = n.nextSibling) after.push(n)
+    sourceList.after(list)
+    if (after.length) {
+      const tail = sourceList.localName === 'ol' ? document.createElement('ol') : document.createElement('ul')
+      const style = sourceList.getAttribute('style')
+      if (style) tail.setAttribute('style', style)
+      for (const node of after) tail.appendChild(node)
+      list.after(tail)
+    }
+  } else {
+    const anchor = first.localName === 'li' ? (first.parentElement ?? first) : first
+    anchor.parentNode?.insertBefore(list, anchor)
+  }
   for (const block of blocks) {
     const source = block.localName === 'li' ? block.parentElement : null
     const li = document.createElement('li')
