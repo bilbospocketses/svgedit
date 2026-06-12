@@ -43,4 +43,26 @@ npm run build      # build to dist/editor
 npm test           # lint + vitest + Playwright e2e
 npm run lint       # eslint + markdownlint-cli2
 npm run lint:md    # markdownlint only
+npm run typecheck  # tsc --build — packages/svgcanvas ONLY (see below)
 ```
+
+## Typecheck scope (gotcha)
+
+`npm run typecheck` builds and typechecks **only `packages/svgcanvas`**. It does **not**
+cover the editor (`src/editor/**`), and neither does `npm test` (vitest transpiles via swc
+without type-checking). To typecheck the editor against the root config, run:
+
+```bash
+tsc --noEmit -p tsconfig.json
+```
+
+The canvas package compiles with `--isolatedDeclarations`, so every **exported** declaration
+needs an explicit type annotation (e.g. `export const X: Set<string> = …`, function return
+types). ESLint also forbids the non-null assertion operator (`!`) — use guards / `??`.
+
+## Importing the canvas engine
+
+Import svgcanvas internals via **subpaths** — `@svgedit/svgcanvas/core/<module>.js` — which
+resolve to the TypeScript **source**. The bare `@svgedit/svgcanvas` specifier resolves to the
+built `dist/` (gitignored), which is stale at dev time unless rebuilt; prefer subpaths for
+runtime values imported into editor/test code.
