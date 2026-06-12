@@ -130,4 +130,17 @@ describe('foreign-html commands', () => {
     expect(ol.querySelector('ul,ol')).toBeNull()
     assertNoInvalidLists(root)
   })
+
+  it('clearFormatting strips inline formatting but preserves block boundaries', () => {
+    root.innerHTML = '<p><strong>bo</strong>ld</p><h2><span style="color: red">head</span></h2>'
+    selectAll(root)
+    cmd.clearFormatting(root)
+    // Both blocks survive as their own elements, with inline formatting removed.
+    expect(root.querySelector('p')?.textContent).toBe('bold')
+    expect(root.querySelector('p')?.querySelector('strong')).toBeNull()
+    expect(root.querySelector('h2')?.textContent).toBe('head')
+    expect(root.querySelector('h2')?.querySelector('span')).toBeNull()
+    // Block count unchanged (no collapse into one text run).
+    expect(root.children.length).toBe(2)
+  })
 })

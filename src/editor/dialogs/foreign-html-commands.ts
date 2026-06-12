@@ -185,6 +185,14 @@ export const setAlign = (root: Element, value: Align): void => {
 }
 
 export const clearFormatting = (root: Element): void => {
+  const blocks = blocksInRange(root)
+  if (blocks.length) {
+    // Strip inline formatting per block, preserving block boundaries.
+    // (RHS keeps the `?? ''` so this is not a no-self-assign; textContent is typed string|null.)
+    for (const block of blocks) block.textContent = block.textContent ?? ''
+    return
+  }
+  // No enclosing block (bare text directly in root) — flatten the range.
   const r = activeRange(root); if (!r) return
   const text = r.toString()
   r.deleteContents(); r.insertNode(document.createTextNode(text))
