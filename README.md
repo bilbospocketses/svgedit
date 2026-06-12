@@ -29,9 +29,9 @@ Requires Node ≥ 20.
 
 ```sh
 npm install
-npm start          # vite dev → http://localhost:8000/src/editor/index.html
-npm run build      # build to dist/editor
-npm run start:iife # build + preview the IIFE bundle
+npm start          # vite dev → http://localhost:8100/src/editor/index.html
+npm run build      # build to dist/editor + dist/server
+npm run serve      # build + run the Node server (production serve) → http://localhost:8100/
 npm test           # lint + vitest unit suite + Playwright e2e
 ```
 

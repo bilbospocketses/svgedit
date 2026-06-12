@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (0a server skeleton -- 2026-06-12)
+
+- **Node server skeleton.** A minimal Node HTTP server (`src/server/`, run via `npm run serve`)
+  now serves the built editor and owns port resolution — a `SVGEDIT_WEB_PORT` override, an
+  auto-shift within a 99-port band, and a sticky persisted port — mirroring ws-scrcpy-web's
+  `reconcileWebPort()`. It also exposes a `/healthz` endpoint and an API-handler seam for
+  future server-side features.
+
+### Changed (dev and serve ports -- 2026-06-12)
+
+- **Default port moved 8000 → 8100.** Both `npm start` (vite dev) and the new Node server now
+  default to 8100 and honor `SVGEDIT_WEB_PORT`, clearing the collision with ws-scrcpy-web. The
+  `start:iife` script is retired in favor of `npm run serve`.
+
 ### Fixed (foreignObject HTML authoring follow-ups -- 2026-06-12)
 
 - **List editing produces valid structure.** Applying a paragraph or heading style to a

@@ -29,7 +29,7 @@ Mixed by context. Three voices, three audiences:
 
 - **2nd person** — `docs/tutorials/*.md`, READMEs of subpackages, how-to guides.
 
-  > Open the editor at `http://localhost:8000/src/editor/index.html`. Click **File →
+  > Open the editor at `http://localhost:8100/src/editor/index.html`. Click **File →
   > New** to start a blank canvas.
 
 - **3rd-person factual** — CHANGELOG entries, API reference, design specs.
