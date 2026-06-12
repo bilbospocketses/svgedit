@@ -46,14 +46,15 @@ Mirrors `ws-scrcpy-web/src/server/`, slimmed of all adb/scan/dependency machiner
 
 ```
 src/server/
-  index.ts        # entrypoint: resolveWebPort() → createServer() → listen → SIGINT/SIGTERM graceful close
-  PortPicker.ts   # tryPort / webPortOverride / findAvailablePort  (ported ~verbatim from the sibling — pure `net`)
-  httpServer.ts   # createServer({ staticDir, apiHandlers }): handler chain → /healthz → static fallback; graceful close
-  Config.ts       # resolveDataRoot(env, platform) + readConfig()/persistWebPort() → <dataRoot>/config.json
-  __tests__/
-    PortPicker.test.ts
-    portResolution.test.ts
-    config.test.ts
+  index.ts          # entrypoint: resolveWebPort() → createServer() → listen → SIGINT/SIGTERM graceful close
+  PortPicker.ts     # tryPort / webPortOverride / findAvailablePort  (ported ~verbatim from the sibling — pure `net`)
+  resolveWebPort.ts # resolveWebPort() orchestration + DEFAULT_WEB_PORT  (extracted from index for unit-testability)
+  httpServer.ts     # createServer({ staticDir, apiHandlers }): handler chain → /healthz → static fallback; graceful close
+  Config.ts         # resolveDataRoot(env, platform) + readConfig()/persistWebPort() → <dataRoot>/config.json
+tests/unit/server/  # vitest include is tests/**, so server tests live here (not src/server/__tests__/)
+  PortPicker.test.ts
+  config.test.ts
+  resolveWebPort.test.ts
 ```
 
 The sibling reference files are the working template:
@@ -80,7 +81,7 @@ The `apiHandlers: ApiHandler[]` array is empty in the skeleton but present as th
 - `webPortOverride(env: string | undefined): number | null` — parse to a valid port (`Number.isInteger && >0 && <65536`) or null.
 - `findAvailablePort(start: number, end: number): Promise<number | null>` — walk `[start, end]` inclusive, first free or null.
 
-`resolveWebPort()` in `index.ts` mirrors `reconcileWebPort()`:
+`resolveWebPort()` (its own module `src/server/resolveWebPort.ts`, imported by `index.ts` — extracted for unit-testability) mirrors `reconcileWebPort()`:
 
 ```
 const DEFAULT_WEB_PORT = 8100
@@ -157,7 +158,7 @@ Use **sirv** (`dependencies`) — tiny, battle-tested, and the same library `vit
 
 ## Files touched
 
-- **New:** `src/server/index.ts`, `src/server/PortPicker.ts`, `src/server/httpServer.ts`, `src/server/Config.ts`, `src/server/__tests__/{PortPicker,portResolution,config}.test.ts`, `tsconfig.server.json`.
+- **New:** `src/server/{index,PortPicker,resolveWebPort,httpServer,Config}.ts`, `tests/unit/server/{PortPicker,config,resolveWebPort}.test.ts`, `tsconfig.server.json`.
 - **Edit:** `package.json` (dep `sirv`; scripts `build:server`, fold into `build`, `serve`; drop `start:iife`), `vite.config.mjs` (dev/preview port `8100` + `SVGEDIT_WEB_PORT`), `.gitignore` (`.svgedit-data/`), docs (`README.md`, `CONTRIBUTING.md`, `AGENTS.md`, `STYLE.md` — port + serve commands), `CHANGELOG.md` (`## [Unreleased]` entry).
 
 ## Testing strategy
@@ -168,7 +169,7 @@ Use **sirv** (`dependencies`) — tiny, battle-tested, and the same library `vit
   - `resolveWebPort` — override forces exact; busy default auto-shifts within band; persists the bound port; throws when band exhausted.
   - `resolveDataRoot` — honors `SVGEDIT_DATA_ROOT`; dev fallback otherwise. `readConfig`/`persistWebPort` round-trip; tolerates missing/garbage file.
 - **Integration:** boot the server → `GET /` returns editor HTML; `GET /healthz` → 200; hold the default port → server binds the shifted port.
-- **Regression:** existing `npm run lint`, unit, and e2e suites stay green; `npm run typecheck:editor` clean (new server is covered by `tsconfig.server.json`).
+- **Regression:** existing `npm run lint`, unit, and e2e suites stay green; `npm run typecheck:editor` clean; the new server is type-checked separately via `npm run typecheck:server` (`tsc --noEmit -p tsconfig.server.json`).
 
 ## Release / changelog
 
