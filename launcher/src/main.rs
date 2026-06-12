@@ -1,6 +1,7 @@
 mod config;
 mod log;
 mod paths;
+mod spawn;
 #[cfg(windows)] mod job_object;
 
 fn main() {
