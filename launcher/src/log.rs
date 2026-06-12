@@ -9,7 +9,10 @@ pub fn init(name: &str) {
 }
 
 fn basename() -> &'static str {
-    BASENAME.get().map(String::as_str).unwrap_or("svgedit-launcher")
+    BASENAME
+        .get()
+        .map(String::as_str)
+        .unwrap_or("svgedit-launcher")
 }
 
 fn log_path() -> Option<PathBuf> {
@@ -46,7 +49,11 @@ fn write_line(level: &str, msg: &str) {
     let line = format!("[{level}] {msg}\n");
     if let Some(path) = log_path() {
         rotate_by_rename_if_large(&path, 10 * 1024 * 1024);
-        if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(&path) {
+        if let Ok(mut f) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&path)
+        {
             let _ = f.write_all(line.as_bytes());
         }
     }
@@ -56,9 +63,15 @@ fn write_line(level: &str, msg: &str) {
     }
 }
 
-pub fn info(msg: &str) { write_line("INFO", msg); }
-pub fn warn(msg: &str) { write_line("WARN", msg); }
-pub fn error(msg: &str) { write_line("ERROR", msg); }
+pub fn info(msg: &str) {
+    write_line("INFO", msg);
+}
+pub fn warn(msg: &str) {
+    write_line("WARN", msg);
+}
+pub fn error(msg: &str) {
+    write_line("ERROR", msg);
+}
 
 #[cfg(test)]
 mod tests {

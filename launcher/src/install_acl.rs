@@ -11,7 +11,7 @@
 // (one-time UAC prompt).  Once granted, all subsequent launches skip the
 // elevation entirely.
 
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
 use std::path::Path;
 
 const SENTINEL: &str = ".svgedit-write-test";
@@ -76,10 +76,10 @@ fn to_wide(s: &str) -> Vec<u16> {
 
 #[cfg(windows)]
 fn run_elevated_icacls(install_root: &Path) -> Result<i32> {
-    use windows::Win32::Foundation::CloseHandle;
-    use windows::Win32::System::Threading::{GetExitCodeProcess, INFINITE, WaitForSingleObject};
-    use windows::Win32::UI::Shell::{SEE_MASK_NOCLOSEPROCESS, SHELLEXECUTEINFOW, ShellExecuteExW};
     use windows::core::PCWSTR;
+    use windows::Win32::Foundation::CloseHandle;
+    use windows::Win32::System::Threading::{GetExitCodeProcess, WaitForSingleObject, INFINITE};
+    use windows::Win32::UI::Shell::{ShellExecuteExW, SEE_MASK_NOCLOSEPROCESS, SHELLEXECUTEINFOW};
 
     let parameters = icacls_args(install_root);
 
@@ -131,7 +131,9 @@ mod tests {
 
     #[test]
     fn is_writable_false_for_nonexistent_path() {
-        assert!(!is_writable(std::path::Path::new("Z:/no/such/svgedit-acl-test")));
+        assert!(!is_writable(std::path::Path::new(
+            "Z:/no/such/svgedit-acl-test"
+        )));
     }
 
     #[test]

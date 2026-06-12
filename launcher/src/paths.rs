@@ -35,7 +35,11 @@ impl Paths {
             None => data_root.join("dependencies"),
         };
 
-        Ok(Self { install_root, data_root, deps_path })
+        Ok(Self {
+            install_root,
+            data_root,
+            deps_path,
+        })
     }
 
     pub fn from_env() -> Result<Self> {
@@ -58,7 +62,12 @@ mod tests {
         let install_root = dir.path();
         let exe_dir = install_root.join("current");
         std::fs::create_dir_all(&exe_dir).unwrap();
-        let p = Paths::compute(&exe_dir, None, Some(dir.path().join("PD").to_str().unwrap())).unwrap();
+        let p = Paths::compute(
+            &exe_dir,
+            None,
+            Some(dir.path().join("PD").to_str().unwrap()),
+        )
+        .unwrap();
         assert_eq!(p.install_root, install_root);
     }
 
@@ -73,8 +82,12 @@ mod tests {
         assert_eq!(default.deps_path, default.data_root.join("dependencies"));
 
         let custom = dir.path().join("custom-deps");
-        let overridden =
-            Paths::compute(&exe_dir, Some(custom.to_str().unwrap()), Some(pd.to_str().unwrap())).unwrap();
+        let overridden = Paths::compute(
+            &exe_dir,
+            Some(custom.to_str().unwrap()),
+            Some(pd.to_str().unwrap()),
+        )
+        .unwrap();
         assert_eq!(overridden.deps_path, custom);
     }
 }

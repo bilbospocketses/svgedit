@@ -18,9 +18,9 @@ use std::sync::OnceLock;
 use windows::core::PCWSTR;
 use windows::Win32::Foundation::{CloseHandle, HANDLE};
 use windows::Win32::System::JobObjects::{
-    AssignProcessToJobObject, CreateJobObjectW, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
-    JOBOBJECT_EXTENDED_LIMIT_INFORMATION, JobObjectExtendedLimitInformation,
-    SetInformationJobObject,
+    AssignProcessToJobObject, CreateJobObjectW, JobObjectExtendedLimitInformation,
+    SetInformationJobObject, JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
+    JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
 };
 
 struct JobHandle(HANDLE);
@@ -81,8 +81,7 @@ pub fn release() -> Result<bool> {
     };
     let mut info = JOBOBJECT_EXTENDED_LIMIT_INFORMATION::default();
     // Explicit zero — no kill-on-close, no other flags.
-    info.BasicLimitInformation.LimitFlags =
-        windows::Win32::System::JobObjects::JOB_OBJECT_LIMIT(0);
+    info.BasicLimitInformation.LimitFlags = windows::Win32::System::JobObjects::JOB_OBJECT_LIMIT(0);
     unsafe {
         SetInformationJobObject(
             handle.0,
@@ -102,10 +101,13 @@ mod tests {
 
     #[test]
     fn release_after_adopt_is_idempotent() {
-        let mut child = Command::new("cmd").args(["/c", "exit", "0"]).spawn().unwrap();
+        let mut child = Command::new("cmd")
+            .args(["/c", "exit", "0"])
+            .spawn()
+            .unwrap();
         adopt(&child).unwrap();
-        assert_eq!(release().unwrap(), true);
-        assert_eq!(release().unwrap(), true); // idempotent
+        assert!(release().unwrap());
+        assert!(release().unwrap()); // idempotent
         let _ = child.wait();
     }
 }

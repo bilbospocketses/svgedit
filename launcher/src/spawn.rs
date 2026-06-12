@@ -15,21 +15,36 @@ const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 pub fn resolve_node_with(deps_path: Option<&str>, exe_dir: &Path) -> Result<PathBuf> {
     if let Some(deps) = deps_path {
         let c = Path::new(deps).join("node").join("bin").join(NODE_BIN);
-        if c.exists() { return Ok(c); }
+        if c.exists() {
+            return Ok(c);
+        }
         let c = Path::new(deps).join("node").join(NODE_BIN);
-        if c.exists() { return Ok(c); }
+        if c.exists() {
+            return Ok(c);
+        }
     }
     let seed = exe_dir.join("seed").join("node").join("bin").join(NODE_BIN);
-    if seed.exists() { return Ok(seed); }
+    if seed.exists() {
+        return Ok(seed);
+    }
     let seed = exe_dir.join("seed").join("node").join(NODE_BIN);
-    if seed.exists() { return Ok(seed); }
-    bail!("Node not found. Set SVGEDIT_DEPS_PATH or place a Node binary at {:?}", seed)
+    if seed.exists() {
+        return Ok(seed);
+    }
+    bail!(
+        "Node not found. Set SVGEDIT_DEPS_PATH or place a Node binary at {:?}",
+        seed
+    )
 }
 
 /// svgedit's server entry is `<exe_dir>/dist/server/index.js`.
 pub fn resolve_server_entry_with(exe_dir: &Path) -> Result<PathBuf> {
     let entry = exe_dir.join("dist").join("server").join("index.js");
-    if entry.exists() { Ok(entry) } else { bail!("Server entry not found at {:?}", entry) }
+    if entry.exists() {
+        Ok(entry)
+    } else {
+        bail!("Server entry not found at {:?}", entry)
+    }
 }
 
 /// Spawn the Node server with a hidden console (Windows). The child reads
@@ -59,7 +74,9 @@ pub fn spawn_server(deps_path: &Path, data_root: &Path) -> Result<Child> {
 
     #[cfg(windows)]
     if let Err(e) = crate::job_object::adopt(&child) {
-        crate::log::error(&format!("could not adopt Node child into Job Object: {e:#}"));
+        crate::log::error(&format!(
+            "could not adopt Node child into Job Object: {e:#}"
+        ));
     }
 
     Ok(child)
@@ -72,7 +89,9 @@ mod tests {
     use tempfile::tempdir;
 
     fn touch(path: &Path) {
-        if let Some(parent) = path.parent() { fs::create_dir_all(parent).unwrap(); }
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent).unwrap();
+        }
         fs::write(path, b"stub").unwrap();
     }
 
@@ -84,7 +103,10 @@ mod tests {
         touch(&node);
         let exe_dir = dir.path().join("exe");
         fs::create_dir_all(&exe_dir).unwrap();
-        assert_eq!(resolve_node_with(Some(deps.to_str().unwrap()), &exe_dir).unwrap(), node);
+        assert_eq!(
+            resolve_node_with(Some(deps.to_str().unwrap()), &exe_dir).unwrap(),
+            node
+        );
     }
 
     #[test]
@@ -97,7 +119,10 @@ mod tests {
         touch(&flat_node);
         let exe_dir = dir.path().join("exe");
         fs::create_dir_all(&exe_dir).unwrap();
-        assert_eq!(resolve_node_with(Some(deps.to_str().unwrap()), &exe_dir).unwrap(), bin_node);
+        assert_eq!(
+            resolve_node_with(Some(deps.to_str().unwrap()), &exe_dir).unwrap(),
+            bin_node
+        );
     }
 
     #[test]
@@ -114,7 +139,10 @@ mod tests {
         let dir = tempdir().unwrap();
         let exe_dir = dir.path().join("exe");
         fs::create_dir_all(&exe_dir).unwrap();
-        assert!(resolve_node_with(None, &exe_dir).unwrap_err().to_string().contains("Node not found"));
+        assert!(resolve_node_with(None, &exe_dir)
+            .unwrap_err()
+            .to_string()
+            .contains("Node not found"));
     }
 
     #[test]
@@ -131,6 +159,9 @@ mod tests {
         let dir = tempdir().unwrap();
         let exe_dir = dir.path().join("exe");
         fs::create_dir_all(&exe_dir).unwrap();
-        assert!(resolve_server_entry_with(&exe_dir).unwrap_err().to_string().contains("Server entry not found"));
+        assert!(resolve_server_entry_with(&exe_dir)
+            .unwrap_err()
+            .to_string()
+            .contains("Server entry not found"));
     }
 }

@@ -62,7 +62,8 @@ fn on_unknown(flag: &str) -> i32 {
 /// then exits with that code, BEFORE `VelopackApp::run()`); `None` for a normal launch.
 pub fn handle_velopack_hook(args: &[String]) -> Option<i32> {
     let kind = parse_hook_flag(args)?;
-    let data_root = crate::config::data_root_from_env().unwrap_or_else(|_| std::path::PathBuf::from("."));
+    let data_root =
+        crate::config::data_root_from_env().unwrap_or_else(|_| std::path::PathBuf::from("."));
     let code = match kind {
         HookKind::Install | HookKind::Updated => on_install(&data_root),
         HookKind::Uninstall => on_uninstall(&data_root),
@@ -76,7 +77,9 @@ pub fn handle_velopack_hook(args: &[String]) -> Option<i32> {
 mod tests {
     use super::*;
 
-    fn v(args: &[&str]) -> Vec<String> { args.iter().map(|s| s.to_string()).collect() }
+    fn v(args: &[&str]) -> Vec<String> {
+        args.iter().map(|s| s.to_string()).collect()
+    }
 
     #[test]
     fn parse_returns_none_for_unrelated_args() {
@@ -85,10 +88,22 @@ mod tests {
 
     #[test]
     fn parse_recognizes_each_known_flag() {
-        assert!(matches!(parse_hook_flag(&v(&["--veloapp-install"])), Some(HookKind::Install)));
-        assert!(matches!(parse_hook_flag(&v(&["--veloapp-updated"])), Some(HookKind::Updated)));
-        assert!(matches!(parse_hook_flag(&v(&["--veloapp-uninstall"])), Some(HookKind::Uninstall)));
-        assert!(matches!(parse_hook_flag(&v(&["--veloapp-obsolete"])), Some(HookKind::Obsolete)));
+        assert!(matches!(
+            parse_hook_flag(&v(&["--veloapp-install"])),
+            Some(HookKind::Install)
+        ));
+        assert!(matches!(
+            parse_hook_flag(&v(&["--veloapp-updated"])),
+            Some(HookKind::Updated)
+        ));
+        assert!(matches!(
+            parse_hook_flag(&v(&["--veloapp-uninstall"])),
+            Some(HookKind::Uninstall)
+        ));
+        assert!(matches!(
+            parse_hook_flag(&v(&["--veloapp-obsolete"])),
+            Some(HookKind::Obsolete)
+        ));
     }
 
     #[test]

@@ -24,7 +24,10 @@ pub fn data_root_for_linux(
     }
     let home = home.filter(|s| !s.is_empty());
     match home {
-        Some(h) => PathBuf::from(h).join(".local").join("share").join("svgedit"),
+        Some(h) => PathBuf::from(h)
+            .join(".local")
+            .join("share")
+            .join("svgedit"),
         None => PathBuf::from("svgedit"), // last-resort relative; callers set the env in prod
     }
 }
@@ -43,8 +46,10 @@ pub fn data_root_from_env() -> Result<PathBuf> {
         let xdg = std::env::var("XDG_DATA_HOME").ok();
         let home = std::env::var("HOME").ok();
         let dr = data_root_for_linux(override_dr.as_deref(), xdg.as_deref(), home.as_deref());
-        if dr == PathBuf::from("svgedit") {
-            anyhow::bail!("could not resolve data root: none of SVGEDIT_DATA_ROOT, XDG_DATA_HOME, HOME set");
+        if dr == std::path::Path::new("svgedit") {
+            anyhow::bail!(
+                "could not resolve data root: none of SVGEDIT_DATA_ROOT, XDG_DATA_HOME, HOME set"
+            );
         }
         Ok(dr)
     }
@@ -60,7 +65,9 @@ struct FlatConfig {
 /// The 0a server persists the bound port here before it begins listening.
 pub fn read_web_port(data_root: &Path) -> Option<u16> {
     let text = std::fs::read_to_string(data_root.join("config.json")).ok()?;
-    serde_json::from_str::<FlatConfig>(&text).ok().and_then(|c| c.web_port)
+    serde_json::from_str::<FlatConfig>(&text)
+        .ok()
+        .and_then(|c| c.web_port)
 }
 
 #[cfg(test)]
@@ -95,7 +102,10 @@ mod tests {
         );
         assert_eq!(
             data_root_for_linux(None, None, Some("/home/u")),
-            PathBuf::from("/home/u").join(".local").join("share").join("svgedit")
+            PathBuf::from("/home/u")
+                .join(".local")
+                .join("share")
+                .join("svgedit")
         );
     }
 

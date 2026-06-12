@@ -24,9 +24,13 @@ pub fn check_healthz(port: u16) -> bool {
     let mut buf = Vec::new();
     let mut chunk = [0u8; 256];
     while let Ok(n) = stream.read(&mut chunk) {
-        if n == 0 { break; }
+        if n == 0 {
+            break;
+        }
         buf.extend_from_slice(&chunk[..n]);
-        if buf.len() >= 64 || buf.windows(4).any(|w| w == b"\r\n\r\n") { break; }
+        if buf.len() >= 64 || buf.windows(4).any(|w| w == b"\r\n\r\n") {
+            break;
+        }
     }
     let head = String::from_utf8_lossy(&buf);
     head.starts_with("HTTP/1.") && head.split_whitespace().nth(1) == Some("200")
@@ -34,12 +38,19 @@ pub fn check_healthz(port: u16) -> bool {
 
 #[cfg(windows)]
 pub fn open(url: &str) {
-    use windows::core::{PCWSTR, w};
+    use windows::core::{w, PCWSTR};
     use windows::Win32::UI::Shell::ShellExecuteW;
     use windows::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
     let wide: Vec<u16> = url.encode_utf16().chain(std::iter::once(0)).collect();
     unsafe {
-        ShellExecuteW(None, w!("open"), PCWSTR::from_raw(wide.as_ptr()), PCWSTR::null(), PCWSTR::null(), SW_SHOWNORMAL);
+        ShellExecuteW(
+            None,
+            w!("open"),
+            PCWSTR::from_raw(wide.as_ptr()),
+            PCWSTR::null(),
+            PCWSTR::null(),
+            SW_SHOWNORMAL,
+        );
     }
 }
 
@@ -53,7 +64,10 @@ pub fn open(url: &str) {
 pub fn open_when_ready(data_root: PathBuf) {
     let mut port = None;
     for _ in 0..150 {
-        if let Some(p) = crate::config::read_web_port(&data_root) { port = Some(p); break; }
+        if let Some(p) = crate::config::read_web_port(&data_root) {
+            port = Some(p);
+            break;
+        }
         std::thread::sleep(Duration::from_millis(100));
     }
     let Some(port) = port else {
@@ -68,7 +82,9 @@ pub fn open_when_ready(data_root: PathBuf) {
         }
         std::thread::sleep(Duration::from_millis(100));
     }
-    crate::log::error(&format!("browser: server on {port} never became healthy; not opening"));
+    crate::log::error(&format!(
+        "browser: server on {port} never became healthy; not opening"
+    ));
 }
 
 #[cfg(test)]

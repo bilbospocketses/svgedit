@@ -17,12 +17,12 @@ pub fn current_mutex_name() -> String {
 }
 
 pub use imp::acquire;
-#[allow(unused_imports)]
-pub use imp::InstanceGuard;
-#[allow(unused_imports)]
-pub use imp::is_elevated;
 #[cfg(unix)]
 pub use imp::acquire_at;
+#[allow(unused_imports)]
+pub use imp::is_elevated;
+#[allow(unused_imports)]
+pub use imp::InstanceGuard;
 
 #[cfg(windows)]
 mod imp {
@@ -31,7 +31,10 @@ mod imp {
     use std::os::windows::ffi::OsStrExt;
 
     fn to_wide(s: &str) -> Vec<u16> {
-        OsStr::new(s).encode_wide().chain(std::iter::once(0)).collect()
+        OsStr::new(s)
+            .encode_wide()
+            .chain(std::iter::once(0))
+            .collect()
     }
 
     pub struct InstanceGuard {
@@ -47,14 +50,12 @@ mod imp {
     }
 
     pub fn acquire(name: &str) -> Result<Option<InstanceGuard>> {
-        use windows::Win32::Foundation::{ERROR_ALREADY_EXISTS, GetLastError};
-        use windows::Win32::System::Threading::CreateMutexW;
         use windows::core::PCWSTR;
+        use windows::Win32::Foundation::{GetLastError, ERROR_ALREADY_EXISTS};
+        use windows::Win32::System::Threading::CreateMutexW;
 
         let wide = to_wide(name);
-        let handle = unsafe {
-            CreateMutexW(None, false, PCWSTR::from_raw(wide.as_ptr()))?
-        };
+        let handle = unsafe { CreateMutexW(None, false, PCWSTR::from_raw(wide.as_ptr()))? };
         let last = unsafe { GetLastError() };
         if last == ERROR_ALREADY_EXISTS {
             unsafe {
@@ -68,7 +69,7 @@ mod imp {
     pub fn is_elevated() -> bool {
         use windows::Win32::Foundation::{CloseHandle, HANDLE};
         use windows::Win32::Security::{
-            GetTokenInformation, TOKEN_ELEVATION, TOKEN_QUERY, TokenElevation,
+            GetTokenInformation, TokenElevation, TOKEN_ELEVATION, TOKEN_QUERY,
         };
         use windows::Win32::System::Threading::{GetCurrentProcess, OpenProcessToken};
 
@@ -116,8 +117,8 @@ mod imp {
                 return PathBuf::from(x).join("svgedit.lock");
             }
         }
-        let data_root = crate::config::data_root_from_env()
-            .unwrap_or_else(|_| PathBuf::from("/tmp"));
+        let data_root =
+            crate::config::data_root_from_env().unwrap_or_else(|_| PathBuf::from("/tmp"));
         data_root.join("control").join("instance.lock")
     }
 
@@ -153,7 +154,10 @@ mod tests {
         let g1 = acquire(name).unwrap();
         assert!(g1.is_some(), "first acquire should win");
         let g2 = acquire(name).unwrap();
-        assert!(g2.is_none(), "second acquire should be denied while first held");
+        assert!(
+            g2.is_none(),
+            "second acquire should be denied while first held"
+        );
         drop(g1);
         let g3 = acquire(name).unwrap();
         assert!(g3.is_some(), "after release, acquire should win again");
