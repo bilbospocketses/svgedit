@@ -23,11 +23,13 @@
     "typecheck": "tsc --build packages/svgcanvas",
     "typecheck:editor": "tsc --build packages/svgcanvas && tsc --noEmit -p tsconfig.json",
     "build:embed": "tsc --project tsconfig.embed.json",
-    "build": "npm run typecheck && vite build packages/svgcanvas && vite build && npm run build:embed",
+    "build:server": "tsc -p tsconfig.server.json",
+    "typecheck:server": "tsc --noEmit -p tsconfig.server.json",
+    "build": "npm run typecheck && vite build packages/svgcanvas && vite build && npm run build:embed && npm run build:server",
     "postbuild": "tsx scripts/copy-static.ts && tsx scripts/build-extensions.ts",
-    "start": "vite dev --host --port 8000 --strictPort",
-    "prestart": "echo svgedit is available at http://localhost:8000/src/editor/index.html",
-    "start:iife": "npm run build && vite preview --host --port 8000 --strictPort --outDir dist/editor --open /iife-index.html",
+    "start": "vite dev --host",
+    "prestart": "echo svgedit is available at http://localhost:8100/src/editor/index.html",
+    "serve": "npm run build && node dist/server/index.js",
     "start:e2e": "vite preview --host --port 9000 --strictPort --outDir dist/editor"
   },
   "repository": {
