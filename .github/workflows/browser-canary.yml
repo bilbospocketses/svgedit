@@ -9,6 +9,11 @@
 # CI browser. The pinned, blocking CI in ci.yml stays the source of truth; this is
 # signal only.
 #
+# Chromium-only: Playwright ships its own patched Firefox that tracks Firefox *Stable*
+# and cannot drive a branded/beta Firefox (there is no `firefox` channel, only
+# `chrome*`/`msedge*`), so there is no Firefox-Beta lane to add here. Firefox is covered
+# by the pinned e2e in ci.yml plus deliberate Playwright-version bumps.
+#
 # Non-blocking by construction: it runs on a schedule + manual dispatch, never on
 # pull_request, so it is never a required status context and can never red-wall a merge.
 # A failure here is a heads-up to investigate, not a gate.
@@ -41,7 +46,15 @@ jobs:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
       - name: Install Chrome Beta
-        run: npx playwright install --with-deps chrome-beta
+        # Install via Google's apt repo, NOT `npx playwright install chrome-beta`, which
+        # downloads the browser and intermittently hangs for the whole timeout on
+        # GitHub-hosted runners (the flake ci.yml sidesteps with the Playwright container).
+        # Playwright's `chrome-beta` channel then drives this system binary.
+        run: |
+          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg
+          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] https://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-beta
 
       - name: Build
         run: npm run build
