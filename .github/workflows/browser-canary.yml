@@ -51,7 +51,9 @@ jobs:
         # GitHub-hosted runners (the flake ci.yml sidesteps with the Playwright container).
         # Playwright's `chrome-beta` channel then drives this system binary.
         run: |
-          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg
+          # dearmor as the runner user — `sudo gpg` fails with "cannot open /dev/tty" in the
+          # no-tty CI shell; sudo is only needed for the privileged keyring write (tee).
+          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor | sudo tee /usr/share/keyrings/google-chrome.gpg > /dev/null
           echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] https://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
           sudo apt-get update
           sudo apt-get install -y google-chrome-beta
