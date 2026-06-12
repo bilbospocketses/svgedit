@@ -5,6 +5,7 @@ mod log;
 mod paths;
 mod single_instance;
 mod spawn;
+mod supervisor;
 #[cfg(windows)] mod job_object;
 #[cfg(windows)] mod install_acl;
 
