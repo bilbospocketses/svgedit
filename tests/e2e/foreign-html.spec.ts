@@ -2,6 +2,11 @@ import { test, expect } from './fixtures.js'
 import type { Page } from '@playwright/test'
 import { visitAndApproveStorage } from './helpers.js'
 
+/** Minimal shape of the `window.svgEditor` global used by the round-trip test. */
+type SvgEditorWindow = Window & {
+  svgEditor: { svgCanvas: { getSvgString: () => string; setSvgString: (s: string) => unknown } }
+}
+
 /**
  * Runtime validation gate for the foreignObject HTML-authoring flow (Phases A-C).
  * Exercises the full insert / edit / cancel / source-toggle / undo / round-trip path
@@ -244,10 +249,10 @@ test.describe('foreignObject HTML authoring', () => {
     await expect(page.locator('#svgcontent foreignObject')).toContainText('Persist me')
 
     // Serialize then re-parse via the real canvas API (the critical sanitize round-trip).
-    const svg = await page.evaluate(() => window.svgEditor.svgCanvas.getSvgString())
+    const svg = await page.evaluate(() => (window as unknown as SvgEditorWindow).svgEditor.svgCanvas.getSvgString())
     expect(svg).toContain('foreignObject')
     const applied = await page.evaluate(
-      (s) => window.svgEditor.svgCanvas.setSvgString(s) !== false, svg)
+      (s) => (window as unknown as SvgEditorWindow).svgEditor.svgCanvas.setSvgString(s) !== false, svg)
     expect(applied).toBe(true)
 
     const fo = page.locator('#svgcontent foreignObject')

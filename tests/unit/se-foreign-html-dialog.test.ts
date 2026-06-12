@@ -5,7 +5,7 @@ import { parseToEditorFragment } from '../../src/editor/dialogs/foreign-html-ser
 
 const flush = async (el: any) => {
   await customElements.whenDefined('se-foreign-html-dialog')
-  await new Promise((r) => queueMicrotask(r))
+  await new Promise<void>((r) => queueMicrotask(() => r()))
   if (el?.updateComplete) await el.updateComplete
 }
 const closeWith = (el: any, returnValue: string) => {
