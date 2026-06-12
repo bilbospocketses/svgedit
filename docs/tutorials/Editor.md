@@ -27,3 +27,11 @@ points) or **Escape** to cancel it.
 - **Copy one object's style to others:** select the source object, `Shift`-select
   the targets, open the fill or stroke colorpicker from the bottom toolbar, and
   confirm — the targets take that paint.
+- **Insert rich HTML:** the **Insert HTML** tool drops a block of formatted text —
+  headings, bold/italic/underline/strikethrough, bulleted & numbered lists, links,
+  colour, alignment, font size — onto the canvas inside a `foreignObject`. Drag out a
+  box, author the content in the popup editor (or toggle `</>` for a raw-HTML source
+  view), and **OK** to place it; double-click an existing block to re-edit. Pasted
+  content is inserted as plain text. Note: `foreignObject` content displays in the
+  editor but is not drawn by every SVG exporter (nor by non-browser renderers such as
+  librsvg).
