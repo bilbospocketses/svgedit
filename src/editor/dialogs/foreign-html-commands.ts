@@ -109,19 +109,44 @@ export const setBlock = (root: Element, tag: BlockTag): void => {
   }
 }
 
-export const toggleList = (root: Element, kind: 'ul' | 'ol'): void => {
-  const blocks = blocksInRange(root)
+/**
+ * Gather the given blocks into a single new list of `kind`.
+ *
+ * The new list is inserted at the first block's root-level position (for a list item,
+ * just before its current list). Each block — a paragraph/heading or an existing `<li>`
+ * from another list — contributes a new `<li>` carrying its children. Source blocks are
+ * removed and any source list left empty is dropped. Powers both wrap (plain → list)
+ * and ul↔ol retype.
+ */
+const wrapInList = (blocks: HTMLElement[], kind: 'ul' | 'ol'): void => {
   const first = blocks[0]
   if (!first) return
-  // Literal createElement — no DOM-sourced `kind` string flows into the sink.
+  // Literal createElement — `kind` is a typed union, never a DOM-sourced string.
   const list = kind === 'ol' ? document.createElement('ol') : document.createElement('ul')
-  first.replaceWith(list)
-  for (const b of blocks) {
+  const anchor = first.localName === 'li' ? (first.parentElement ?? first) : first
+  anchor.parentNode?.insertBefore(list, anchor)
+  for (const block of blocks) {
+    const source = block.localName === 'li' ? block.parentElement : null
     const li = document.createElement('li')
-    while (b.firstChild) li.appendChild(b.firstChild)
+    while (block.firstChild) li.appendChild(block.firstChild)
     list.appendChild(li)
-    if (b.parentNode) b.remove()
+    block.remove()
+    if (source && source !== list && !source.children.length) source.remove()
   }
+}
+
+export const toggleList = (root: Element, kind: 'ul' | 'ol'): void => {
+  const blocks = blocksInRange(root)
+  if (!blocks.length) return
+  const allInKind = blocks.every(
+    (b) => b.localName === 'li' && b.parentElement?.localName === kind
+  )
+  if (allInKind) {
+    // Toggle OFF — unwrap each item back to a paragraph.
+    for (const li of blocks) liftItem(li, document.createElement('p'))
+    return
+  }
+  wrapInList(blocks, kind)
 }
 
 export const insertLink = (root: Element, url: string): void => {

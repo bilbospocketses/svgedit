@@ -96,4 +96,38 @@ describe('foreign-html commands', () => {
     expect([...root.querySelectorAll('p')].map((p) => p.textContent)).toEqual(['a', 'b', 'c'])
     assertNoInvalidLists(root)
   })
+
+  it('toggleList wraps plain blocks into a list', () => {
+    root.innerHTML = '<p>a</p><p>b</p>'
+    selectAll(root)
+    cmd.toggleList(root, 'ul')
+    const ul = root.querySelector('ul')!
+    expect(ul).not.toBeNull()
+    expect([...ul.children].map((li) => li.localName)).toEqual(['li', 'li'])
+    expect([...ul.querySelectorAll('li')].map((li) => li.textContent)).toEqual(['a', 'b'])
+    expect(root.querySelector('p')).toBeNull()
+    assertNoInvalidLists(root)
+  })
+
+  it('toggleList toggles OFF when the items are already in a list of that kind', () => {
+    root.innerHTML = '<ul><li>a</li><li>b</li></ul>'
+    selectAll(root.querySelector('ul')!)
+    cmd.toggleList(root, 'ul')
+    expect(root.querySelector('ul')).toBeNull()
+    expect([...root.querySelectorAll('p')].map((p) => p.textContent)).toEqual(['a', 'b'])
+    assertNoInvalidLists(root)
+  })
+
+  it('toggleList retypes ul -> ol (no double-nest)', () => {
+    root.innerHTML = '<ul><li>a</li><li>b</li></ul>'
+    selectAll(root.querySelector('ul')!)
+    cmd.toggleList(root, 'ol')
+    expect(root.querySelector('ul')).toBeNull()
+    const ol = root.querySelector('ol')!
+    expect(ol).not.toBeNull()
+    expect([...ol.querySelectorAll('li')].map((li) => li.textContent)).toEqual(['a', 'b'])
+    // No nested list (the old double-nest bug).
+    expect(ol.querySelector('ul,ol')).toBeNull()
+    assertNoInvalidLists(root)
+  })
 })
