@@ -77,7 +77,15 @@ export const registerForeignHtml = (editor: Editor): void => {
       return
     }
     if (result.trim() === '') {
+      // Empty content on an existing (already-committed) box deletes it — undoably, so
+      // Ctrl+Z restores the foreignObject (its child content rides along on re-insert).
+      const parent = fo.parentNode
+      if (!parent) return
+      const { RemoveElementCommand } = canvas.history
+      const sibling = fo.nextSibling
+      canvas.clearSelection()
       fo.remove()
+      canvas.addCommandToHistory(new RemoveElementCommand(fo, sibling, parent))
       return
     }
     canvas.setForeignContent(fo, result)

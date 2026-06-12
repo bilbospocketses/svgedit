@@ -66,29 +66,87 @@ export const toggleInline = (root: Element, tag: InlineTag): void => {
   wrap(root, createInlineEl(tag))
 }
 
+/**
+ * Replace a list item with a block element, lifting it OUT of its list.
+ *
+ * `block` (created + styled by the caller) receives the item's children and is placed
+ * immediately after the item's list; any siblings that followed the item are moved into
+ * a fresh list of the same kind after `block` (a split), so the list is never left with
+ * a non-`li` block as a child. The original list is removed if the lift empties it.
+ * Processing a run of items in turn coalesces — each lifted item carries its trailing
+ * siblings into the tail list the next call operates on.
+ */
+const liftItem = (li: HTMLElement, block: HTMLElement): void => {
+  const list = li.parentElement
+  if (!list) return
+  while (li.firstChild) block.appendChild(li.firstChild)
+  const after: ChildNode[] = []
+  for (let n = li.nextSibling; n; n = n.nextSibling) after.push(n)
+  list.after(block)
+  if (after.length) {
+    // Literal createElement — `list.localName` is a read, never a tainted sink arg.
+    const tail = list.localName === 'ol' ? document.createElement('ol') : document.createElement('ul')
+    const style = list.getAttribute('style')
+    if (style) tail.setAttribute('style', style)
+    for (const node of after) tail.appendChild(node)
+    block.after(tail)
+  }
+  li.remove()
+  if (!list.children.length) list.remove()
+}
+
 export const setBlock = (root: Element, tag: BlockTag): void => {
   for (const block of blocksInRange(root)) {
     const repl = createBlockEl(tag)
     const style = block.getAttribute('style')
     if (style) repl.setAttribute('style', style)
-    while (block.firstChild) repl.appendChild(block.firstChild)
-    block.replaceWith(repl)
+    if (block.localName === 'li') {
+      liftItem(block, repl)
+    } else {
+      while (block.firstChild) repl.appendChild(block.firstChild)
+      block.replaceWith(repl)
+    }
+  }
+}
+
+/**
+ * Gather the given blocks into a single new list of `kind`.
+ *
+ * The new list is inserted at the first block's root-level position (for a list item,
+ * just before its current list). Each block — a paragraph/heading or an existing `<li>`
+ * from another list — contributes a new `<li>` carrying its children. Source blocks are
+ * removed and any source list left empty is dropped. Powers both wrap (plain → list)
+ * and ul↔ol retype.
+ */
+const wrapInList = (blocks: HTMLElement[], kind: 'ul' | 'ol'): void => {
+  const first = blocks[0]
+  if (!first) return
+  // Literal createElement — `kind` is a typed union, never a DOM-sourced string.
+  const list = kind === 'ol' ? document.createElement('ol') : document.createElement('ul')
+  const anchor = first.localName === 'li' ? (first.parentElement ?? first) : first
+  anchor.parentNode?.insertBefore(list, anchor)
+  for (const block of blocks) {
+    const source = block.localName === 'li' ? block.parentElement : null
+    const li = document.createElement('li')
+    while (block.firstChild) li.appendChild(block.firstChild)
+    list.appendChild(li)
+    block.remove()
+    if (source && source !== list && !source.children.length) source.remove()
   }
 }
 
 export const toggleList = (root: Element, kind: 'ul' | 'ol'): void => {
   const blocks = blocksInRange(root)
-  const first = blocks[0]
-  if (!first) return
-  // Literal createElement — no DOM-sourced `kind` string flows into the sink.
-  const list = kind === 'ol' ? document.createElement('ol') : document.createElement('ul')
-  first.replaceWith(list)
-  for (const b of blocks) {
-    const li = document.createElement('li')
-    while (b.firstChild) li.appendChild(b.firstChild)
-    list.appendChild(li)
-    if (b.parentNode) b.remove()
+  if (!blocks.length) return
+  const allInKind = blocks.every(
+    (b) => b.localName === 'li' && b.parentElement?.localName === kind
+  )
+  if (allInKind) {
+    // Toggle OFF — unwrap each item back to a paragraph.
+    for (const li of blocks) liftItem(li, document.createElement('p'))
+    return
   }
+  wrapInList(blocks, kind)
 }
 
 export const insertLink = (root: Element, url: string): void => {
@@ -127,6 +185,14 @@ export const setAlign = (root: Element, value: Align): void => {
 }
 
 export const clearFormatting = (root: Element): void => {
+  const blocks = blocksInRange(root)
+  if (blocks.length) {
+    // Strip inline formatting per block, preserving block boundaries.
+    // (RHS keeps the `?? ''` so this is not a no-self-assign; textContent is typed string|null.)
+    for (const block of blocks) block.textContent = block.textContent ?? ''
+    return
+  }
+  // No enclosing block (bare text directly in root) — flatten the range.
   const r = activeRange(root); if (!r) return
   const text = r.toString()
   r.deleteContents(); r.insertNode(document.createTextNode(text))

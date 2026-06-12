@@ -55,4 +55,92 @@ describe('foreign-html commands', () => {
     cmd.setFontSize(root, 'M')
     expect(root.querySelector('span')).toBeNull()
   })
+
+  // Helper: assert the structural invariant — no non-<li> block directly inside a list,
+  // and no list directly inside a list.
+  const assertNoInvalidLists = (host: Element): void => {
+    host.querySelectorAll('ul,ol').forEach((list) => {
+      for (const child of [...list.children]) {
+        expect(child.localName, `invalid <${child.localName}> child of <${list.localName}>`).toBe('li')
+      }
+    })
+  }
+
+  it('setBlock on a lone list item lifts it out and removes the empty list', () => {
+    root.innerHTML = '<ul><li>only</li></ul>'
+    selectAll(root.querySelector('li')!)
+    cmd.setBlock(root, 'h2')
+    expect(root.querySelector('ul')).toBeNull()
+    expect(root.querySelector('h2')?.textContent).toBe('only')
+    assertNoInvalidLists(root)
+  })
+
+  it('setBlock on a middle list item splits the list around the new block', () => {
+    root.innerHTML = '<ul><li>a</li><li>b</li><li>c</li></ul>'
+    selectAll(root.querySelectorAll('li')[1]!) // select "b"
+    cmd.setBlock(root, 'h2')
+    // Expect: <ul>a</ul> <h2>b</h2> <ul>c</ul>
+    const lists = root.querySelectorAll('ul')
+    expect(lists.length).toBe(2)
+    expect(lists[0].textContent).toBe('a')
+    expect(lists[1].textContent).toBe('c')
+    expect(root.querySelector('h2')?.textContent).toBe('b')
+    assertNoInvalidLists(root)
+  })
+
+  it('setBlock over a whole list converts every item and drops the list', () => {
+    root.innerHTML = '<ul><li>a</li><li>b</li><li>c</li></ul>'
+    selectAll(root.querySelector('ul')!)
+    cmd.setBlock(root, 'p')
+    expect(root.querySelector('ul')).toBeNull()
+    expect([...root.querySelectorAll('p')].map((p) => p.textContent)).toEqual(['a', 'b', 'c'])
+    assertNoInvalidLists(root)
+  })
+
+  it('toggleList wraps plain blocks into a list', () => {
+    root.innerHTML = '<p>a</p><p>b</p>'
+    selectAll(root)
+    cmd.toggleList(root, 'ul')
+    const ul = root.querySelector('ul')!
+    expect(ul).not.toBeNull()
+    expect([...ul.children].map((li) => li.localName)).toEqual(['li', 'li'])
+    expect([...ul.querySelectorAll('li')].map((li) => li.textContent)).toEqual(['a', 'b'])
+    expect(root.querySelector('p')).toBeNull()
+    assertNoInvalidLists(root)
+  })
+
+  it('toggleList toggles OFF when the items are already in a list of that kind', () => {
+    root.innerHTML = '<ul><li>a</li><li>b</li></ul>'
+    selectAll(root.querySelector('ul')!)
+    cmd.toggleList(root, 'ul')
+    expect(root.querySelector('ul')).toBeNull()
+    expect([...root.querySelectorAll('p')].map((p) => p.textContent)).toEqual(['a', 'b'])
+    assertNoInvalidLists(root)
+  })
+
+  it('toggleList retypes ul -> ol (no double-nest)', () => {
+    root.innerHTML = '<ul><li>a</li><li>b</li></ul>'
+    selectAll(root.querySelector('ul')!)
+    cmd.toggleList(root, 'ol')
+    expect(root.querySelector('ul')).toBeNull()
+    const ol = root.querySelector('ol')!
+    expect(ol).not.toBeNull()
+    expect([...ol.querySelectorAll('li')].map((li) => li.textContent)).toEqual(['a', 'b'])
+    // No nested list (the old double-nest bug).
+    expect(ol.querySelector('ul,ol')).toBeNull()
+    assertNoInvalidLists(root)
+  })
+
+  it('clearFormatting strips inline formatting but preserves block boundaries', () => {
+    root.innerHTML = '<p><strong>bo</strong>ld</p><h2><span style="color: red">head</span></h2>'
+    selectAll(root)
+    cmd.clearFormatting(root)
+    // Both blocks survive as their own elements, with inline formatting removed.
+    expect(root.querySelector('p')?.textContent).toBe('bold')
+    expect(root.querySelector('p')?.querySelector('strong')).toBeNull()
+    expect(root.querySelector('h2')?.textContent).toBe('head')
+    expect(root.querySelector('h2')?.querySelector('span')).toBeNull()
+    // Block count unchanged (no collapse into one text run).
+    expect(root.children.length).toBe(2)
+  })
 })

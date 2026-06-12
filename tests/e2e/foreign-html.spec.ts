@@ -324,4 +324,39 @@ test.describe('foreignObject HTML authoring', () => {
     await injectSourcePayload(page)
     await expectInertResult(page)
   })
+
+  test('edit then empty-OK deletes the box; undo restores it', async ({ page }) => {
+    await drawForeignBox(page)
+    await typeInEditor(page, 'DeleteMe')
+    await page.locator(OK).click()
+    const fo = page.locator('#svgcontent foreignObject')
+    await expect(fo).toHaveCount(1)
+    await expect(fo).toContainText('DeleteMe')
+
+    // Re-open, clear all content, OK -> the box is deleted.
+    await page.locator('#tool_select').click()
+    await fo.dblclick()
+    await expect(page.locator(DIALOG)).toBeAttached()
+    await page.locator(EDITOR).click()
+    await page.keyboard.press('ControlOrMeta+a')
+    await page.keyboard.press('Delete')
+    await page.locator(OK).click()
+    await expect(page.locator(DIALOG)).toHaveCount(0)
+    await expect.poll(() => foreignCount(page)).toBe(0)
+
+    // Undo restores the deleted box with its content (undoable RemoveElementCommand).
+    await page.locator('#svgcanvas').click({ position: { x: 5, y: 5 } })
+    await page.keyboard.press('ControlOrMeta+z')
+    await expect.poll(() => foreignCount(page)).toBe(1)
+    await expect(page.locator('#svgcontent foreignObject')).toContainText('DeleteMe')
+  })
+
+  test('drawing a box then OK with no content removes it', async ({ page }) => {
+    await drawForeignBox(page)
+    await expect.poll(() => foreignCount(page)).toBe(1)
+    // OK without typing -> empty -> the just-drawn (uncommitted) box is removed.
+    await page.locator(OK).click()
+    await expect(page.locator(DIALOG)).toHaveCount(0)
+    await expect.poll(() => foreignCount(page)).toBe(0)
+  })
 })

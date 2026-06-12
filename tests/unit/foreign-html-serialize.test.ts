@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest'
-import { serialize, deserialize, FOREIGN_ROOT_CLASS } from '../../src/editor/dialogs/foreign-html-serialize.ts'
+import { serialize, deserialize, FOREIGN_ROOT_CLASS, isForeignContentEmpty } from '../../src/editor/dialogs/foreign-html-serialize.ts'
 import { NS } from '../../packages/svgcanvas/core/namespaces.js'
 
 describe('foreign-html serialize/deserialize', () => {
@@ -45,4 +45,15 @@ describe('foreign-html serialize/deserialize', () => {
     const div = document.createElement('div'); div.appendChild(frag)
     expect(div.querySelector('p')?.textContent).toBe('hi')
   })
+})
+
+describe('isForeignContentEmpty', () => {
+  const mk = (html: string): HTMLElement => {
+    const d = document.createElement('div'); d.innerHTML = html; return d
+  }
+  it('is true for no content', () => expect(isForeignContentEmpty(mk(''))).toBe(true))
+  it('is true for an empty paragraph', () => expect(isForeignContentEmpty(mk('<p><br></p>'))).toBe(true))
+  it('is true for whitespace-only text', () => expect(isForeignContentEmpty(mk('<p>   </p>'))).toBe(true))
+  it('is false for text content', () => expect(isForeignContentEmpty(mk('<p>hi</p>'))).toBe(false))
+  it('is false for hr-only content', () => expect(isForeignContentEmpty(mk('<hr>'))).toBe(false))
 })

@@ -1,6 +1,6 @@
 import { LitElement, html, css, type PropertyValues } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
-import { serialize, deserialize, parseToEditorFragment } from './foreign-html-serialize.js'
+import { serialize, deserialize, parseToEditorFragment, isForeignContentEmpty } from './foreign-html-serialize.js'
 import type { BlockTag, Align, FontPreset } from './foreign-html-commands.js'
 import * as cmd from './foreign-html-commands.js'
 
@@ -176,7 +176,7 @@ export default class SeForeignHtmlDialog extends LitElement {
           // Inert parse + prune the raw source string (no innerHTML sink, no onerror).
           editor.replaceChildren(parseToEditorFragment(srcEl.value))
         }
-        out = serialize(editor)
+        out = isForeignContentEmpty(editor) ? '' : serialize(editor)
       } else {
         out = ''
       }
