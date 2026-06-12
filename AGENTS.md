@@ -44,17 +44,24 @@ npm test           # lint + vitest + Playwright e2e
 npm run lint       # eslint + markdownlint-cli2
 npm run lint:md    # markdownlint only
 npm run typecheck  # tsc --build — packages/svgcanvas ONLY (see below)
+npm run typecheck:editor  # svgcanvas decls + editor (src/editor) typecheck — self-contained
 ```
 
 ## Typecheck scope (gotcha)
 
 `npm run typecheck` builds and typechecks **only `packages/svgcanvas`**. It does **not**
 cover the editor (`src/editor/**`), and neither does `npm test` (vitest transpiles via swc
-without type-checking). To typecheck the editor against the root config, run:
+without type-checking). To typecheck the editor, run:
 
 ```bash
-tsc --noEmit -p tsconfig.json
+npm run typecheck:editor   # = tsc --build packages/svgcanvas && tsc --noEmit -p tsconfig.json
 ```
+
+This script is self-contained because the editor typecheck needs `packages/svgcanvas`'s
+`.d.ts` built first — **and `npm run build` clobbers them** (its `vite build packages/svgcanvas`
+step overwrites `dist/`), so a bare `tsc --noEmit -p tsconfig.json` after a build throws ~50
+spurious `TS6305` "output not built" errors until you re-run `tsc --build packages/svgcanvas`.
+The script chains both so you never hit that. (IDE diagnostics also work for a quick check.)
 
 The canvas package compiles with `--isolatedDeclarations`, so every **exported** declaration
 needs an explicit type annotation (e.g. `export const X: Set<string> = …`, function return
