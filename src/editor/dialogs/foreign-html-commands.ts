@@ -66,13 +66,46 @@ export const toggleInline = (root: Element, tag: InlineTag): void => {
   wrap(root, createInlineEl(tag))
 }
 
+/**
+ * Replace a list item with a block element, lifting it OUT of its list.
+ *
+ * `block` (created + styled by the caller) receives the item's children and is placed
+ * immediately after the item's list; any siblings that followed the item are moved into
+ * a fresh list of the same kind after `block` (a split), so the list is never left with
+ * a non-`li` block as a child. The original list is removed if the lift empties it.
+ * Processing a run of items in turn coalesces — each lifted item carries its trailing
+ * siblings into the tail list the next call operates on.
+ */
+const liftItem = (li: HTMLElement, block: HTMLElement): void => {
+  const list = li.parentElement
+  if (!list) return
+  while (li.firstChild) block.appendChild(li.firstChild)
+  const after: ChildNode[] = []
+  for (let n = li.nextSibling; n; n = n.nextSibling) after.push(n)
+  list.after(block)
+  if (after.length) {
+    // Literal createElement — `list.localName` is a read, never a tainted sink arg.
+    const tail = list.localName === 'ol' ? document.createElement('ol') : document.createElement('ul')
+    const style = list.getAttribute('style')
+    if (style) tail.setAttribute('style', style)
+    for (const node of after) tail.appendChild(node)
+    block.after(tail)
+  }
+  li.remove()
+  if (!list.children.length) list.remove()
+}
+
 export const setBlock = (root: Element, tag: BlockTag): void => {
   for (const block of blocksInRange(root)) {
     const repl = createBlockEl(tag)
     const style = block.getAttribute('style')
     if (style) repl.setAttribute('style', style)
-    while (block.firstChild) repl.appendChild(block.firstChild)
-    block.replaceWith(repl)
+    if (block.localName === 'li') {
+      liftItem(block, repl)
+    } else {
+      while (block.firstChild) repl.appendChild(block.firstChild)
+      block.replaceWith(repl)
+    }
   }
 }
 

@@ -55,4 +55,45 @@ describe('foreign-html commands', () => {
     cmd.setFontSize(root, 'M')
     expect(root.querySelector('span')).toBeNull()
   })
+
+  // Helper: assert the structural invariant — no non-<li> block directly inside a list,
+  // and no list directly inside a list.
+  const assertNoInvalidLists = (host: Element): void => {
+    host.querySelectorAll('ul,ol').forEach((list) => {
+      for (const child of [...list.children]) {
+        expect(child.localName, `invalid <${child.localName}> child of <${list.localName}>`).toBe('li')
+      }
+    })
+  }
+
+  it('setBlock on a lone list item lifts it out and removes the empty list', () => {
+    root.innerHTML = '<ul><li>only</li></ul>'
+    selectAll(root.querySelector('li')!)
+    cmd.setBlock(root, 'h2')
+    expect(root.querySelector('ul')).toBeNull()
+    expect(root.querySelector('h2')?.textContent).toBe('only')
+    assertNoInvalidLists(root)
+  })
+
+  it('setBlock on a middle list item splits the list around the new block', () => {
+    root.innerHTML = '<ul><li>a</li><li>b</li><li>c</li></ul>'
+    selectAll(root.querySelectorAll('li')[1]!) // select "b"
+    cmd.setBlock(root, 'h2')
+    // Expect: <ul>a</ul> <h2>b</h2> <ul>c</ul>
+    const lists = root.querySelectorAll('ul')
+    expect(lists.length).toBe(2)
+    expect(lists[0].textContent).toBe('a')
+    expect(lists[1].textContent).toBe('c')
+    expect(root.querySelector('h2')?.textContent).toBe('b')
+    assertNoInvalidLists(root)
+  })
+
+  it('setBlock over a whole list converts every item and drops the list', () => {
+    root.innerHTML = '<ul><li>a</li><li>b</li><li>c</li></ul>'
+    selectAll(root.querySelector('ul')!)
+    cmd.setBlock(root, 'p')
+    expect(root.querySelector('ul')).toBeNull()
+    expect([...root.querySelectorAll('p')].map((p) => p.textContent)).toEqual(['a', 'b', 'c'])
+    assertNoInvalidLists(root)
+  })
 })
