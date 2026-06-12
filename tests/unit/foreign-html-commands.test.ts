@@ -143,4 +143,30 @@ describe('foreign-html commands', () => {
     // Block count unchanged (no collapse into one text run).
     expect(root.children.length).toBe(2)
   })
+
+  it('setBlock on a middle ordered-list item continues the trailing list numbering', () => {
+    root.innerHTML = '<ol><li>a</li><li>b</li><li>c</li></ol>'
+    selectAll(root.querySelectorAll('li')[1]!) // b
+    cmd.setBlock(root, 'p')
+    const ols = root.querySelectorAll('ol')
+    expect(ols.length).toBe(2)
+    expect(ols[0].getAttribute('start')).toBeNull() // first list keeps default numbering
+    expect(ols[1].getAttribute('start')).toBe('3') // c continues at 3, not restart at 1
+    expect(root.querySelector('p')?.textContent).toBe('b')
+    assertNoInvalidLists(root)
+  })
+
+  it('toggleList partial retype preserves document order (no reordering)', () => {
+    root.innerHTML = '<ul><li>a</li><li>b</li><li>c</li><li>d</li></ul>'
+    const lis = root.querySelectorAll('li')
+    const r = document.createRange(); r.setStartBefore(lis[1]!); r.setEndAfter(lis[2]!) // b..c
+    const sel = window.getSelection()!; sel.removeAllRanges(); sel.addRange(r)
+    cmd.toggleList(root, 'ol')
+    // In-place split keeps order: ul[a], ol[b,c], ul[d] — not ol[b,c] before ul[a,d].
+    expect([...root.children].map((el) => el.localName)).toEqual(['ul', 'ol', 'ul'])
+    expect(root.children[0]?.textContent).toBe('a')
+    expect(root.children[1]?.textContent).toBe('bc')
+    expect(root.children[2]?.textContent).toBe('d')
+    assertNoInvalidLists(root)
+  })
 })

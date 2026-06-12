@@ -20,6 +20,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Emptying a box deletes it, undoably.** Removing all content from an HTML box and
   confirming now deletes the box instead of leaving an empty one behind, and the deletion
   can be undone (#118).
+- **List numbering continues across a split.** Splitting an ordered list (lifting an item
+  out as a heading or paragraph) now continues the trailing list's numbering instead of
+  restarting it at 1 (#123).
+- **Partial list retype keeps document order.** Converting a subset of a list between
+  bulleted and numbered now splits the list in place instead of moving the converted items
+  ahead of the rest (#123).
 
 ### Added (foreignObject HTML authoring -- 2026-06-11)
 
