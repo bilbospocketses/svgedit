@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security (esbuild dev-dependency -- 2026-06-12)
+
+- Override `esbuild` to `^0.28.1`, resolving two Dependabot alerts in the dev toolchain
+  (transitive via `vite` + `tsx`): a high-severity RCE via `NPM_CONFIG_REGISTRY`
+  (GHSA-gv7w-rqvm-qjhr) and a low-severity dev-server file read on Windows
+  (GHSA-g7r4-m6w7-qqqr). Both patched in esbuild 0.28.1; build + `npm audit` clean.
+
 ### Added (0b launcher -- 2026-06-12)
 
 - New `launcher/` Rust crate: svgedit's statically-linked, cross-platform Velopack `--mainExe`.
