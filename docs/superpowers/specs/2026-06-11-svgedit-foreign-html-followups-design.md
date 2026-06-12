@@ -101,35 +101,61 @@ block element. Two formatted `<p>`s → two plain `<p>`s; headings stay headings
 sub-span — this matches the "preserve blocks" goal. Range-precise partial clearing
 is deferred.
 
-## Fix (c) — undoable edit-delete
+## Fix (c) — empty content deletes the box (undoably on edit)
 
 ### Problem
-`authorEdit` (the double-click edit path) deletes an existing, already-committed
-foreignObject on empty-OK via a raw `fo.remove()` with no history command, so undo
-cannot restore it.
+The intent (per the `foreignHtml.ts` flow comment) is "empty content → delete the
+box." But it never fires: `serialize()` (`foreign-html-serialize.ts:57-62`) ALWAYS
+wraps content in `<div class="se-fo-root">…</div>`, and on OK the dialog returns
+`serialize(editor)` with `_editor` still attached (`SeForeignHtmlDialog.ts:179`), so
+the accepted result is never `''`. The `result.trim() === ''` branches in BOTH
+`authorEdit` and `authorNew` (`foreignHtml.ts:54,79`) are unreachable — clearing a
+box's content and clicking OK today sets the content to an empty wrapper (an empty
+box) instead of deleting it. And the edit-path delete, even if reached, used a raw
+`fo.remove()` with no history command.
 
 ### Design
-Mirror the canvas's own undoable-remove pattern (`setForeignContentMethod`,
-`packages/svgcanvas/core/foreign.ts:43-48`): capture sibling + parent, clear the
-selection (the box is selected from the dblclick), remove, record a
-`RemoveElementCommand`.
+Two parts: make "empty" detectable, then make the edit-path delete undoable.
+
+**1. Empty detection (shared).** Add `isForeignContentEmpty` to
+`foreign-html-serialize.ts` and have the dialog report empty content as `''`:
+```ts
+// foreign-html-serialize.ts — <hr> is the only no-text element in the allowlist
+// (<img> is stripped), so blank text + no <hr> ⇒ empty.
+export const isForeignContentEmpty = (editorRoot: Element): boolean =>
+  (editorRoot.textContent ?? '').trim() === '' && editorRoot.querySelector('hr') === null
+
+// SeForeignHtmlDialog.ts _onClose — replaces `out = serialize(editor)`
+out = isForeignContentEmpty(editor) ? '' : serialize(editor)
 ```
-if result is empty:
-  parent = fo.parentNode; if none → return
-  sibling = fo.nextSibling
-  canvas.clearSelection()                 // release the selector box on fo
+This makes the existing `result.trim() === ''` branches reachable in both controller
+paths. An empty paragraph (`<p></p>`, `<p><br></p>`) counts as empty (blank text) —
+which is why detection is text-based, not "no element children".
+
+**2. Edit-path delete is undoable.** `authorEdit`'s empty branch removes the existing
+(already-committed) box via `RemoveElementCommand`, mirroring the canvas's own
+pattern (`foreign.ts:43-48`):
+```ts
+if (result.trim() === '') {
+  const parent = fo.parentNode
+  if (!parent) return
+  const { RemoveElementCommand } = canvas.history
+  const sibling = fo.nextSibling
+  canvas.clearSelection()                 // release the selector box (fo selected from the dblclick)
   fo.remove()
   canvas.addCommandToHistory(new RemoveElementCommand(fo, sibling, parent))
   return
+}
 ```
-Undo re-inserts the foreignObject whole — its child content rides along with the
-detached node. The create-**cancel** path stays history-free by design and is
-untouched (that box was never committed to history).
+Undo re-inserts the foreignObject whole (its child content rides along on the
+detached node).
 
-`RemoveElementCommand(elem, oldNextSibling, oldParent, text?)` is exported from
-`canvas.history` (`packages/svgcanvas/core/history.ts:235`). The exact
-selection-clear call (`clearSelection()` vs `selectOnly([])`) is confirmed against
-the canvas API during implementation; the command shape is settled.
+`authorNew`'s empty branch needs **no code change**: its `fo.remove()` is correctly
+history-free (the just-drawn box was never committed to history per
+`event.ts:842-848`) — it simply starts working now that the dialog reports empty as
+`''`. The create-**cancel** path (result `null`) is likewise untouched.
+`clearSelection` / `addCommandToHistory` / `RemoveElementCommand` are all on the
+canvas API (`svgcanvas-types.ts:232,448`; `history.ts:235`).
 
 ## Testing
 
@@ -143,9 +169,12 @@ the canvas API during implementation; the command shape is settled.
     (the non-`li` path is unchanged).
 - **(b)** unit: multi-block selection with inline formatting → blocks preserved,
   inline stripped; heading vs paragraph distinction kept.
-- **(c)** e2e (`tests/e2e/foreign-html.spec.ts`): draw + author content, save;
-  double-click to edit, clear all content, OK → box deleted; **Ctrl+Z restores it**
-  (revert-proven, matching the existing #9 e2e style).
+- **(c)** unit (`tests/unit/foreign-html-serialize.test.ts`): `isForeignContentEmpty`
+  → true for blank and `<p><br></p>`, false for text and for `<hr>`-only content.
+  e2e (`tests/e2e/foreign-html.spec.ts`): (i) edit → clear all content → OK deletes the
+  box and **Ctrl+Z restores it** (undoable edit-delete); (ii) draw a box → OK with no
+  content → box removed (create-path empty, now reachable). Matches the existing #9
+  e2e style.
 
 ## Out of scope
 - Follow-up (d): `FOREIGN_HTML_TAGS` allowlists `sub`/`sup`/`blockquote` as a
@@ -156,5 +185,8 @@ the canvas API during implementation; the command shape is settled.
 ## Files touched
 - `src/editor/dialogs/foreign-html-commands.ts` — +2 helpers (`liftItem`,
   `wrapInList`); rework `setBlock`, `toggleList`, `clearFormatting`.
-- `src/editor/foreignHtml.ts` — undoable branch in `authorEdit`.
-- `tests/unit/foreign-html-commands.test.ts`, `tests/e2e/foreign-html.spec.ts` — new cases.
+- `src/editor/dialogs/foreign-html-serialize.ts` — +`isForeignContentEmpty`.
+- `src/editor/dialogs/SeForeignHtmlDialog.ts` — report empty content as `''` in `_onClose`.
+- `src/editor/foreignHtml.ts` — undoable `RemoveElementCommand` in `authorEdit`'s empty branch.
+- `tests/unit/foreign-html-commands.test.ts`, `tests/unit/foreign-html-serialize.test.ts`,
+  `tests/e2e/foreign-html.spec.ts` — new cases.
