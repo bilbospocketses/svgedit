@@ -23,3 +23,6 @@ test-results
 
 # OS
 .DS_Store
+
+# Rust launcher build output
+/launcher/target

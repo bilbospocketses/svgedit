@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (0b launcher -- 2026-06-12)
+
+- New `launcher/` Rust crate: svgedit's statically-linked, cross-platform Velopack `--mainExe`.
+  Handles Velopack hooks, hidden spawn + crash-supervision + single-instance, the Windows
+  PerMachine ACL grant, and launcher-side browser-open around the 0a Node server.
+- `npm run build:launcher` builds it (`cargo build --release`); a `launcher` CI job gates it on
+  the msvc + musl targets. Packaging (`vpk pack`, seed-Node bundling) and the in-app updater
+  remain deferred to later #7 milestones.
+
 ### Added (0a server skeleton -- 2026-06-12)
 
 - **Node server skeleton.** A minimal Node HTTP server (`src/server/`, run via `npm run serve`)

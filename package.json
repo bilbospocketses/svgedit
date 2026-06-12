@@ -30,7 +30,8 @@
     "start": "vite dev --host",
     "prestart": "echo svgedit is available at http://localhost:8100/src/editor/index.html",
     "serve": "npm run build && node dist/server/index.js",
-    "start:e2e": "vite preview --host --port 9000 --strictPort --outDir dist/editor"
+    "start:e2e": "vite preview --host --port 9000 --strictPort --outDir dist/editor",
+    "build:launcher": "cargo build --release --manifest-path launcher/Cargo.toml --config launcher/.cargo/config.toml"
   },
   "repository": {
     "type": "git",
