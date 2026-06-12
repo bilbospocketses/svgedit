@@ -21,7 +21,13 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] }
+      use: {
+        ...devices['Desktop Chrome'],
+        // The browser-canary workflow sets CHROMIUM_CHANNEL=chrome-beta to run this suite
+        // against the upcoming Chrome; unset everywhere else, so the pinned CI and local
+        // runs use Playwright's bundled Chromium.
+        ...(process.env.CHROMIUM_CHANNEL ? { channel: process.env.CHROMIUM_CHANNEL } : {})
+      }
     },
     {
       name: 'firefox',
