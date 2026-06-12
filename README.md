@@ -35,6 +35,9 @@ npm run serve      # build + run the Node server (production serve) → http://l
 npm test           # lint + vitest unit suite + Playwright e2e
 ```
 
+- `npm run build:launcher` — build the native Velopack launcher (`launcher/`, Rust). Optional;
+  not needed for the web app.
+
 ## Repository layout
 
 | Path | What lives there |

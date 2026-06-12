@@ -49,6 +49,15 @@ npm run typecheck:editor  # svgcanvas decls + editor (src/editor + src/server) t
 npm run typecheck:server  # server (src/server) typecheck via tsconfig.server.json
 ```
 
+## Launcher (0b)
+
+The `launcher/` crate is svgedit's Velopack `--mainExe` (Rust). It is built
+separately from the JS app (`npm run build:launcher`) and is NOT part of `npm run
+build`, so the editor build needs no Rust toolchain. Tests: `cargo test
+--manifest-path launcher/Cargo.toml`. Static-linked: Windows `+crt-static`
+(`launcher/.cargo/config.toml`), Linux `x86_64-unknown-linux-musl`. Packaging
+(`vpk pack`, seed-Node bundling) is a later #7 milestone.
+
 ## Typecheck scope (gotcha)
 
 `npm run typecheck` builds and typechecks **only `packages/svgcanvas`**. It does **not**

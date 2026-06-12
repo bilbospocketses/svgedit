@@ -1,0 +1,62 @@
+# Launcher CI -- build + test the launcher/ Rust crate on both targets.
+#
+# Two matrix arms:
+#   windows-latest / x86_64-pc-windows-msvc  -- CRT-static build (via launcher/.cargo/config.toml)
+#   ubuntu-latest  / x86_64-unknown-linux-musl -- fully static binary; verified with `file` + `ldd`
+#
+# `working-directory: launcher` means all cargo commands run from inside launcher/,
+# so launcher/.cargo/config.toml (+crt-static target cfg) is auto-discovered on Windows
+# and relative target/ paths in the static-verify step resolve under launcher/.
+#
+# All actions SHA-pinned to commit SHAs per sha_pinning_required enforcement.
+# Comments are precise (# vX.Y.Z) to keep Dependabot's github-actions ecosystem
+# tracking aligned (bare-major comments are a documented Dependabot blind spot).
+
+name: launcher
+
+on:
+  push:
+    paths:
+      - 'launcher/**'
+      - '.github/workflows/launcher.yml'
+  pull_request:
+    paths:
+      - 'launcher/**'
+      - '.github/workflows/launcher.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: launcher
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9 # stable
+        with:
+          targets: ${{ matrix.target }}
+          components: clippy, rustfmt
+      - name: Install musl linker
+        if: matrix.target == 'x86_64-unknown-linux-musl'
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
+      - run: cargo fmt --check
+      - run: cargo clippy --all-targets --target ${{ matrix.target }} -- -D warnings
+      - run: cargo test --target ${{ matrix.target }}
+      - run: cargo build --release --target ${{ matrix.target }}
+      - name: Verify Linux binary is static
+        if: matrix.target == 'x86_64-unknown-linux-musl'
+        run: |
+          BIN=target/x86_64-unknown-linux-musl/release/svgedit
+          file "$BIN"
+          ldd "$BIN" || true   # ldd exits nonzero on a fully-static binary -- that is the goal

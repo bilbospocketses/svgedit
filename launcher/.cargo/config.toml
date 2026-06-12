@@ -1,0 +1,4 @@
+# Statically link the MSVC C runtime so the launcher has no dependency on the
+# Visual C++ Redistributable (absent on fresh Win11). Verified via dumpbin.
+[target.'cfg(target_env = "msvc")']
+rustflags = ["-C", "target-feature=+crt-static"]
