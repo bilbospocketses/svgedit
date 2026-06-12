@@ -1,4 +1,5 @@
 mod config;
+mod hooks;
 mod log;
 mod paths;
 mod spawn;
