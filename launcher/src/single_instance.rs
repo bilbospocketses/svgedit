@@ -18,6 +18,7 @@ pub fn current_mutex_name() -> String {
 
 pub use imp::acquire;
 #[cfg(unix)]
+#[allow(unused_imports)] // used by the unix test; not by the bin
 pub use imp::acquire_at;
 #[allow(unused_imports)]
 pub use imp::is_elevated;
