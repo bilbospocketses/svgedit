@@ -9,10 +9,37 @@ export type ApiHandler = (req: IncomingMessage, res: ServerResponse) => Promise<
 export interface CreateServerOptions {
   staticDir?: string
   apiHandlers?: ApiHandler[]
+  /**
+   * Host-header allow-list (DNS-rebinding guard). Defaults to the loopback set;
+   * pass `null` to disable the check when an operator has explicitly opted into a
+   * non-loopback bind via {@link resolveBindHost} (LAN exposure is then their call).
+   */
+  allowedHosts?: Iterable<string> | null
 }
 
 const serverDir = path.dirname(fileURLToPath(import.meta.url))
 const DEFAULT_STATIC_DIR = path.resolve(serverDir, '..', 'editor') // dist/server → dist/editor
+
+// Loopback hostnames a locally-served editor may legitimately be reached at.
+const DEFAULT_ALLOWED_HOSTS: ReadonlySet<string> = new Set(['localhost', '127.0.0.1', '[::1]', '::1'])
+
+/**
+ * The interface the server should bind. Loopback (127.0.0.1) by default so the
+ * editor is not reachable from the LAN; an operator can opt into a wider bind
+ * via `SVGEDIT_BIND_HOST` (e.g. `0.0.0.0`), taking responsibility for exposure.
+ */
+export function resolveBindHost (): string {
+  const override = process.env.SVGEDIT_BIND_HOST
+  return override !== undefined && override !== '' ? override : '127.0.0.1'
+}
+
+/** Whether a request's Host header is in the allow-list (port-insensitive). */
+function hostAllowed (req: IncomingMessage, allowed: ReadonlySet<string>): boolean {
+  const raw = req.headers.host
+  if (raw === undefined || raw === '') return false
+  const host = raw.replace(/:\d+$/, '').toLowerCase()
+  return allowed.has(host)
+}
 
 function healthz (req: IncomingMessage, res: ServerResponse): boolean {
   if (req.url === '/healthz') {
@@ -27,10 +54,17 @@ export function createServer (options: CreateServerOptions = {}): http.Server {
   const staticDir = options.staticDir ?? DEFAULT_STATIC_DIR
   const apiHandlers = options.apiHandlers ?? []
   const serveStatic = sirv(staticDir, { etag: true, single: false })
+  const allowedHosts: ReadonlySet<string> | null =
+    options.allowedHosts === null ? null : new Set(options.allowedHosts ?? DEFAULT_ALLOWED_HOSTS)
 
   return http.createServer((req, res) => {
     void (async () => {
       try {
+        if (allowedHosts !== null && !hostAllowed(req, allowedHosts)) {
+          res.writeHead(403, { 'content-type': 'text/plain' })
+          res.end('Forbidden')
+          return
+        }
         for (const handler of apiHandlers) {
           if (await handler(req, res)) return
         }

@@ -12,6 +12,14 @@ import { warn } from '../common/logger.js'
 const REVERSE_NS = getReverseNS()
 const FONT_ATTRIBUTES = ['font-family', 'font-size', 'font-stretch', 'font-style', 'font-weight']
 
+// --- Untrusted-input hardening (regressions live in sanitize-security.test.ts) ---
+// Upper bound on a passed-through se:/data- attribute value (smuggling/DoS guard, #41).
+const MAX_DATA_ATTR_LEN = 4096
+// se:<name> / data-<name> restricted to a markup-safe name shape (#41).
+const SAFE_DATA_NAME = /^(?:se:[A-Za-z][\w-]*|data-[a-z][\w.:-]*)$/
+// CSS value constructs that fetch or script — never promote/keep these (#3, #42).
+const UNSAFE_STYLE_VALUE = /url\s*\(|expression\s*\(|image-set\s*\(|javascript:/i
+
 // Todo: Split out into core attributes, presentation attributes, etc. so consistent
 /**
  * This defines which elements and attributes that we support (or at least
@@ -207,7 +215,8 @@ export const sanitizeSvg = (node: Node): void => {
           // Bypassing the whitelist to allow se: prefix and data- attributes
           // We can add specific namespaces on demand for now.
           // Is there a more appropriate way to do this?
-          if (attrName.startsWith('se:') || attrName.startsWith('data-')) {
+          if ((attrName.startsWith('se:') || attrName.startsWith('data-')) &&
+            SAFE_DATA_NAME.test(attrName) && attr.value.length <= MAX_DATA_ATTR_LEN) {
             // We should bypass the namespace as well
             const seAttrNS: string | null = attrName.startsWith('se:') ? NS.SE : null
             seAttrs.push([attrName, attr.value, seAttrNS])
@@ -230,9 +239,15 @@ export const sanitizeSvg = (node: Node): void => {
           const val = colonIdx >= 0 ? prop.slice(colonIdx + 1) : ''
           const styleAttrName = (name || '').trim()
           const styleAttrVal = (val || '').trim()
-          // Now check that this attribute is supported
+          // Now check that this attribute is supported. Never promote a value
+          // carrying a CSS fetch/script construct — the downstream non-local
+          // reference scrub only covers a fixed set of paint properties (#42).
           if (allowedAttrs.includes(styleAttrName)) {
-            elem.setAttribute(styleAttrName, styleAttrVal)
+            if (UNSAFE_STYLE_VALUE.test(styleAttrVal)) {
+              warn(`unsafe style value for ${styleAttrName} in element ${elem.nodeName} is dropped: ${styleAttrVal}`, null, 'sanitize')
+            } else {
+              elem.setAttribute(styleAttrName, styleAttrVal)
+            }
           }
         }
         elem.removeAttribute('style')
@@ -249,6 +264,23 @@ export const sanitizeSvg = (node: Node): void => {
     Object.values(seAttrs).forEach(([att, val, ns]) => {
       elem.setAttributeNS(ns, att, val)
     })
+
+    // Scheme-harden hrefs on elements where the sanitizer otherwise permits a
+    // non-local reference. SVG <a> must reject javascript:/data:/vbscript: (the
+    // foreignObject anchor path is hardened separately); <image> may only load a
+    // local (#), http(s), or data:image/* source (#1, #2, #39).
+    if (elem.nodeName === 'a' || elem.nodeName === 'image') {
+      const linkHref = getHref(elem)
+      if (linkHref !== null && linkHref !== '') {
+        const safe = elem.nodeName === 'a' ? isSafeForeignHref(linkHref) : isSafeImageHref(linkHref)
+        if (!safe) {
+          warn(`unsafe href scheme on <${elem.nodeName}> (${linkHref}) is removed: ${elem.outerHTML}`, null, 'sanitize')
+          setHref(elem, '')
+          elem.removeAttributeNS(NS.XLINK, 'href')
+          elem.removeAttribute('href')
+        }
+      }
+    }
 
     // for some elements that have a xlink:href or href, ensure the URI refers to a local element
     // (but not for links and other elements where external hrefs are allowed)
@@ -301,6 +333,17 @@ export const sanitizeSvg = (node: Node): void => {
         }
       }
     })
+
+    // <style> CSS text is otherwise never inspected; neutralize a body that can
+    // exfiltrate or execute (@import / url() / expression() / javascript:),
+    // preserving benign rules (#3).
+    if (elem.nodeName === 'style') {
+      const css = elem.textContent ?? ''
+      if (UNSAFE_STYLE_VALUE.test(css) || /@import/i.test(css)) {
+        warn(`unsafe CSS in <style> is removed: ${css}`, null, 'sanitize')
+        elem.textContent = ''
+      }
+    }
 
     // recurse to children
     i = elem.childNodes.length
@@ -374,6 +417,21 @@ export const isSafeForeignHref = (href: string): boolean => {
   const m = /^([a-z][a-z0-9+.-]*:)/i.exec(v)
   if (!m) return true // scheme-less relative
   return FOREIGN_HREF_SCHEMES.has((m[1] ?? '').toLowerCase())
+}
+
+/**
+ * Whether an `<image>` href is safe to load. Allows a local fragment, an
+ * http(s) URL, an inline `data:image/*` URI, or a scheme-less (same-origin)
+ * relative path. Blocks `data:text/html`, `javascript:`, `file:` and other
+ * non-http schemes that turn an opened/pasted SVG into an SSRF/exfil vector (#2).
+ */
+export const isSafeImageHref = (href: string): boolean => {
+  const v = href.trim()
+  if (v.startsWith('#')) return true
+  if (/^https?:\/\//i.test(v)) return true
+  if (/^data:image\/(?:png|jpe?g|gif|webp|svg\+xml|bmp|avif|x-icon|vnd\.microsoft\.icon);/i.test(v)) return true
+  // A scheme-less value (no "scheme:") is a same-origin relative reference — allow.
+  return !/^[a-z][a-z0-9+.-]*:/i.test(v)
 }
 
 /**
