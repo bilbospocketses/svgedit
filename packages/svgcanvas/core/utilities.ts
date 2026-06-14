@@ -60,7 +60,10 @@ export const dropXMLInternalSubset = (str: string): string => {
   if (doctypeIdx === -1) return str
   const bracketIdx = str.indexOf('[', doctypeIdx)
   if (bracketIdx === -1) return str
-  const closeIdx = str.indexOf('?]>', bracketIdx + 1)
+  // The internal subset ends at the first ']' after '[' — the canonical
+  // billion-laughs payload terminates with ']>' (not '?]>'), so matching '?]>'
+  // never fired and the ENTITY declarations survived. Match the real ']'.
+  const closeIdx = str.indexOf(']', bracketIdx + 1)
   if (closeIdx === -1) return str
   return str.slice(0, bracketIdx + 1) + str.slice(closeIdx)
 }
