@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security (prototype-pollution / inherited-key hardening -- 2026-06-14)
+
+- **`mergeDeep` ignores prototype-mutating keys.** A JSON-parsed source carrying an own
+  `__proto__`/`constructor`/`prototype` key reassigned the merged object's prototype (or
+  planted a bogus own `constructor`). It does not pollute the global `Object.prototype`,
+  but the poisoned result object flowed into `curConfig`/editor state; these keys are now
+  skipped at every recursion level (#4).
+- **`ConfigObj.setConfig` checks own properties, not truthiness.** The prefs gate
+  `this.defaultPrefs[key]` treated inherited members (`toString`, `valueOf`, `__proto__`,
+  …) as known prefs, so a URL/iife config key such as `?toString=evil` was written into
+  `curPrefs`, corrupting it (a `toString` string, or a reassigned `curPrefs` prototype).
+  It now uses `Object.prototype.hasOwnProperty`; the deep-merges in `setConfig` inherit
+  the `mergeDeep` guard above (#43, #44).
+- Regression coverage: `tests/unit/prototype-pollution.test.ts`.
+
 ### Security (esbuild dev-dependency -- 2026-06-12)
 
 - Override `esbuild` to `^0.28.1`, resolving two Dependabot alerts in the dev toolchain

@@ -30,6 +30,10 @@ export const mergeDeep = (
 
   if (isObject(target) && isObject(source)) {
     for (const key of Object.keys(source)) {
+      // Never merge prototype-mutating keys — a JSON-parsed source can carry an
+      // own "__proto__"/"constructor"/"prototype" key that would reassign the
+      // result's prototype or shadow its constructor (#4).
+      if (key === '__proto__' || key === 'constructor' || key === 'prototype') continue
       const sourceVal = source[key]
       if (isObject(sourceVal)) {
         const targetVal = target[key]
