@@ -28,6 +28,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   canonical `<!DOCTYPE svg [ … ]>` payload.
 - Regression coverage: `tests/unit/sanitize-security.test.ts` (13 tests).
 
+### Security (server loopback bind + DNS-rebinding guard -- 2026-06-14)
+
+- **The local HTTP server now binds loopback (`127.0.0.1`) by default**, not all
+  interfaces (`0.0.0.0`). The launcher-spawned editor is no longer reachable from the
+  LAN; an operator can opt back into a wider bind with `SVGEDIT_BIND_HOST` (e.g.
+  `0.0.0.0`). The startup log now reports the real bound host instead of always
+  claiming `localhost`.
+- **Added a Host-header allow-list (DNS-rebinding guard).** On the loopback default the
+  server answers only requests whose `Host` is `localhost`/`127.0.0.1`/`[::1]`, returning
+  `403` otherwise, so a malicious page cannot rebind a hostname to the local port and
+  drive the editor. The guard relaxes automatically when an operator opts into a
+  non-loopback bind (`allowedHosts: null`).
+- Regression coverage: `tests/unit/server/server-bind.test.ts`.
+
 ### Security (esbuild dev-dependency -- 2026-06-12)
 
 - Override `esbuild` to `^0.28.1`, resolving two Dependabot alerts in the dev toolchain
