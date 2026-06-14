@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security (sanitizer import hardening -- 2026-06-14)
+
+- **SVG `<a>` / `<image>` href schemes are now validated in `sanitizeSvg`.** An SVG
+  `<a>` accepted `javascript:` via both modern `href` and legacy `xlink:href` (the
+  latter silently mirrored to `href` first), and `<image>` accepted any href including
+  `data:text/html` and arbitrary remote URLs. SVG `<a>` now follows the same scheme
+  policy as foreignObject anchors; `<image>` allows only local (`#`), http(s),
+  `data:image/*`, or same-origin-relative sources — closing stored-XSS and
+  SSRF/tracking-pixel vectors in opened/pasted/source-edited SVG.
+- **Inline `<style>` CSS is scrubbed.** A `<style>` body containing `@import`, `url()`,
+  `expression()`, or `javascript:` is emptied (benign rules preserved), blocking
+  CSS-based exfiltration and UI-redress.
+- **Inline `style="…"` values carrying `url()`/`expression()`/`image-set()` are no longer
+  promoted to presentation attributes** (defense-in-depth beyond the paint-reference scrub).
+- **`data-*` / `se:` passthrough is bounded** to a markup-safe name shape and a 4 KB value
+  cap, removing an unvalidated smuggling/DoS channel.
+- **`dropXMLInternalSubset` now strips DOCTYPE `<!ENTITY>` declarations.** It matched a
+  `?]>` terminator that never occurs, so the billion-laughs guard was a no-op on the
+  canonical `<!DOCTYPE svg [ … ]>` payload.
+- Regression coverage: `tests/unit/sanitize-security.test.ts` (13 tests).
+
 ### Security (server loopback bind + DNS-rebinding guard -- 2026-06-14)
 
 - **The local HTTP server now binds loopback (`127.0.0.1`) by default**, not all
