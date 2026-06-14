@@ -1130,9 +1130,24 @@ export const getFeGaussianBlur = (ele: Element | null | undefined): Element | nu
   return null
 }
 
+/** Escape a string for safe embedding inside a double-quoted CSS attribute-selector value. */
+export const cssAttrValue = (value: string): string => value.replace(/["\\]/g, '\\$&')
+
 /** Get a DOM element by ID within the SVG root element. */
 export const getElement = (id: string): Element | null => {
-  return svgroot_?.querySelector(`#${id}`) ?? null
+  if (!svgroot_) return null
+  // getElementById is exact-match and immune to CSS-selector injection from ids
+  // carried in url(#…)/xlink:href references; `querySelector('#'+id)` throws on
+  // selector metacharacters (`]`, `:`, quotes, …) and aborts the caller (#35).
+  const root = svgroot_ as unknown as { getElementById?: (elementId: string) => Element | null }
+  if (typeof root.getElementById === 'function') {
+    return root.getElementById(id)
+  }
+  try {
+    return svgroot_.querySelector(`#${CSS.escape(id)}`) ?? null
+  } catch {
+    return null
+  }
 }
 
 /**
