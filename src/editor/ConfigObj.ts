@@ -472,7 +472,10 @@ export default class ConfigObj {
     }
     Object.entries(opts).forEach(([key, val]) => {
       // Only allow prefs defined in configObj.defaultPrefs or...
-      if (this.defaultPrefs[key]) {
+      // Own-property check, not truthiness: `this.defaultPrefs[key]` would treat
+      // inherited members (toString, valueOf, __proto__, …) as known prefs and
+      // write them into curPrefs, corrupting it (#43).
+      if (Object.prototype.hasOwnProperty.call(this.defaultPrefs, key)) {
         if (cfgCfg.overwrite === false && (
           this.curConfig.preventAllURLConfig ||
           this.curPrefs[key])

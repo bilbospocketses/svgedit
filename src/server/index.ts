@@ -1,13 +1,16 @@
-import { closeServer, createServer } from './httpServer.js'
+import { closeServer, createServer, resolveBindHost } from './httpServer.js'
 import { resolveWebPort } from './resolveWebPort.js'
 
-const HOST = '0.0.0.0'
+const HOST = resolveBindHost()
+const LOOPBACK_HOSTS = new Set(['127.0.0.1', '::1', 'localhost'])
 
 async function main (): Promise<void> {
   const port = await resolveWebPort()
-  const server = createServer()
+  // Enforce the Host allow-list on the secure default (loopback); an explicit
+  // non-loopback bind via SVGEDIT_BIND_HOST is opt-in LAN exposure, so relax it.
+  const server = createServer(LOOPBACK_HOSTS.has(HOST) ? {} : { allowedHosts: null })
   server.listen(port, HOST, () => {
-    process.stdout.write(`svgedit server listening on http://localhost:${port}/\n`)
+    process.stdout.write(`svgedit server listening on http://${HOST}:${port}/\n`)
   })
 
   const shutdown = (): void => {

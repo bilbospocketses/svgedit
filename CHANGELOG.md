@@ -7,6 +7,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security (sanitizer import hardening -- 2026-06-14)
+
+- **SVG `<a>` / `<image>` href schemes are now validated in `sanitizeSvg`.** An SVG
+  `<a>` accepted `javascript:` via both modern `href` and legacy `xlink:href` (the
+  latter silently mirrored to `href` first), and `<image>` accepted any href including
+  `data:text/html` and arbitrary remote URLs. SVG `<a>` now follows the same scheme
+  policy as foreignObject anchors; `<image>` allows only local (`#`), http(s),
+  `data:image/*`, or same-origin-relative sources — closing stored-XSS and
+  SSRF/tracking-pixel vectors in opened/pasted/source-edited SVG.
+- **Inline `<style>` CSS is scrubbed.** A `<style>` body containing `@import`, `url()`,
+  `expression()`, or `javascript:` is emptied (benign rules preserved), blocking
+  CSS-based exfiltration and UI-redress.
+- **Inline `style="…"` values carrying `url()`/`expression()`/`image-set()` are no longer
+  promoted to presentation attributes** (defense-in-depth beyond the paint-reference scrub).
+- **`data-*` / `se:` passthrough is bounded** to a markup-safe name shape and a 4 KB value
+  cap, removing an unvalidated smuggling/DoS channel.
+- **`dropXMLInternalSubset` now strips DOCTYPE `<!ENTITY>` declarations.** It matched a
+  `?]>` terminator that never occurs, so the billion-laughs guard was a no-op on the
+  canonical `<!DOCTYPE svg [ … ]>` payload.
+- Regression coverage: `tests/unit/sanitize-security.test.ts` (13 tests).
+
+### Security (server loopback bind + DNS-rebinding guard -- 2026-06-14)
+
+- **The local HTTP server now binds loopback (`127.0.0.1`) by default**, not all
+  interfaces (`0.0.0.0`). The launcher-spawned editor is no longer reachable from the
+  LAN; an operator can opt back into a wider bind with `SVGEDIT_BIND_HOST` (e.g.
+  `0.0.0.0`). The startup log now reports the real bound host instead of always
+  claiming `localhost`.
+- **Added a Host-header allow-list (DNS-rebinding guard).** On the loopback default the
+  server answers only requests whose `Host` is `localhost`/`127.0.0.1`/`[::1]`, returning
+  `403` otherwise, so a malicious page cannot rebind a hostname to the local port and
+  drive the editor. The guard relaxes automatically when an operator opts into a
+  non-loopback bind (`allowedHosts: null`).
+- Regression coverage: `tests/unit/server/server-bind.test.ts`.
+
+### Security (prototype-pollution / inherited-key hardening -- 2026-06-14)
+
+- **`mergeDeep` ignores prototype-mutating keys.** A JSON-parsed source carrying an own
+  `__proto__`/`constructor`/`prototype` key reassigned the merged object's prototype (or
+  planted a bogus own `constructor`). It does not pollute the global `Object.prototype`,
+  but the poisoned result object flowed into `curConfig`/editor state; these keys are now
+  skipped at every recursion level (#4).
+- **`ConfigObj.setConfig` checks own properties, not truthiness.** The prefs gate
+  `this.defaultPrefs[key]` treated inherited members (`toString`, `valueOf`, `__proto__`,
+  …) as known prefs, so a URL/iife config key such as `?toString=evil` was written into
+  `curPrefs`, corrupting it (a `toString` string, or a reassigned `curPrefs` prototype).
+  It now uses `Object.prototype.hasOwnProperty`; the deep-merges in `setConfig` inherit
+  the `mergeDeep` guard above (#43, #44).
+- Regression coverage: `tests/unit/prototype-pollution.test.ts`.
+
 ### Security (selector-injection hardening -- 2026-06-14)
 
 - **`getElement` resolves ids via `getElementById`, not `querySelector('#' + id)`.** An id
