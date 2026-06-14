@@ -57,6 +57,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the `mergeDeep` guard above (#43, #44).
 - Regression coverage: `tests/unit/prototype-pollution.test.ts`.
 
+### Security (selector-injection hardening -- 2026-06-14)
+
+- **`getElement` resolves ids via `getElementById`, not `querySelector('#' + id)`.** An id
+  carried in a `url(#…)`/`xlink:href` reference can contain CSS-selector metacharacters
+  (`]`, `:`, quotes); the unquoted selector threw a `SyntaxError`, aborting reference
+  resolution and its caller. It now matches exactly by id, with an escaped-`querySelector`
+  fallback (#35).
+- **SVG import no longer aborts on a hostile id.** `setSvgString`'s duplicate-id remediation
+  (`[id="<id>"]`) and gradient conversion (`[fill="url(#<id>)"]`) threw on an id containing a
+  `"`, failing the whole import (`Error setting SVG string`). The dedup now matches the
+  already-collected `[id]` nodes by property, and the gradient selectors escape the id via a
+  shared `cssAttrValue` helper (#36, #37).
+- Regression coverage: `tests/unit/selector-injection.test.ts`.
+
 ### Security (esbuild dev-dependency -- 2026-06-12)
 
 - Override `esbuild` to `^0.28.1`, resolving two Dependabot alerts in the dev toolchain

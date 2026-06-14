@@ -22,7 +22,8 @@ import {
   getStrokedBBoxDefaultVisible,
   walkTree,
   getBBox as utilsGetBBox,
-  hashCode
+  hashCode,
+  cssAttrValue
 } from './utilities.js'
 import {
   transformPoint,
@@ -458,9 +459,12 @@ const setSvgString = (xmlString: string, preventUndo?: boolean): boolean => {
 
     Object.entries(ids).forEach(([key, value]) => {
       if (value > 1) {
-        const nodes = content.querySelectorAll(`[id="${key}"]`)
-        for (let i = 1; i < nodes.length; i++) {
-          nodes[i]?.setAttribute('id', svgCanvas.getNextId())
+        // Match against the already-collected [id] nodes by id property — an
+        // untrusted id interpolated into a `[id="…"]` selector throws on a quote
+        // and aborts the whole import (#37).
+        const dupes = Array.prototype.filter.call(nodes, (n: Element) => n.id === key) as Element[]
+        for (let i = 1; i < dupes.length; i++) {
+          dupes[i]?.setAttribute('id', svgCanvas.getNextId())
         }
       }
     })
@@ -1164,13 +1168,17 @@ const convertGradientsMethod = (elem: Element): void => {
   Array.prototype.forEach.call(elems, (grad: Element) => {
     if (grad.getAttribute('gradientUnits') === 'userSpaceOnUse') {
       const svgContent = svgCanvas.getSvgContent() as Element
+      // Escape the (untrusted, imported) gradient id before it goes into a CSS
+      // attribute-value selector, or a quote in the id throws and aborts the
+      // gradient conversion mid-import (#36).
+      const gradSel = cssAttrValue(grad.id)
       // Audit-flagged: multi-element gradient duplication bug (svg-exec.ts:1278) — preserve
       let fillStrokeElems = svgContent.querySelectorAll(
-        '[fill="url(#' + grad.id + ')"],[stroke="url(#' + grad.id + ')"]'
+        '[fill="url(#' + gradSel + ')"],[stroke="url(#' + gradSel + ')"]'
       )
       if (!fillStrokeElems.length) {
         const tmpFillStrokeElems = svgContent.querySelectorAll(
-          '[*|href="#' + grad.id + '"]'
+          '[*|href="#' + gradSel + '"]'
         )
         if (!tmpFillStrokeElems.length) {
           return
@@ -1183,11 +1191,12 @@ const convertGradientsMethod = (elem: Element): void => {
             first.getAttribute('gradientUnits') ===
               'userSpaceOnUse'
           ) {
+            const firstSel = cssAttrValue(first.id)
             fillStrokeElems = svgContent.querySelectorAll(
               '[fill="url(#' +
-                first.id +
+                firstSel +
                 ')"],[stroke="url(#' +
-                first.id +
+                firstSel +
                 ')"]'
             )
           } else {
