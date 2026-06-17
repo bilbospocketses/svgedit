@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Performance (color slider -- 2026-06-17)
+
+- **The color slider tracks the latest pointer position during a drag.**
+  `_onPointerMove` dropped every move while a frame was pending and the pending
+  frame closed over the *first* event, so a fast drag painted stale positions. It
+  now records the latest event and the frame reads it (#17).
+- **A pending frame can no longer commit a stale color after release.**
+  `_onPointerUp` left a scheduled frame to fire after the pointer was released; it
+  now cancels the pending frame and commits the release position (#18).
+
 ### Fixed (selection integrity -- 2026-06-17)
 
 - **`cycleElement` no longer corrupts the selection when the current element is
