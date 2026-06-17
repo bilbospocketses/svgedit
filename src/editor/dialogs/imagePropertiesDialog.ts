@@ -312,16 +312,20 @@ export class SeImgPropDialog extends LitElement {
     let saveOpt = ''
     const w = this._canvasWidth.value
     const h = this._canvasHeight.value
+    let valid = true
     if (w !== 'fit' && !isValidUnit('width', w)) {
       this._canvasWidth.parentElement?.classList.add('error')
+      valid = false
     } else {
       this._canvasWidth.parentElement?.classList.remove('error')
     }
-    if (h !== 'fit' && !isValidUnit('height', w)) {
+    if (h !== 'fit' && !isValidUnit('height', h)) {
       this._canvasHeight.parentElement?.classList.add('error')
+      valid = false
     } else {
       this._canvasHeight.parentElement?.classList.remove('error')
     }
+    if (!valid) { return }
     if (this._imageOptEmbed.checked) {
       saveOpt = 'embed'
     }
