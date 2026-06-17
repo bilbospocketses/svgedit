@@ -6,6 +6,7 @@
  *
  */
 import { getSvgEditor } from '../../svgEditorInstance.js'
+import { isSafePathData, isSafeExtPath } from '@svgedit/svgcanvas/core/validators.js'
 
 const name = 'shapes'
 
@@ -43,8 +44,10 @@ export default {
       callback () {
         if ($id('tool_shapelib') === null) {
           const extPath = svgEditor.configObj.curConfig.extPath
+          const extPathStr = `${extPath}`
+          const safeExtPath = isSafeExtPath(extPathStr) ? extPathStr : ''
           const buttonTemplate = `
-          <se-explorerbutton id="tool_shapelib" title="${svgEditor.i18next.t(`${name}:buttons.0.title`)}" lib="${extPath}/ext-shapes/shapelib/"
+          <se-explorerbutton id="tool_shapelib" title="${svgEditor.i18next.t(`${name}:buttons.0.title`)}" lib="${safeExtPath}/ext-shapes/shapelib/"
           src="shapelib.svg"></se-explorerbutton>
           `
           canv.insertChildAtIndex($id('tools_left')!, buttonTemplate, 9)
@@ -59,7 +62,8 @@ export default {
         const mode = canv.getMode()
         if (mode !== modeId) { return undefined }
 
-        const currentD = $id('tool_shapelib')!.dataset.draw ?? ''
+        const rawD = $id('tool_shapelib')!.dataset.draw ?? ''
+        const currentD = isSafePathData(rawD) ? rawD : ''
         startX = opts.start_x
         const x = startX
         startY = opts.start_y

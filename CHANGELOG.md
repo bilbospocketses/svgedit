@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security (extension input validation -- 2026-06-17)
+
+- **Untrusted values reaching extension DOM/CSS sinks are now allow-list validated** via
+  `@svgedit/svgcanvas/core/validators.js` (`isSafeDomId`, `isSafePathData`, `isSafeExtPath`).
+- **`ext-shapes` no longer interpolates a raw `extPath` into a button HTML string.** A
+  config/URL-controlled `extPath` such as `" onmouseover="…` could inject a firing
+  event-handler attribute onto the shapelib button (the string is parsed into DOM by
+  `insertChildAtIndex`); `extPath` is now rejected unless it is a plain path/URL (#9).
+- **Marker ids derived from a selected element's `id` are validated before building
+  `url(#…)` references** in `ext-markers` (defense-in-depth -- the sinks were
+  `setAttribute`-contained) (#8).
+- **Shapelib path data (`dataset.draw`) is validated against the SVG path-data charset**
+  before it becomes a `<path d>` attribute (defense-in-depth) (#10).
+- Regression coverage: `tests/unit/ext-input-validation.test.ts`.
+
 ### Security (sanitizer import hardening -- 2026-06-14)
 
 - **SVG `<a>` / `<image>` href schemes are now validated in `sanitizeSvg`.** An SVG

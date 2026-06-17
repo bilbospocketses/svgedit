@@ -26,6 +26,7 @@
 */
 
 import { getSvgEditor } from '../../svgEditorInstance.js'
+import { isSafeDomId } from '@svgedit/svgcanvas/core/validators.js'
 
 const name = 'markers'
 
@@ -203,6 +204,7 @@ export default {
         return
       }
       // Set marker on element
+      if (el.id && !isSafeDomId(el.id)) { return }
       const id = 'mkr_' + pos + '_' + el.id
       addMarker(id, val)
       svgCanvas.changeSelectedAttribute(markerName, 'url(#' + id + ')')
@@ -247,6 +249,7 @@ export default {
           const len = el.id.length
           const linkid = url.slice(-len - 1, -1)
           if (el.id !== linkid) {
+            if (el.id && !isSafeDomId(el.id)) { return }
             const newMarkerId = 'mkr_' + pos + '_' + el.id
             addMarker(newMarkerId, marker.getAttribute('se_type')!)
             svgCanvas.changeSelectedAttribute(markerName, 'url(#' + newMarkerId + ')')
