@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (selection integrity -- 2026-06-17)
+
+- **`cycleElement` no longer corrupts the selection when the current element is
+  gone.** If the selected element was absent from the layer's visible elements
+  (e.g. it had been removed), the cycle left `elem` as `false` and called
+  `selectOnly([false])`. It now returns early and leaves the selection unchanged (#16).
+- **#15 was an over-claim** (no code change). `cloneSelectedElements` already
+  breaks on the first null hole and clones every selected element -- the ledger
+  described the inverse; a regression test now pins the correct behaviour (#15).
+
 ### Fixed (units parsing -- 2026-06-17)
 
 - **`convertToNum` no longer zeroes a value with an unexpected unit.** It took the

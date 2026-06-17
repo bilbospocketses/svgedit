@@ -223,4 +223,25 @@ describe('selected-elem', () => {
 
     expect(fired).toEqual(['before-move', 'after-move'])
   })
+
+  it('#15 cloneSelectedElements clones every selected element (confirm not-a-bug)', () => {
+    const r1 = svgCanvas.addSVGElementsFromJson({ element: 'rect', attr: { id: 'clone-1', x: 0, y: 0, width: 10, height: 10 } })
+    const r2 = svgCanvas.addSVGElementsFromJson({ element: 'rect', attr: { id: 'clone-2', x: 20, y: 0, width: 10, height: 10 } })
+    const r3 = svgCanvas.addSVGElementsFromJson({ element: 'rect', attr: { id: 'clone-3', x: 40, y: 0, width: 10, height: 10 } })
+    svgCanvas.selectOnly([r1, r2, r3], true)
+    const before = svgCanvas.getSvgContent().querySelectorAll('rect').length
+    svgCanvas.cloneSelectedElements(5, 5)
+    const after = svgCanvas.getSvgContent().querySelectorAll('rect').length
+    expect(after).toBe(before + 3)
+  })
+
+  it('#16 cycleElement does not selectOnly([false]) when the current element is gone', () => {
+    const a = svgCanvas.addSVGElementsFromJson({ element: 'rect', attr: { id: 'cyc-a', x: 0, y: 0, width: 10, height: 10 } })
+    svgCanvas.addSVGElementsFromJson({ element: 'rect', attr: { id: 'cyc-b', x: 20, y: 0, width: 10, height: 10 } })
+    svgCanvas.selectOnly([a], true)
+    a.remove() // selected element is no longer in the layer but remains the current element
+    const spy = vi.spyOn(svgCanvas, 'selectOnly')
+    svgCanvas.cycleElement(true)
+    expect(spy).not.toHaveBeenCalledWith([false], true)
+  })
 })
