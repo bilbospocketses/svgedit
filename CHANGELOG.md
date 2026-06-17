@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (units parsing -- 2026-06-17)
+
+- **`convertToNum` no longer zeroes a value with an unexpected unit.** It took the
+  unit as a blind `slice(-2)`, so a 1-character or unknown unit collapsed the
+  numeric part to `Number('')` (0). It now parses with a single regex and returns
+  `NaN` for unparseable input. Robustness-grade: all valid SVG units are two
+  characters or `%`, so this only affected malformed input (#13).
+- **`shortFloat` reordered for clarity** (the Array case is checked first and the
+  `as unknown as number - 0` cast is gone). #14 was an over-claim -- the function
+  already produced correct output for every valid input; behavior is unchanged (#14).
+
 ### Fixed (editor action guards -- 2026-06-17)
 
 - **Layer moves now confirm every time.** The "move selection to another layer"
