@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (editor action guards -- 2026-06-17)
+
+- **Layer moves now confirm every time.** The "move selection to another layer"
+  handler gated its confirmation on a one-shot flag, so after the first confirmed
+  move every subsequent layer change relocated the selection with no prompt. The
+  logic moved to `moveSelectedToLayerWithConfirm`, which always confirms (#7).
+- **Invalid image-properties dimensions no longer reach the canvas.** `_onSave`
+  validated the height against the *width* value, and even when it flagged a bad
+  value with a cosmetic `.error` class it still dispatched the save. It now
+  validates height against the height value and returns before dispatching when
+  either dimension is invalid (#11, #12).
+- Regression coverage: `tests/unit/layer-move.test.ts`,
+  `tests/unit/image-properties-dialog.test.ts`.
+
 ### Security (extension input validation -- 2026-06-17)
 
 - **Untrusted values reaching extension DOM/CSS sinks are now allow-list validated** via

@@ -21,6 +21,7 @@ import type Editor from './Editor.js'
 import { typedDetail, type SeChangeDetail, type SeSvgSourceDetail, type SeCmenuDetail } from './typed-events.js'
 import { applyInitialTheme } from './styles/theme.js'
 import { registerForeignHtml } from './foreignHtml.js'
+import { moveSelectedToLayerWithConfirm } from './layerMove.js'
 
 const { $id, $click, convertUnit } = SvgCanvas
 
@@ -213,25 +214,8 @@ export async function initEditor (editor: Editor): Promise<void> {
   })
 
   // fired when user wants to move elements to another layer
-  let promptMoveLayerOnce = false
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
-  $id('selLayerNames')?.addEventListener('change', async (evt) => {
-    const destLayer = typedDetail<SeChangeDetail>(evt).value
-    if (!destLayer) return
-    if (promptMoveLayerOnce) {
-      promptMoveLayerOnce = true
-      editor.svgCanvas.moveSelectedToLayer(destLayer)
-      editor.svgCanvas.clearSelection()
-      editor.layersPanel.populateLayers()
-    } else {
-      const confirmStr = editor.i18next.t('notification.QmoveElemsToLayer').replace('%s', destLayer)
-      const ok = await seConfirm(confirmStr)
-      if (ok === 'Cancel') return
-      promptMoveLayerOnce = true
-      editor.svgCanvas.moveSelectedToLayer(destLayer)
-      editor.svgCanvas.clearSelection()
-      editor.layersPanel.populateLayers()
-    }
+  $id('selLayerNames')?.addEventListener('change', (evt) => {
+    void moveSelectedToLayerWithConfirm(editor, typedDetail<SeChangeDetail>(evt).value)
   })
   $id('tool_font_family')?.addEventListener('change', (evt) => {
     editor.svgCanvas.setFontFamily(typedDetail<SeChangeDetail>(evt).value)
