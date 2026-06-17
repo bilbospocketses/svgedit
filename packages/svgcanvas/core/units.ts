@@ -88,13 +88,13 @@ export const getTypeMap = (): TypeMap => {
  */
 export const shortFloat = (val: string | number | [number, number]): number | string => {
   const digits = elementContainer_.getRoundDigits()
-  if (!isNaN(val as number)) {
-    return Number(Number(val).toFixed(digits))
-  }
   if (Array.isArray(val)) {
     return `${shortFloat(val[0])},${shortFloat(val[1])}`
   }
-  return Number.parseFloat(val as string).toFixed(digits) as unknown as number - 0
+  if (!isNaN(val as number)) {
+    return Number(Number(val).toFixed(digits))
+  }
+  return Number(Number.parseFloat(val as string).toFixed(digits))
 }
 
 /**
@@ -160,8 +160,10 @@ export const convertToNum = (attr: string, val: string): number => {
     }
     return num * Math.sqrt((width * width) + (height * height)) / Math.sqrt(2)
   }
-  const unit = val.slice(-2)
-  const num = Number(val.slice(0, -2))
+  const match = /^([+-]?[\d.]+)([a-z%]*)$/i.exec(val)
+  if (!match) { return NaN }
+  const num = Number(match[1])
+  const unit = (match[2] ?? '').toLowerCase()
   return num * (typeMap_[unit] ?? 1)
 }
 
