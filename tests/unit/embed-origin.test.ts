@@ -26,8 +26,13 @@ describe('embed origin validator', () => {
     expect(parseAllowedOrigins(' https://a.com , , https://b.com ')).toEqual(['https://a.com', 'https://b.com'])
   })
 
-  it('parseAllowedOrigins of "*" returns ["*"]', () => {
-    expect(parseAllowedOrigins('*')).toEqual(['*'])
+  it('parseAllowedOrigins drops "*" so a URL param cannot widen to every origin (#29)', () => {
+    expect(parseAllowedOrigins('*')).toEqual([])
+  })
+
+  it('parseAllowedOrigins drops malformed/non-origin entries, keeps valid origins (#29)', () => {
+    expect(parseAllowedOrigins('https://ok.test, not a url , javascript:alert(1)'))
+      .toEqual(['https://ok.test'])
   })
 
   it('parseAllowedOrigins of empty string returns []', () => {

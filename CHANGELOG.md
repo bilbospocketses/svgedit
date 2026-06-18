@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security (embed RPC/origin hardening -- 2026-06-18)
+
+- **Embed call results are returned only to the calling origin.** `EmbedServer.reply`
+  posted every result to `allowedOrigins[0]`, so when a host configures more than one
+  allowed origin a call from origin B had its result delivered to origin A. Results and
+  errors now go back to the verified origin of the calling message; server-initiated
+  events keep targeting the first allowed origin (#28).
+- **URL-param `allowedOrigins` is validated.** A value from the embed URL (e.g.
+  `?allowedOrigins=*`) was accepted verbatim, silently widening the embed to every
+  origin. Each entry must now be a real origin; `*` and malformed tokens are dropped. A
+  programmatic `opts.allowedOrigins` still accepts `*` as a deliberate dev escape hatch
+  (#29).
+- **RPC dispatch rejects reserved method names.** `{kind:'call', method:'constructor'}`
+  (and `__proto__`/`prototype`) passed the `typeof fn === 'function'` gate and invoked
+  the target's constructor; these names are now refused with `METHOD_NOT_FOUND` (#30).
+- **The argument (de)serializer ignores prototype-mutating keys.** Rebuilding a plain
+  object from an inbound message assigned `out['__proto__']`, reassigning the rebuilt
+  object's prototype; `__proto__`/`constructor`/`prototype` keys are now skipped on both
+  the serialize and deserialize paths (#31).
+- **Element handles are per-instance and weakly held.** The handle/element maps were
+  module-global, so handles leaked across `EmbedServer` instances and pinned every
+  returned element for the page's lifetime. They are now instance fields, the reverse map
+  holds elements via `WeakRef`, and it is cleared on `dispose()` (#32).
+- Regression coverage: `tests/unit/embed-server-security.test.ts`,
+  `tests/unit/embed-origin.test.ts`.
+
 ### Security (export-time SSRF + ungroup selector-injection -- 2026-06-18)
 
 - **Export no longer fetches cross-origin `<image>` hrefs.** `convertImagesToBase64`
