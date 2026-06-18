@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security (export-time SSRF + ungroup selector-injection -- 2026-06-18)
+
+- **Export no longer fetches cross-origin `<image>` hrefs.** `convertImagesToBase64`
+  (raster + PDF export) inlined every non-`data:` `<image>` by `fetch`ing its href, so an
+  opened/pasted SVG pointing an `<image>` at an internal host or a cloud-metadata endpoint
+  turned export into request-forgery plus response-exfiltration into the exported file. It
+  now fetches only same-origin `http(s)` sources (relative refs resolve same-origin);
+  cross-origin and protocol-relative refs are skipped with a warning, and `data:` images
+  are left untouched (#34).
+- **`convertToGroup` no longer interpolates an element id into a CSS selector.** When
+  ungrouping a `<use>`, the count of other `<use>`s referencing the symbol id was built as
+  ``querySelectorAll(`use[href="#${id}"]…`)``; an id containing `"`/`]` threw a
+  `SyntaxError` and aborted the ungroup. It now counts with an injection-immune `getHref`
+  comparison (same class as #35/#36/#37) (#50).
+- **Investigated and dismissed #40 (foreignObject non-HTML-namespace "bypass").** Imported
+  foreignObject children inherit the SVG namespace and take the SVG sanitize ruleset rather
+  than the strict foreign-HTML allow-list, but that ruleset (post-#132) strips the same
+  active-content vectors (`javascript:` href, `<script>`, event handlers, `@import`/`url()`
+  CSS), and the import path is XML-parse → sanitize → live SVG DOM with no HTML re-parse to
+  mutate against -- an over-claim, kept under regression guard (#40).
+- Regression coverage: `tests/unit/export-ssrf.test.ts`,
+  `tests/unit/foreign-namespace-sanitize.test.ts`, `tests/unit/selected-elem.test.ts`.
+
 ### Tests (assertion integrity -- 2026-06-18)
 
 - **`convertToPath` test no longer checks a misspelled attribute.** `visibilituy`
