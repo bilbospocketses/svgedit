@@ -62,6 +62,7 @@ export class SeColorSlider extends LitElement {
 
   private _dragging = false
   private _rafId = 0
+  private _latestEvent: PointerEvent | null = null
 
   get x() { return this._x }
   set x(v: number) { this._x = v }
@@ -96,15 +97,19 @@ export class SeColorSlider extends LitElement {
 
   private _onPointerMove = (e: PointerEvent) => {
     if (!this._dragging) return
+    this._latestEvent = e
     if (this._rafId) return
     this._rafId = requestAnimationFrame(() => {
       this._rafId = 0
-      this._updateFromPointer(e)
+      if (this._latestEvent) this._updateFromPointer(this._latestEvent)
     })
   }
 
   private _onPointerUp = (e: PointerEvent) => {
     this._dragging = false
+    if (this._rafId) { cancelAnimationFrame(this._rafId); this._rafId = 0 }
+    this._updateFromPointer(e) // commit the final (release) position
+    this._latestEvent = null
     const el = e.currentTarget as HTMLElement
     el.releasePointerCapture(e.pointerId)
     el.removeEventListener('pointermove', this._onPointerMove)
