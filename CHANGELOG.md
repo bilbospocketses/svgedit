@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security (context-menu / breadcrumb DOM injection -- 2026-06-18)
+
+- **Extension context-menu items are built with the DOM API, not `insertAdjacentHTML`.**
+  A custom menu item's `id`, `label`, or `shortcut` was interpolated into an HTML string
+  and inserted, so an extension (or a config/i18n-supplied value) could inject markup into
+  the canvas context menu. The `<li><a><span>` is now created with
+  `createElement`/`textContent`, with the id set via `setAttribute` (#46).
+- **The context "breadcrumb" panel is built with the DOM API, not `innerHTML`.**
+  `contextChanged` assembled `<a>…${parent.id}…</a>` from the selected element's ancestor
+  ids and the current layer name and assigned it to `innerHTML`. Those values are
+  attacker-controlled — an element id or layer title from a crafted SVG survives the
+  import sanitizer unvalidated — so a malicious id/title could run script. Rendering is
+  extracted to `renderContextPanel`, which builds text nodes / anchors directly (#47).
+- Regression coverage: `tests/unit/contextmenu-security.test.ts`,
+  `tests/unit/contextPanel.test.ts`.
+
 ### Security (background + image-URL validation -- 2026-06-18)
 
 - **`setImageURL` rejects non-image schemes.** The image-URL setter wrote the value to

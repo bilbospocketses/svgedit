@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach, vi } from 'vitest'
+import { describe, expect, it, beforeEach } from 'vitest'
 
 import {
   add,
@@ -26,18 +26,18 @@ describe('contextmenu helpers', () => {
 
   it('injects extensions into the context menu DOM', () => {
     const host = document.getElementById('cmenu_canvas')
-    const inserted = []
-    host.insertAdjacentHTML = vi.fn((_position, html) => {
-      inserted.push(html)
-    })
     add({ id: 'alpha', label: 'Alpha', action: () => {}, shortcut: 'Ctrl+A' })
     add({ id: 'beta', label: 'Beta', action: () => {} })
 
     injectExtendedContextMenuItemsIntoDom()
 
-    expect(host.insertAdjacentHTML).toHaveBeenCalledTimes(2)
-    expect(inserted[0]).toContain('#alpha')
-    expect(inserted[0]).toContain('Ctrl+A')
-    expect(inserted[1]).toContain('#beta')
+    // Built via the DOM API (no insertAdjacentHTML) — assert the real nodes (#46).
+    const links = host.querySelectorAll('li.disabled > a')
+    expect(links).toHaveLength(2)
+    expect(links[0].getAttribute('href')).toBe('#alpha')
+    expect(links[0].textContent).toContain('Alpha')
+    expect(links[0].querySelector('.shortcut').textContent).toBe('Ctrl+A')
+    expect(links[1].getAttribute('href')).toBe('#beta')
+    expect(links[1].textContent).toContain('Beta')
   })
 })
