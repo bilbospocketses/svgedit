@@ -1248,6 +1248,7 @@ const cycleElement = (next: boolean | number): void => {
       }
     }
   }
-  svgCanvas.selectOnly([elem as Element], true)
+  if (!elem) { return } // current element not found in the layer; leave selection unchanged (#16)
+  svgCanvas.selectOnly([elem], true)
   svgCanvas.call('selected', selectedElements)
 }
