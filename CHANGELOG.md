@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security (background + image-URL validation -- 2026-06-18)
+
+- **`setImageURL` rejects non-image schemes.** The image-URL setter wrote the value to
+  the element's `href` and loaded it (`new Image().src`) with no validation, so a
+  `javascript:`, `data:text/html`, or other non-image URL could be set on a selected
+  `<image>` (via the dialog or the embed API). It now accepts only the sources the import
+  sanitizer allows for `<image>` (local `#`, http(s), `data:image/*`, same-origin
+  relative) and ignores the rest (#48).
+- **`setBackground` validates the color and image URL.** The canvas-background setter
+  wrote its `color` straight to `fill` and its `url` straight to the background image's
+  `href`. A `url()`/`expression()`/`javascript:` paint value is no longer written as the
+  fill, and the background image URL is held to the same `<image>` href policy as above
+  (#49).
+- Regression coverage: `tests/unit/elem-get-set-security.test.ts`.
+
 ### Security (embed RPC/origin hardening -- 2026-06-18)
 
 - **Embed call results are returned only to the calling origin.** `EmbedServer.reply`

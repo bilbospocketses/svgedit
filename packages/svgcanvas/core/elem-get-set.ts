@@ -16,8 +16,13 @@ import {
   convertToNum
 } from './units.js'
 import { getParents } from '../common/util.js'
+import { isSafeImageHref } from './sanitize.js'
+import { warn } from '../common/logger.js'
 
 import type { ISvgCanvas } from './svgcanvas-types.js'
+
+// Background color / paint values that fetch or script — never write these to fill (#49).
+const UNSAFE_PAINT = /url\s*\(|expression\s*\(|image-set\s*\(|javascript:/i
 
 let svgCanvas = null as unknown as ISvgCanvas
 
@@ -870,6 +875,14 @@ const setImageURLMethod = (val: string): void => {
   const elem = selectedElements[0]
   if (!elem) { return }
 
+  // Only a local/http(s)/data:image/same-origin source may be set + loaded — reject
+  // javascript:, data:text/html, and other non-image schemes (#48), mirroring the
+  // import sanitizer's <image> href policy.
+  if (!isSafeImageHref(val)) {
+    warn(`unsafe image URL ignored (${val})`, null, 'elem-get-set')
+    return
+  }
+
   const attrs = {
     width: elem.getAttribute('width'),
     height: elem.getAttribute('height')
@@ -1015,7 +1028,12 @@ const setBackgroundMethod = (color: string, url: string): void => {
   if (!border) { return }
   let bgImg: Element | null = getElement('background_image')
   let bgPattern: Element | null = getElement('background_pattern')
-  border.setAttribute('fill', color === 'chessboard' ? '#fff' : color)
+  const fillVal = color === 'chessboard' ? '#fff' : color
+  if (UNSAFE_PAINT.test(fillVal)) {
+    warn(`unsafe background color ignored (${fillVal})`, null, 'elem-get-set')
+  } else {
+    border.setAttribute('fill', fillVal)
+  }
   if (color === 'chessboard') {
     if (!bgPattern) {
       bgPattern = svgCanvas.getDOMDocument().createElementNS(NS.SVG, 'foreignObject')
@@ -1041,7 +1059,10 @@ const setBackgroundMethod = (color: string, url: string): void => {
   } else if (bgPattern) {
     bgPattern.remove()
   }
-  if (url) {
+  if (url && !isSafeImageHref(url)) {
+    warn(`unsafe background image URL ignored (${url})`, null, 'elem-get-set')
+    if (bgImg) { bgImg.remove() }
+  } else if (url) {
     if (!bgImg) {
       bgImg = svgCanvas.getDOMDocument().createElementNS(NS.SVG, 'image')
       svgCanvas.assignAttributes(bgImg, {
