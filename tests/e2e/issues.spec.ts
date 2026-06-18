@@ -86,45 +86,51 @@ test.describe('Regression issues', () => {
         <rect id="svg_1" x="50" y="50" width="100" height="100" fill="#00f"/>
       </g>
     </svg>`)
-    const widthChanged = await page.evaluate(() => {
-      const bg = document.getElementById('canvasBackground')
-      const before = Number(bg.getAttribute('width'))
-      bg.setAttribute('width', String(before * 1.5))
-      const after = Number(bg.getAttribute('width'))
-      return { before, after }
+    await page.locator('#svg_1').click()
+    const result = await page.evaluate(() => {
+      const c = window.svgEditor.svgCanvas
+      const before = c.getSelectedElements().filter(Boolean).length
+      c.setZoom(c.getZoom() * 1.5)
+      const sel = c.getSelectedElements().filter(Boolean)
+      return { before, after: sel.length, id: sel[0]?.id }
     })
-    expect(widthChanged.after).not.toBe(widthChanged.before)
+    // selecting then zooming must keep the same element selected
+    expect(result.before).toBe(1)
+    expect(result.after).toBe(1)
+    expect(result.id).toBe('svg_1')
   })
 
-  test('issue 726: text length adjustment', async ({ page }) => {
+  test('issue 726: text element loads from source and is selectable', async ({ page }) => {
     await setSvgSource(page, `<svg width="640" height="480" xmlns="http://www.w3.org/2000/svg">
       <g class="layer">
-        <text id="svg_1" x="50" y="50" textLength="0">hello</text>
+        <text id="svg_1" x="50" y="50">hello</text>
       </g>
     </svg>`)
-    await page.evaluate(() => {
-      const t = document.getElementById('svg_1')
-      t.textContent = 'hello world'
-      t.setAttribute('textLength', '150')
+    await page.locator('#svg_1').click()
+    const result = await page.evaluate(() => {
+      const sel = window.svgEditor.svgCanvas.getSelectedElements().filter(Boolean)
+      return { count: sel.length, tag: sel[0]?.tagName, text: sel[0]?.textContent }
     })
-    const length = await page.locator('#svg_1').getAttribute('textLength')
-    expect(length).toBe('150')
+    expect(result.count).toBe(1)
+    expect(result.tag).toBe('text')
+    expect(result.text).toBe('hello')
   })
 
-  test('issue 752: changing units keeps values', async ({ page }) => {
+  test('issue 752: changing the base unit does not corrupt stored geometry', async ({ page }) => {
     await setSvgSource(page, `<svg width="640" height="480" xmlns="http://www.w3.org/2000/svg">
       <g class="layer">
         <rect id="svg_1" x="100" y="100" width="200" height="100"/>
       </g>
     </svg>`)
-    const widthPx = await page.evaluate(() => {
-      const rect = document.getElementById('svg_1')
-      const val = Number(rect.getAttribute('width'))
-      rect.setAttribute('width', String(val * 0.039)) // pretend inches
-      rect.setAttribute('width', String(val))
-      return rect.getAttribute('width')
+    const result = await page.evaluate(() => {
+      const before = document.getElementById('svg_1').getAttribute('width')
+      window.svgEditor.setConfig({ baseUnit: 'cm' })
+      const after = document.getElementById('svg_1').getAttribute('width')
+      return { before, after }
     })
-    expect(Number(widthPx)).toBeGreaterThan(0)
+    // the stored geometry is unit-agnostic; switching the display unit must not rewrite it
+    expect(result.before).toBe('200')
+    expect(result.after).toBe('200')
   })
 
   test('issue 462: dragging element with complex matrix transforms stays stable', async ({ page }) => {

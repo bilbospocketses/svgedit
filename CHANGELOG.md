@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Tests (assertion integrity -- 2026-06-18)
+
+- **`convertToPath` test no longer checks a misspelled attribute.** `visibilituy`
+  always read back `null`; corrected to `visibility`, pinning that `convertToPath`
+  does not leak the source `attrs.visibility` onto the path (#22).
+- **The touch shim test now exercises a multi-touch *move*.** It only ever sent a
+  single-touch move, so the "ignores multi-touch" claim was untested; a two-touch
+  `touchmove` is now dispatched and asserted to produce no `mousemove` (#23).
+- **The embed origin-rejection test can now fail.** The unauthorized and authorized
+  `ready` messages carried identical payloads, so dropping the origin check would
+  still have passed; the unauthorized payload is now distinguishable (`9.9.9`) so
+  accepting it flips the assertion (#24).
+- **`se-components` e2e create the real components.** Two tests used unregistered
+  tag names (`se-flying-button`/`se-explorer-button`) and tested inert generic
+  elements; corrected to `se-flyingbutton`/`se-explorerbutton` with a `:defined`
+  upgrade check (#25).
+- **Four "regression" e2e drive the real editor instead of asserting their own DOM
+  edits.** `issue 699`/`726`/`752` and the zoom spec mutated `canvasBackground` (or
+  the target element) themselves and asserted that mutation; they now drive the real
+  `svgCanvas` API (`setZoom`/`getZoom`/`getSelectedElements`, selection, source
+  import) and assert the app's resulting state (#26).
+
 ### Tests (recalculate integrity -- 2026-06-18)
 
 - **`recalculate.test.ts` no longer hides failures.** ~56 vacuous assertions

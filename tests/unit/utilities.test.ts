@@ -338,7 +338,7 @@ describe('utilities', function () {
     svgroot.append(elem)
     const path = convertToPath(elem, attrs, mockSvgCanvas)
     assert.equal(path.getAttribute('d'), 'M0,1 L5,1 L5,11 L0,11 L0,1 Z')
-    assert.equal(path.getAttribute('visibilituy'), null)
+    assert.equal(path.getAttribute('visibility'), null)
     assert.equal(path.id, 'rect')
     assert.equal(path.parentNode, svgroot)
     assert.equal(elem.parentNode, null)

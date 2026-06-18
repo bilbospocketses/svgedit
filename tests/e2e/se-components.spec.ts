@@ -17,13 +17,14 @@ test.describe('Editor web components', () => {
     })
     const button = page.locator('#playwright-se-button')
     await expect(button).toHaveCount(1)
+    expect(await button.evaluate(el => el.matches(':defined'))).toBe(true)
     await button.click()
   })
 
-  test('se-flying-button clicks', async ({ page }) => {
+  test('se-flyingbutton clicks', async ({ page }) => {
     await page.exposeFunction('onSeFlying', () => {})
     await page.evaluate(() => {
-      const el = document.createElement('se-flying-button')
+      const el = document.createElement('se-flyingbutton')
       el.id = 'playwright-se-flying'
       el.style.display = 'inline-block'
       el.addEventListener('click', window.onSeFlying)
@@ -31,13 +32,14 @@ test.describe('Editor web components', () => {
     })
     const button = page.locator('#playwright-se-flying')
     await expect(button).toHaveCount(1)
+    expect(await button.evaluate(el => el.matches(':defined'))).toBe(true)
     await button.evaluate(el => el.click())
   })
 
-  test('se-explorer-button clicks', async ({ page }) => {
+  test('se-explorerbutton clicks', async ({ page }) => {
     await page.exposeFunction('onSeExplorer', () => {})
     await page.evaluate(() => {
-      const el = document.createElement('se-explorer-button')
+      const el = document.createElement('se-explorerbutton')
       el.id = 'playwright-se-explorer'
       el.style.display = 'inline-block'
       el.addEventListener('click', window.onSeExplorer)
@@ -45,6 +47,7 @@ test.describe('Editor web components', () => {
     })
     const button = page.locator('#playwright-se-explorer')
     await expect(button).toHaveCount(1)
+    expect(await button.evaluate(el => el.matches(':defined'))).toBe(true)
     await button.evaluate(el => el.click())
   })
 })

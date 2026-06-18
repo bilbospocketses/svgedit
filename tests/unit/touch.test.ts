@@ -102,6 +102,18 @@ describe('touch adapter', () => {
     })
 
     expect(mouseMove).toBe(1)
+
+    // a multi-touch move must be ignored (changedTouches.length >= 2)
+    svgroot.dispatch('touchmove', {
+      type: 'touchmove',
+      changedTouches: [
+        { target, clientX: 13, clientY: 14, screenX: 15, screenY: 16 },
+        { target, clientX: 17, clientY: 18, screenX: 19, screenY: 20 }
+      ],
+      preventDefault: vi.fn()
+    })
+
+    expect(mouseMove).toBe(1)
   })
 
   it('returns early on unknown event types', () => {
