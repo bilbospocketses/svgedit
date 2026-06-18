@@ -3,6 +3,24 @@ import * as utilities from '../../packages/svgcanvas/core/utilities.js'
 import * as coords from '../../packages/svgcanvas/core/coords.js'
 import * as recalculate from '../../packages/svgcanvas/core/recalculate.js'
 
+/**
+ * jsdom does not implement the `.points` SVGPointList on polyline/polygon, so
+ * `recalculateDimensions` throws when it reads `selected.points.numberOfItems`.
+ * Snapshot the current `points` attribute into a minimal mock so the real remap
+ * path runs under test (production code is exercised; only the jsdom-missing DOM
+ * API is supplied).
+ */
+const mockPoints = (el: Element): void => {
+  const pts = (el.getAttribute('points') ?? '').trim().split(/\s+/).filter(Boolean).map((pair) => {
+    const [x, y] = pair.split(',').map(Number)
+    return { x, y }
+  })
+  Object.defineProperty(el, 'points', {
+    configurable: true,
+    value: { numberOfItems: pts.length, getItem: (i: number) => pts[i] }
+  })
+}
+
 describe('recalculate', function () {
   const root = document.createElement('div')
   root.id = 'root'
@@ -299,10 +317,12 @@ describe('recalculate', function () {
 
     const cmd = recalculate.recalculateDimensions(circle)
 
-    // Just verify transform was processed
-    assert.ok(cmd !== undefined)
-    // Circle attributes should be modified
-    assert.ok(circle.getAttribute('r') !== '20' || circle.getAttribute('cx') !== '50')
+    // scale(2) about (25,25): (50,50) -> (125,125), r 20 -> 40; transform baked away.
+    assert.ok(cmd)
+    assert.equal(circle.getAttribute('cx'), '125')
+    assert.equal(circle.getAttribute('cy'), '125')
+    assert.equal(circle.getAttribute('r'), '40')
+    assert.equal(circle.hasAttribute('transform'), false)
   })
 
   it('recalculateDimensions() handles circle with translate transform', () => {
@@ -336,10 +356,13 @@ describe('recalculate', function () {
 
     const cmd = recalculate.recalculateDimensions(ellipse)
 
-    // Just verify transform was processed
-    assert.ok(cmd !== undefined)
-    // Ellipse dimensions should be modified
-    assert.ok(ellipse.getAttribute('rx') !== '30' || ellipse.getAttribute('ry') !== '20')
+    // scale(2,3) about (50,50): center -> (150,250), rx 30->60, ry 20->60; transform baked away.
+    assert.ok(cmd)
+    assert.equal(ellipse.getAttribute('cx'), '150')
+    assert.equal(ellipse.getAttribute('cy'), '250')
+    assert.equal(ellipse.getAttribute('rx'), '60')
+    assert.equal(ellipse.getAttribute('ry'), '60')
+    assert.equal(ellipse.hasAttribute('transform'), false)
   })
 
   it('recalculateDimensions() handles ellipse with translate transform', () => {
@@ -374,10 +397,13 @@ describe('recalculate', function () {
 
     const cmd = recalculate.recalculateDimensions(line)
 
-    // Just verify transform was processed
-    assert.ok(cmd !== undefined)
-    // Line coordinates should be modified
-    assert.ok(line.getAttribute('x1') !== '10' || line.getAttribute('x2') !== '50')
+    // scale(2) about (10,10): (10,10)->(30,30), (50,50)->(110,110); transform baked away.
+    assert.ok(cmd)
+    assert.equal(line.getAttribute('x1'), '30')
+    assert.equal(line.getAttribute('y1'), '30')
+    assert.equal(line.getAttribute('x2'), '110')
+    assert.equal(line.getAttribute('y2'), '110')
+    assert.equal(line.hasAttribute('transform'), false)
   })
 
   it('recalculateDimensions() handles line with translate transform', () => {
@@ -429,14 +455,10 @@ describe('recalculate', function () {
     polyline.setAttribute('transform', 'translate(-10,-10) scale(2,2) translate(10,10)')
     svg.append(polyline)
 
-    // Just verify it doesn't throw - jsdom may not support points property
-    try {
-      recalculate.recalculateDimensions(polyline)
-      assert.ok(true)
-    } catch {
-      // Expected if jsdom doesn't support SVGPointList
-      assert.ok(true)
-    }
+    mockPoints(polyline)
+    recalculate.recalculateDimensions(polyline)
+    // scale(2) about (10,10): each (x,y) -> (2x+10, 2y+10)
+    assert.equal(polyline.getAttribute('points'), '30,30 50,50 70,30 90,50')
   })
 
   it('recalculateDimensions() handles polyline with translate transform', () => {
@@ -447,14 +469,9 @@ describe('recalculate', function () {
     polyline.setAttribute('transform', 'translate(5,10)')
     svg.append(polyline)
 
-    // Just verify it doesn't throw - jsdom may not support points property
-    try {
-      recalculate.recalculateDimensions(polyline)
-      assert.ok(true)
-    } catch {
-      // Expected if jsdom doesn't support SVGPointList
-      assert.ok(true)
-    }
+    mockPoints(polyline)
+    recalculate.recalculateDimensions(polyline)
+    assert.equal(polyline.getAttribute('points'), '15,20 25,30 35,20')
   })
 
   // Tests for polygon element
@@ -466,14 +483,9 @@ describe('recalculate', function () {
     polygon.setAttribute('transform', 'translate(10,15)')
     svg.append(polygon)
 
-    // Just verify it doesn't throw
-    try {
-      recalculate.recalculateDimensions(polygon)
-      assert.ok(true)
-    } catch {
-      // If jsdom doesn't support points property, that's ok
-      assert.ok(true)
-    }
+    mockPoints(polygon)
+    recalculate.recalculateDimensions(polygon)
+    assert.equal(polygon.getAttribute('points'), '20,25 30,25 25,35')
   })
 
   // Tests for path element
@@ -487,9 +499,10 @@ describe('recalculate', function () {
 
     const cmd = recalculate.recalculateDimensions(path)
 
-    const d = path.getAttribute('d')
-    assert.ok(d.includes('M'))
+    // scale(2) about (10,10) baked into the path data; transform removed.
     assert.ok(cmd)
+    assert.equal(path.getAttribute('d'), 'M30,30 L50,50 L70,30 z')
+    assert.equal(path.hasAttribute('transform'), false)
   })
 
   it('recalculateDimensions() handles path with translate transform', () => {
@@ -503,8 +516,9 @@ describe('recalculate', function () {
     const cmd = recalculate.recalculateDimensions(path)
 
     assert.ok(cmd)
-    // Path should have transform removed and coordinates adjusted
+    // Path should have transform removed and translate(5,10) baked into coordinates
     assert.equal(path.hasAttribute('transform'), false)
+    assert.equal(path.getAttribute('d'), 'M15,20 L25,30 L35,20 z')
   })
 
   // Tests for image element
@@ -790,8 +804,12 @@ describe('recalculate', function () {
 
     const cmd = recalculate.recalculateDimensions(circle)
 
-    // Should handle rotation + translate
-    assert.ok(cmd || circle.hasAttribute('transform'))
+    // Rotation is peeled off, leaving translate(10,20) which bakes into cx/cy
+    // (50->60, 50->70); radius unchanged. A command is produced.
+    assert.ok(cmd)
+    assert.equal(circle.getAttribute('cx'), '60')
+    assert.equal(circle.getAttribute('cy'), '70')
+    assert.equal(circle.getAttribute('r'), '20')
   })
 
   it('recalculateDimensions() handles ellipse with rotation', () => {
@@ -824,8 +842,14 @@ describe('recalculate', function () {
 
     const cmd = recalculate.recalculateDimensions(rect)
 
-    // Combined transforms should be processed
-    assert.ok(cmd !== undefined)
+    // 'translate scale' (no trailing translate) is not a form recalc bakes in:
+    // it is left untouched (no-op) and returns null.
+    assert.equal(cmd, null)
+    assert.equal(rect.getAttribute('transform'), 'translate(5,10) scale(1.5,1.5)')
+    assert.equal(rect.getAttribute('x'), '10')
+    assert.equal(rect.getAttribute('y'), '10')
+    assert.equal(rect.getAttribute('width'), '50')
+    assert.equal(rect.getAttribute('height'), '30')
   })
 
   it('recalculateDimensions() handles tspan', () => {
@@ -844,17 +868,19 @@ describe('recalculate', function () {
 
     const cmd = recalculate.recalculateDimensions(tspan)
 
-    assert.ok(cmd !== undefined)
+    // translate(10,10) baked into tspan x/y (50->60, 60->70); transform removed.
+    assert.ok(cmd)
+    assert.equal(tspan.getAttribute('x'), '60')
+    assert.equal(tspan.getAttribute('y'), '70')
+    assert.equal(tspan.hasAttribute('transform'), false)
   })
 
   it('updateClipPath() with empty clip-path reference', () => {
     setUp()
 
-    // Try to update a non-existent clipPath
-    recalculate.updateClipPath('url(#nonexistent)', 5, 10)
-
-    // Should not crash
-    assert.ok(true)
+    // A clip-path URL with no matching clipPath element returns undefined.
+    const result = recalculate.updateClipPath('url(#nonexistent)', 5, 10)
+    assert.equal(result, undefined)
   })
 
   it('recalculateDimensions() handles path with zero-degree rotation', () => {
@@ -910,10 +936,13 @@ describe('recalculate', function () {
 
     const cmd = recalculate.recalculateDimensions(image)
 
-    assert.ok(cmd !== undefined)
-    // Image attributes should be updated
-    assert.ok(Number.parseFloat(image.getAttribute('x')) !== 10 ||
-             Number.parseFloat(image.getAttribute('y')) !== 10)
+    // translate(20,30) baked into x/y (10->30, 10->40); size unchanged; transform removed.
+    assert.ok(cmd)
+    assert.equal(image.getAttribute('x'), '30')
+    assert.equal(image.getAttribute('y'), '40')
+    assert.equal(image.getAttribute('width'), '100')
+    assert.equal(image.getAttribute('height'), '80')
+    assert.equal(image.hasAttribute('transform'), false)
   })
 
   it('recalculateDimensions() removes identity matrix transform', () => {
@@ -947,9 +976,14 @@ describe('recalculate', function () {
 
     const cmd = recalculate.recalculateDimensions(rect)
 
-    assert.ok(cmd !== undefined)
-    // Dimensions should have changed
-    assert.ok(rect.getAttribute('width') !== null && rect.getAttribute('height') !== null)
+    // A bare scale() (not wrapped in translate...translate) is left untouched
+    // and returns null; geometry and transform are unchanged.
+    assert.equal(cmd, null)
+    assert.equal(rect.getAttribute('transform'), 'scale(2)')
+    assert.equal(rect.getAttribute('x'), '10')
+    assert.equal(rect.getAttribute('y'), '10')
+    assert.equal(rect.getAttribute('width'), '50')
+    assert.equal(rect.getAttribute('height'), '50')
   })
 
   it('recalculateDimensions() handles multiple transforms', () => {
@@ -965,7 +999,13 @@ describe('recalculate', function () {
 
     const cmd = recalculate.recalculateDimensions(rect)
 
-    assert.ok(cmd !== undefined)
+    // 'translate scale' (no trailing translate) is not a bake-in form: no-op, null.
+    assert.equal(cmd, null)
+    assert.equal(rect.getAttribute('transform'), 'translate(5,5) scale(1.5)')
+    assert.equal(rect.getAttribute('x'), '10')
+    assert.equal(rect.getAttribute('y'), '10')
+    assert.equal(rect.getAttribute('width'), '50')
+    assert.equal(rect.getAttribute('height'), '50')
   })
 
   it('recalculateDimensions() handles ellipse with scale', () => {
@@ -981,7 +1021,13 @@ describe('recalculate', function () {
 
     const cmd = recalculate.recalculateDimensions(ellipse)
 
-    assert.ok(cmd !== undefined)
+    // A bare scale() is left untouched and returns null.
+    assert.equal(cmd, null)
+    assert.equal(ellipse.getAttribute('transform'), 'scale(1.5)')
+    assert.equal(ellipse.getAttribute('cx'), '50')
+    assert.equal(ellipse.getAttribute('cy'), '50')
+    assert.equal(ellipse.getAttribute('rx'), '30')
+    assert.equal(ellipse.getAttribute('ry'), '20')
   })
 
   it('recalculateDimensions() handles line with transform', () => {
@@ -997,7 +1043,13 @@ describe('recalculate', function () {
 
     const cmd = recalculate.recalculateDimensions(line)
 
-    assert.ok(cmd !== undefined)
+    // translate(10,10) baked into endpoints; transform removed.
+    assert.ok(cmd)
+    assert.equal(line.getAttribute('x1'), '10')
+    assert.equal(line.getAttribute('y1'), '10')
+    assert.equal(line.getAttribute('x2'), '110')
+    assert.equal(line.getAttribute('y2'), '110')
+    assert.equal(line.hasAttribute('transform'), false)
   })
 
   it('recalculateDimensions() handles use element (should return null)', () => {
@@ -1028,7 +1080,13 @@ describe('recalculate', function () {
 
     const cmd = recalculate.recalculateDimensions(fo)
 
-    assert.ok(cmd !== undefined)
+    // translate(5,5) baked into x/y (10->15); size unchanged; transform removed.
+    assert.ok(cmd)
+    assert.equal(fo.getAttribute('x'), '15')
+    assert.equal(fo.getAttribute('y'), '15')
+    assert.equal(fo.getAttribute('width'), '100')
+    assert.equal(fo.getAttribute('height'), '100')
+    assert.equal(fo.hasAttribute('transform'), false)
   })
 
   it('recalculateDimensions() handles text element', () => {
@@ -1043,7 +1101,11 @@ describe('recalculate', function () {
 
     const cmd = recalculate.recalculateDimensions(text)
 
-    assert.ok(cmd !== undefined)
+    // translate(5,5) baked into text x/y (10->15); transform removed.
+    assert.ok(cmd)
+    assert.equal(text.getAttribute('x'), '15')
+    assert.equal(text.getAttribute('y'), '15')
+    assert.equal(text.hasAttribute('transform'), false)
   })
 
   it('recalculateDimensions() with matrix and rotation transforms', () => {
@@ -1078,7 +1140,9 @@ describe('recalculate', function () {
 
     const cmd = recalculate.recalculateDimensions(g)
 
-    assert.ok(cmd !== undefined || cmd === null)
+    // Groups always return null - transforms stay on the group element
+    assert.equal(cmd, null)
+    assert.equal(g.getAttribute('transform'), 'rotate(45 35 35)')
   })
 
   it('recalculateDimensions() handles anchor tag with transform', () => {
@@ -1096,7 +1160,9 @@ describe('recalculate', function () {
 
     const cmd = recalculate.recalculateDimensions(a)
 
-    assert.ok(cmd !== undefined || cmd === null)
+    // Anchor (<a>) is treated like a group - returns null, transform preserved
+    assert.equal(cmd, null)
+    assert.equal(a.getAttribute('transform'), 'translate(10,10)')
   })
 
   it('recalculateDimensions() handles polyline with identity transform', () => {
@@ -1122,13 +1188,13 @@ describe('recalculate', function () {
     polygon.setAttribute('transform', 'scale(2)')
     svg.append(polygon)
 
-    try {
-      const cmd = recalculate.recalculateDimensions(polygon)
-      assert.ok(cmd !== undefined || cmd === null)
-    } catch {
-      // May fail due to DOM API, that's okay
-      assert.ok(true)
-    }
+    mockPoints(polygon)
+    const cmd = recalculate.recalculateDimensions(polygon)
+    // A bare scale() on a polygon is not a bake-in form: no-op, returns null,
+    // points and transform left unchanged.
+    assert.equal(cmd, null)
+    assert.equal(polygon.getAttribute('points'), '0,0 10,0 5,10')
+    assert.equal(polygon.getAttribute('transform'), 'scale(2)')
   })
 
   it('recalculateDimensions() handles path with complex transform chain', () => {
@@ -1141,7 +1207,11 @@ describe('recalculate', function () {
 
     const cmd = recalculate.recalculateDimensions(path)
 
-    assert.ok(cmd !== undefined || cmd === null)
+    // 'translate scale rotate' is not a recognised bake-in form: no-op, returns
+    // null, path data and transform left unchanged.
+    assert.equal(cmd, null)
+    assert.equal(path.getAttribute('d'), 'M0,0 L10,10 L20,0 Z')
+    assert.equal(path.getAttribute('transform'), 'translate(10,10) scale(1.5) rotate(30)')
   })
 
   it('recalculateDimensions() handles rect with no transform', () => {
@@ -1191,12 +1261,11 @@ describe('recalculate', function () {
     rect.setAttribute('height', '100')
     svg.append(rect)
 
-    try {
-      recalculate.updateClipPath('url(#testClip3)', svg.createSVGMatrix())
-      assert.ok(true)
-    } catch {
-      assert.ok(true)
-    }
+    const result = recalculate.updateClipPath('url(#testClip3)', 7, 11, rect)
+    // Single user of the clipPath: child rect shifted by (7,11) in place; attr returned.
+    assert.equal(result, 'url(#testClip3)')
+    assert.equal(clipRect.getAttribute('x'), '7')
+    assert.equal(clipRect.getAttribute('y'), '11')
   })
 
   it('recalculateDimensions() handles svg element', () => {
@@ -1212,7 +1281,14 @@ describe('recalculate', function () {
 
     const cmd = recalculate.recalculateDimensions(innerSvg)
 
-    assert.ok(cmd !== undefined || cmd === null)
+    // A nested <svg> has no remap handler, so the translate is consumed (transform
+    // removed) but x/y/width/height are left unchanged. A command is still returned.
+    assert.ok(cmd)
+    assert.equal(innerSvg.getAttribute('x'), '10')
+    assert.equal(innerSvg.getAttribute('y'), '10')
+    assert.equal(innerSvg.getAttribute('width'), '100')
+    assert.equal(innerSvg.getAttribute('height'), '100')
+    assert.equal(innerSvg.hasAttribute('transform'), false)
   })
 
   it('recalculateDimensions() handles ellipse with no transform', () => {
@@ -1303,12 +1379,11 @@ describe('recalculate', function () {
     g.setAttribute('transform', 'translate(10,10) scale(1.5)')
     svg.append(g)
 
-    try {
-      const cmd = recalculate.recalculateDimensions(g)
-      assert.ok(cmd !== undefined || cmd === null)
-    } catch {
-      assert.ok(true)
-    }
+    const cmd = recalculate.recalculateDimensions(g)
+
+    // Groups always return null - transform preserved on the group
+    assert.equal(cmd, null)
+    assert.equal(g.getAttribute('transform'), 'translate(10,10) scale(1.5)')
   })
 
   it('recalculateDimensions() handles rect with only rotation', () => {
@@ -1370,12 +1445,14 @@ describe('recalculate', function () {
     rect.setAttribute('transform', 'translate(0,0) scale(2) translate(0,0)')
     svg.append(rect)
 
-    try {
-      const cmd = recalculate.recalculateDimensions(rect)
-      assert.ok(cmd !== undefined || cmd === null)
-    } catch {
-      assert.ok(true)
-    }
+    const cmd = recalculate.recalculateDimensions(rect)
+    // The zero translates are stripped, leaving a bare scale(2), which is not a
+    // bake-in form: no-op, returns null, geometry unchanged.
+    assert.equal(cmd, null)
+    assert.equal(rect.getAttribute('x'), '10')
+    assert.equal(rect.getAttribute('y'), '10')
+    assert.equal(rect.getAttribute('width'), '50')
+    assert.equal(rect.getAttribute('height'), '50')
   })
 
   it('recalculateDimensions() handles polyline with points', () => {
@@ -1386,12 +1463,12 @@ describe('recalculate', function () {
     polyline.setAttribute('transform', 'translate(10,10)')
     svg.append(polyline)
 
-    try {
-      const cmd = recalculate.recalculateDimensions(polyline)
-      assert.ok(cmd !== undefined || cmd === null)
-    } catch {
-      assert.ok(true)
-    }
+    mockPoints(polyline)
+    const cmd = recalculate.recalculateDimensions(polyline)
+    // translate(10,10) baked into every point; transform removed.
+    assert.ok(cmd)
+    assert.equal(polyline.getAttribute('points'), '10,10 20,20 30,10 40,20')
+    assert.equal(polyline.hasAttribute('transform'), false)
   })
 
   it('recalculateDimensions() handles polygon with points', () => {
@@ -1402,12 +1479,12 @@ describe('recalculate', function () {
     polygon.setAttribute('transform', 'translate(5,5)')
     svg.append(polygon)
 
-    try {
-      const cmd = recalculate.recalculateDimensions(polygon)
-      assert.ok(cmd !== undefined || cmd === null)
-    } catch {
-      assert.ok(true)
-    }
+    mockPoints(polygon)
+    const cmd = recalculate.recalculateDimensions(polygon)
+    // translate(5,5) baked into every point; transform removed.
+    assert.ok(cmd)
+    assert.equal(polygon.getAttribute('points'), '5,5 15,5 10,15')
+    assert.equal(polygon.hasAttribute('transform'), false)
   })
 
   it('recalculateDimensions() handles text with multiple transforms', () => {
@@ -1420,12 +1497,12 @@ describe('recalculate', function () {
     text.setAttribute('transform', 'translate(5,5) scale(1.2)')
     svg.append(text)
 
-    try {
-      const cmd = recalculate.recalculateDimensions(text)
-      assert.ok(cmd !== undefined || cmd === null)
-    } catch {
-      assert.ok(true)
-    }
+    const cmd = recalculate.recalculateDimensions(text)
+    // 'translate scale' (no trailing translate) is not a bake-in form: no-op, null.
+    assert.equal(cmd, null)
+    assert.equal(text.getAttribute('x'), '10')
+    assert.equal(text.getAttribute('y'), '10')
+    assert.equal(text.getAttribute('transform'), 'translate(5,5) scale(1.2)')
   })
 
   it('recalculateDimensions() handles foreignObject with transform', () => {
@@ -1439,12 +1516,14 @@ describe('recalculate', function () {
     fo.setAttribute('transform', 'scale(1.5)')
     svg.append(fo)
 
-    try {
-      const cmd = recalculate.recalculateDimensions(fo)
-      assert.ok(cmd !== undefined || cmd === null)
-    } catch {
-      assert.ok(true)
-    }
+    const cmd = recalculate.recalculateDimensions(fo)
+    // A bare scale() is not a bake-in form: no-op, returns null, geometry unchanged.
+    assert.equal(cmd, null)
+    assert.equal(fo.getAttribute('x'), '10')
+    assert.equal(fo.getAttribute('y'), '10')
+    assert.equal(fo.getAttribute('width'), '100')
+    assert.equal(fo.getAttribute('height'), '100')
+    assert.equal(fo.getAttribute('transform'), 'scale(1.5)')
   })
 
   it('recalculateDimensions() handles image with scale', () => {
@@ -1458,12 +1537,14 @@ describe('recalculate', function () {
     image.setAttribute('transform', 'scale(2,2)')
     svg.append(image)
 
-    try {
-      const cmd = recalculate.recalculateDimensions(image)
-      assert.ok(cmd !== undefined || cmd === null)
-    } catch {
-      assert.ok(true)
-    }
+    const cmd = recalculate.recalculateDimensions(image)
+    // A bare scale() is not a bake-in form: no-op, returns null, geometry unchanged.
+    assert.equal(cmd, null)
+    assert.equal(image.getAttribute('x'), '10')
+    assert.equal(image.getAttribute('y'), '10')
+    assert.equal(image.getAttribute('width'), '100')
+    assert.equal(image.getAttribute('height'), '80')
+    assert.equal(image.getAttribute('transform'), 'scale(2,2)')
   })
 
   it('recalculateDimensions() handles path with translate only', () => {
@@ -1474,12 +1555,11 @@ describe('recalculate', function () {
     path.setAttribute('transform', 'translate(15,15)')
     svg.append(path)
 
-    try {
-      const cmd = recalculate.recalculateDimensions(path)
-      assert.ok(cmd !== undefined || cmd === null)
-    } catch {
-      assert.ok(true)
-    }
+    const cmd = recalculate.recalculateDimensions(path)
+    // translate(15,15) baked into the path data; transform removed.
+    assert.ok(cmd)
+    assert.equal(path.getAttribute('d'), 'M15,15 L25,25 L35,15 z')
+    assert.equal(path.hasAttribute('transform'), false)
   })
 
   it('recalculateDimensions() handles empty transform attribute', () => {
@@ -1494,7 +1574,13 @@ describe('recalculate', function () {
     svg.append(rect)
 
     const cmd = recalculate.recalculateDimensions(rect)
-    assert.ok(cmd !== undefined || cmd === null)
+    // Empty transform has no items: it is removed and null is returned; geometry unchanged.
+    assert.equal(cmd, null)
+    assert.equal(rect.hasAttribute('transform'), false)
+    assert.equal(rect.getAttribute('x'), '10')
+    assert.equal(rect.getAttribute('y'), '20')
+    assert.equal(rect.getAttribute('width'), '30')
+    assert.equal(rect.getAttribute('height'), '40')
   })
 
   it('recalculateDimensions() handles polyline with translate', () => {
@@ -1505,12 +1591,12 @@ describe('recalculate', function () {
     polyline.setAttribute('transform', 'translate(5,5)')
     svg.append(polyline)
 
-    try {
-      const cmd = recalculate.recalculateDimensions(polyline)
-      assert.ok(cmd !== undefined || cmd === null)
-    } catch {
-      assert.ok(true)
-    }
+    mockPoints(polyline)
+    const cmd = recalculate.recalculateDimensions(polyline)
+    // translate(5,5) baked into every point; transform removed.
+    assert.ok(cmd)
+    assert.equal(polyline.getAttribute('points'), '5,5 15,15 25,10')
+    assert.equal(polyline.hasAttribute('transform'), false)
   })
 
   it('recalculateDimensions() handles tspan element', () => {
@@ -1524,12 +1610,12 @@ describe('recalculate', function () {
     text.append(tspan)
     svg.append(text)
 
-    try {
-      const cmd = recalculate.recalculateDimensions(tspan)
-      assert.ok(cmd !== undefined || cmd === null)
-    } catch {
-      assert.ok(true)
-    }
+    const cmd = recalculate.recalculateDimensions(tspan)
+    // No transform present: returns null, geometry unchanged.
+    assert.equal(cmd, null)
+    assert.equal(tspan.getAttribute('x'), '10')
+    assert.equal(tspan.getAttribute('y'), '20')
+    assert.equal(tspan.hasAttribute('transform'), false)
   })
 
   it('updateClipPath() with translation', () => {
@@ -1549,12 +1635,11 @@ describe('recalculate', function () {
     elem.setAttribute('clip-path', 'url(#clip1)')
     svg.append(elem)
 
-    try {
-      const result = recalculate.updateClipPath('url(#clip1)', 10, 20, elem)
-      assert.ok(result !== undefined || result === null)
-    } catch {
-      assert.ok(true)
-    }
+    const result = recalculate.updateClipPath('url(#clip1)', 10, 20, elem)
+    // Single user: clipPath child rect shifted by (10,20) in place; attr returned.
+    assert.equal(result, 'url(#clip1)')
+    assert.equal(clipRect.getAttribute('x'), '10')
+    assert.equal(clipRect.getAttribute('y'), '20')
   })
 
   it('recalculateDimensions() handles marker elements', () => {
@@ -1569,12 +1654,14 @@ describe('recalculate', function () {
     line.setAttribute('transform', 'scale(2)')
     svg.append(line)
 
-    try {
-      const cmd = recalculate.recalculateDimensions(line)
-      assert.ok(cmd !== undefined || cmd === null)
-    } catch {
-      assert.ok(true)
-    }
+    const cmd = recalculate.recalculateDimensions(line)
+    // A bare scale() on a line is not a bake-in form: no-op, returns null, endpoints unchanged.
+    assert.equal(cmd, null)
+    assert.equal(line.getAttribute('x1'), '0')
+    assert.equal(line.getAttribute('y1'), '0')
+    assert.equal(line.getAttribute('x2'), '100')
+    assert.equal(line.getAttribute('y2'), '100')
+    assert.equal(line.getAttribute('transform'), 'scale(2)')
   })
 
   it('recalculateDimensions() handles switch element', () => {
@@ -1590,12 +1677,11 @@ describe('recalculate', function () {
     switchElem.append(rect)
     svg.append(switchElem)
 
-    try {
-      const cmd = recalculate.recalculateDimensions(switchElem)
-      assert.ok(cmd !== undefined || cmd === null)
-    } catch {
-      assert.ok(true)
-    }
+    const cmd = recalculate.recalculateDimensions(switchElem)
+    // <switch> has no bounding box (and is not a path), so recalc returns null and
+    // leaves the transform in place.
+    assert.equal(cmd, null)
+    assert.equal(switchElem.getAttribute('transform'), 'translate(10,10)')
   })
 
   it('recalculateDimensions() handles nested groups', () => {
@@ -1614,12 +1700,11 @@ describe('recalculate', function () {
     g1.append(g2)
     svg.append(g1)
 
-    try {
-      const cmd = recalculate.recalculateDimensions(g1)
-      assert.ok(cmd !== undefined || cmd === null)
-    } catch {
-      assert.ok(true)
-    }
+    const cmd = recalculate.recalculateDimensions(g1)
+
+    // Outer group always returns null - transform preserved
+    assert.equal(cmd, null)
+    assert.equal(g1.getAttribute('transform'), 'translate(10,10)')
   })
 
   it('recalculateDimensions() handles skewX transform', () => {
@@ -1633,12 +1718,15 @@ describe('recalculate', function () {
     rect.setAttribute('transform', 'skewX(15)')
     svg.append(rect)
 
-    try {
-      const cmd = recalculate.recalculateDimensions(rect)
-      assert.ok(cmd !== undefined || cmd === null)
-    } catch {
-      assert.ok(true)
-    }
+    const cmd = recalculate.recalculateDimensions(rect)
+    // jsdom does not parse skewX() into a transform item, so the (empty) transform
+    // list is removed and null is returned; geometry is unchanged.
+    assert.equal(cmd, null)
+    assert.equal(rect.hasAttribute('transform'), false)
+    assert.equal(rect.getAttribute('x'), '10')
+    assert.equal(rect.getAttribute('y'), '20')
+    assert.equal(rect.getAttribute('width'), '30')
+    assert.equal(rect.getAttribute('height'), '40')
   })
 
   it('recalculateDimensions() handles skewY transform', () => {
@@ -1652,12 +1740,15 @@ describe('recalculate', function () {
     rect.setAttribute('transform', 'skewY(15)')
     svg.append(rect)
 
-    try {
-      const cmd = recalculate.recalculateDimensions(rect)
-      assert.ok(cmd !== undefined || cmd === null)
-    } catch {
-      assert.ok(true)
-    }
+    const cmd = recalculate.recalculateDimensions(rect)
+    // jsdom does not parse skewY() into a transform item, so the (empty) transform
+    // list is removed and null is returned; geometry is unchanged.
+    assert.equal(cmd, null)
+    assert.equal(rect.hasAttribute('transform'), false)
+    assert.equal(rect.getAttribute('x'), '10')
+    assert.equal(rect.getAttribute('y'), '20')
+    assert.equal(rect.getAttribute('width'), '30')
+    assert.equal(rect.getAttribute('height'), '40')
   })
 
   it('recalculateDimensions() handles zero width rect', () => {
@@ -1672,7 +1763,13 @@ describe('recalculate', function () {
     svg.append(rect)
 
     const cmd = recalculate.recalculateDimensions(rect)
-    assert.ok(cmd !== undefined || cmd === null)
+    // translate(5,5) baked into x/y (10->15, 20->25); zero width preserved; transform removed.
+    assert.ok(cmd)
+    assert.equal(rect.getAttribute('x'), '15')
+    assert.equal(rect.getAttribute('y'), '25')
+    assert.equal(rect.getAttribute('width'), '0')
+    assert.equal(rect.getAttribute('height'), '40')
+    assert.equal(rect.hasAttribute('transform'), false)
   })
 
   it('recalculateDimensions() handles zero height rect', () => {
@@ -1687,7 +1784,13 @@ describe('recalculate', function () {
     svg.append(rect)
 
     const cmd = recalculate.recalculateDimensions(rect)
-    assert.ok(cmd !== undefined || cmd === null)
+    // translate(5,5) baked into x/y (10->15, 20->25); zero height preserved; transform removed.
+    assert.ok(cmd)
+    assert.equal(rect.getAttribute('x'), '15')
+    assert.equal(rect.getAttribute('y'), '25')
+    assert.equal(rect.getAttribute('width'), '30')
+    assert.equal(rect.getAttribute('height'), '0')
+    assert.equal(rect.hasAttribute('transform'), false)
   })
 
   it('recalculateDimensions() handles circle with zero radius', () => {
@@ -1701,7 +1804,12 @@ describe('recalculate', function () {
     svg.append(circle)
 
     const cmd = recalculate.recalculateDimensions(circle)
-    assert.ok(cmd !== undefined || cmd === null)
+    // translate(5,5) baked into cx/cy (50->55); zero radius preserved; transform removed.
+    assert.ok(cmd)
+    assert.equal(circle.getAttribute('cx'), '55')
+    assert.equal(circle.getAttribute('cy'), '55')
+    assert.equal(circle.getAttribute('r'), '0')
+    assert.equal(circle.hasAttribute('transform'), false)
   })
 
   it('recalculateDimensions() handles ellipse with zero rx', () => {
@@ -1716,7 +1824,13 @@ describe('recalculate', function () {
     svg.append(ellipse)
 
     const cmd = recalculate.recalculateDimensions(ellipse)
-    assert.ok(cmd !== undefined || cmd === null)
+    // translate(5,5) baked into cx/cy (50->55); zero rx preserved; transform removed.
+    assert.ok(cmd)
+    assert.equal(ellipse.getAttribute('cx'), '55')
+    assert.equal(ellipse.getAttribute('cy'), '55')
+    assert.equal(ellipse.getAttribute('rx'), '0')
+    assert.equal(ellipse.getAttribute('ry'), '20')
+    assert.equal(ellipse.hasAttribute('transform'), false)
   })
 
   it('recalculateDimensions() handles ellipse with zero ry', () => {
@@ -1731,7 +1845,13 @@ describe('recalculate', function () {
     svg.append(ellipse)
 
     const cmd = recalculate.recalculateDimensions(ellipse)
-    assert.ok(cmd !== undefined || cmd === null)
+    // translate(5,5) baked into cx/cy (50->55); zero ry preserved; transform removed.
+    assert.ok(cmd)
+    assert.equal(ellipse.getAttribute('cx'), '55')
+    assert.equal(ellipse.getAttribute('cy'), '55')
+    assert.equal(ellipse.getAttribute('rx'), '20')
+    assert.equal(ellipse.getAttribute('ry'), '0')
+    assert.equal(ellipse.hasAttribute('transform'), false)
   })
 
   it('recalculateDimensions() handles multiple transforms', () => {
@@ -1745,12 +1865,14 @@ describe('recalculate', function () {
     rect.setAttribute('transform', 'translate(5,5) scale(2) rotate(45)')
     svg.append(rect)
 
-    try {
-      const cmd = recalculate.recalculateDimensions(rect)
-      assert.ok(cmd !== undefined || cmd === null)
-    } catch {
-      assert.ok(true)
-    }
+    const cmd = recalculate.recalculateDimensions(rect)
+    // 'translate scale rotate' is not a recognised bake-in form: no-op, returns null,
+    // geometry unchanged.
+    assert.equal(cmd, null)
+    assert.equal(rect.getAttribute('x'), '10')
+    assert.equal(rect.getAttribute('y'), '20')
+    assert.equal(rect.getAttribute('width'), '30')
+    assert.equal(rect.getAttribute('height'), '40')
   })
 
   it('recalculateDimensions() handles line with zero length', () => {
@@ -1765,7 +1887,13 @@ describe('recalculate', function () {
     svg.append(line)
 
     const cmd = recalculate.recalculateDimensions(line)
-    assert.ok(cmd !== undefined || cmd === null)
+    // translate(5,5) baked into both (coincident) endpoints; transform removed.
+    assert.ok(cmd)
+    assert.equal(line.getAttribute('x1'), '15')
+    assert.equal(line.getAttribute('y1'), '25')
+    assert.equal(line.getAttribute('x2'), '15')
+    assert.equal(line.getAttribute('y2'), '25')
+    assert.equal(line.hasAttribute('transform'), false)
   })
 
   it('updateClipPath() handles circle clipPath', () => {
@@ -1784,12 +1912,12 @@ describe('recalculate', function () {
     elem.setAttribute('clip-path', 'url(#clip2)')
     svg.append(elem)
 
-    try {
-      const result = recalculate.updateClipPath('url(#clip2)', 10, 20, elem)
-      assert.ok(result !== undefined || result === null)
-    } catch {
-      assert.ok(true)
-    }
+    const result = recalculate.updateClipPath('url(#clip2)', 10, 20, elem)
+    // Circle clipPath child shifted by (10,20): cx 50->60, cy 50->70; radius unchanged.
+    assert.equal(result, 'url(#clip2)')
+    assert.equal(clipCircle.getAttribute('cx'), '60')
+    assert.equal(clipCircle.getAttribute('cy'), '70')
+    assert.equal(clipCircle.getAttribute('r'), '25')
   })
 
   it('updateClipPath() handles ellipse clipPath', () => {
@@ -1809,12 +1937,13 @@ describe('recalculate', function () {
     elem.setAttribute('clip-path', 'url(#clip3)')
     svg.append(elem)
 
-    try {
-      const result = recalculate.updateClipPath('url(#clip3)', 10, 20, elem)
-      assert.ok(result !== undefined || result === null)
-    } catch {
-      assert.ok(true)
-    }
+    const result = recalculate.updateClipPath('url(#clip3)', 10, 20, elem)
+    // Ellipse clipPath child shifted by (10,20): cx 50->60, cy 50->70; radii unchanged.
+    assert.equal(result, 'url(#clip3)')
+    assert.equal(clipEllipse.getAttribute('cx'), '60')
+    assert.equal(clipEllipse.getAttribute('cy'), '70')
+    assert.equal(clipEllipse.getAttribute('rx'), '30')
+    assert.equal(clipEllipse.getAttribute('ry'), '20')
   })
 
   it('updateClipPath() handles line clipPath', () => {
@@ -1834,12 +1963,13 @@ describe('recalculate', function () {
     elem.setAttribute('clip-path', 'url(#clip4)')
     svg.append(elem)
 
-    try {
-      const result = recalculate.updateClipPath('url(#clip4)', 10, 20, elem)
-      assert.ok(result !== undefined || result === null)
-    } catch {
-      assert.ok(true)
-    }
+    const result = recalculate.updateClipPath('url(#clip4)', 10, 20, elem)
+    // Line clipPath child shifted by (10,20).
+    assert.equal(result, 'url(#clip4)')
+    assert.equal(clipLine.getAttribute('x1'), '10')
+    assert.equal(clipLine.getAttribute('y1'), '20')
+    assert.equal(clipLine.getAttribute('x2'), '110')
+    assert.equal(clipLine.getAttribute('y2'), '120')
   })
 
   it('updateClipPath() handles polygon clipPath', () => {
@@ -1856,12 +1986,10 @@ describe('recalculate', function () {
     elem.setAttribute('clip-path', 'url(#clip5)')
     svg.append(elem)
 
-    try {
-      const result = recalculate.updateClipPath('url(#clip5)', 10, 20, elem)
-      assert.ok(result !== undefined || result === null)
-    } catch {
-      assert.ok(true)
-    }
+    const result = recalculate.updateClipPath('url(#clip5)', 10, 20, elem)
+    // Polygon clipPath child points shifted by (10,20).
+    assert.equal(result, 'url(#clip5)')
+    assert.equal(clipPolygon.getAttribute('points'), '10,20 60,20 35,70')
   })
 
   it('updateClipPath() handles polyline clipPath', () => {
@@ -1878,12 +2006,10 @@ describe('recalculate', function () {
     elem.setAttribute('clip-path', 'url(#clip6)')
     svg.append(elem)
 
-    try {
-      const result = recalculate.updateClipPath('url(#clip6)', 10, 20, elem)
-      assert.ok(result !== undefined || result === null)
-    } catch {
-      assert.ok(true)
-    }
+    const result = recalculate.updateClipPath('url(#clip6)', 10, 20, elem)
+    // Polyline clipPath child points shifted by (10,20).
+    assert.equal(result, 'url(#clip6)')
+    assert.equal(clipPolyline.getAttribute('points'), '10,20 60,45 110,20')
   })
 
   it('updateClipPath() handles path clipPath', () => {
@@ -1900,12 +2026,12 @@ describe('recalculate', function () {
     elem.setAttribute('clip-path', 'url(#clip7)')
     svg.append(elem)
 
-    try {
-      const result = recalculate.updateClipPath('url(#clip7)', 10, 20, elem)
-      assert.ok(result !== undefined || result === null)
-    } catch {
-      assert.ok(true)
-    }
+    const result = recalculate.updateClipPath('url(#clip7)', 10, 20, elem)
+    // Path clipPath child: a translate(10,20) is appended then baked into the path
+    // data via a recursive recalculateDimensions, leaving no transform.
+    assert.equal(result, 'url(#clip7)')
+    assert.equal(clipPathElem.getAttribute('d'), 'M10,20 L60,70 L110,20 z')
+    assert.equal(clipPathElem.hasAttribute('transform'), false)
   })
 
   it('updateClipPath() with invalid clip-path reference', () => {
@@ -1916,7 +2042,8 @@ describe('recalculate', function () {
     svg.append(elem)
 
     const result = recalculate.updateClipPath('url(#nonexistent)', 10, 20, elem)
-    assert.ok(result === undefined || result === null)
+    // No clipPath element resolves for the reference, so undefined is returned.
+    assert.equal(result, undefined)
   })
 
   it('updateClipPath() without element parameter', () => {
@@ -1933,7 +2060,10 @@ describe('recalculate', function () {
     svg.append(clipPath)
 
     const result = recalculate.updateClipPath('url(#clip8)', 10, 20)
-    assert.ok(result !== undefined || result === null)
+    // Without an element argument the clipPath child rect is still shifted by (10,20).
+    assert.equal(result, 'url(#clip8)')
+    assert.equal(clipRect.getAttribute('x'), '10')
+    assert.equal(clipRect.getAttribute('y'), '20')
   })
 
   it('recalculateDimensions() with element having only translate(0,0)', () => {
@@ -1948,6 +2078,11 @@ describe('recalculate', function () {
     svg.append(rect)
 
     const cmd = recalculate.recalculateDimensions(rect)
-    assert.ok(cmd !== undefined || cmd === null)
+    // translate(0,0) is a zero translation: it is stripped, leaving no transforms,
+    // so the attribute is removed and null is returned; geometry unchanged.
+    assert.equal(cmd, null)
+    assert.equal(rect.hasAttribute('transform'), false)
+    assert.equal(rect.getAttribute('x'), '10')
+    assert.equal(rect.getAttribute('y'), '20')
   })
 })
