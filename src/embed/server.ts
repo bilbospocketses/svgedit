@@ -21,62 +21,15 @@ export type EmbedServerOptions = {
   defaultDialogHandlers?: DialogHandlers
 }
 
-let handleCounter = 0
-const handleMap = new WeakMap<Element, string>()
-const reverseHandleMap = new Map<string, Element>()
+// Method names that must never be dispatched as RPC: they resolve to functions on
+// every object (constructor) or to the prototype machinery, none of which are editor
+// API. Without this gate, `{kind:'call', method:'constructor'}` invokes the target's
+// constructor (#30).
+const RESERVED_RPC_METHODS: ReadonlySet<string> = new Set(['__proto__', 'constructor', 'prototype'])
 
-function allocateHandle (el: Element): ElementHandle {
-  let key = handleMap.get(el)
-  if (!key) {
-    handleCounter += 1
-    key = `el-${handleCounter}`
-    handleMap.set(el, key)
-    reverseHandleMap.set(key, el)
-  }
-  return { __svgeditHandle: key }
-}
-
-function resolveHandle (h: ElementHandle): Element | undefined {
-  return reverseHandleMap.get(h.__svgeditHandle)
-}
-
-function serializeForPostMessage (v: unknown): unknown {
-  if (v instanceof Element) return allocateHandle(v)
-  if (Array.isArray(v)) return v.map(serializeForPostMessage)
-  if (v && typeof v === 'object' && !isElementHandle(v)) {
-    const proto: unknown = Object.getPrototypeOf(v)
-    if (proto === Object.prototype || proto === null) {
-      const out: Record<string, unknown> = {}
-      for (const [k, vv] of Object.entries(v as Record<string, unknown>)) {
-        out[k] = serializeForPostMessage(vv)
-      }
-      return out
-    }
-  }
-  return v
-}
-
-function deserializeArg (v: unknown): unknown {
-  if (isElementHandle(v)) {
-    const el = resolveHandle(v)
-    if (!el) {
-      throw Object.assign(new Error(`element handle not found: ${v.__svgeditHandle}`), { code: ERROR_CODES.ELEMENT_NOT_FOUND })
-    }
-    return el
-  }
-  if (Array.isArray(v)) return v.map(deserializeArg)
-  if (v && typeof v === 'object') {
-    const proto: unknown = Object.getPrototypeOf(v)
-    if (proto === Object.prototype || proto === null) {
-      const out: Record<string, unknown> = {}
-      for (const [k, vv] of Object.entries(v as Record<string, unknown>)) {
-        out[k] = deserializeArg(vv)
-      }
-      return out
-    }
-  }
-  return v
-}
+// Keys that must not be copied through the (de)serializer: assigning `out['__proto__']`
+// reassigns the rebuilt object's prototype (#31).
+const UNSAFE_KEYS: ReadonlySet<string> = new Set(['__proto__', 'constructor', 'prototype'])
 
 export class EmbedServer {
   protected readonly editor: { svgCanvas: Record<string, unknown> } & Record<string, unknown>
@@ -88,6 +41,13 @@ export class EmbedServer {
   private readonly hostHandlersRegistered: Set<DialogKind> = new Set()
   private readonly pendingDialogReplies: Map<number, (response: unknown) => void> = new Map()
   private dialogIdCounter = 0
+
+  // Element <-> handle maps are INSTANCE state (not module-global), so handles never
+  // leak across EmbedServer instances and are released on dispose. The reverse map
+  // holds elements weakly so a returned-then-removed element can still be GC'd (#32).
+  private handleCounter = 0
+  private readonly handleMap = new WeakMap<Element, string>()
+  private readonly reverseHandleMap = new Map<string, WeakRef<Element>>()
 
   constructor (editor: { svgCanvas: Record<string, unknown> } & Record<string, unknown>, opts: EmbedServerOptions = {}) {
     this.editor = editor
@@ -122,6 +82,61 @@ export class EmbedServer {
     window.addEventListener('message', this.listener)
   }
 
+  private allocateHandle (el: Element): ElementHandle {
+    let key = this.handleMap.get(el)
+    if (!key) {
+      this.handleCounter += 1
+      key = `el-${this.handleCounter}`
+      this.handleMap.set(el, key)
+      this.reverseHandleMap.set(key, new WeakRef(el))
+    }
+    return { __svgeditHandle: key }
+  }
+
+  private resolveHandle (h: ElementHandle): Element | undefined {
+    return this.reverseHandleMap.get(h.__svgeditHandle)?.deref()
+  }
+
+  private serializeForPostMessage (v: unknown): unknown {
+    if (v instanceof Element) return this.allocateHandle(v)
+    if (Array.isArray(v)) return v.map((item) => this.serializeForPostMessage(item))
+    if (v && typeof v === 'object' && !isElementHandle(v)) {
+      const proto: unknown = Object.getPrototypeOf(v)
+      if (proto === Object.prototype || proto === null) {
+        const out: Record<string, unknown> = {}
+        for (const [k, vv] of Object.entries(v as Record<string, unknown>)) {
+          if (UNSAFE_KEYS.has(k)) continue
+          out[k] = this.serializeForPostMessage(vv)
+        }
+        return out
+      }
+    }
+    return v
+  }
+
+  private deserializeArg (v: unknown): unknown {
+    if (isElementHandle(v)) {
+      const el = this.resolveHandle(v)
+      if (!el) {
+        throw Object.assign(new Error(`element handle not found: ${v.__svgeditHandle}`), { code: ERROR_CODES.ELEMENT_NOT_FOUND })
+      }
+      return el
+    }
+    if (Array.isArray(v)) return v.map((item) => this.deserializeArg(item))
+    if (v && typeof v === 'object') {
+      const proto: unknown = Object.getPrototypeOf(v)
+      if (proto === Object.prototype || proto === null) {
+        const out: Record<string, unknown> = {}
+        for (const [k, vv] of Object.entries(v as Record<string, unknown>)) {
+          if (UNSAFE_KEYS.has(k)) continue
+          out[k] = this.deserializeArg(vv)
+        }
+        return out
+      }
+    }
+    return v
+  }
+
   protected async handleMessage (e: MessageEvent): Promise<void> {
     if (!isOriginAllowed(e.origin, this.allowedOrigins)) {
       console.warn(`EmbedServer: rejected message from unauthorized origin: ${e.origin}`)
@@ -132,7 +147,7 @@ export class EmbedServer {
     const env = e.data
     switch (env.kind) {
       case 'call':
-        await this.handleCall(env)
+        await this.handleCall(env, e.origin)
         return
       case 'dialog-response': {
         const resolve = this.pendingDialogReplies.get(env.id)
@@ -147,25 +162,25 @@ export class EmbedServer {
     }
   }
 
-  protected async handleCall (env: EmbedCall): Promise<void> {
+  protected async handleCall (env: EmbedCall, callerOrigin: string): Promise<void> {
     if (env.method === '__registerDialogHandler') {
       this.markHostHandlerRegistered(env.args[0] as DialogKind)
-      this.reply({ ns: 'svgedit', v: 1, kind: 'result', id: env.id, result: null })
+      this.reply({ ns: 'svgedit', v: 1, kind: 'result', id: env.id, result: null }, callerOrigin)
       return
     }
     if (env.method === '__unregisterDialogHandler') {
       this.unmarkHostHandlerRegistered(env.args[0] as DialogKind)
-      this.reply({ ns: 'svgedit', v: 1, kind: 'result', id: env.id, result: null })
+      this.reply({ ns: 'svgedit', v: 1, kind: 'result', id: env.id, result: null }, callerOrigin)
       return
     }
     if (env.method === '__setTheme') {
       applyTheme(resolveInitialTheme(env.args[0] as string))
-      this.reply({ ns: 'svgedit', v: 1, kind: 'result', id: env.id, result: null })
+      this.reply({ ns: 'svgedit', v: 1, kind: 'result', id: env.id, result: null }, callerOrigin)
       return
     }
     if (env.method === '__setPalette') {
       this.callEditorPalette(env.args[0])
-      this.reply({ ns: 'svgedit', v: 1, kind: 'result', id: env.id, result: null })
+      this.reply({ ns: 'svgedit', v: 1, kind: 'result', id: env.id, result: null }, callerOrigin)
       return
     }
     if (env.method === '__setChrome') {
@@ -174,7 +189,7 @@ export class EmbedServer {
         ? resolveChromePreset(arg as ChromePreset)
         : arg as ChromeState
       applyChrome(document.body, state)
-      this.reply({ ns: 'svgedit', v: 1, kind: 'result', id: env.id, result: null })
+      this.reply({ ns: 'svgedit', v: 1, kind: 'result', id: env.id, result: null }, callerOrigin)
       return
     }
     if (env.method === '__setDialogTimeout') {
@@ -182,19 +197,22 @@ export class EmbedServer {
       if (typeof ms === 'number' && Number.isInteger(ms) && ms > 0) {
         this.dialogTimeoutMs = ms
       }
-      this.reply({ ns: 'svgedit', v: 1, kind: 'result', id: env.id, result: null })
+      this.reply({ ns: 'svgedit', v: 1, kind: 'result', id: env.id, result: null }, callerOrigin)
       return
     }
     try {
+      if (RESERVED_RPC_METHODS.has(env.method)) {
+        throw Object.assign(new Error(`method not allowed: ${env.method}`), { code: ERROR_CODES.METHOD_NOT_FOUND })
+      }
       const target = this.editor.svgCanvas[env.method] !== undefined ? this.editor.svgCanvas : this.editor
       const fn = target[env.method]
       if (typeof fn !== 'function') {
         throw Object.assign(new Error(`method not found: ${env.method}`), { code: ERROR_CODES.METHOD_NOT_FOUND })
       }
-      const deserializedArgs = env.args.map(deserializeArg)
+      const deserializedArgs = env.args.map((a) => this.deserializeArg(a))
       const raw = await (fn as (...args: unknown[]) => unknown).apply(target, deserializedArgs)
-      const result = serializeForPostMessage(raw)
-      this.reply({ ns: 'svgedit', v: 1, kind: 'result', id: env.id, result })
+      const result = this.serializeForPostMessage(raw)
+      this.reply({ ns: 'svgedit', v: 1, kind: 'result', id: env.id, result }, callerOrigin)
     } catch (err: unknown) {
       const error = err as Error & { code?: string }
       this.reply({
@@ -202,13 +220,18 @@ export class EmbedServer {
         message: error.message ?? String(err),
         ...(error.stack !== undefined && { stack: error.stack }),
         ...(error.code !== undefined && { code: error.code })
-      })
+      }, callerOrigin)
     }
   }
 
-  protected reply (env: EmbedEnvelope): void {
-    const targetOrigin = this.allowedOrigins[0] === '*' ? '*' : (this.allowedOrigins[0] ?? window.location.origin)
-    window.parent.postMessage(env, targetOrigin)
+  /**
+   * Post an envelope to the host. Call results/errors go back to the verified caller
+   * origin (so a result is not leaked to a different allowed origin, #28); server-
+   * initiated events/dialog-requests fall back to the first allowed origin.
+   */
+  protected reply (env: EmbedEnvelope, targetOrigin?: string): void {
+    const fallback = this.allowedOrigins[0] === '*' ? '*' : (this.allowedOrigins[0] ?? window.location.origin)
+    window.parent.postMessage(env, targetOrigin ?? fallback)
   }
 
   private callEditorPalette (colors: unknown): void {
@@ -266,6 +289,7 @@ export class EmbedServer {
       window.removeEventListener('message', this.listener)
       this.listener = null
     }
+    this.reverseHandleMap.clear()
   }
 
   get _allowedOriginsForTest (): readonly string[] { return this.allowedOrigins }
