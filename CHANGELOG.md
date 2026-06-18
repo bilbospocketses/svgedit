@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (embed API docs — allowedOrigins / targetOrigin -- 2026-06-18)
+
+- **`EMBED_API.md` now matches the hardened embed boundary.** The editor-side
+  `allowedOrigins` docs said a URL-param `*` enabled wildcard mode; corrected to state that a
+  URL-param `*` (and malformed entries) are dropped — the wildcard escape hatch is host-side
+  / constructor-only (#29). The outbound `targetOrigin` docs now say a call result/error is
+  returned to the verified caller origin, while server-initiated events use the first allowed
+  origin (#28).
+
 ### Security (context-menu / breadcrumb DOM injection -- 2026-06-18)
 
 - **Extension context-menu items are built with the DOM API, not `insertAdjacentHTML`.**

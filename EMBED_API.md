@@ -45,7 +45,7 @@ All params are optional. Apply them to the editor iframe `src`.
 | `embed` | `1` | absent | Activates embed mode. Enables the postMessage listener and chrome system. Without this param the editor runs in standalone mode and ignores all embed messages. |
 | `chrome` | `full` \| `minimal` \| `none` | `none` when `embed=1` | Initial chrome preset. Set before first paint — no flash of unwanted chrome. See [Chrome control](#chrome-control). |
 | `theme` | `light` \| `dark` | editor's persisted choice, else OS `prefers-color-scheme` | Initial theme, applied as `html[data-theme="<value>"]` (drives the design tokens). An invalid value falls back to the OS preference. |
-| `allowedOrigins` | comma-separated origins | same-origin only | Origins the editor will accept postMessages from. `*` accepts any origin — logs a dev-only console warning; use only for local dev/test. |
+| `allowedOrigins` | comma-separated origins | same-origin only | Origins the editor will accept postMessages from. Each must be a real origin; `*` and malformed entries are ignored, so a URL param cannot widen the editor to every origin. For a wildcard in local dev, use the host-side `allowedOrigins: ['*']` constructor option instead. |
 | `dialogTimeout` | integer (ms) | `30000` | How long (ms) the editor waits for a host dialog handler to respond before falling back to its own internal modal. |
 
 **Examples:**
@@ -523,9 +523,12 @@ boundary.
 - URL param `?allowedOrigins=origin1,origin2` (comma-separated). Default is same-origin only.
 - Inbound messages from unauthorized origins are silently dropped plus `console.warn`. The editor
   does not reply — it does not leak its existence to foreign origins.
-- Outbound to `window.parent` uses the first allowed origin as `targetOrigin` (or `'*'` in
-  wildcard mode).
-- Wildcard `*` is accepted; logs a warning and disables origin checking.
+- Outbound: a **call result/error** is posted to the verified origin of the calling message;
+  server-initiated **events** use the first allowed origin as `targetOrigin`. Always to
+  `window.parent`, never `'*'`.
+- A URL-param `*` is **not** honored — it is dropped along with any malformed entry and the editor
+  falls back to same-origin. (The host-side `SvgEditEmbed` constructor still accepts `['*']` for
+  local dev.)
 
 ### Recommended iframe sandbox attributes
 
@@ -660,9 +663,9 @@ have no `id` — they are fire-and-forget.
 - **Host → Editor:** `iframe.contentWindow.postMessage(env, iframeOrigin)` where `iframeOrigin` is
   the editor host's origin. Never use `'*'` in production — it exposes the message to any embedded
   frame that may be co-resident.
-- **Editor → Host:** the editor sends to `window.parent` with `targetOrigin` set to the first
-  entry in `allowedOrigins` (or `'*'` in wildcard mode). Your host page must be at that origin to
-  receive the message.
+- **Editor → Host:** a call result/error goes to the verified origin of the calling message;
+  server-initiated events use the first entry in `allowedOrigins` as `targetOrigin`. Your host
+  page must be at an allowed origin to receive messages.
 
 ### Minimal raw-protocol example
 
