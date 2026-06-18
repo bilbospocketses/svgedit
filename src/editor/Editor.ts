@@ -26,6 +26,7 @@ import { EmbedServer } from '../embed/server.js'
 import { setSvgEditor } from './svgEditorInstance.js'
 import { typedDetail } from './typed-events.js'
 import { setPaletteWithErrors } from './components/palette-store.js'
+import { renderContextPanel } from './contextPanel.js'
 
 /** Narrow i18next facade — matches the surface from locale.ts. */
 interface I18nextFacade {
@@ -984,24 +985,13 @@ class Editor {
    * @listens module:svgcanvas.SvgCanvas#event:contextset
    */
   contextChanged (_win: unknown, context: Element | null): void {
-    let linkStr = ''
+    let str = ''
+    let parents: Element[] = []
     if (context) {
-      let str = ''
-      linkStr =
-        '<a href="#" data-root="y">' +
-        this.svgCanvas.getCurrentDrawing().getCurrentLayerName() +
-        '</a>'
-      const parentsUntil = getParentsUntil(context, '#svgcontent') ?? []
-      ;(parentsUntil as Element[]).forEach(function (parent: Element) {
-        if (parent.id) {
-          str += ' > ' + parent.id
-          linkStr +=
-            parent !== context
-              ? ` > <a href="#">${parent.id}</a>`
-              : ` > ${parent.id}`
-        }
+      parents = (getParentsUntil(context, '#svgcontent') ?? []) as Element[]
+      parents.forEach((parent: Element) => {
+        if (parent.id) { str += ' > ' + parent.id }
       })
-
       this.curContext = str
     } else {
       this.curContext = null
@@ -1009,8 +999,13 @@ class Editor {
     const ctxPanel = $id('cur_context_panel')
     if (ctxPanel) {
       ctxPanel.style.display = context ? 'block' : 'none'
-      // Pre-existing: linkStr is built from internal layer names, not user-supplied HTML.
-      ctxPanel.innerHTML = linkStr
+      // Build the breadcrumb via the DOM API — a selected element's id or the layer
+      // title is untrusted (both survive the import sanitizer unvalidated) (#47).
+      if (context) {
+        renderContextPanel(ctxPanel, this.svgCanvas.getCurrentDrawing().getCurrentLayerName(), parents, context)
+      } else {
+        ctxPanel.replaceChildren()
+      }
     }
   }
 

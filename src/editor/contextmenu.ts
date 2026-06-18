@@ -68,11 +68,23 @@ const injectExtendedContextMenuItemIntoDom = function (menuItem: MenuItem): void
   const host = $id('cmenu_canvas')
   if (!host) return
   if (!Object.keys(contextMenuExtensions).length) {
-    host.insertAdjacentHTML('beforeend', '<li class="separator"></li>')
+    const sep = document.createElement('li')
+    sep.className = 'separator'
+    host.append(sep)
   }
-  const shortcut = menuItem.shortcut || ''
-  host.insertAdjacentHTML('beforeend',
-    `<li class="disabled"><a href="#${menuItem.id}">${menuItem.label}<span class="shortcut">${shortcut}</span></a></li>`)
+  // Build via the DOM API (not an interpolated HTML string) so an extension's
+  // id / label / shortcut cannot inject markup into the context menu (#46).
+  const li = document.createElement('li')
+  li.className = 'disabled'
+  const a = document.createElement('a')
+  a.setAttribute('href', `#${menuItem.id}`)
+  a.append(document.createTextNode(menuItem.label))
+  const span = document.createElement('span')
+  span.className = 'shortcut'
+  span.textContent = menuItem.shortcut || ''
+  a.append(span)
+  li.append(a)
+  host.append(li)
 }
 
 /**
