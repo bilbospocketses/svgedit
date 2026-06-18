@@ -980,8 +980,12 @@ const convertToGroup = (elem: Element): void => {
     $elem.remove()
 
     const svgContent: Element = svgCanvas.getSvgContent()
+    // Count other <use>s still referencing this id WITHOUT interpolating the
+    // (untrusted) id into a CSS selector — a crafted id like `a"]b` breaks out of
+    // the attribute selector and throws a SyntaxError, aborting the ungroup (#50).
+    const uses = svgContent.querySelectorAll('use')
     const hasMore = elem.id
-      ? svgContent.querySelectorAll(`use[href="#${elem.id}"], use[*|href="#${elem.id}"]`).length
+      ? Array.prototype.filter.call(uses, (u: Element) => getHref(u) === `#${elem.id}`).length
       : 0
 
     const g = svgCanvas.getDOMDocument().createElementNS(NS.SVG, 'g') as Element

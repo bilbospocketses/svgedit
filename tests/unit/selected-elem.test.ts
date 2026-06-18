@@ -244,4 +244,37 @@ describe('selected-elem', () => {
     svgCanvas.cycleElement(true)
     expect(spy).not.toHaveBeenCalledWith([false], true)
   })
+
+  it('#50 ungroups a <use> whose symbol id has selector metacharacters without throwing', () => {
+    const content = svgCanvas.getSvgContent()
+    const defs = content.querySelector('defs') ||
+      content.appendChild(document.createElementNS(NS.SVG, 'defs'))
+    const symbol = document.createElementNS(NS.SVG, 'symbol')
+    symbol.id = 'a"]b' // breaks the interpolated `use[href="#…"]` selector in convertToGroup
+    const symRect = document.createElementNS(NS.SVG, 'rect')
+    symRect.setAttribute('width', '10')
+    symRect.setAttribute('height', '10')
+    symbol.append(symRect)
+    defs.append(symbol)
+
+    const container = svgCanvas.addSVGElementsFromJson({
+      element: 'g',
+      attr: { id: 'use50-container' }
+    })
+    const use = svgCanvas.addSVGElementsFromJson({
+      element: 'use',
+      attr: { id: 'use50', href: '#a"]b' }
+    })
+    container.append(use)
+    svgCanvas.setUseData(use)
+    svgCanvas.selectOnly([use], true)
+
+    expect(() => svgCanvas.ungroupSelectedElement()).not.toThrow()
+
+    expect(container.querySelector('use')).toBeNull()
+    const group = container.firstElementChild
+    expect(group).toBeTruthy()
+    expect(group.tagName).toBe('g')
+    expect(group.querySelector('rect')).toBeTruthy()
+  })
 })
