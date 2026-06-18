@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Tests (recalculate integrity -- 2026-06-18)
+
+- **`recalculate.test.ts` no longer hides failures.** ~56 vacuous assertions
+  (`assert.ok(true)` inside swallow-all `try/catch`, and tautological
+  `assert.ok(cmd !== undefined || cmd === null)`) were replaced with real
+  assertions that pin the actual `recalculateDimensions` output: baked
+  coordinates, `points`/`d` strings, command-vs-`null`, and transform-removed
+  state (#19, #20).
+- **Polyline/polygon remap tests run the real path again.** They were silently
+  skipped because jsdom lacks the `.points` SVGPointList (the call threw and a
+  `try/catch` swallowed it); a small test-scoped mock supplies it so the remap is
+  exercised and the resulting `points` asserted (#21).
+
 ### Performance (color slider -- 2026-06-17)
 
 - **The color slider tracks the latest pointer position during a drag.**
