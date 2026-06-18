@@ -6,14 +6,14 @@ test.describe('Zoom tool', () => {
     await visitAndApproveStorage(page)
   })
 
-  test('opens zoom popup and applies selection zoom', async ({ page }) => {
+  test('setZoom changes the canvas zoom level', async ({ page }) => {
     const { before, after } = await page.evaluate(() => {
-      const bg = document.getElementById('canvasBackground')
-      const before = Number(bg.getAttribute('width'))
-      bg.setAttribute('width', String(before * 2))
-      const after = Number(bg.getAttribute('width'))
-      return { before, after }
+      const c = window.svgEditor.svgCanvas
+      const before = c.getZoom()
+      c.setZoom(before * 2)
+      return { before, after: c.getZoom() }
     })
+    expect(after).toBe(before * 2)
     expect(after).not.toBe(before)
   })
 })

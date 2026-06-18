@@ -56,7 +56,7 @@ describe('SvgEditEmbed — constructor + ready', () => {
     const client = new SvgEditEmbed(iframe, { allowedOrigins: ['https://editor.test'] })
     setTimeout(() => {
       window.dispatchEvent(new MessageEvent('message', {
-        data: { ns: 'svgedit', v: 1, kind: 'event', name: 'ready', payload: { version: '7.4.1', protocolVersion: 1, capabilities: [] } },
+        data: { ns: 'svgedit', v: 1, kind: 'event', name: 'ready', payload: { version: '9.9.9', protocolVersion: 1, capabilities: [] } },
         origin: 'https://evil.com',
         source: iframe.contentWindow
       }))
