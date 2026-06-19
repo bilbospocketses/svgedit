@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Performance (matrix-multiply allocation -- 2026-06-19)
+
+- **`matrixMultiply` no longer allocates a `DOMMatrix` per argument.** It reduced
+  with `acc.multiply(DOMMatrix.fromMatrix(curr))`, building a throwaway
+  `DOMMatrix` for every matrix on each transform multiply (a hot path); it now
+  passes the `SVGMatrix` straight to `multiply()`, which reads its a–f members as
+  a `DOMMatrixInit`. Same product — the existing identity round-trip tests guard
+  it — with one fewer allocation per argument (#67).
+
 ### Performance (undo-history allocations -- 2026-06-19)
 
 - **`BatchCommand.unapply` no longer clones the subcommand stack on every undo.**
