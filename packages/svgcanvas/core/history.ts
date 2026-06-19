@@ -416,10 +416,12 @@ export class BatchCommand extends Command {
   */
   unapply (handler: HistoryEventHandler | null): void {
     super.unapply(handler, () => {
-      ;[...this.stack].reverse().forEach((stackItem) => {
+      // Iterate subcommands in reverse without cloning the stack (#74).
+      for (let i = this.stack.length - 1; i >= 0; i--) {
+        const stackItem = this.stack[i]
         console.assert(!!stackItem, 'stack item should not be null')
         if (stackItem) stackItem.unapply(handler)
-      })
+      }
     })
   }
 
@@ -551,7 +553,9 @@ export class UndoManager {
   */
   addCommandToHistory (cmd: Command): void {
     if (this.undoStackPointer < this.undoStack.length && this.undoStack.length > 0) {
-      this.undoStack = this.undoStack.splice(0, this.undoStackPointer)
+      // Discard the redo tail in place — `length =` truncates without allocating
+      // the extra array the old `splice(0, pointer)` returned (#75).
+      this.undoStack.length = this.undoStackPointer
     }
 
     const incoming = unwrapTextChange(cmd)

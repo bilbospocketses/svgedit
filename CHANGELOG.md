@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Performance (undo-history allocations -- 2026-06-19)
+
+- **`BatchCommand.unapply` no longer clones the subcommand stack on every undo.**
+  It iterated `[...this.stack].reverse()`, allocating a copy of the entire
+  subcommand array on each undo; it now walks the stack backwards in place (#74).
+- **`addCommandToHistory` truncates the redo tail in place.** Adding a command
+  after an undo discarded the redo tail via `undoStack = undoStack.splice(0, ptr)`,
+  which allocated a second array; it now sets `undoStack.length = ptr` — same
+  result, no allocation, clearer intent (#75).
+
 ### Security (untrusted-value sinks -- 2026-06-19)
 
 - **`?url=` content loading is restricted to the editor's own origin.** Opening
