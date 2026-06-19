@@ -22,6 +22,7 @@ import BottomPanel from './panels/BottomPanel.js'
 import LayersPanel from './panels/LayersPanel.js'
 import MainMenu from './MainMenu.js'
 import { getParentsUntil } from '@svgedit/svgcanvas/common/util.js'
+import { isSameOriginHttpUrl } from '@svgedit/svgcanvas/core/url-policy.js'
 import { EmbedServer } from '../embed/server.js'
 import { setSvgEditor } from './svgEditorInstance.js'
 import { typedDetail } from './typed-events.js'
@@ -1367,6 +1368,15 @@ class Editor {
   loadFromURL (url: string, { cache, noAlert }: { cache?: boolean | undefined; noAlert?: boolean | undefined } = {}): Promise<unknown> {
     return this.ready(() => {
       return new Promise<void>((resolve, reject) => {
+        if (!isSameOriginHttpUrl(url)) {
+          if (noAlert) {
+            reject(new Error('URLLoadFail'))
+            return
+          }
+          seAlert(this.i18next.t('notification.URLLoadFail'))
+          resolve()
+          return
+        }
         fetch(url, { cache: cache ? 'force-cache' : 'no-cache' })
           .then((response) => {
             if (!response.ok) {

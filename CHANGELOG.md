@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security (untrusted-value sinks -- 2026-06-19)
+
+- **`?url=` content loading is restricted to the editor's own origin.** Opening
+  the editor with `?url=<URL>` triggered an unrestricted browser `fetch()` of
+  that URL — a blind cross-origin GET (SSRF / CSRF from the victim's browser).
+  `loadFromURL` now loads only same-origin `http(s)` URLs (relative URLs resolve
+  same-origin); cross-origin, protocol-relative, and non-http schemes are
+  refused. The same-origin policy is shared with the #34 export-time image
+  inliner via a new `url-policy.ts` (`isSameOriginHttpUrl`), so both SSRF guards
+  share one definition (#45). `?source=` inline loading is unchanged.
+- **Palette colours can no longer smuggle `url()`/`var()` into a CSS sink.** The
+  swatch colour validator accepted any value its style-setter probe allowed, and
+  the probe accepts `var(--…)`; the value was then interpolated into a
+  `background-color` declaration. `url()` and `var()` values are now rejected
+  before the probe, independent of browser quirks (#53).
+
 ### Security (persisted-state guards -- 2026-06-19)
 
 - **The cross-tab clipboard mirror is size- and shape-guarded.** When another
