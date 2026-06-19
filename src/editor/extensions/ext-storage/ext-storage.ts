@@ -19,6 +19,7 @@
  */
 import './storageDialog.js'
 import { getSvgEditor } from '../../svgEditorInstance.js'
+import { contentStorageKey, titleStorageKey, saveSvgContent } from './content-store.js'
 
 /**
  * Expire the storage cookie.
@@ -90,11 +91,11 @@ export default {
         (!noStorageOnLoad &&
           /(?:^|;\s*)svgeditstore=prefsAndContent/.test(document.cookie)))
     ) {
-      const key = 'svgedit-' + canvasName
+      const key = contentStorageKey(canvasName)
       const cached = storage.getItem(key)
       if (cached) {
         void svgEditor.loadFromString(cached)
-        const storedName = storage.getItem(`title-${key}`) ?? 'untitled.svg'
+        const storedName = storage.getItem(titleStorageKey(canvasName)) ?? 'untitled.svg'
         svgEditor.topPanel.updateTitle(storedName)
         svgEditor.layersPanel.populateLayers()
       }
@@ -161,14 +162,7 @@ export default {
      */
     const setSvgContentStorage = (svgString: string) => {
       if (!storage) return
-      const storageName = `svgedit-${svgEditor.configObj.curConfig.canvasName}`
-      if (!svgString) {
-        storage.removeItem(storageName)
-        storage.removeItem(`${storageName}-title`)
-      } else {
-        storage.setItem(storageName, svgString)
-        storage.setItem(`title-${storageName}`, svgEditor.title)
-      }
+      saveSvgContent(storage, svgEditor.configObj.curConfig.canvasName, svgString, svgEditor.title)
     }
 
     /**
