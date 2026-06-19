@@ -66,3 +66,8 @@ Or by URL parameter (value URL-encoded):
 ?source=<encoded data URI>
 ?url=<encoded local URL>
 ```
+
+`loadFromURL` and `?url=` fetch **same-origin** `http(s)` URLs only (relative paths
+resolve same-origin); cross-origin and non-`http(s)` URLs are refused as an SSRF guard.
+To preload content from another origin, fetch it in your own page and pass the string
+via `loadFromString` or `?source=`.

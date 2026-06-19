@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (docs — `?url=` same-origin -- 2026-06-19)
+
+- **`EMBED_API.md` and the ConfigOptions tutorial now state the `?url=` / `loadFromURL`
+  same-origin restriction.** The embed example loaded a cross-origin URL that #45 now
+  refuses; replaced it with a same-origin example plus a note, and documented the
+  policy in the config tutorial.
+
 ### Performance (matrix-multiply allocation -- 2026-06-19)
 
 - **`matrixMultiply` no longer allocates a `DOMMatrix` per argument.** It reduced

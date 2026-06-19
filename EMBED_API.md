@@ -154,8 +154,13 @@ await editor.editor.clearSelection()
 
 // Call Editor load methods
 await editor.editor.loadFromString('<svg xmlns="http://www.w3.org/2000/svg"><circle r="40"/></svg>')
-await editor.editor.loadFromURL('https://example.com/drawing.svg')
+await editor.editor.loadFromURL('/drawings/example.svg') // same-origin http(s) only
 ```
+
+> **`loadFromURL` is same-origin only.** It fetches `http(s)` URLs on the editor's own
+> origin (relative URLs resolve same-origin); cross-origin or non-`http(s)` URLs are
+> refused as an SSRF guard. To load content from another origin, fetch it in your host
+> page and pass the string to `loadFromString`.
 
 The editor-side dispatcher checks `svgCanvas` first, then the `Editor` instance. Every call
 returns a `Promise` regardless of whether the underlying method is synchronous — postMessage is
