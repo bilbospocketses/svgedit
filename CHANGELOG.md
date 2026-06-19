@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security (server static-file + build source-map hardening -- 2026-06-19)
+
+- **Production builds no longer ship source maps.** All three build steps that
+  write into the served `dist/editor/` tree emitted `.map` files: the main
+  editor build, the prod-only extensions build, and the embed declaration maps.
+  The extension `.js.map` files embedded the full original TypeScript sources
+  and were publicly fetchable. Source maps are now disabled in the editor build
+  (`build.sourcemap`), the extensions build (`scripts/build-extensions.ts`), and
+  the embed `tsconfig` (`declarationMap`); a clean build produces zero `.map`
+  files under `dist/editor`/`dist/embed`. The vite dev server still serves maps
+  for local debugging (#54).
+- **The local HTTP server pins its static-serving options explicitly.** `sirv`
+  is now configured with `dev: false` and `dotfiles: false`. sirv v3 already
+  skips dotfiles in its default index, so this is defense-in-depth rather than a
+  fixed exposure: it pins the posture against a dependency default change or an
+  accidental `dev: true` (which would serve dotfiles via sirv's per-request
+  path). Guarded by `tests/unit/server/server-static.test.ts` (a stray `.env` is
+  never served) (#33).
+
 ### Changed (embed API docs — allowedOrigins / targetOrigin -- 2026-06-18)
 
 - **`EMBED_API.md` now matches the hardened embed boundary.** The editor-side

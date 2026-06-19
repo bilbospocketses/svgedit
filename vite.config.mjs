@@ -81,7 +81,11 @@ export default defineConfig({
   build: {
     outDir: 'dist/editor',
     emptyOutDir: true,
-    sourcemap: true,
+    // Do not ship source maps to production: emitted `.map` files (and the
+    // `sourceMappingURL` comments) hand the original TypeScript sources to
+    // anyone who opens devtools. The vite dev server still serves maps for
+    // local debugging independently of this build-time flag. (#54)
+    sourcemap: false,
     lib: {
       entry: resolve(__dirname, 'src/editor/Editor.js'),
       name: 'Editor',
