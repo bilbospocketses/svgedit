@@ -53,7 +53,11 @@ function healthz (req: IncomingMessage, res: ServerResponse): boolean {
 export function createServer (options: CreateServerOptions = {}): http.Server {
   const staticDir = options.staticDir ?? DEFAULT_STATIC_DIR
   const apiHandlers = options.apiHandlers ?? []
-  const serveStatic = sirv(staticDir, { etag: true, single: false })
+  // Static serving is pinned to production semantics: `dev: false` keeps sirv on
+  // its pre-indexed file map (no per-request `fs` reads, and that index skips
+  // dotfiles), and `dotfiles: false` makes the dotfile exclusion explicit rather
+  // than relying on sirv's implicit default — so a stray `.env`/`.git` never ships.
+  const serveStatic = sirv(staticDir, { etag: true, single: false, dev: false, dotfiles: false })
   const allowedHosts: ReadonlySet<string> | null =
     options.allowedHosts === null ? null : new Set(options.allowedHosts ?? DEFAULT_ALLOWED_HOSTS)
 

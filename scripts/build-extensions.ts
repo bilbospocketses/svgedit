@@ -81,7 +81,10 @@ await build({
   build: {
     outDir,
     emptyOutDir: false, // main build already wrote Editor.js, keep it
-    sourcemap: true,
+    // #54: this is a prod-only build (dev serves extensions from source via the
+    // vite dev server), so never emit `.js.map` — they embed full TS sources and
+    // would be publicly fetchable under the served dist/editor/extensions/ tree.
+    sourcemap: false,
     minify: false, // keep exports intact
     rollupOptions: {
       treeshake: false,

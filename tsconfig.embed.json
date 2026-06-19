@@ -4,7 +4,7 @@
     "rootDir": "src/embed",
     "outDir": "dist/embed",
     "declaration": true,
-    "declarationMap": true,
+    "declarationMap": false,
     "emitDeclarationOnly": false,
     "noEmit": false,
     "module": "ES2022",
