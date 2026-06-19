@@ -18,6 +18,7 @@ import * as pathModule from './core/path.js'
 import * as history from './core/history.js'
 import * as draw from './core/draw.js'
 import { init as pasteInit, pasteElementsMethod } from './core/paste-elem.js'
+import { isMirrorableClipboard } from './core/clipboard-payload.js'
 import { init as touchInit } from './core/touch.js'
 import { svgRootElement } from './core/svgroot.js'
 import {
@@ -543,8 +544,15 @@ class SvgCanvas implements ISvgCanvas {
         localStorage.removeItem(`${CLIPBOARD_ID}_startup`)
         this.flashStorage()
       } else if (ev.key === CLIPBOARD_ID) {
-        sessionStorage.setItem(CLIPBOARD_ID, ev.newValue)
+        if (!isMirrorableClipboard(ev.newValue)) return
+        try {
+          sessionStorage.setItem(CLIPBOARD_ID, ev.newValue)
+        } catch {
+          // sessionStorage quota exceeded — drop the cross-tab mirror rather
+          // than throw out of the storage event handler.
+        }
       }
+
     }
 
     window.addEventListener('storage', storageChange, false)

@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security (persisted-state guards -- 2026-06-19)
+
+- **The cross-tab clipboard mirror is size- and shape-guarded.** When another
+  same-origin tab flashed its clipboard onto `localStorage`, this tab mirrored
+  the value into `sessionStorage` verbatim with no bound; an oversized value
+  threw an uncaught `QuotaExceededError` out of the `storage` event handler. The
+  handler now mirrors only a size-bounded value that parses to a JSON array (the
+  clipboard payload shape) and wraps the write in try/catch. The paste path
+  already rejects malformed shapes, so this caps quota abuse at the source (#51).
+- **Clearing a stored document no longer leaves a stale title behind.**
+  `ext-storage` saved the document title under `title-svgedit-<name>` but
+  removed it under `svgedit-<name>-title`, so the keys never matched on a clear.
+  The key derivation and the save/clear operation are centralised in
+  `content-store.ts`, so the set, clear, and read sites share one definition and
+  can no longer drift (#52).
+
 ### Security (server static-file + build source-map hardening -- 2026-06-19)
 
 - **Production builds no longer ship source maps.** All three build steps that
