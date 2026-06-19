@@ -10,9 +10,22 @@ const listeners = new Set<() => void>()
 // A detached element whose style setter rejects invalid CSS colors. Works in both
 // real browsers and jsdom (cssstyle validates color), unlike CSS.supports in jsdom.
 const probe = document.createElement('span')
+/**
+ * Whether a colour string contains a CSS function that must never reach the
+ * swatch's `background-color` sink: `url()` (loads a resource) or `var()`
+ * (resolves to an attacker-influenced custom property). `var()` in particular
+ * is accepted by the style-setter probe below, so it needs an explicit reject.
+ * Ordinary colour functions (rgb/hsl/…) are unaffected. (#53)
+ */
+export function hasUnsafeCssFunctionValue (value: string): boolean {
+  const lower = value.toLowerCase()
+  return lower.includes('url(') || lower.includes('var(')
+}
+
 function isValidColor (value: unknown): boolean {
   if (value === 'none') return true
   if (typeof value !== 'string' || value.trim() === '') return false
+  if (hasUnsafeCssFunctionValue(value)) return false
   probe.style.color = ''
   probe.style.color = value
   return probe.style.color !== ''

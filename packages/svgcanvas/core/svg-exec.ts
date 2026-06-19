@@ -11,6 +11,7 @@ import { jsPDF as JsPDF } from 'jspdf'
 import 'svg2pdf.js'
 import * as history from './history.js'
 import { error, warn } from '../common/logger.js'
+import { isSameOriginHttpUrl } from './url-policy.js'
 import {
   text2xml,
   cleanupElement,
@@ -792,23 +793,6 @@ const getIssues = (): { issues: string[]; issueCodes: string[] } => {
 }
 
 /**
- * Whether an `<image>` href may be fetched at export time. Only same-origin
- * http(s) URLs (relative refs resolve same-origin) are fetchable — this blocks the
- * export-time SSRF / exfiltration vector where a crafted SVG points an `<image>` at
- * an internal host or cloud-metadata endpoint (#34). `data:` hrefs are handled by
- * the caller (already inline, never fetched).
- */
-const isFetchableExportHref = (href: string): boolean => {
-  try {
-    const u = new URL(href, document.baseURI)
-    return (u.protocol === 'http:' || u.protocol === 'https:') &&
-      u.origin === window.location.origin
-  } catch {
-    return false
-  }
-}
-
-/**
  * Utility function to convert all external image links in an SVG element to Base64 data URLs.
  * Exported for direct testing of the export-time fetch policy (#34).
  */
@@ -817,7 +801,7 @@ export const convertImagesToBase64 = async (svgElement: Element): Promise<void> 
   const promises = Array.from(imageElements).map(async (img: Element) => {
     const href = img.getAttribute('xlink:href') ?? img.getAttribute('href')
     if (href && !href.startsWith('data:')) {
-      if (!isFetchableExportHref(href)) {
+      if (!isSameOriginHttpUrl(href)) {
         warn(`skipping export-time fetch of non-same-origin <image> href (SSRF guard, #34): ${href}`, null, 'svg-exec')
         return
       }
