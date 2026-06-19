@@ -137,7 +137,10 @@ export const matrixMultiply = (...args: SVGMatrix[]): SVGMatrix => {
 
   if (typeof DOMMatrix === 'function' && typeof DOMMatrix.fromMatrix === 'function') {
     const result = args.reduce(
-      (acc, curr) => acc.multiply(DOMMatrix.fromMatrix(curr)),
+      // Pass each SVGMatrix straight to multiply() — it reads the a–f members as a
+      // DOMMatrixInit — instead of allocating a throwaway DOMMatrix per arg via
+      // fromMatrix() on every transform multiply (#67).
+      (acc, curr) => acc.multiply(curr),
       new DOMMatrix()
     )
 
