@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (polystar point-generation deduplication -- 2026-06-24)
+
+- **The polystar star/polygon vertex math is no longer duplicated across four call
+  sites.** The star and regular-polygon `points`-string loops were copy-pasted in
+  the panel change handlers and the mouseMove draw path; they are extracted into two
+  pure, unit-tested helpers (`buildStarPoints`, `buildRegularPolygonPoints` in
+  `polystar-points.ts`). Behaviour is unchanged -- the loops were folded verbatim,
+  and the call sites still source their own inputs (#77).
+
 ### Performance (align/distribute selection math -- 2026-06-24)
 
 - **Distributing a selection is no longer O(n²).** Both distribute helpers mapped

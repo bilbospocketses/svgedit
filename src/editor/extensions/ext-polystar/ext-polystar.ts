@@ -7,6 +7,7 @@
  */
 
 import { getSvgEditor } from '../../svgEditorInstance.js'
+import { buildStarPoints, buildRegularPolygonPoints } from './polystar-points.js'
 
 const name = 'polystar'
 
@@ -154,35 +155,7 @@ export default {
                 const circumradius = Number(elem.getAttribute('r'))
                 const inradius = circumradius / Number(elem.getAttribute('starRadiusMultiplier'))
 
-                let polyPoints = ''
-                for (let s = 0; point >= s; s++) {
-                  let angle = 2.0 * Math.PI * (s / point)
-                  if (orient === 'point') {
-                    angle -= Math.PI / 2
-                  } else if (orient === 'edge') {
-                    angle = angle + Math.PI / point - Math.PI / 2
-                  }
-
-                  let x = circumradius * Math.cos(angle) + cx
-                  let y = circumradius * Math.sin(angle) + cy
-
-                  polyPoints += x + ',' + y + ' '
-
-                  if (!isNaN(inradius)) {
-                    angle = 2.0 * Math.PI * (s / point) + Math.PI / point
-                    if (orient === 'point') {
-                      angle -= Math.PI / 2
-                    } else if (orient === 'edge') {
-                      angle = angle + Math.PI / point - Math.PI / 2
-                    }
-                    angle += radialshift
-
-                    x = inradius * Math.cos(angle) + cx
-                    y = inradius * Math.sin(angle) + cy
-
-                    polyPoints += x + ',' + y + ' '
-                  }
-                }
+                const polyPoints = buildStarPoints(cx, cy, point, circumradius, inradius, orient, radialshift)
                 elem.setAttribute('points', polyPoints)
                 addToHistory(new ChangeElementCommand(elem, { point: oldPoint, points: oldPoints }))
               }
@@ -220,13 +193,7 @@ export default {
                 const edg = Number(elem.getAttribute('edge'))
                 const inradius = (edg / 2) * cot(Math.PI / sides)
                 const circumradius = inradius * sec(Math.PI / sides)
-                let points = ''
-                for (let s = 0; sides >= s; s++) {
-                  const angle = (2.0 * Math.PI * s) / sides
-                  const x = circumradius * Math.cos(angle) + cx
-                  const y = circumradius * Math.sin(angle) + cy
-                  points += x + ',' + y + ' '
-                }
+                const points = buildRegularPolygonPoints(cx, cy, sides, circumradius)
                 elem.setAttribute('points', points)
                 addToHistory(new ChangeElementCommand(elem, { sides: oldSides, points: oldPoints }))
               }
@@ -302,8 +269,8 @@ export default {
           const strokeWidth = Number(newFO.getAttribute('stroke-width'))
           const radialshift = Number(newFO.getAttribute('radialshift'))
 
-          let x = opts.mouse_x
-          let y = opts.mouse_y
+          const x = opts.mouse_x
+          const y = opts.mouse_y
 
           const circumradius =
             Math.sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy)) / 1.5
@@ -314,35 +281,7 @@ export default {
           newFO.setAttribute('r2', String(inradius))
           newFO.setAttribute('starRadiusMultiplier', RadiusMultiplier)
 
-          let polyPoints = ''
-          for (let s = 0; point >= s; s++) {
-            let angle = 2.0 * Math.PI * (s / point)
-            if (orient === 'point') {
-              angle -= Math.PI / 2
-            } else if (orient === 'edge') {
-              angle = angle + Math.PI / point - Math.PI / 2
-            }
-
-            x = circumradius * Math.cos(angle) + cx
-            y = circumradius * Math.sin(angle) + cy
-
-            polyPoints += x + ',' + y + ' '
-
-            if (!isNaN(inradius)) {
-              angle = 2.0 * Math.PI * (s / point) + Math.PI / point
-              if (orient === 'point') {
-                angle -= Math.PI / 2
-              } else if (orient === 'edge') {
-                angle = angle + Math.PI / point - Math.PI / 2
-              }
-              angle += radialshift
-
-              x = inradius * Math.cos(angle) + cx
-              y = inradius * Math.sin(angle) + cy
-
-              polyPoints += x + ',' + y + ' '
-            }
-          }
+          const polyPoints = buildStarPoints(cx, cy, point, circumradius, inradius, orient, radialshift)
           newFO.setAttribute('points', polyPoints)
           newFO.setAttribute('fill', fill ?? '')
           newFO.setAttribute('stroke', stroke ?? '')
@@ -361,8 +300,8 @@ export default {
           const stroke = newFO.getAttribute('stroke')
           const strokeWidth = Number(newFO.getAttribute('stroke-width'))
 
-          let x = opts.mouse_x
-          let y = opts.mouse_y
+          const x = opts.mouse_x
+          const y = opts.mouse_y
 
           const edg =
             Math.sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy)) / 1.5
@@ -370,14 +309,7 @@ export default {
 
           const inradius = (edg / 2) * cot(Math.PI / sides)
           const circumradius = inradius * sec(Math.PI / sides)
-          let points = ''
-          for (let s = 0; sides >= s; s++) {
-            const angle = (2.0 * Math.PI * s) / sides
-            x = circumradius * Math.cos(angle) + cx
-            y = circumradius * Math.sin(angle) + cy
-
-            points += x + ',' + y + ' '
-          }
+          const points = buildRegularPolygonPoints(cx, cy, sides, circumradius)
 
           // const poly = newFO.createElementNS(NS.SVG, 'polygon');
           newFO.setAttribute('points', points)
