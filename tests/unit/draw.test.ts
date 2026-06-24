@@ -397,6 +397,50 @@ describe('draw.Drawing', function () {
     cleanupSVG(svg)
   })
 
+  it('Test identifyLayers() ignores non-element and non-visible root nodes', function () {
+    const drawing = new draw.Drawing(svg)
+
+    // A properly named layer.
+    const layer1 = document.createElementNS(NS.SVG, 'g')
+    layer1.setAttribute('class', Layer.CLASS_NAME)
+    const layer1Title = document.createElementNS(NS.SVG, 'title')
+    layer1Title.append(LAYER1)
+    layer1.append(layer1Title)
+    svg.append(layer1)
+
+    // Non-element nodes at the root must be skipped, not treated as orphans.
+    svg.append(document.createTextNode('\n  '))
+    svg.append(document.createComment('a comment'))
+
+    // A non-visible, non-group element (defs) at the root must also be skipped.
+    const defs = document.createElementNS(NS.SVG, 'defs')
+    svg.append(defs)
+
+    // An unnamed group and a bare visible shape are the only orphans.
+    const orphanGroup = document.createElementNS(NS.SVG, 'g')
+    const orphanRect = document.createElementNS(NS.SVG, 'rect')
+    svg.append(orphanGroup, orphanRect)
+
+    drawing.identifyLayers()
+
+    // One named layer plus one synthesized layer holding exactly the two orphans.
+    assert.equal(drawing.getNumLayers(), 2)
+    assert.equal(drawing.getLayerName(0), LAYER1)
+    assert.equal(drawing.all_layers[0].getGroup(), layer1)
+
+    const orphanLayerGroup = drawing.all_layers[1].getGroup()
+    const orphanLayerChildren = [...orphanLayerGroup.childNodes]
+    assert.ok(orphanLayerChildren.includes(orphanGroup))
+    assert.ok(orphanLayerChildren.includes(orphanRect))
+    // The skipped nodes were left at the SVG root, not collected as orphans.
+    assert.ok([...svg.childNodes].includes(defs))
+    assert.ok(!orphanLayerChildren.includes(defs))
+    // The orphan layer is the current layer when orphans are present.
+    assert.equal(drawing.getCurrentLayer(), orphanLayerGroup)
+
+    cleanupSVG(svg)
+  })
+
   it('Test getLayerName()', function () {
     const drawing = new draw.Drawing(svg)
     setupSVGWith3Layers(svg)

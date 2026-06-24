@@ -478,16 +478,19 @@ export class Drawing {
   identifyLayers (): void {
     this.all_layers = []
     this.layer_map = {}
-    const numchildren = this.#svgElem.childNodes.length
+    // Snapshot the live child NodeList once. Indexed access into a live NodeList
+    // (`childNodes.item(i)`) is not guaranteed O(1), so the original counted loop
+    // was O(n^2) for documents with many root-level children (e.g. a flat SVG
+    // whose shapes are all orphans). A single Array.from pass is O(n).
+    const children = Array.from(this.#svgElem.childNodes)
     // loop through all children of SVG element
     const orphans: Element[] = []
     const layernames: string[] = []
     let layer: Layer | null = null
     let childgroups = false
-    for (let i = 0; i < numchildren; ++i) {
-      const child = this.#svgElem.childNodes.item(i)
+    for (const child of children) {
       // for each g, find its layer name
-      if (child?.nodeType === 1) {
+      if (child.nodeType === 1) {
         const childEl = child as Element
         if (childEl.tagName === 'g') {
           childgroups = true

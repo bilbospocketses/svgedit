@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Performance (layer-identification scan -- 2026-06-24)
+
+- **`Drawing.identifyLayers` no longer indexes a live `NodeList` by position.** It
+  read each root child with `childNodes.item(i)` inside a counted loop; indexed
+  access into a live `NodeList` is not guaranteed O(1), so the scan degraded to
+  O(n²) for documents with many root-level children (a flat SVG whose shapes are
+  all orphans). It now snapshots the children once with `Array.from` and iterates
+  that — a single O(n) pass. Behaviour is unchanged; the existing `draw.test.ts`
+  layer-identification suite plus a new mixed-root-content characterization test
+  (non-element and non-visible root nodes are skipped, not orphaned) guard it (#65).
+
 ### Changed (docs — `?url=` same-origin -- 2026-06-19)
 
 - **`EMBED_API.md` and the ConfigOptions tutorial now state the `?url=` / `loadFromURL`
