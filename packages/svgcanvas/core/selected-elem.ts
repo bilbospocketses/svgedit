@@ -346,11 +346,14 @@ const alignSelectedElements = (type: string, relativeTo: string): void => {
       maxy = svgCanvas.getContentH()
       break
     default:
-      // 'selected'
-      minx = Math.min(...bboxes.map(box => box.x))
-      miny = Math.min(...bboxes.map(box => box.y))
-      maxx = Math.max(...bboxes.map(box => box.x + box.width))
-      maxy = Math.max(...bboxes.map(box => box.y + box.height))
+      // 'selected' -- one pass instead of four map()+spread passes. forEach skips
+      // sparse holes, matching the previous per-box .map().
+      bboxes.forEach((box) => {
+        minx = Math.min(minx, box.x)
+        miny = Math.min(miny, box.y)
+        maxx = Math.max(maxx, box.x + box.width)
+        maxy = Math.max(maxy, box.y + box.height)
+      })
       break
   }
 
@@ -416,9 +419,13 @@ const _getDistributeHorizontalDistances = (
     _dx[i] = cur.x - orgX
   }
 
+  // O(1) reverse lookup of each sorted clone's original index (was an O(n)
+  // findIndex per element => O(n^2)). Synthetic 'page' boxes aren't in bboxes,
+  // so .get() returns undefined and they're skipped, exactly as findIndex's -1.
+  const idxOfBbox = new Map(bboxes.map((box, i) => [box, i] as const))
   bboxesSortedClone.forEach((boxClone, idx) => {
-    const orgIdx = bboxes.findIndex(box => box === boxClone)
-    if (orgIdx !== -1) {
+    const orgIdx = idxOfBbox.get(boxClone)
+    if (orgIdx !== undefined) {
       dx[orgIdx] = _dx[idx] ?? 0
     }
   })
@@ -474,9 +481,12 @@ const _getDistributeVerticalDistances = (
     _dy[i] = cur.y - orgY
   }
 
+  // O(1) reverse lookup (was an O(n) findIndex per element => O(n^2)); synthetic
+  // 'page' boxes aren't in bboxes, so .get() returns undefined and is skipped.
+  const idxOfBbox = new Map(bboxes.map((box, i) => [box, i] as const))
   bboxesSortedClone.forEach((boxClone, idx) => {
-    const orgIdx = bboxes.findIndex(box => box === boxClone)
-    if (orgIdx !== -1) {
+    const orgIdx = idxOfBbox.get(boxClone)
+    if (orgIdx !== undefined) {
       dy[orgIdx] = _dy[idx] ?? 0
     }
   })

@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Performance (align/distribute selection math -- 2026-06-24)
+
+- **Distributing a selection is no longer O(n²).** Both distribute helpers mapped
+  each sorted box back to its original index with `bboxes.findIndex(...)` inside a
+  loop over the same array (O(n²) in the selection size). They now build one
+  box→index `Map` up front for O(1) lookups. Behaviour is unchanged -- the sort
+  tie-break and the synthetic 'page' edge-boxes (absent from the map, so skipped
+  exactly as `findIndex`'s `-1`) are preserved (#84).
+- **Aligning to the selection bounds does a single pass.** The 'selected' branch
+  computed min/max x/y with four separate `.map()`+spread passes; it now folds all
+  four extremes in one `forEach` over the bboxes (#83).
+
 ### Fixed (svgcanvas constructor listener leak -- 2026-06-24)
 
 - **`SvgCanvas` now exposes a `destroy()` method that detaches every listener its

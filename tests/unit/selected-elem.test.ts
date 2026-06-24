@@ -75,6 +75,36 @@ describe('selected-elem', () => {
     expect(parsed[0].attr.id).toBe('rect-copy')
   })
 
+  it('aligns selected elements to the left edge of the selection', () => {
+    const r0 = svgCanvas.addSVGElementsFromJson({ element: 'rect', attr: { id: 'align-r0', x: 0, y: 0, width: 10, height: 10 } })
+    const r1 = svgCanvas.addSVGElementsFromJson({ element: 'rect', attr: { id: 'align-r1', x: 20, y: 0, width: 10, height: 10 } })
+    const r2 = svgCanvas.addSVGElementsFromJson({ element: 'rect', attr: { id: 'align-r2', x: 100, y: 0, width: 10, height: 10 } })
+    svgCanvas.selectOnly([r0, r1, r2], true)
+
+    svgCanvas.alignSelectedElements('l', 'selected')
+
+    // Left-align moves every element's left edge to the selection's minx (0).
+    expect(r0.getAttribute('x')).toBe('0')
+    expect(r1.getAttribute('x')).toBe('0')
+    expect(r2.getAttribute('x')).toBe('0')
+  })
+
+  it('distributes selected elements horizontally, mapping distances to the right elements', () => {
+    // Selection order (A,B,C) deliberately differs from left-to-right order
+    // (B,C,A) so the sorted-clone -> original-index mapping is exercised.
+    const rA = svgCanvas.addSVGElementsFromJson({ element: 'rect', attr: { id: 'dist-rA', x: 100, y: 0, width: 10, height: 10 } })
+    const rB = svgCanvas.addSVGElementsFromJson({ element: 'rect', attr: { id: 'dist-rB', x: 0, y: 0, width: 10, height: 10 } })
+    const rC = svgCanvas.addSVGElementsFromJson({ element: 'rect', attr: { id: 'dist-rC', x: 20, y: 0, width: 10, height: 10 } })
+    svgCanvas.selectOnly([rA, rB, rC], true)
+
+    svgCanvas.alignSelectedElements('dh', 'selected')
+
+    // minx=0, maxx=110, space=(110-30)/2=40: B stays at 0, C -> 50, A stays at 100.
+    expect(rB.getAttribute('x')).toBe('0')
+    expect(rC.getAttribute('x')).toBe('50')
+    expect(rA.getAttribute('x')).toBe('100')
+  })
+
   it('moves element to bottom even with whitespace/title/defs nodes', () => {
     const rect1 = svgCanvas.addSVGElementsFromJson({
       element: 'rect',
