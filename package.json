@@ -87,7 +87,7 @@
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.59.3",
     "unplugin-swc": "^1.5.9",
-    "vite": "^7.3.2",
+    "vite": "^7.3.5",
     "vite-plugin-string": "^1.2.3",
     "vitest": "^4.0.16"
   },
@@ -99,6 +99,9 @@
     "postcss": "^8.5.10",
     "rollup": "^4.59.0",
     "glob": "^10.5.0",
-    "esbuild": "^0.28.1"
+    "esbuild": "^0.28.1",
+    "js-yaml": "^4.2.0",
+    "markdown-it": "^14.2.0",
+    "ws": "^8.21.0"
   }
 }
