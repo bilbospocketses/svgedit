@@ -121,4 +121,18 @@ describe('blur-event', () => {
     svgCanvas.undoMgr.redo()
     expect(rect.hasAttribute('filter')).toBe(false)
   })
+
+  it('#102 setBlur with complete=false does not leak an open undoable change', () => {
+    const rect = svgCanvas.addSVGElementsFromJson({
+      element: 'rect',
+      attr: { id: 'rect-blur-leak', x: 10, y: 20, width: 30, height: 40 }
+    })
+    svgCanvas.selectOnly([rect], true)
+
+    const before = svgCanvas.undoMgr.undoChangeStackPointer
+    svgCanvas.setBlur(2, false)
+    // A non-final (complete=false) call must not leave a beginUndoableChange open:
+    // the undo-change stack pointer must return to where it started.
+    expect(svgCanvas.undoMgr.undoChangeStackPointer).toBe(before)
+  })
 })

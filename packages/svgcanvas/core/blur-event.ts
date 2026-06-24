@@ -203,9 +203,12 @@ export const setBlur = (val: number, complete: boolean): void => {
   svgCanvas.setBlurOffsets(filter, blurVal)
   svgCanvas.setCurCommand(batchCmd)
 
-  const blurElem = getFeGaussianBlurElem(filter)
-  svgCanvas.undoMgr.beginUndoableChange('stdDeviation', [blurElem])
+  // Only open an undoable change when finalizing. A non-final (complete=false)
+  // call must not leave a beginUndoableChange unpaired -- that orphans an entry
+  // on the undo-change stack and offsets its pointer for every later edit (#102).
   if (complete) {
+    const blurElem = getFeGaussianBlurElem(filter)
+    svgCanvas.undoMgr.beginUndoableChange('stdDeviation', [blurElem])
     svgCanvas.setBlurNoUndo(blurVal)
     finishChange()
   }

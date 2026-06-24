@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (setBlur undoable-change leak -- 2026-06-24)
+
+- **`setBlur(val, false)` no longer leaves an undoable change open.** A blur call
+  always called `beginUndoableChange` but only finished it when `complete` was true,
+  so a non-final (`complete=false`) call orphaned an entry on the undo-change stack
+  and offset its pointer for every later edit. `beginUndoableChange` now runs only
+  when finalizing. This is currently latent -- every in-tree caller passes
+  `complete=true` -- so it hardens the public `setBlur` API rather than fixing a
+  user-visible regression (#102).
+
 ### Fixed (coords: tspan rotation remap + gradient-mirror ids -- 2026-06-24)
 
 - **Rotating text no longer mislocates its `tspan` children.** When baking a
