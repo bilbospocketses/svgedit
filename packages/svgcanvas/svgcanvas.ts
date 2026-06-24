@@ -184,6 +184,9 @@ class SvgCanvas implements ISvgCanvas {
   // canvas is a self-reference set via setCanvas('canvas', this)
   declare canvas: ISvgCanvas
 
+  // Removers for the event listeners wired in the constructor; run by destroy().
+  declare listenerCleanups: Array<() => void>
+
   // ── Instance fields: wired on by core/*.ts init() calls ──────────────────
   // Declared here with `declare` so the class body + ISvgCanvas interface
   // provide full type coverage. No separate augment file needed.
@@ -520,6 +523,7 @@ class SvgCanvas implements ISvgCanvas {
       e.preventDefault()
       return false
     }
+    this.listenerCleanups = []
     container.addEventListener('mousedown', this.mouseDownEvent)
     container.addEventListener('mousemove', this.mouseMoveEvent)
     $click(container, handleLinkInCanvas)
@@ -528,6 +532,19 @@ class SvgCanvas implements ISvgCanvas {
     container.addEventListener('mouseleave', this.mouseOutEvent)
     container.addEventListener('mousewheel', this.DOMMouseScrollEvent as EventListenerOrEventListenerObject)
     container.addEventListener('DOMMouseScroll', this.DOMMouseScrollEvent as EventListenerOrEventListenerObject)
+    // Track removers so destroy() can detach every constructor-wired listener.
+    // $click attaches both 'click' and 'touchend' to handleLinkInCanvas.
+    this.listenerCleanups.push(
+      () => container.removeEventListener('mousedown', this.mouseDownEvent),
+      () => container.removeEventListener('mousemove', this.mouseMoveEvent),
+      () => container.removeEventListener('click', handleLinkInCanvas),
+      () => container.removeEventListener('touchend', handleLinkInCanvas),
+      () => container.removeEventListener('dblclick', this.dblClickEvent),
+      () => container.removeEventListener('mouseup', this.mouseUpEvent),
+      () => container.removeEventListener('mouseleave', this.mouseOutEvent),
+      () => container.removeEventListener('mousewheel', this.DOMMouseScrollEvent as EventListenerOrEventListenerObject),
+      () => container.removeEventListener('DOMMouseScroll', this.DOMMouseScrollEvent as EventListenerOrEventListenerObject)
+    )
 
     this.linkControlPoints = pathActions.linkControlPoints
     this.curCommand = null
@@ -556,6 +573,7 @@ class SvgCanvas implements ISvgCanvas {
     }
 
     window.addEventListener('storage', storageChange, false)
+    this.listenerCleanups.push(() => window.removeEventListener('storage', storageChange))
     localStorage.setItem(`${CLIPBOARD_ID}_startup`, String(Math.random()))
 
     pasteInit(this)
@@ -566,6 +584,20 @@ class SvgCanvas implements ISvgCanvas {
 
     this.modeChangeEvent()
   } // End constructor
+
+  /**
+   * Detach every event listener wired by the constructor -- the nine `container`
+   * listeners and the global `window` 'storage' listener -- so a discarded
+   * instance (e.g. an iframe-embedded editor that is torn down, or a test
+   * fixture) can be garbage-collected instead of being pinned by the global
+   * storage listener's closure. Idempotent.
+   */
+  destroy (): void {
+    for (const cleanup of this.listenerCleanups) {
+      cleanup()
+    }
+    this.listenerCleanups = []
+  }
 
   getSvgOption (): { round_digits: number; apply?: boolean; images?: string } {
     return this.saveOptions
