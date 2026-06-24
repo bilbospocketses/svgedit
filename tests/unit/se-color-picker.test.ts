@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import '../../src/editor/components/jgraduate/se-color-picker.ts'
+import { packBarKey } from '../../src/editor/components/jgraduate/se-color-picker.ts'
 
 const flush = async (el) => {
   await customElements.whenDefined('se-color-picker')
@@ -9,6 +9,25 @@ const flush = async (el) => {
     await el.updateComplete
   }
 }
+
+describe('packBarKey', () => {
+  const base = { r: 0, g: 0, b: 0, h: 0, s: 0, v: 0, a: 255 }
+
+  it('gives distinct rgb keys for colors differing only in r vs g', () => {
+    // (r=1,g=0) and (r=0,g=100) both collapsed to 100000 under the old 1e5 stride
+    const keyA = packBarKey('rgb', { ...base, r: 1, g: 0 })
+    const keyB = packBarKey('rgb', { ...base, r: 0, g: 100 })
+    expect(keyA).not.toBe(keyB)
+  })
+
+  it('packs distinct rgb triples to distinct keys across the channel range', () => {
+    const seen = new Set<number>()
+    for (const [r, g, b] of [[1, 0, 0], [0, 100, 0], [0, 0, 100], [255, 255, 255], [12, 34, 56]]) {
+      seen.add(packBarKey('rgb', { ...base, r, g, b }))
+    }
+    expect(seen.size).toBe(5)
+  })
+})
 
 describe('se-color-picker', () => {
   let el
