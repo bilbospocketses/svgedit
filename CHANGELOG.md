@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (svgcanvas constructor listener leak -- 2026-06-24)
+
+- **`SvgCanvas` now exposes a `destroy()` method that detaches every listener its
+  constructor wires.** The constructor attached nine `container` listeners plus a
+  global `window` 'storage' listener and never removed them, so a discarded
+  instance stayed pinned in memory by the global listener's closure over `this` --
+  a leak whenever the editor is torn down and recreated (an iframe-embedded
+  instance, or test fixtures). `destroy()` removes all of them via a tracked
+  cleanup list and is idempotent (#70).
+
 ### Removed (unreachable group-flatten code in recalculate -- 2026-06-24)
 
 - **Deleted ~300 lines of unreachable code from `recalculateDimensions`.** The
