@@ -28,6 +28,10 @@ import type { ISvgCanvas } from './svgcanvas-types.js'
 
 let svgCanvas = null as unknown as ISvgCanvas
 
+// Monotonic counter for fallback mirrored-gradient ids when no drawing/getNextId
+// is available -- avoids Date.now() collisions and duplicate `<id>-mirrored` ids.
+let mirrorGradCounter = 0
+
 /** A path segment entry with type + optional coordinate fields. */
 interface PathSegEntry {
   type: number
@@ -163,8 +167,7 @@ export const remapElement = (selected: Element, changes: RemapChanges, m: SVGMat
       }
 
       const drawing = svgCanvas.getCurrentDrawing?.() || svgCanvas.getDrawing?.()
-      const generatedId = drawing?.getNextId?.() ??
-        (grad.id ? `${grad.id}-mirrored` : `mirrored-grad-${Date.now()}`)
+      const generatedId = drawing?.getNextId?.() ?? `mirrored-grad-${++mirrorGradCounter}`
       if (!generatedId) {
         warn('Unable to mirror gradient: no drawing context available', null, 'coords')
         return
@@ -243,7 +246,9 @@ export const remapElement = (selected: Element, changes: RemapChanges, m: SVGMat
       break
     }
     case 'text': {
-      const pt = remap(changes.x ?? 0, changes.y ?? 0)
+      const rawX = changes.x ?? 0
+      const rawY = changes.y ?? 0
+      const pt = remap(rawX, rawY)
       changes.x = pt.x
       changes.y = pt.y
 
@@ -269,15 +274,21 @@ export const remapElement = (selected: Element, changes: RemapChanges, m: SVGMat
           const childChanges: RemapChanges = {}
           const hasX = child.hasAttribute('x')
           const hasY = child.hasAttribute('y')
-          if (hasX) {
-            const childX = convertToNum('x', child.getAttribute('x') ?? '0')
-            const childPtX = remap(childX, changes.y ?? 0).x
-            childChanges.x = childPtX
-          }
-          if (hasY) {
-            const childY = convertToNum('y', child.getAttribute('y') ?? '0')
-            const childPtY = remap(changes.x ?? 0, childY).y
-            childChanges.y = childPtY
+          // Remap the tspan's own point through the full matrix, falling back to
+          // the parent text's raw coord for an axis the tspan does not set. Both
+          // axes must pass through remap together: under a rotated/skewed matrix
+          // the x output depends on y (and vice versa), so the previous code that
+          // mixed a raw coord with the parent's already-remapped coord was wrong.
+          if (hasX || hasY) {
+            const childX = hasX ? convertToNum('x', child.getAttribute('x') ?? '0') : rawX
+            const childY = hasY ? convertToNum('y', child.getAttribute('y') ?? '0') : rawY
+            const childPt = remap(childX, childY)
+            if (hasX) {
+              childChanges.x = childPt.x
+            }
+            if (hasY) {
+              childChanges.y = childPt.y
+            }
           }
 
           let tspanFS = child.getAttribute('font-size')

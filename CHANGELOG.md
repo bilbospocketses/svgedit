@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (coords: tspan rotation remap + gradient-mirror ids -- 2026-06-24)
+
+- **Rotating text no longer mislocates its `tspan` children.** When baking a
+  transform into a `<text>`, each `tspan` child's x/y were remapped on the wrong
+  axis -- the tspan's raw x was paired with the parent's already-remapped y (and
+  vice versa). For a pure scale/translate that happened to be correct, but under a
+  rotation or skew it placed the tspans wrong. Each tspan point now passes through
+  the full matrix on both axes (#95).
+- **Mirroring a gradient generates a unique id even without a drawing context.** The
+  fallback id (used when `getNextId()` is unavailable) was either `<id>-mirrored`
+  (duplicated when the same gradient is mirrored twice) or
+  `mirrored-grad-<Date.now()>` (duplicated within the same millisecond). It now uses
+  a monotonic counter (#96).
+
 ### Fixed (engine selection/touch/path correctness -- 2026-06-24)
 
 - **A cancelled touch (`touchcancel`) no longer leaves the editor mid-drag.** The

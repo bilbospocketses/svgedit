@@ -572,6 +572,71 @@ describe('coords', function () {
     assert.equal(Number.parseFloat(tspan.getAttribute('y')), 65)
   })
 
+  it('#95 remaps tspan children by both axes under a rotation', function () {
+    const text = document.createElementNS(NS.SVG, 'text')
+    text.setAttribute('x', '50')
+    text.setAttribute('y', '100')
+    const tspan = document.createElementNS(NS.SVG, 'tspan')
+    tspan.setAttribute('x', '55')
+    tspan.setAttribute('y', '70')
+    tspan.textContent = 'Test'
+    text.append(tspan)
+    svg.append(text)
+
+    // 90-degree rotation: transformPoint(x, y) = (-y, x)
+    const m = svg.createSVGMatrix()
+    m.a = 0; m.b = 1
+    m.c = -1; m.d = 0
+    m.e = 0; m.f = 0
+
+    coords.remapElement(text, { x: 50, y: 100 }, m)
+
+    // The tspan point (55,70) must remap through the full matrix to (-70, 55).
+    // The cross-axis bug (raw x with parent's remapped y, and vice versa) gives (-50, -100).
+    assert.equal(Number.parseFloat(tspan.getAttribute('x')), -70)
+    assert.equal(Number.parseFloat(tspan.getAttribute('y')), 55)
+  })
+
+  it('#96 mirrored-grad fallback ids are unique when getNextId is unavailable', function () {
+    // Force the no-drawing-id fallback: getNextId returns null.
+    const noIdDrawing = { getNextId () { return null } }
+    coords.init({
+      getGridSnapping () { return false },
+      getDrawing () { return noIdDrawing },
+      getCurrentDrawing () { return noIdDrawing },
+      getDataStorage () { return { get: () => null, has: () => false } },
+      getSvgRoot () { return svg }
+    })
+
+    const defs = document.createElementNS(NS.SVG, 'defs')
+    svg.append(defs)
+    const grad = document.createElementNS(NS.SVG, 'radialGradient')
+    grad.id = 'shared-grad'
+    grad.setAttribute('cx', '0.2')
+    defs.append(grad)
+
+    const flip = svg.createSVGMatrix()
+    flip.a = -1
+    flip.d = 1
+
+    const mirrorIdFor = (rectId) => {
+      const rect = document.createElementNS(NS.SVG, 'rect')
+      rect.id = rectId
+      rect.setAttribute('x', '0')
+      rect.setAttribute('y', '0')
+      rect.setAttribute('width', '10')
+      rect.setAttribute('height', '10')
+      rect.setAttribute('fill', 'url(#shared-grad)')
+      svg.append(rect)
+      coords.remapElement(rect, { x: 0, y: 0, width: 10, height: 10 }, flip)
+      return rect.getAttribute('fill').replace('url(#', '').replace(')', '')
+    }
+
+    // Both mirror the same id'd gradient; the old fallback gives both
+    // 'shared-grad-mirrored' (collision). The counter fix makes them unique.
+    assert.notEqual(mirrorIdFor('r1'), mirrorIdFor('r2'))
+  })
+
   it('Test remapElement with gradient in userSpaceOnUse mode', function () {
     const defs = document.createElementNS(NS.SVG, 'defs')
     svg.append(defs)
