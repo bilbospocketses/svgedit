@@ -116,12 +116,12 @@ describe('touch adapter', () => {
     expect(mouseMove).toBe(1)
   })
 
-  it('returns early on unknown event types', () => {
+  it('maps touchcancel to mouseup so an interrupted drag ends', () => {
     const svgroot = createSvgRoot()
     initTouch({ svgroot })
     const target = document.createElement('div')
-    let mouseCount = 0
-    target.addEventListener('mousedown', () => { mouseCount++ })
+    const received = []
+    target.addEventListener('mouseup', (ev) => { received.push(ev.type) })
 
     const preventDefault = vi.fn()
     svgroot.dispatch('touchcancel', {
@@ -131,6 +131,6 @@ describe('touch adapter', () => {
     })
 
     expect(preventDefault).toHaveBeenCalled()
-    expect(mouseCount).toBe(0)
+    expect(received).toEqual(['mouseup'])
   })
 })

@@ -2,7 +2,7 @@ import { NS } from '../../packages/svgcanvas/core/namespaces.js'
 import * as utilities from '../../packages/svgcanvas/core/utilities.js'
 import { convertPath as convertPathActions } from '../../packages/svgcanvas/core/path-actions.js'
 import * as pathModule from '../../packages/svgcanvas/core/path.js'
-import { Path, Segment, toPathSeg } from '../../packages/svgcanvas/core/path-method.js'
+import { Path, Segment, toPathSeg, init as initPathMethod } from '../../packages/svgcanvas/core/path-method.js'
 import { getPathData } from '../../packages/svgcanvas/core/path-data.js'
 import type { PathSeg } from '../../packages/svgcanvas/core/path-method.js'
 import { init as unitsInit } from '../../packages/svgcanvas/core/units.js'
@@ -62,6 +62,27 @@ describe('path', function () {
     const [mockPathContext] = getMockContexts()
     pathModule.init(mockPathContext)
     assert.equal(typeof mockPathContext.recalcRotatedPath, 'function')
+  })
+
+  it('#94 selected_pts sorts point indexes numerically, not lexicographically', () => {
+    // Drive addPtsToSelection directly with a minimal `this`: it only needs
+    // svgCanvas.getPathObj (for the static subpathIsClosed) and
+    // svgCanvas.addPtsToSelection, so we avoid the full Path constructor.
+    initPathMethod({
+      setPathObj () {},
+      getPathObj: () => ({ eachSeg () {} }),
+      addPtsToSelection () {}
+    })
+
+    const fakeThis = { segs: [], selected_pts: [] }
+    for (const i of [1, 2, 10]) {
+      fakeThis.segs[i] = { ptgrip: {}, select () {} }
+    }
+
+    Path.prototype.addPtsToSelection.call(fakeThis, [10, 2, 1])
+
+    // Lexicographic sort would give [1, 10, 2]; numeric sort gives [1, 2, 10].
+    expect(fakeThis.selected_pts).toEqual([1, 2, 10])
   })
 
   it('Test svgedit.path.replacePathSeg', function () {

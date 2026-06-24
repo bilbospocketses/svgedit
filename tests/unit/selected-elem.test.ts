@@ -152,6 +152,43 @@ describe('selected-elem', () => {
     expect(order).toEqual(['title', 'defs', 'rect-bottom-2', 'rect-bottom-1'])
   })
 
+  it('#103 moves to bottom above defs/title regardless of their order', () => {
+    const rect1 = svgCanvas.addSVGElementsFromJson({
+      element: 'rect', attr: { id: 'order-1', x: 10, y: 10, width: 10, height: 10 }
+    })
+    const rect2 = svgCanvas.addSVGElementsFromJson({
+      element: 'rect', attr: { id: 'order-2', x: 30, y: 10, width: 10, height: 10 }
+    })
+    const parent = svgCanvas.addSVGElementsFromJson({
+      element: 'g', attr: { id: 'order-container' }
+    })
+    parent.append(rect1, rect2)
+    // defs BEFORE title (reverse of the canonical order the old code assumed)
+    const defs = document.createElementNS(NS.SVG, 'defs')
+    parent.insertBefore(defs, rect1)
+    const title = document.createElementNS(NS.SVG, 'title')
+    title.textContent = 'Layer'
+    parent.insertBefore(title, rect1)
+
+    svgCanvas.selectOnly([rect2], true)
+    svgCanvas.moveToBottomSelectedElement()
+
+    const order = Array.from(parent.childNodes)
+      .filter((n) => n.nodeType === 1)
+      .map((n) => (n.tagName === 'title' || n.tagName === 'defs') ? n.tagName : n.id)
+    // rect2 must land after BOTH defs and title, not wedged between them
+    expect(order).toEqual(['defs', 'title', 'order-2', 'order-1'])
+  })
+
+  it('#103 does not throw when the selected element has no parent', () => {
+    const rect = svgCanvas.addSVGElementsFromJson({
+      element: 'rect', attr: { id: 'orphan-rect', x: 0, y: 0, width: 10, height: 10 }
+    })
+    svgCanvas.selectOnly([rect], true)
+    rect.remove() // detach: parentNode is now null
+    expect(() => svgCanvas.moveToBottomSelectedElement()).not.toThrow()
+  })
+
   it('ungroups a <use> when it is the first element child', () => {
     const defs = svgCanvas.getSvgContent().querySelector('defs') ||
       svgCanvas.getSvgContent().appendChild(document.createElementNS(NS.SVG, 'defs'))

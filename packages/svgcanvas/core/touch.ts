@@ -13,6 +13,7 @@ const touchHandler = (ev: TouchEvent): void => {
     case 'touchstart': type = 'mousedown'; break
     case 'touchmove': type = 'mousemove'; break
     case 'touchend': type = 'mouseup'; break
+    case 'touchcancel': type = 'mouseup'; break
     default: return
   }
 
