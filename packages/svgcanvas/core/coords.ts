@@ -22,7 +22,7 @@ import {
   getTransformList
 } from './math.js'
 import { convertToNum } from './units.js'
-import { getPathData } from './path-data.js'
+import { getPathDataReadonly } from './path-data.js'
 
 import type { ISvgCanvas } from './svgcanvas-types.js'
 
@@ -337,7 +337,7 @@ export const remapElement = (selected: Element, changes: RemapChanges, m: SVGMat
       const selectedPath = selected as SVGPathElement
 
       // Handle path segments
-      const pathDataSegments = getPathData(selectedPath)
+      const pathDataSegments = getPathDataReadonly(selectedPath)
       const len: number = pathDataSegments.length
       const det = m.a * m.d - m.b * m.c
       const shouldToggleArcSweep = det < 0

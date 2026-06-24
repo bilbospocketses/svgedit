@@ -14,7 +14,7 @@ import {
   getTransformList
 } from './math.js'
 import { mergeDeep } from '../common/util.js'
-import { getPathData as getPathDataFn } from './path-data.js'
+import { getPathDataReadonly as getPathDataFn } from './path-data.js'
 
 /** A plain bounding box object. */
 export interface BBoxObject {
