@@ -5,6 +5,7 @@ import {
   hexToRgba,
   rgbaToHex,
   validateHex,
+  invertHex,
   ColorModel
 } from '../../src/editor/components/jgraduate/ColorModel.ts'
 
@@ -33,9 +34,9 @@ describe('hsvToRgb', () => {
     expect(hsvToRgb(0, 0, 100)).toEqual([255, 255, 255])
   })
 
-  it('converts mid-gray (0,0,50) → [127,127,127]', () => {
-    // v=50 → (50*255/100)|0 = 127
-    expect(hsvToRgb(0, 0, 50)).toEqual([127, 127, 127])
+  it('converts mid-gray (0,0,50) → [128,128,128]', () => {
+    // v=50 → round(50*255/100) = round(127.5) = 128
+    expect(hsvToRgb(0, 0, 50)).toEqual([128, 128, 128])
   })
 
   it('treats h=360 identically to h=0', () => {
@@ -52,6 +53,11 @@ describe('hsvToRgb', () => {
 
   it('converts magenta (300,100,100) → [255,0,255]', () => {
     expect(hsvToRgb(300, 100, 100)).toEqual([255, 0, 255])
+  })
+
+  it('rounds channel output rather than truncating', () => {
+    // (0,50,100): g=b=0.5*255=127.5 -> rounds to 128, not 127
+    expect(hsvToRgb(0, 50, 100)).toEqual([255, 128, 128])
   })
 })
 
@@ -93,10 +99,15 @@ describe('rgbToHsv', () => {
   it('round-trips for an arbitrary mid-tone', () => {
     const [r, g, b] = hsvToRgb(200, 60, 80)
     const [rh, rs, rv] = rgbToHsv(r, g, b)
-    // Allow ±1 for integer truncation in hsvToRgb
+    // Allow ±2 for integer rounding in hsvToRgb
     expect(Math.abs(rh - 200)).toBeLessThanOrEqual(2)
     expect(Math.abs(rs - 60)).toBeLessThanOrEqual(2)
     expect(Math.abs(rv - 80)).toBeLessThanOrEqual(2)
+  })
+
+  it('rounds S/V rather than truncating', () => {
+    // 201/255 = 0.7882 -> V = 78.82 -> rounds to 79, not 78
+    expect(rgbToHsv(201, 0, 0)).toEqual([0, 100, 79])
   })
 })
 
@@ -186,6 +197,30 @@ describe('validateHex', () => {
 
   it('leaves a valid 6-char hex unchanged', () => {
     expect(validateHex('abc123')).toBe('abc123')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// invertHex
+// ---------------------------------------------------------------------------
+
+describe('invertHex', () => {
+  it('inverts a 6-char hex', () => {
+    expect(invertHex('#ffffff')).toBe('#000000')
+    expect(invertHex('#000000')).toBe('#ffffff')
+  })
+
+  it('inverts a 6-char hex without a leading #', () => {
+    expect(invertHex('ff0000')).toBe('#00ffff')
+  })
+
+  it('expands and inverts 3-digit shorthand hex', () => {
+    // #f00 -> #ff0000 -> invert -> #00ffff
+    expect(invertHex('#f00')).toBe('#00ffff')
+  })
+
+  it('never emits NaN for an unparseable/named color', () => {
+    expect(invertHex('red')).toMatch(/^#[0-9a-f]{6}$/)
   })
 })
 

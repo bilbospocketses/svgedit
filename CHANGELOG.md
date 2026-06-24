@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (color/gradient math -- 2026-06-24)
+
+- **Inverting a 3-digit or named stop color no longer corrupts it.** `invertHex`
+  assumed 6-digit hex and ran off the end of shorter strings, so a `#f00` stop
+  produced `#0fffNaN` and a named color like `red` produced `#NaNf2NaN`. It now
+  expands 3-digit shorthand and falls back to a neutral mid-gray (`#808080`) for
+  unparseable input, and has moved to `ColorModel.ts` beside the other hex helpers
+  (#123).
+- **HSV↔RGB conversions round instead of truncating.** `rgbToHsv` truncated S/V
+  with `| 0` while H was already rounded, and `hsvToRgb` truncated its RGB output,
+  biasing every round-trip downward. Both now `Math.round`, which minimizes
+  round-trip drift and makes S/V consistent with H (#124).
+- **The color-picker spectrum bar redraws correctly in alpha mode.** Its `rgb`
+  change-detection key packed `r*100000 + g*1000 + b`, so a green value >= 100
+  overflowed the `r` band -- e.g. (r=1,g=0) collided with (r=0,g=100), suppressing
+  a needed redraw. The packing is extracted to a pure, unit-tested `packBarKey`
+  helper with the `r` stride widened to `1e6` (#125).
+
 ### Changed (polystar point-generation deduplication -- 2026-06-24)
 
 - **The polystar star/polygon vertex math is no longer duplicated across four call

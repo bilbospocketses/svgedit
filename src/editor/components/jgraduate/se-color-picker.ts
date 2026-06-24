@@ -15,6 +15,34 @@ import { t } from '../../locale.js'
 
 type PickerMode = 'h' | 's' | 'v' | 'r' | 'g' | 'b' | 'a'
 
+/**
+ * Pack the BAR's fixed channel(s) into a single change-detection key:
+ * a number that changes iff the relevant channel value(s) change.
+ *
+ * @param ch - Fixed-channel id from `_getBarFixedChannel`.
+ * @param m  - Current color values.
+ */
+export function packBarKey (ch: string, m: { r: number, g: number, b: number, h: number, s: number, v: number, a: number }): number {
+  switch (ch) {
+    case 'h': return m.h
+    case 's': return m.s
+    case 'v': return m.v
+    case 'r': return m.r
+    case 'g': return m.g
+    case 'b': return m.b
+    case 'a': return m.a
+    case 'h+v': return m.h * 1000 + m.v
+    case 'h+s': return m.h * 1000 + m.s
+    case 'g+b': return m.g * 1000 + m.b
+    case 'r+b': return m.r * 1000 + m.b
+    case 'r+g': return m.r * 1000 + m.g
+    // 1e6 stride on r: g's band reaches 255*1000 = 255000, so a 1e5 stride collides
+    case 'rgb': return m.r * 1000000 + m.g * 1000 + m.b
+    case '_static': return 0
+    default: return 0
+  }
+}
+
 /** Photoshop-style HSV/RGB/alpha color picker rendered with Canvas 2D; dispatches `commit`, `cancel`, and `live` events */
 @customElement('se-color-picker')
 export class SeColorPicker extends LitElement {
@@ -620,24 +648,7 @@ export class SeColorPicker extends LitElement {
   }
 
   private _getChannelValue (ch: string): number {
-    const m = this._active
-    switch (ch) {
-      case 'h': return m.h
-      case 's': return m.s
-      case 'v': return m.v
-      case 'r': return m.r
-      case 'g': return m.g
-      case 'b': return m.b
-      case 'a': return m.a
-      case 'h+v': return m.h * 1000 + m.v
-      case 'h+s': return m.h * 1000 + m.s
-      case 'g+b': return m.g * 1000 + m.b
-      case 'r+b': return m.r * 1000 + m.b
-      case 'r+g': return m.r * 1000 + m.g
-      case 'rgb': return m.r * 100000 + m.g * 1000 + m.b
-      case '_static': return 0
-      default: return 0
-    }
+    return packBarKey(ch, this._active)
   }
 
   // ---------------------------------------------------------------------------

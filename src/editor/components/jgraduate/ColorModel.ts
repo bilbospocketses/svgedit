@@ -18,12 +18,12 @@ export type ColorChannel = 'r' | 'g' | 'b' | 'h' | 's' | 'v' | 'a'
  * @param h - Hue, 0–360
  * @param s - Saturation, 0–100
  * @param v - Value, 0–100
- * @returns Tuple [r, g, b] each in 0–255 (integer, truncated with `| 0`)
+ * @returns Tuple [r, g, b] each in 0–255 (integer, rounded)
  */
 export function hsvToRgb (h: number, s: number, v: number): [number, number, number] {
   if (s === 0) {
     if (v === 0) return [0, 0, 0]
-    const gray = (v * 255 / 100) | 0
+    const gray = Math.round(v * 255 / 100)
     return [gray, gray, gray]
   }
 
@@ -49,7 +49,7 @@ export function hsvToRgb (h: number, s: number, v: number): [number, number, num
     default: r = 0; g = 0; b = 0
   }
 
-  return [(r * 255) | 0, (g * 255) | 0, (b * 255) | 0]
+  return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)]
 }
 
 /**
@@ -90,7 +90,7 @@ export function rgbToHsv (r: number, g: number, b: number): [number, number, num
     if (hOut < 0) hOut += 360
   }
 
-  return [hOut, (sOut * 100) | 0, (vOut * 100) | 0]
+  return [hOut, Math.round(sOut * 100), Math.round(vOut * 100)]
 }
 
 // ---------------------------------------------------------------------------
@@ -161,6 +161,32 @@ function intToHex (dec: number): string {
   let result = (dec | 0).toString(16)
   if (result.length === 1) result = '0' + result
   return result.toLowerCase()
+}
+
+/**
+ * Invert a hex color (per-channel `255 − value`).
+ *
+ * Accepts 6-digit (`#rrggbb`) or 3-digit shorthand (`#rgb`, expanded), with or
+ * without a leading `#`; a trailing alpha pair is ignored. Any input that is not
+ * valid 6-digit hex (e.g. a named color like `red`) yields a neutral mid-gray
+ * inverse rather than corrupt `#NaN…` output.
+ *
+ * @param hex - Hex color string.
+ * @returns 6-char `#rrggbb` inverse, or `#808080` for unparseable input.
+ */
+export function invertHex (hex: string): string {
+  let raw = hex.startsWith('#') ? hex.slice(1) : hex
+  // Expand 3-digit shorthand (#rgb -> rrggbb).
+  if (raw.length === 3) raw = raw.replace(/(.)(.)(.)/, '$1$1$2$2$3$3')
+  raw = raw.slice(0, 6)
+  if (!/^[0-9a-fA-F]{6}$/.test(raw)) return '#808080'
+  let inverted = ''
+  for (let i = 0; i < 6; i += 2) {
+    let inv = (255 - parseInt(raw.substring(i, i + 2), 16)).toString(16)
+    if (inv.length < 2) inv = '0' + inv
+    inverted += inv
+  }
+  return '#' + inverted
 }
 
 // ---------------------------------------------------------------------------

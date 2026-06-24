@@ -11,7 +11,7 @@ import { LitElement, html, svg, css, nothing } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import SvgCanvas from '@svgedit/svgcanvas'
 import type Paint from '@svgedit/svgcanvas/core/paint.js'
-import type { ColorModel } from './ColorModel.js'
+import { invertHex, type ColorModel } from './ColorModel.js'
 import './se-color-picker.js'
 import './se-color-slider.js'
 import './se-gradient-stop.js'
@@ -29,18 +29,6 @@ interface GradientStop {
 let stopIdCounter = 0
 function nextStopId (): string {
   return 'gs_' + String(++stopIdCounter)
-}
-
-/** Invert a 6-char hex color. */
-function invertHex (hex: string): string {
-  const raw = hex.startsWith('#') ? hex.slice(1) : hex
-  let inverted = ''
-  for (let i = 0; i < 6; i += 2) {
-    let inv = (255 - parseInt(raw.substring(i, i + 2), 16)).toString(16)
-    if (inv.length < 2) inv = '0' + inv
-    inverted += inv
-  }
-  return '#' + inverted
 }
 
 /** Clamp a number to [min, max]. */
