@@ -135,7 +135,7 @@ export class SePalette extends LitElement {
     const swatches = getPalette()
     return html`
       <div id="palette_holder" title=${ifDefined(this.uiPaletteInfo || undefined)}>
-        <div id="js-se-palette">
+        <div id="js-se-palette" @click=${this._onSquareClick}>
           ${swatches.map(rgb => this._renderSquare(rgb))}
         </div>
       </div>
@@ -144,7 +144,7 @@ export class SePalette extends LitElement {
         title=${this.isPopupOpen ? 'Hide palette window' : 'Show whole palette'}
         @click=${this._toggleExpand}
       >${this.isPopupOpen ? '▲' : '▼'}</button>
-      <div id="palette_popup" style=${this.isPopupOpen ? 'display:flex' : 'display:none'}>
+      <div id="palette_popup" style=${this.isPopupOpen ? 'display:flex' : 'display:none'} @click=${this._onSquareClick}>
         ${swatches.map(rgb => this._renderSquare(rgb))}
       </div>
     `
@@ -153,17 +153,22 @@ export class SePalette extends LitElement {
   private _renderSquare(rgb: string) {
     if (rgb === 'none') {
       return html`
-        <div class="square" data-rgb=${rgb} @click=${this._onSquareClick}>
+        <div class="square" data-rgb=${rgb}>
           <img src=${NO_COLOR_SVG_DATA_URL} alt="No color" style="width:15px;height:15px" />
         </div>
       `
     }
-    return html`<div class="square" data-rgb=${rgb} style="background-color:${rgb}" @click=${this._onSquareClick}></div>`
+    return html`<div class="square" data-rgb=${rgb} style="background-color:${rgb}"></div>`
   }
 
   private _onSquareClick = (evt: MouseEvent) => {
+    // Delegated from the palette containers: resolve the clicked swatch (or its
+    // inner <img>); ignore clicks on the container background.
+    const eventTarget = evt.target
+    if (!(eventTarget instanceof Element)) return
+    const target = eventTarget.closest('.square')
+    if (!(target instanceof HTMLElement)) return
     evt.preventDefault()
-    const target = evt.currentTarget as HTMLElement
     // shift key or right click for stroke
     const picker = evt.shiftKey || evt.button === 2 ? 'stroke' : 'fill'
     let color = target.dataset['rgb']

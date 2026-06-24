@@ -160,6 +160,8 @@ export class SeZoom extends LitElement {
       clearTimeout(this._changedTimeout)
       this._changedTimeout = null
     }
+    this._options.forEach(option => option.removeEventListener('click', this._handleSelect))
+    this._options = []
   }
 
   // TODO: see todo #10 — inverted-guard attributeChangedCallback: runs inner block when
@@ -234,11 +236,13 @@ export class SeZoom extends LitElement {
     if (!slot) return
     const assigned = slot.assignedElements()
     if (assigned.length > 0) {
+      // Detach listeners from the previously slotted options before rebinding so
+      // repeated slotchanges don't accumulate duplicate click handlers. Binding the
+      // stable `this._handleSelect` reference (not a fresh closure) keeps them removable.
+      this._options.forEach(option => option.removeEventListener('click', this._handleSelect))
       this._options = assigned
       this._initPopup()
-      this._options.forEach(option => {
-        option.addEventListener('click', e => this._handleSelect(e))
-      })
+      this._options.forEach(option => option.addEventListener('click', this._handleSelect))
     }
   }
 

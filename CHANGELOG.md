@@ -28,6 +28,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   computed min/max x/y with four separate `.map()`+spread passes; it now folds all
   four extremes in one `forEach` over the bboxes (#83).
 
+### Fixed (se-zoom option-listener leak -- 2026-06-24)
+
+- **`<se-zoom>` no longer accumulates duplicate option `click` listeners.** On every
+  `slotchange`, `_handleOptionsChange` added a fresh `click` arrow closure to each
+  slotted option and never removed the old ones (`disconnectedCallback` cleaned only
+  the document handler and the timeout), so repeated re-slots stacked handlers and
+  double-fired selection. It now binds the stable `this._handleSelect` reference,
+  detaches the prior options before rebinding, and removes them on disconnect (#89).
+
+### Changed (se-palette swatch click delegation -- 2026-06-24)
+
+- **`<se-palette>` uses one delegated `click` handler per palette container instead
+  of one per swatch.** Each swatch (rendered twice -- the inline strip and the popup)
+  carried its own `@click`; the handler now lives on the two containers and resolves
+  the clicked swatch via `closest('.square')`, ignoring container-background clicks.
+  Behaviour and the non-bubbling `change` event contract are unchanged (#88).
+
 ### Fixed (svgcanvas constructor listener leak -- 2026-06-24)
 
 - **`SvgCanvas` now exposes a `destroy()` method that detaches every listener its
