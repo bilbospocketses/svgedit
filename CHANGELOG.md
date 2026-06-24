@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (engine selection/touch/path correctness -- 2026-06-24)
+
+- **A cancelled touch (`touchcancel`) no longer leaves the editor mid-drag.** The
+  touch-to-mouse adapter registered a `touchcancel` listener but its `switch` had no
+  case for it, so an interrupted touch (system gesture, palm rejection) never
+  synthesized a `mouseup` and the drag stayed stuck. `touchcancel` now maps to
+  `mouseup`, like `touchend` (#101).
+- **"Move to bottom" handles structural nodes in any order and tolerates a detached
+  element.** It skipped exactly one `title` then one `defs`, so a `defs`-before-`title`
+  order (or extra `metadata`/`desc`) wedged the moved element between them; it also
+  dereferenced `parentNode` without a guard. It now skips all leading non-content nodes
+  in any order and returns early when the element has no parent, matching the sibling
+  "move to top" (#103).
+- **Selecting 10 or more path points keeps them in order.** `addPtsToSelection` sorted
+  the numeric point-index list with a bare `.sort()`, which orders lexicographically
+  (`[2,10,1]` becomes `[1,10,2]`), corrupting the selected-point order and the
+  closed-subpath check on paths with ten or more nodes. It now sorts numerically (#94).
+
 ### Fixed (color/gradient math -- 2026-06-24)
 
 - **Inverting a 3-digit or named stop color no longer corrupts it.** `invertHex`

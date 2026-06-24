@@ -93,27 +93,32 @@ const moveToTopSelectedElem = (): void => {
  */
 const moveToBottomSelectedElem = (): void => {
   const [selected] = svgCanvas.getSelectedElements()
-  if (selected) {
-    let t: Element = selected
-    const oldParent = t.parentNode
-    const oldNextSibling = t.nextSibling
-    let firstChild: Element | null = (t.parentNode as Element).firstElementChild
-    if (firstChild?.tagName === 'title') {
-      firstChild = firstChild.nextElementSibling
-    }
-    if (firstChild?.tagName === 'defs') {
-      firstChild = firstChild.nextElementSibling
-    }
-    if (!firstChild) {
-      return
-    }
-    t = (t.parentNode as Element).insertBefore(t, firstChild)
-    if (oldNextSibling !== t.nextSibling) {
-      svgCanvas.addCommandToHistory(
-        new MoveElementCommand(t, oldNextSibling, oldParent as Node, 'bottom')
-      )
-      svgCanvas.call('changed', [t])
-    }
+  if (!selected) {
+    return
+  }
+  const t: Element = selected
+  const parent = t.parentNode as Element | null
+  if (!parent) {
+    return
+  }
+  const oldParent = t.parentNode
+  const oldNextSibling = t.nextSibling
+  // Skip all leading non-content nodes (title/defs/metadata/desc), in any order,
+  // so the element lands at the start of the rendered content rather than wedged
+  // between them.
+  let firstChild: Element | null = parent.firstElementChild
+  while (firstChild && ['title', 'defs', 'metadata', 'desc'].includes(firstChild.tagName)) {
+    firstChild = firstChild.nextElementSibling
+  }
+  if (!firstChild) {
+    return
+  }
+  parent.insertBefore(t, firstChild)
+  if (oldNextSibling !== t.nextSibling) {
+    svgCanvas.addCommandToHistory(
+      new MoveElementCommand(t, oldNextSibling, oldParent as Node, 'bottom')
+    )
+    svgCanvas.call('changed', [t])
   }
 }
 

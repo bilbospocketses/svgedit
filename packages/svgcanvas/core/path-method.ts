@@ -1055,7 +1055,7 @@ export class Path {
         this.selected_pts.push(index)
       }
     })
-    this.selected_pts.sort()
+    this.selected_pts.sort((a, b) => a - b)
     let i = this.selected_pts.length
     const grips: (SVGCircleElement | null)[] = []
     grips.length = i
