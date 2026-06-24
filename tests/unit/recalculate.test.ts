@@ -2085,4 +2085,60 @@ describe('recalculate', function () {
     assert.equal(rect.getAttribute('x'), '10')
     assert.equal(rect.getAttribute('y'), '20')
   })
+
+  it('recalculateDimensions() never flattens a <g> transform into its children', () => {
+    setUp()
+
+    const g = document.createElementNS(NS.SVG, 'g')
+    const rect = document.createElementNS(NS.SVG, 'rect')
+    rect.setAttribute('x', '10')
+    rect.setAttribute('y', '10')
+    rect.setAttribute('width', '20')
+    rect.setAttribute('height', '20')
+    const circle = document.createElementNS(NS.SVG, 'circle')
+    circle.setAttribute('cx', '50')
+    circle.setAttribute('cy', '50')
+    circle.setAttribute('r', '5')
+    circle.setAttribute('transform', 'translate(3,4)')
+    g.append(rect, circle)
+    // translate/scale/translate -- the exact shape the group-only flatten loops handled.
+    g.setAttribute('transform', 'translate(-35,-35) scale(2,2) translate(35,35)')
+    svg.append(g)
+
+    const cmd = recalculate.recalculateDimensions(g)
+
+    // Groups keep their transform on the group element; children are left untouched.
+    assert.equal(cmd, null)
+    assert.equal(g.getAttribute('transform'), 'translate(-35,-35) scale(2,2) translate(35,35)')
+    assert.equal(rect.getAttribute('x'), '10')
+    assert.equal(rect.getAttribute('y'), '10')
+    assert.equal(rect.getAttribute('width'), '20')
+    assert.equal(rect.getAttribute('height'), '20')
+    assert.equal(rect.hasAttribute('transform'), false)
+    assert.equal(circle.getAttribute('cx'), '50')
+    assert.equal(circle.getAttribute('cy'), '50')
+    assert.equal(circle.getAttribute('transform'), 'translate(3,4)')
+  })
+
+  it('recalculateDimensions() never flattens an <a> transform into its children', () => {
+    setUp()
+
+    const a = document.createElementNS(NS.SVG, 'a')
+    const rect = document.createElementNS(NS.SVG, 'rect')
+    rect.setAttribute('x', '10')
+    rect.setAttribute('y', '10')
+    rect.setAttribute('width', '20')
+    rect.setAttribute('height', '20')
+    a.append(rect)
+    a.setAttribute('transform', 'translate(5,10)')
+    svg.append(a)
+
+    const cmd = recalculate.recalculateDimensions(a)
+
+    assert.equal(cmd, null)
+    assert.equal(a.getAttribute('transform'), 'translate(5,10)')
+    assert.equal(rect.getAttribute('x'), '10')
+    assert.equal(rect.getAttribute('y'), '10')
+    assert.equal(rect.hasAttribute('transform'), false)
+  })
 })

@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed (unreachable group-flatten code in recalculate -- 2026-06-24)
+
+- **Deleted ~300 lines of unreachable code from `recalculateDimensions`.** The
+  function returns `null` for `<g>`/`<a>` near the top (groups keep their transform on
+  the group element rather than pushing it onto children), yet a large `g`/`a`-gated
+  block lower down still held the legacy child-transform-flatten loops -- the
+  `childNodes.item(i)` counted loops and per-child `getElementsByTagNameNS('use')`
+  re-query of audit finding #69, and the post-mutation singular-matrix `inverse()` of
+  finding #66. The early return makes that block unreachable, so both findings were
+  over-claims against dead code. The block is removed and the live non-group path
+  unwrapped; behaviour is unchanged (the surviving code is byte-identical apart from
+  indentation), guarded by the existing group tests plus new characterization tests
+  asserting `<g>`/`<a>` transforms are never flattened into their children (#66, #69).
+
 ### Performance (read-only path-data cache access -- 2026-06-24)
 
 - **Read-only path-data lookups no longer pay a defensive deep-clone.** `getPathData`
