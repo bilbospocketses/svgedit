@@ -978,6 +978,23 @@ export function getPathData (el: SVGPathElement, settings?: SVGPathDataSettings)
 }
 
 /**
+ * Read-only variant of {@link getPathData} that returns the per-element cache
+ * entry directly, WITHOUT the defensive deep-clone `getPathData` performs on
+ * every call. The returned array and its segments MUST NOT be mutated -- it is
+ * the live cache. Callers that only read path data should use this on hot paths;
+ * any caller that mutates the result (and then calls `setPathData`) MUST use
+ * `getPathData` instead. The `readonly` return type enforces this at compile time.
+ */
+export function getPathDataReadonly (el: SVGPathElement): readonly SVGPathDataCommand[] {
+  let cached = cachedPathData.get(el)
+  if (!cached) {
+    cached = parsePathData(el.getAttribute('d') || '')
+    cachedPathData.set(el, cached)
+  }
+  return cached
+}
+
+/**
  * Write structured path data to an SVGPathElement's `d` attribute.
  */
 export function setPathData (el: SVGPathElement, data: SVGPathDataCommand[]): void {

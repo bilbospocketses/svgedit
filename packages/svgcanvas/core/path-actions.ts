@@ -20,7 +20,7 @@ import {
 } from './utilities.js'
 import type { PathSeg, Segment } from './path-method.js'
 import { Path, toPathSeg } from './path-method.js'
-import { getPathData, setPathData } from './path-data.js'
+import { getPathData, getPathDataReadonly, setPathData } from './path-data.js'
 import type { SVGPathDataCommand } from './path-data.js'
 
 import type { ISvgCanvas } from './svgcanvas-types.js'
@@ -57,7 +57,7 @@ export const init = (canvas: ISvgCanvas): void => {
  * @param toRel - true of convert to relative
  */
 export const convertPath = (pth: SVGPathElement, toRel: boolean): string => {
-  const pathData = getPathData(pth)
+  const pathData = getPathDataReadonly(pth)
   const len = pathData.length
   let curx = 0; let cury = 0
   let d = ''
@@ -444,7 +444,7 @@ class PathActions {
         index = this.#subpath ? path.segs.length : 0
         svgCanvas.addPointGrip(index, mouseX, mouseY)
       } else {
-        const drawnData = getPathData(drawnPath)
+        const drawnData = getPathDataReadonly(drawnPath)
         let i = drawnData.length
         const FUZZ = 6 / zoom
         let clickOnPoint = false
@@ -474,7 +474,7 @@ class PathActions {
             const absX = firstCmd?.x ?? 0
             const absY = firstCmd?.y ?? 0
 
-            const stretchyData = getPathData(stretchy)
+            const stretchyData = getPathDataReadonly(stretchy)
             sSeg = stretchyData[1] ? toPathSeg(stretchyData[1]) : null
             const newEntry: SVGPathDataCommand = sSeg?.pathSegType === 4
               ? { type: 'L', values: [absX, absY] }
@@ -515,7 +515,7 @@ class PathActions {
             return false
           }
 
-          const drawnData2 = getPathData(drawnPath)
+          const drawnData2 = getPathDataReadonly(drawnPath)
           const num = drawnData2.length
           const lastCmd = drawnData2[num - 1] ? toPathSeg(drawnData2[num - 1]!) : null
           const lastx = lastCmd?.x ?? 0; const lasty = lastCmd?.y ?? 0
@@ -525,7 +525,7 @@ class PathActions {
             ({ x, y } = xya)
           }
 
-          const stretchyData2 = getPathData(stretchy)
+          const stretchyData2 = getPathDataReadonly(stretchy)
           sSeg = stretchyData2[1] ? toPathSeg(stretchyData2[1]) : null
           const rx = svgCanvas.round(x)
           const ry = svgCanvas.round(y)
@@ -604,7 +604,7 @@ class PathActions {
     const drawnPath = svgCanvas.getDrawnPath()
     if (svgCanvas.getCurrentMode() === 'path') {
       if (!drawnPath) { return }
-      const drawnMoveData = getPathData(drawnPath)
+      const drawnMoveData = getPathDataReadonly(drawnPath)
       const index = drawnMoveData.length - 1
 
       if (this.#newPoint) {
@@ -880,7 +880,7 @@ class PathActions {
     const m = transformListToTransform(tlist).matrix
     tlist.clear()
     pth.removeAttribute('transform')
-    const resetData = getPathData(pth)
+    const resetData = getPathDataReadonly(pth)
     const len = resetData.length
     for (let i = 0; i < len; ++i) {
       const cmd = resetData[i]
@@ -1115,7 +1115,7 @@ class PathActions {
 
     cleanup()
 
-    if (getPathData(path.elem).length <= 1) {
+    if (getPathDataReadonly(path.elem).length <= 1) {
       pathActionsMethod.toSelectMode(path.elem)
       svgCanvas.canvas.deleteSelectedElements()
       return
@@ -1199,7 +1199,7 @@ class PathActions {
   finishPath (): void {
     const drawnPath = svgCanvas.getDrawnPath()
     if (!drawnPath) return
-    if (getPathData(drawnPath).length < 2) return
+    if (getPathDataReadonly(drawnPath).length < 2) return
     const stretchy = getElement('path_stretch_line')
     if (stretchy) stretchy.remove()
     svgCanvas.setDrawnPath(null)

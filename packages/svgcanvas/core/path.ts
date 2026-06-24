@@ -12,7 +12,7 @@ import {
   getRotationAngle, getBBox,
   getRefElem, findDefs
 } from './utilities.js'
-import { getPathData } from './path-data.js'
+import { getPathDataReadonly } from './path-data.js'
 import { toPathSeg } from './path-method.js'
 import {
   init as pathMethodInit,
@@ -451,7 +451,7 @@ export const recalcRotatedPath = (): void => {
   newcx = r * Math.cos(theta) + oldcx
   newcy = r * Math.sin(theta) + oldcy
 
-  const recalcData = getPathData(pathElem)
+  const recalcData = getPathDataReadonly(pathElem)
   if (!recalcData.length) { return }
 
   let i = recalcData.length
@@ -602,7 +602,7 @@ const pathMap: (string | number)[] = [
  * @param toRel - true of convert to relative
  */
 export const convertPath = (pth: SVGPathElement, toRel: boolean): string => {
-  const cvtData = getPathData(pth)
+  const cvtData = getPathDataReadonly(pth)
   const len = cvtData.length
   let curx = 0; let cury = 0
   let d = ''

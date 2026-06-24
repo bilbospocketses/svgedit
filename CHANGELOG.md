@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Performance (read-only path-data cache access -- 2026-06-24)
+
+- **Read-only path-data lookups no longer pay a defensive deep-clone.** `getPathData`
+  returns a fresh clone of its per-element cache on every call, so that callers which
+  mutate the result cannot corrupt the cache. Most call sites only read the data
+  (bounding-box, coordinate remap, path serialization, interactive segment read-out)
+  yet still paid the clone on every call. A new `getPathDataReadonly` returns the
+  cache entry directly with no clone, and a `readonly` return type makes mutating it
+  a compile error. The read-only call sites across `coords`, `utilities`, `path`,
+  `path-method`, and `path-actions` now use it; mutating call sites keep using
+  `getPathData` and its protective clone. Behaviour is unchanged (#62).
+
 ### Performance (layer-identification scan -- 2026-06-24)
 
 - **`Drawing.identifyLayers` no longer indexes a live `NodeList` by position.** It

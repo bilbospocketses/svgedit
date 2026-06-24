@@ -16,7 +16,7 @@ import {
   assignAttributes, getRotationAngle,
   getElement
 } from './utilities.js'
-import { getPathData, setPathData } from './path-data.js'
+import { getPathData, getPathDataReadonly, setPathData } from './path-data.js'
 import type { SVGPathDataCommand } from './path-data.js'
 
 /** Seg object shape used by the path editing subsystem. */
@@ -412,7 +412,7 @@ export const replacePathSegMethod = (type: number, index: number, pts: number[],
   const segData = svgCanvas.getSegData?.() as Record<number, string[]> | undefined
   const props = segData?.[type] ?? segData?.[type - 1]
   if (props && pts.length < props.length) {
-    const data = getPathData(pth)
+    const data = getPathDataReadonly(pth)
     const currentSeg = data[index] ? toPathSeg(data[index]) : null
     if (currentSeg) {
       pts = props.map((prop, i) => (pts[i] !== undefined ? (pts[i]) : ((currentSeg[prop] as number) ?? 0)))
@@ -553,7 +553,7 @@ export class Segment {
       if (this.ctrlpts) {
         if (full) {
           const path = svgCanvas.getPathObj() as Path
-          const data = getPathData(path.elem)
+          const data = getPathDataReadonly(path.elem)
           const cmd = data[this.index]
           if (cmd) { this.item = toPathSeg(cmd) }
           this.type = this.item.pathSegType
@@ -658,7 +658,7 @@ export class Segment {
     replacePathSegMethod(newType, this.index, pts)
     this.type = newType
     const path = svgCanvas.getPathObj() as Path
-    const data = getPathData(path.elem)
+    const data = getPathDataReadonly(path.elem)
     const cmd = data[this.index]
     if (cmd) { this.item = toPathSeg(cmd) }
     this.showCtrlPts(newType === 6)
@@ -717,7 +717,7 @@ export class Path {
       el.setAttribute('display', 'none')
     })
 
-    const pathData = getPathData(this.elem)
+    const pathData = getPathDataReadonly(this.elem)
     const len = pathData.length
     this.segs = []
     this.selected_pts = []
@@ -1032,7 +1032,7 @@ export class Path {
       this.imatrix = null
     }
 
-    const updateData = getPathData(elem)
+    const updateData = getPathDataReadonly(elem)
     this.eachSeg(function (i) {
       const cmd = updateData[i]
       if (cmd) { this.item = toPathSeg(cmd) }
