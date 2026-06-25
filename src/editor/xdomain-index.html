@@ -28,9 +28,12 @@
   })
   svgEditor.init()
   if (typeof XDOMAIN !== 'undefined' && XDOMAIN) {
+    // ext-xdomain-messaging (the sole allowedOrigins consumer) isn't present
+    // in this fork, so cross-domain postMessage is inert; this entry only
+    // namespaces the canvas. Do NOT re-add allowedOrigins:['*'] without first
+    // restoring a properly origin-gated consumer.
     svgEditor.setConfig({
-      canvasName: 'xdomain',
-      allowedOrigins: ['*']
+      canvasName: 'xdomain'
     })
     console.info('xdomain config activated')
   }
