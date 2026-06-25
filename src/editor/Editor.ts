@@ -14,6 +14,7 @@ import type { ISvgCanvas } from '@svgedit/svgcanvas'
 
 import SvgCanvas from '@svgedit/svgcanvas'
 import ConfigObj from './ConfigObj.js'
+import { DocumentIO } from './DocumentIO.js'
 import type Rulers from './Rulers.js'
 import { initEditor } from './editorInit.js'
 import LeftPanel from './panels/LeftPanel.js'
@@ -22,7 +23,6 @@ import BottomPanel from './panels/BottomPanel.js'
 import LayersPanel from './panels/LayersPanel.js'
 import MainMenu from './MainMenu.js'
 import { getParentsUntil } from '@svgedit/svgcanvas/common/util.js'
-import { isSameOriginHttpUrl } from '@svgedit/svgcanvas/core/url-policy.js'
 import { EmbedServer } from '../embed/server.js'
 import { setSvgEditor } from './svgEditorInstance.js'
 import { typedDetail } from './typed-events.js'
@@ -47,7 +47,7 @@ interface ShortcutDef {
 
 const SVGEDIT_VERSION = '7.4.1'
 
-const { $id, $click, decode64 } = SvgCanvas
+const { $id, $click } = SvgCanvas
 
 /** Main SVG editor class — owns the canvas, panels, keyboard shortcuts, and extension lifecycle. */
 class Editor {
@@ -74,6 +74,7 @@ class Editor {
 
   // --- Properties (startup forward-declared) ---
   configObj: ConfigObj
+  documentIO: DocumentIO
   svgCanvas!: ISvgCanvas
   i18next!: I18nextFacade
   $svgEditor!: HTMLElement
@@ -122,6 +123,7 @@ class Editor {
     this.configObj = new ConfigObj(this)
     this.configObj.pref = this.configObj.pref.bind(this.configObj)
     this.setConfig = this.configObj.setConfig.bind(this.configObj)
+    this.documentIO = new DocumentIO(this)
     this.callbacks = []
     this.curContext = null
     this.exportWindowName = null
@@ -505,14 +507,8 @@ class Editor {
    *
    * @throws {Error} Upon failure to load SVG
    */
-  loadSvgString (str: string, { noAlert }: { noAlert?: boolean | undefined } = {}): void {
-    const success = this.svgCanvas.setSvgString(str) !== false
-    if (success) {
-      this.updateCanvas(false, undefined)
-      return
-    }
-    if (!noAlert) seAlert(this.i18next.t('notification.errorLoadingSVG'))
-    throw new Error('Error loading SVG')
+  loadSvgString (str: string, opts: { noAlert?: boolean | undefined } = {}): void {
+    this.documentIO.loadSvgString(str, opts)
   }
 
   /**
@@ -1237,11 +1233,8 @@ class Editor {
    * @returns Resolves to boolean indicating `true` if there were no changes
    *  and `false` after the user confirms.
    */
-  async openPrep () {
-    if (this.svgCanvas.undoMgr.getUndoStackSize() === 0) {
-      return true
-    }
-    return await seConfirm(this.i18next.t('notification.QwantToOpen'))
+  openPrep (): Promise<boolean | string> {
+    return this.documentIO.openPrep()
   }
 
   onDragEnter (e: DragEvent): void {
@@ -1341,16 +1334,8 @@ class Editor {
    * @function module:SVGthis.loadFromString
    * @param [opts.noAlert=false] Option to avoid alert to user and instead get rejected promise
    */
-  loadFromString (str: string, { noAlert }: { noAlert?: boolean | undefined } = {}): Promise<unknown> {
-    return this.ready(() => {
-      try {
-        this.loadSvgString(str, { noAlert })
-      } catch (err) {
-        if (noAlert) {
-          throw err
-        }
-      }
-    })
+  loadFromString (str: string, opts: { noAlert?: boolean | undefined } = {}): Promise<unknown> {
+    return this.documentIO.loadFromString(str, opts)
   }
 
   /**
@@ -1365,46 +1350,8 @@ class Editor {
    *   the SVG (or upon failure to parse the loaded string) when `noAlert` is
    *   enabled
    */
-  loadFromURL (url: string, { cache, noAlert }: { cache?: boolean | undefined; noAlert?: boolean | undefined } = {}): Promise<unknown> {
-    return this.ready(() => {
-      return new Promise<void>((resolve, reject) => {
-        if (!isSameOriginHttpUrl(url)) {
-          if (noAlert) {
-            reject(new Error('URLLoadFail'))
-            return
-          }
-          seAlert(this.i18next.t('notification.URLLoadFail'))
-          resolve()
-          return
-        }
-        fetch(url, { cache: cache ? 'force-cache' : 'no-cache' })
-          .then((response) => {
-            if (!response.ok) {
-              if (noAlert) {
-                reject(new Error('URLLoadFail'))
-                return
-              }
-              seAlert(this.i18next.t('notification.URLLoadFail'))
-              resolve()
-            }
-            return response.text()
-          })
-          .then((str) => {
-            this.loadSvgString(str as string, { noAlert })
-            resolve()
-          })
-          .catch((error) => {
-            if (noAlert) {
-              reject(new Error('URLLoadFail'))
-              return
-            }
-            seAlert(
-              this.i18next.t('notification.URLLoadFail') + ': \n' + error
-            )
-            resolve()
-          })
-      })
-    })
+  loadFromURL (url: string, opts: { cache?: boolean | undefined; noAlert?: boolean | undefined } = {}): Promise<unknown> {
+    return this.documentIO.loadFromURL(url, opts)
   }
 
   /**
@@ -1413,22 +1360,8 @@ class Editor {
    * @param str The Data URI to base64-decode (if relevant) and load
    * @returns Resolves to `undefined` and rejects if loading SVG string fails and `noAlert` is enabled
    */
-  loadFromDataURI (str: string, { noAlert }: { noAlert?: boolean | undefined } = {}): Promise<unknown> {
-    return this.ready(() => {
-      let base64 = false
-      let preMatch = str.match(/^data:image\/svg\+xml;base64,/)
-      if (preMatch) {
-        base64 = true
-      } else {
-        preMatch = str.match(/^data:image\/svg\+xml(?:;|;utf8)?,/)
-      }
-      const pre = preMatch ? preMatch[0] : null
-      const src = str.slice((pre ?? '').length)
-      return this.loadSvgString(
-        base64 ? decode64(src) : decodeURIComponent(src),
-        { noAlert }
-      )
-    })
+  loadFromDataURI (str: string, opts: { noAlert?: boolean | undefined } = {}): Promise<unknown> {
+    return this.documentIO.loadFromDataURI(str, opts)
   }
 
   /**
