@@ -680,9 +680,6 @@ export class Path {
   cur_pt?: number
   dragctrl?: number | false
   last_d?: string | null
-  // Dynamic property access needed for path segment operations
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Path uses dynamic property access for segment data
-  [key: string]: any
 
   /**
   * @throws {Error} If constructed without a path element
