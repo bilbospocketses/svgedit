@@ -53,7 +53,10 @@ describe('elem-get-set', () => {
       addCommandToHistory (cmd) {
         historyStack.push(cmd)
       },
-      setCurText () {},
+      setCurShape () {},
+      setCurProperties () {},
+      getMode () { return '' },
+      setCurText: vi.fn(),
       textActions: {
         setCursor () {}
       }
@@ -274,6 +277,85 @@ describe('elem-get-set', () => {
     canvas.setFontColor('#f00')
 
     expect(canvas.changeSelectedAttribute).toHaveBeenCalledWith('fill', '#f00', [text])
+    expect(canvas.call).toHaveBeenCalledWith('changed', [text])
+  })
+
+  // --- #99 group-flatten characterization (collectNonGroupElements) ---
+  it('setStrokeWidth() flattens a group selection to its non-group descendants', () => {
+    const g = createSvgElement('g')
+    const r1 = createSvgElement('rect')
+    const r2 = createSvgElement('rect')
+    g.append(r1, r2)
+    svgContent.append(g)
+    canvas.selectedElements = [g]
+
+    canvas.setStrokeWidth(3)
+
+    const [attr, val, els] = canvas.changeSelectedAttribute.mock.calls[0]
+    expect(attr).toBe('stroke-width')
+    expect(val).toBe(3)
+    expect(new Set(els)).toEqual(new Set([r1, r2]))
+  })
+
+  it('setStrokeAttr() flattens a group selection to its non-group descendants', () => {
+    const g = createSvgElement('g')
+    const r1 = createSvgElement('rect')
+    const c1 = createSvgElement('circle')
+    g.append(r1, c1)
+    svgContent.append(g)
+    canvas.selectedElements = [g]
+
+    canvas.setStrokeAttr('stroke-dasharray', '5,5')
+
+    const [attr, val, els] = canvas.changeSelectedAttribute.mock.calls[0]
+    expect(attr).toBe('stroke-dasharray')
+    expect(val).toBe('5,5')
+    expect(new Set(els)).toEqual(new Set([r1, c1]))
+  })
+
+  it('setColor() excludes top-level polyline/line for fill but keeps them inside groups', () => {
+    const topLine = createSvgElement('line')
+    const topRect = createSvgElement('rect')
+    const g = createSvgElement('g')
+    const innerLine = createSvgElement('line')
+    g.append(innerLine)
+    svgContent.append(topLine, topRect, g)
+    canvas.selectedElements = [topLine, topRect, g]
+
+    canvas.setColor('fill', '#0f0')
+
+    const [attr, val, els] = canvas.changeSelectedAttribute.mock.calls[0]
+    expect(attr).toBe('fill')
+    expect(val).toBe('#0f0')
+    // Top-level line excluded for fill; top-level rect kept; the line nested in
+    // the group is flattened in WITHOUT the exclusion (asymmetry is preserved).
+    expect(new Set(els)).toEqual(new Set([topRect, innerLine]))
+  })
+
+  // --- #100 text-setter scaffold characterization (applyTextAttr) ---
+  it('setFontFamily() sets curText and emits changed for modified text', () => {
+    const text = createSvgElement('text')
+    text.textContent = 'Hi'
+    svgContent.append(text)
+    canvas.selectedElements = [text]
+
+    canvas.setFontFamily('serif')
+
+    expect(canvas.setCurText).toHaveBeenCalledWith('font_family', 'serif')
+    expect(canvas.changeSelectedAttribute).toHaveBeenCalledWith('font-family', 'serif', [text])
+    expect(canvas.call).toHaveBeenCalledWith('changed', [text])
+  })
+
+  it('setTextAnchor() emits changed for modified text without touching curText', () => {
+    const text = createSvgElement('text')
+    text.textContent = 'Hi'
+    svgContent.append(text)
+    canvas.selectedElements = [text]
+
+    canvas.setTextAnchor('middle')
+
+    expect(canvas.setCurText).not.toHaveBeenCalled()
+    expect(canvas.changeSelectedAttribute).toHaveBeenCalledWith('text-anchor', 'middle', [text])
     expect(canvas.call).toHaveBeenCalledWith('changed', [text])
   })
 })
