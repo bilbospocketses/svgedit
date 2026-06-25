@@ -1,15 +1,11 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "./tsconfig.emit-base.json",
   "compilerOptions": {
     "rootDir": "src/embed",
     "outDir": "dist/embed",
     "declaration": true,
     "declarationMap": false,
-    "emitDeclarationOnly": false,
-    "noEmit": false,
-    "module": "ES2022",
-    "moduleResolution": "Bundler"
+    "emitDeclarationOnly": false
   },
-  "include": ["src/embed/**/*.ts"],
-  "exclude": ["**/*.test.ts", "**/*.test.js"]
+  "include": ["src/embed/**/*.ts"]
 }

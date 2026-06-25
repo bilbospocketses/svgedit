@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "module": "ES2022",
+    "moduleResolution": "Bundler"
+  },
+  "exclude": ["**/*.test.ts", "**/*.test.js"]
+}

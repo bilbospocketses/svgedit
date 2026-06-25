@@ -1,13 +1,9 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "./tsconfig.emit-base.json",
   "compilerOptions": {
     "rootDir": "src/server",
     "outDir": "dist/server",
-    "noEmit": false,
-    "module": "ES2022",
-    "moduleResolution": "Bundler",
     "types": ["node"]
   },
-  "include": ["src/server/**/*.ts"],
-  "exclude": ["**/*.test.ts", "**/*.test.js"]
+  "include": ["src/server/**/*.ts"]
 }
