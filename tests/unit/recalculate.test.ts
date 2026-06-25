@@ -304,6 +304,20 @@ describe('recalculate', function () {
     assert.equal(poly.getAttribute('points'), '3,-2 5,-2 5,0')
   })
 
+  it('updateClipPath() shifts polygon points', () => {
+    setUp()
+    const clipPath = document.createElementNS(NS.SVG, 'clipPath')
+    clipPath.id = 'clip-polygon'
+    const poly = document.createElementNS(NS.SVG, 'polygon')
+    poly.setAttribute('points', '1,1 4,1 4,5')
+    clipPath.append(poly)
+    svg.append(clipPath)
+
+    recalculate.updateClipPath('url(#clip-polygon)', -1, 2)
+
+    assert.equal(poly.getAttribute('points'), '0,3 3,3 3,7')
+  })
+
   // Tests for circle element with scale transform
   it('recalculateDimensions() handles circle with scale transform', () => {
     setUp()
@@ -607,6 +621,25 @@ describe('recalculate', function () {
 
     // Use elements return null to preserve referenced positioning
     assert.equal(cmd, null)
+  })
+
+  it('recalculateDimensions() handles use element with matrix (returns null)', () => {
+    setUp()
+
+    const use = document.createElementNS(NS.SVG, 'use')
+    use.setAttribute('x', '10')
+    use.setAttribute('y', '10')
+    use.setAttribute('href', '#someId')
+    use.setAttribute('transform', 'matrix(2,0,0,2,5,5)')
+    svg.append(use)
+
+    const cmd = recalculate.recalculateDimensions(use)
+
+    // <use> is short-circuited to null up front so referenced geometry is
+    // preserved; the transform is left intact (exercises the path the now-dead
+    // per-branch <use> matrix handling used to sit on).
+    assert.equal(cmd, null)
+    assert.equal(use.hasAttribute('transform'), true)
   })
 
   // Tests for group with rotation
