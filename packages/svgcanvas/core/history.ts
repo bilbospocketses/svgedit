@@ -23,7 +23,7 @@ export const BBOX_AFFECTING_ATTRS: Set<string> = new Set([
 * @param elem - SVG element
 * @param changedAttrs - attribute names that were changed
 */
-function relocateRotationCenter (elem: Element, changedAttrs: string[]): void {
+export function relocateRotationCenter (elem: Element, changedAttrs: string[]): void {
   const hasBboxChange = changedAttrs.some(attr => BBOX_AFFECTING_ATTRS.has(attr))
   if (!hasBboxChange) return
 

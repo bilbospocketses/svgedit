@@ -321,26 +321,18 @@ const alignSelectedElements = (type: string, relativeTo: string): void => {
 
   switch (relativeTo) {
     case 'smallest':
-      if (isHorizontalAlign(type) || isVerticalAlign(type)) {
-        const sortedBboxes = bboxes.slice().sort((a, b) => a.width - b.width)
-        const minBbox = sortedBboxes[0]
-        if (minBbox) {
-          minx = minBbox.x
-          miny = minBbox.y
-          maxx = minBbox.x + minBbox.width
-          maxy = minBbox.y + minBbox.height
-        }
-      }
-      break
     case 'largest':
       if (isHorizontalAlign(type) || isVerticalAlign(type)) {
         const sortedBboxes = bboxes.slice().sort((a, b) => a.width - b.width)
-        const maxBbox = sortedBboxes[bboxes.length - 1]
-        if (maxBbox) {
-          minx = maxBbox.x
-          miny = maxBbox.y
-          maxx = maxBbox.x + maxBbox.width
-          maxy = maxBbox.y + maxBbox.height
+        // Narrowest (smallest) or widest (largest) bbox as the reference. NB: sort
+        // pushes sparse holes to the end, so 'largest' may land on a hole — guarded
+        // by `if (bb)`. Behavior preserved from the previous two separate cases.
+        const bb = relativeTo === 'smallest' ? sortedBboxes[0] : sortedBboxes[bboxes.length - 1]
+        if (bb) {
+          minx = bb.x
+          miny = bb.y
+          maxx = bb.x + bb.width
+          maxy = bb.y + bb.height
         }
       }
       break

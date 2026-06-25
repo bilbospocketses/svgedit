@@ -6,16 +6,13 @@
  */
 import * as draw from './draw.js'
 import * as hstry from './history.js'
-import { BBOX_AFFECTING_ATTRS, UndoManager, HistoryEventTypes } from './history.js'
+import { UndoManager, HistoryEventTypes, relocateRotationCenter } from './history.js'
 import {
-  getRotationAngle, getBBox as utilsGetBBox, setHref, getStrokedBBoxDefaultVisible
+  setHref, getStrokedBBoxDefaultVisible
 } from './utilities.js'
 import {
   isGecko
 } from '../common/browser.js'
-import {
-  transformPoint, transformListToTransform, getTransformList
-} from './math.js'
 
 import type { ISvgCanvas } from './svgcanvas-types.js'
 
@@ -236,45 +233,10 @@ export const changeSelectedAttributeNoUndoMethod = (attr: string, newValue: stri
           svgCanvas.selectorManager.requestSelector(currentElem)!.resize()
         }, 0)
       }
-      // Only recalculate rotation center for attributes that change element geometry.
-      // Non-geometric attributes (stroke-width, fill, opacity, etc.) don't affect
-      // the bbox center, so the rotation is already correct and must not be touched.
-      // BBOX_AFFECTING_ATTRS is imported from history.js to keep the list in one place.
-      const angle = getRotationAngle(currentElem)
-      if (angle !== 0 && attr !== 'transform' && BBOX_AFFECTING_ATTRS.has(attr)) {
-        const tlist = getTransformList(currentElem)
-        if (!tlist) continue
-        let n = tlist.numberOfItems
-        while (n--) {
-          const xform = tlist.getItem(n)
-          if (xform.type === 4) {
-            // Compute bbox BEFORE removing the rotation so we can bail out
-            // safely if getBBox returns nothing (avoids losing the rotation).
-            const box = utilsGetBBox(currentElem)
-            if (!box) break
-
-            tlist.removeItem(n)
-
-            // Transform bbox center through only the transforms that come
-            // AFTER the rotation in the list (not the pre-rotation transforms).
-            // After removeItem(n), what was at n+1 is now at n.
-            let centerMatrix: SVGMatrix
-            if (n < tlist.numberOfItems) {
-              centerMatrix = transformListToTransform(tlist, n, tlist.numberOfItems - 1).matrix
-            } else {
-              centerMatrix = svgCanvas.getSvgRoot().createSVGMatrix() // identity
-            }
-            const center = transformPoint(
-              box.x + box.width / 2, box.y + box.height / 2, centerMatrix
-            )
-
-            const newrot = svgCanvas.getSvgRoot().createSVGTransform()
-            newrot.setRotate(angle, center.x, center.y)
-            tlist.insertItemBefore(newrot, n)
-            break
-          }
-        }
-      }
+      // Relocate the rotation center after a geometry-affecting attribute change.
+      // Shared with history.ts's ChangeElementCommand; relocateRotationCenter
+      // no-ops for non-bbox attrs (and for `transform`, which isn't bbox-affecting).
+      relocateRotationCenter(currentElem, [attr])
     } // if oldValue != newValue
   } // for each elem
 }
