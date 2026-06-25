@@ -17,6 +17,7 @@ import ConfigObj from './ConfigObj.js'
 import { DocumentIO } from './DocumentIO.js'
 import { ExportManager } from './ExportManager.js'
 import { EditorSelection } from './EditorSelection.js'
+import { UICoordinator } from './UICoordinator.js'
 import type Rulers from './Rulers.js'
 import { initEditor } from './editorInit.js'
 import LeftPanel from './panels/LeftPanel.js'
@@ -24,12 +25,10 @@ import TopPanel from './panels/TopPanel.js'
 import BottomPanel from './panels/BottomPanel.js'
 import LayersPanel from './panels/LayersPanel.js'
 import MainMenu from './MainMenu.js'
-import { getParentsUntil } from '@svgedit/svgcanvas/common/util.js'
 import { EmbedServer } from '../embed/server.js'
 import { setSvgEditor } from './svgEditorInstance.js'
 import { typedDetail } from './typed-events.js'
 import { setPaletteWithErrors } from './components/palette-store.js'
-import { renderContextPanel } from './contextPanel.js'
 
 /** Narrow i18next facade — matches the surface from locale.ts. */
 interface I18nextFacade {
@@ -76,6 +75,7 @@ class Editor {
   documentIO: DocumentIO
   exportManager: ExportManager
   selection: EditorSelection
+  uiCoordinator: UICoordinator
   svgCanvas!: ISvgCanvas
   i18next!: I18nextFacade
   $svgEditor!: HTMLElement
@@ -139,6 +139,7 @@ class Editor {
     this.documentIO = new DocumentIO(this)
     this.exportManager = new ExportManager(this)
     this.selection = new EditorSelection()
+    this.uiCoordinator = new UICoordinator(this)
     this.callbacks = []
     this.curContext = null
     this.docprops = false
@@ -468,41 +469,8 @@ class Editor {
  * Listens to the mode change, listener is to be added on document
 * @param evt custom modeChange event
 */
-  modeListener (_evt: Event): void {
-    const mode = this.svgCanvas.getMode()
-
-    this.setCursorStyle(mode)
-  }
-
-  /**
-   * sets cursor styling for workarea depending on the current mode
-   */
-  setCursorStyle (mode: string): void {
-    let cs = 'auto'
-    switch (mode) {
-      case 'ext-panning':
-        cs = 'grab'
-        break
-      case 'zoom':
-      case 'shapelib':
-        cs = 'crosshair'
-        break
-      case 'circle':
-      case 'ellipse':
-      case 'rect':
-      case 'square':
-      case 'star':
-      case 'polygon':
-        cs = `url("./images/cursors/${mode}_cursor.svg"), crosshair`
-        break
-      case 'text':
-        cs = 'text'
-        break
-      default:
-        cs = 'auto'
-    }
-
-    this.workarea.style.cursor = cs
+  modeListener (evt: Event): void {
+    this.uiCoordinator.modeListener(evt)
   }
 
   /**
@@ -673,106 +641,11 @@ class Editor {
    * @function module:SVGthis.updateCanvas
    */
   updateCanvas (center?: boolean, newCtr?: { x: number; y: number }): void {
-    const zoom = this.svgCanvas.getZoom()
-    const { workarea } = this
-    const cnvs = $id('svgcanvas')
-    if (!cnvs) return
-
-    let w = parseFloat(
-      getComputedStyle(workarea, null).width.replace('px', '')
-    )
-    let h = parseFloat(
-      getComputedStyle(workarea, null).height.replace('px', '')
-    )
-    const wOrig = w
-    const hOrig = h
-    const oldCtr = {
-      x: workarea.scrollLeft + wOrig / 2,
-      y: workarea.scrollTop + hOrig / 2
-    }
-    const multi = this.configObj.curConfig.canvas_expansion
-    w = Math.max(wOrig, this.svgCanvas.contentW * zoom * multi)
-    h = Math.max(hOrig, this.svgCanvas.contentH * zoom * multi)
-
-    if (w === wOrig && h === hOrig) {
-      workarea.style.overflow = 'hidden'
-    } else {
-      workarea.style.overflow = 'scroll'
-    }
-
-    const oldCanY =
-      parseFloat(getComputedStyle(cnvs, null).height.replace('px', '')) / 2
-    const oldCanX =
-      parseFloat(getComputedStyle(cnvs, null).width.replace('px', '')) / 2
-
-    cnvs.style.width = w + 'px'
-    cnvs.style.height = h + 'px'
-    const newCanY = h / 2
-    const newCanX = w / 2
-    const offset = this.svgCanvas.updateCanvas(w, h)
-
-    const ratio = newCanX / oldCanX
-
-    const scrollX = w / 2 - wOrig / 2
-    const scrollY = h / 2 - hOrig / 2
-
-    if (!newCtr) {
-      const oldDistX = oldCtr.x - oldCanX
-      const newX = newCanX + oldDistX * ratio
-
-      const oldDistY = oldCtr.y - oldCanY
-      const newY = newCanY + oldDistY * ratio
-
-      newCtr = {
-        x: newX,
-        y: newY
-      }
-    } else {
-      newCtr.x += offset.x
-      newCtr.y += offset.y
-    }
-
-    if (center) {
-      // Go to top-left for larger documents
-      if (
-        this.svgCanvas.contentW >
-        parseFloat(getComputedStyle(workarea, null).width.replace('px', ''))
-      ) {
-        // Top-left
-        workarea.scrollLeft = offset.x - 10
-        workarea.scrollTop = offset.y - 10
-      } else {
-        // Center
-        workarea.scrollLeft = scrollX
-        workarea.scrollTop = scrollY
-      }
-    } else {
-      workarea.scrollLeft = newCtr.x - wOrig / 2
-      workarea.scrollTop = newCtr.y - hOrig / 2
-    }
-    if (this.configObj.curConfig.showRulers) {
-      this.rulers.updateRulers(cnvs, zoom)
-      workarea.scroll()
-    }
-
-    if (
-      this.configObj.urldata.storagePrompt !== true &&
-      this.storagePromptState === 'ignore'
-    ) {
-      $id('dialog_box')?.style.setProperty('display', 'none')
-    }
+    this.uiCoordinator.updateCanvas(center, newCtr)
   }
 
-  updateWireFrame () {
-    const rule = `
-      #workarea.wireframe #svgcontent * {
-        stroke-width: ${1 / this.svgCanvas.getZoom()}px;
-      }
-    `
-    if (document.querySelectorAll('#wireframe_rules').length > 0) {
-      ;(document.querySelector('#wireframe_rules') as HTMLElement).textContent =
-        this.workarea.classList.contains('wireframe') ? rule : ''
-    }
+  updateWireFrame (): void {
+    this.uiCoordinator.updateWireFrame()
   }
 
   // called when we've selected a different element
@@ -908,11 +781,8 @@ class Editor {
     this.svgCanvas.runExtensions({ action: 'beforeClear' })
   }
 
-  zoomDone () {
-    for (const el of this.svgCanvas.selectedElements) {
-      if (el) this.svgCanvas.selectorManager.requestSelector(el)?.resize()
-    }
-    this.updateWireFrame()
+  zoomDone (): void {
+    this.uiCoordinator.zoomDone()
   }
 
   /**
@@ -921,78 +791,15 @@ class Editor {
    * @listens module:svgcanvas.SvgCanvas#event:zoomed
    * @fires module:svgcanvas.SvgCanvas#event:ext_zoomChanged
    */
-  zoomChanged (_win: unknown, bbox: unknown, autoCenter?: boolean): void {
-    const scrbar = 15
-    const zInfo = this.svgCanvas.setBBoxZoom(
-      bbox,
-      parseFloat(
-        getComputedStyle(this.workarea, null).width.replace('px', '')
-      ) - scrbar,
-      parseFloat(
-        getComputedStyle(this.workarea, null).height.replace('px', '')
-      ) - scrbar
-    )
-    if (!zInfo) {
-      return
-    }
-    const zoomlevel = zInfo.zoom
-    const bb = zInfo.bbox as { x: number; y: number; width: number; height: number }
-
-    if (zoomlevel < 0.001) {
-      this.bottomPanel.changeZoom(String(0.1))
-      return
-    }
-
-    ;($id('zoom') as HTMLInputElement | null)?.setAttribute('value', (this.svgCanvas.getZoom() * 100).toFixed(1))
-
-    if (autoCenter) {
-      this.updateCanvas(false, undefined)
-    } else {
-      this.updateCanvas(false, {
-        x: bb.x * zoomlevel + (bb.width * zoomlevel) / 2,
-        y: bb.y * zoomlevel + (bb.height * zoomlevel) / 2
-      })
-    }
-
-    if (this.svgCanvas.getMode() === 'zoom' && bb.width) {
-      // Go to select if a zoom box was drawn
-      this.leftPanel.clickSelect()
-    }
-
-    this.zoomDone()
-
-    this.svgCanvas.runExtensions({
-      action: 'zoomChanged',
-      vars: this.svgCanvas.getZoom()
-    })
+  zoomChanged (win: unknown, bbox: unknown, autoCenter?: boolean): void {
+    this.uiCoordinator.zoomChanged(win, bbox, autoCenter)
   }
 
   /**
    * @listens module:svgcanvas.SvgCanvas#event:contextset
    */
-  contextChanged (_win: unknown, context: Element | null): void {
-    let str = ''
-    let parents: Element[] = []
-    if (context) {
-      parents = (getParentsUntil(context, '#svgcontent') ?? []) as Element[]
-      parents.forEach((parent: Element) => {
-        if (parent.id) { str += ' > ' + parent.id }
-      })
-      this.curContext = str
-    } else {
-      this.curContext = null
-    }
-    const ctxPanel = $id('cur_context_panel')
-    if (ctxPanel) {
-      ctxPanel.style.display = context ? 'block' : 'none'
-      // Build the breadcrumb via the DOM API — a selected element's id or the layer
-      // title is untrusted (both survive the import sanitizer unvalidated) (#47).
-      if (context) {
-        renderContextPanel(ctxPanel, this.svgCanvas.getCurrentDrawing().getCurrentLayerName(), parents, context)
-      } else {
-        ctxPanel.replaceChildren()
-      }
-    }
+  contextChanged (win: unknown, context: Element | null): void {
+    this.uiCoordinator.contextChanged(win, context)
   }
 
   /**
