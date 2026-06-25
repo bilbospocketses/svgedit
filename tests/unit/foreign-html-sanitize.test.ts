@@ -2,17 +2,23 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { NS } from '../../packages/svgcanvas/core/namespaces.js'
 import * as sanitize from '../../packages/svgcanvas/core/sanitize.js'
 
+// Shared foreignObject scaffold used by the tag/attr/link describe blocks below.
+// Each builds an <svg><foreignObject><div> tree, exposes the <div> as `root`,
+// and silences sanitize warnings.
+const h = (tag: string) => document.createElementNS(NS.HTML, tag)
+let root: Element
+const setupForeignRoot = () => {
+  console.warn = () => {}
+  const svg = document.createElementNS(NS.SVG, 'svg')
+  const fo = document.createElementNS(NS.SVG, 'foreignObject')
+  root = h('div'); fo.appendChild(root); svg.appendChild(fo)
+  document.body.appendChild(svg)
+}
+const teardownForeignRoot = () => { document.body.textContent = '' }
+
 describe('sanitizeForeignHtml — tags', () => {
-  const h = (tag: string) => document.createElementNS(NS.HTML, tag)
-  let root: Element
-  beforeEach(() => {
-    console.warn = () => {}
-    const svg = document.createElementNS(NS.SVG, 'svg')
-    const fo = document.createElementNS(NS.SVG, 'foreignObject')
-    root = h('div'); fo.appendChild(root); svg.appendChild(fo)
-    document.body.appendChild(svg)
-  })
-  afterEach(() => { document.body.textContent = '' })
+  beforeEach(setupForeignRoot)
+  afterEach(teardownForeignRoot)
 
   it('keeps allowed inline/block tags', () => {
     root.innerHTML = '<p>a <strong>b</strong> <em>c</em></p>'
@@ -37,16 +43,8 @@ describe('sanitizeForeignHtml — tags', () => {
 })
 
 describe('sanitizeForeignHtml — attrs + style', () => {
-  const h = (tag: string) => document.createElementNS(NS.HTML, tag)
-  let root: Element
-  beforeEach(() => {
-    console.warn = () => {}
-    const svg = document.createElementNS(NS.SVG, 'svg')
-    const fo = document.createElementNS(NS.SVG, 'foreignObject')
-    root = h('div'); fo.appendChild(root); svg.appendChild(fo)
-    document.body.appendChild(svg)
-  })
-  afterEach(() => { document.body.textContent = '' })
+  beforeEach(setupForeignRoot)
+  afterEach(teardownForeignRoot)
 
   it('keeps allowlisted CSS props, drops the rest', () => {
     root.innerHTML = '<span style="color: red; font-size: 16px; position: absolute">x</span>'
@@ -78,16 +76,8 @@ describe('sanitizeForeignHtml — attrs + style', () => {
 })
 
 describe('sanitizeForeignHtml — links', () => {
-  const h = (tag: string) => document.createElementNS(NS.HTML, tag)
-  let root: Element
-  beforeEach(() => {
-    console.warn = () => {}
-    const svg = document.createElementNS(NS.SVG, 'svg')
-    const fo = document.createElementNS(NS.SVG, 'foreignObject')
-    root = h('div'); fo.appendChild(root); svg.appendChild(fo)
-    document.body.appendChild(svg)
-  })
-  afterEach(() => { document.body.textContent = '' })
+  beforeEach(setupForeignRoot)
+  afterEach(teardownForeignRoot)
 
   it('keeps http(s) links and forces target/rel', () => {
     root.innerHTML = '<a href="https://example.com">x</a>'

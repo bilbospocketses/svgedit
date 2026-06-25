@@ -10,6 +10,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import SvgCanvas from '../../packages/svgcanvas/svgcanvas.js'
 import { NS } from '../../packages/svgcanvas/core/namespaces.js'
 import * as utilities from '../../packages/svgcanvas/core/utilities.js'
+import { createSvgCanvasFixture } from './helpers/createSvgCanvasFixture'
 
 describe('getElement — selector injection (#35)', () => {
   let svg: SVGSVGElement
@@ -46,22 +47,7 @@ describe('getElement — selector injection (#35)', () => {
 describe('setSvgString / convertGradients — selector injection (#37, #36)', () => {
   let svgCanvas: InstanceType<typeof SvgCanvas>
 
-  const createSvgCanvas = (): InstanceType<typeof SvgCanvas> => {
-    document.body.textContent = ''
-    const svgEditor = document.createElement('div'); svgEditor.id = 'svg_editor'
-    const svgcanvas = document.createElement('div'); svgcanvas.id = 'svgcanvas'; svgcanvas.style.visibility = 'hidden'
-    const workarea = document.createElement('div'); workarea.id = 'workarea'; workarea.append(svgcanvas)
-    const toolsLeft = document.createElement('div'); toolsLeft.id = 'tools_left'
-    svgEditor.append(workarea, toolsLeft); document.body.append(svgEditor)
-    return new SvgCanvas(document.getElementById('svgcanvas') as HTMLElement, {
-      canvas_expansion: 3, dimensions: [640, 480],
-      initFill: { color: 'FF0000', opacity: 1 }, initStroke: { width: 5, color: '000000', opacity: 1 },
-      initOpacity: 1, imgPath: '../editor/images', langPath: 'locale/', extPath: 'extensions/',
-      extensions: [], initTool: 'select', wireframe: false
-    }) as never
-  }
-
-  beforeEach(() => { svgCanvas = createSvgCanvas() })
+  beforeEach(() => { svgCanvas = createSvgCanvasFixture() as InstanceType<typeof SvgCanvas> })
 
   it('imports duplicate ids containing a quote without aborting (#37)', () => {
     const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">' +

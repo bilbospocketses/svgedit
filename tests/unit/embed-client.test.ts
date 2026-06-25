@@ -82,21 +82,21 @@ const buildIframeWithStubPM = () => {
   return iframe
 }
 
+const fireReady = (iframe, { capabilities = [] } = {}) => window.dispatchEvent(new MessageEvent('message', {
+  data: { ns: 'svgedit', v: 1, kind: 'event', name: 'ready', payload: { version: '7.4.1', protocolVersion: 1, capabilities } },
+  origin: 'https://editor.test',
+  source: iframe.contentWindow
+}))
+
 describe('SvgEditEmbed — Proxy method dispatch', () => {
   let iframe
   beforeEach(() => {
     iframe = buildIframeWithStubPM()
   })
 
-  const fireReady = () => window.dispatchEvent(new MessageEvent('message', {
-    data: { ns: 'svgedit', v: 1, kind: 'event', name: 'ready', payload: { version: '7.4.1', protocolVersion: 1, capabilities: [] } },
-    origin: 'https://editor.test',
-    source: iframe.contentWindow
-  }))
-
   it('Proxy forwards method calls via postMessage with id correlation', async () => {
     const client = new SvgEditEmbed(iframe, { allowedOrigins: ['https://editor.test'] })
-    setTimeout(fireReady, 0)
+    setTimeout(() => fireReady(iframe), 0)
     await client.ready
 
     const callPromise = client.editor.getZoom()
@@ -120,7 +120,7 @@ describe('SvgEditEmbed — Proxy method dispatch', () => {
 
   it('Proxy rejects Promise on error reply', async () => {
     const client = new SvgEditEmbed(iframe, { allowedOrigins: ['https://editor.test'] })
-    setTimeout(fireReady, 0)
+    setTimeout(() => fireReady(iframe), 0)
     await client.ready
 
     const callPromise = client.editor.bogusMethod()
@@ -141,7 +141,7 @@ describe('SvgEditEmbed — Proxy method dispatch', () => {
 
     expect(iframe.contentWindow.postMessage).not.toHaveBeenCalled()
 
-    fireReady()
+    fireReady(iframe)
     await client.ready
 
     expect(iframe.contentWindow.postMessage).toHaveBeenCalled()
@@ -226,14 +226,9 @@ describe('SvgEditEmbed — dialog handlers', () => {
     iframe = buildIframeWithStubPM()
   })
 
-  const fireReady = () => window.dispatchEvent(new MessageEvent('message', {
-    data: { ns: 'svgedit', v: 1, kind: 'event', name: 'ready', payload: { version: '7.4.1', protocolVersion: 1, capabilities: [] } },
-    origin: 'https://editor.test', source: iframe.contentWindow
-  }))
-
   it('setDialogHandler routes dialog-request to handler and posts response', async () => {
     const client = new SvgEditEmbed(iframe, { allowedOrigins: ['https://editor.test'] })
-    fireReady()
+    fireReady(iframe)
     await client.ready
 
     client.setDialogHandler('prompt', async (text, def) => `${text}=${def}`)
@@ -266,14 +261,9 @@ describe('SvgEditEmbed — convenience methods', () => {
     iframe = buildIframeWithStubPM()
   })
 
-  const fireReady = () => window.dispatchEvent(new MessageEvent('message', {
-    data: { ns: 'svgedit', v: 1, kind: 'event', name: 'ready', payload: { version: '7.4.1', protocolVersion: 1, capabilities: ['chrome', 'theme'] } },
-    origin: 'https://editor.test', source: iframe.contentWindow
-  }))
-
   it('setTheme posts a __setTheme call', async () => {
     const client = new SvgEditEmbed(iframe, { allowedOrigins: ['https://editor.test'] })
-    fireReady()
+    fireReady(iframe, { capabilities: ['chrome', 'theme'] })
     await client.ready
 
     void client.setTheme('dark')
@@ -284,7 +274,7 @@ describe('SvgEditEmbed — convenience methods', () => {
 
   it('setChrome posts a __setChrome call with preset', async () => {
     const client = new SvgEditEmbed(iframe, { allowedOrigins: ['https://editor.test'] })
-    fireReady()
+    fireReady(iframe, { capabilities: ['chrome', 'theme'] })
     await client.ready
 
     void client.setChrome('minimal')
@@ -295,7 +285,7 @@ describe('SvgEditEmbed — convenience methods', () => {
 
   it('setDialogTimeout posts a __setDialogTimeout call', async () => {
     const client = new SvgEditEmbed(iframe, { allowedOrigins: ['https://editor.test'] })
-    fireReady()
+    fireReady(iframe, { capabilities: ['chrome', 'theme'] })
     await client.ready
 
     void client.setDialogTimeout(15000)
