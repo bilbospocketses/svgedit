@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures.js'
-import { setSvgSource, visitAndApproveStorage } from './helpers.js'
+import { setRotationAngle, setSvgSource, visitAndApproveStorage } from './helpers.js'
 
 test.describe('Regression issues', () => {
   test.beforeEach(async ({ page }) => {
@@ -13,8 +13,12 @@ test.describe('Regression issues', () => {
         <rect fill="#ffff00" height="70" width="165" x="179.5" y="146.5"/>
       </g>
      </svg>`)
+    // The fixture rect has no id, so select it by element type within the content layer.
+    await expect(page.locator('#svgcontent rect')).toHaveCount(1)
     await page.locator('#tool_undo').click()
+    await expect(page.locator('#svgcontent rect')).toHaveCount(0)
     await page.locator('#tool_redo').click()
+    await expect(page.locator('#svgcontent rect')).toHaveCount(1)
   })
 
   test('issue 407: ellipse rotation preserves center', async ({ page }) => {
@@ -25,11 +29,7 @@ test.describe('Regression issues', () => {
       </g>
     </svg>`)
     await page.locator('#svg_1').click()
-    await page.locator('#angle').evaluate(el => {
-      const input = el.shadowRoot.querySelector('input')
-      input.value = '15'
-      input.dispatchEvent(new Event('change', { bubbles: true }))
-    })
+    await setRotationAngle(page, 15)
     const cx = await page.locator('#svg_1').getAttribute('cx')
     const cy = await page.locator('#svg_1').getAttribute('cy')
     expect(cx).toBe('217.5')
@@ -71,11 +71,7 @@ test.describe('Regression issues', () => {
       </g>
     </svg>`)
     await page.locator('#svg_1').click()
-    await page.locator('#angle').evaluate(el => {
-      const input = el.shadowRoot.querySelector('input')
-      input.value = '25'
-      input.dispatchEvent(new Event('change', { bubbles: true }))
-    })
+    await setRotationAngle(page, 25)
     const points = await page.locator('#svg_1').getAttribute('points')
     expect(points).toBeTruthy()
   })

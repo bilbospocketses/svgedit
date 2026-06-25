@@ -296,9 +296,20 @@ test.describe('foreignObject HTML authoring', () => {
     await expect(fo).toContainText('safe-marker')
     await expect(page.locator('foreignObject img')).toHaveCount(0)
     await expect(page.locator('foreignObject script')).toHaveCount(0)
-    // onerror is async — give the browser a beat before reading the flag.
-    await page.waitForTimeout(150)
-    expect(await page.evaluate(() => (window as Window & { __xssFired?: boolean }).__xssFired)).toBe(false)
+    // onerror is async: a malicious <img onerror> fires on the image-load task queue.
+    // Instead of a fixed sleep, inject our own guaranteed-404 sentinel image and await
+    // its load/error. Image events resolve in order on the same queue, so once the
+    // sentinel settles any payload <img> would already have run — then read the flag.
+    const fired = await page.evaluate(async () => {
+      await new Promise<void>((resolve) => {
+        const probe = new Image()
+        probe.onload = () => resolve()
+        probe.onerror = () => resolve()
+        probe.src = `/__xss-drain-probe__/${Date.now()}.png`
+      })
+      return (window as Window & { __xssFired?: boolean }).__xssFired
+    })
+    expect(fired).toBe(false)
   }
 
   test('source-mode XSS payload neither executes nor renders', async ({ page }) => {

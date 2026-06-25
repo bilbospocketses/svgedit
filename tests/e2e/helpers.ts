@@ -74,6 +74,14 @@ export async function dismissStorageDialog (page) {
   ).catch(() => {})
 }
 
+export async function setRotationAngle (page, degrees) {
+  await page.locator('#angle').evaluate((el, value) => {
+    const input = el.shadowRoot.querySelector('input')
+    input.value = value
+    input.dispatchEvent(new Event('change', { bubbles: true }))
+  }, String(degrees))
+}
+
 export async function clickCanvas (page, point) {
   const canvas = page.locator('#svgroot')
   const box = await canvas.boundingBox()

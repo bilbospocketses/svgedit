@@ -14,19 +14,19 @@ test.describe('embed: dialog hooks', () => {
       })
     })
 
-    // Give __registerDialogHandler call time to reach the server
-    await page.waitForTimeout(150)
+    // Wait until the __registerDialogHandler call has reached the server (the server
+    // marks the host handler registered), rather than guessing with a fixed delay.
+    const frame = page.frames().find(f => f.url().includes('/index.html'))
+    await expect
+      .poll(() => frame.evaluate(() => window.svgEditor._embedServer._isHostHandlerRegistered('alert')))
+      .toBe(true)
 
     // Trigger requestDialog from inside the iframe via Playwright frame API
     // (cannot nest page.evaluate — use frame.evaluate instead)
-    const frame = page.frames().find(f => f.url().includes('/index.html'))
     await frame.evaluate(() => window.svgEditor._embedServer.requestDialog('alert', ['hello from test']))
 
-    // Wait for the postMessage round-trip to complete
-    await page.waitForTimeout(300)
-
-    const captured = await page.evaluate(() => window.__capturedDialog)
-    expect(captured).toBe('hello from test')
+    // Poll for the postMessage round-trip to complete instead of a fixed delay.
+    await expect.poll(() => page.evaluate(() => window.__capturedDialog)).toBe('hello from test')
   })
 
   test('host-registered handler is unregistered correctly', async ({ page }) => {
@@ -41,11 +41,14 @@ test.describe('embed: dialog hooks', () => {
       off()
     })
 
-    // Give __unregisterDialogHandler call time to reach the server
-    await page.waitForTimeout(150)
+    // Wait until the __unregisterDialogHandler call has reached the server (the server
+    // clears the host-handler mark) instead of guessing with a fixed delay.
+    const frame = page.frames().find(f => f.url().includes('/index.html'))
+    await expect
+      .poll(() => frame.evaluate(() => window.svgEditor._embedServer._isHostHandlerRegistered('alert')))
+      .toBe(false)
 
     // Trigger requestDialog — handler should NOT fire (server no longer has it registered)
-    const frame = page.frames().find(f => f.url().includes('/index.html'))
     await frame.evaluate(() => window.svgEditor._embedServer.requestDialog('alert', ['should not arrive']))
 
     // Wait for any potential round-trip
