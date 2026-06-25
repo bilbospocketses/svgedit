@@ -152,20 +152,7 @@ export async function initEditor (editor: Editor): Promise<void> {
   editor.svgCanvas.bind('transition', editor.elementTransition.bind(editor))
   editor.svgCanvas.bind('changed', editor.elementChanged.bind(editor))
   editor.svgCanvas.bind('exported', editor.exportHandler.bind(editor))
-  editor.svgCanvas.bind('exportedPDF', (_win: unknown, data: { output?: string; exportWindowName?: string }) => {
-    if (!data.output) { // Ignore Chrome
-      return
-    }
-    const { exportWindowName } = data
-    if (exportWindowName) {
-      editor.exportWindow = window.open('', editor.exportWindowName ?? undefined) // A hack to get the window via JSON-able name without opening a new one
-    }
-    if (!editor.exportWindow || editor.exportWindow.closed) {
-      seAlert(editor.i18next.t('notification.popupWindowBlocked'))
-      return
-    }
-    editor.exportWindow.location.href = data.output
-  })
+  editor.svgCanvas.bind('exportedPDF', editor.exportManager.handleExportedPDF.bind(editor.exportManager))
   editor.svgCanvas.bind('zoomed', editor.zoomChanged.bind(editor))
   editor.svgCanvas.bind('zoomDone', editor.zoomDone.bind(editor))
   editor.svgCanvas.bind(
