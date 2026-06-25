@@ -52,6 +52,30 @@ describe('selected-elem', () => {
     expect(r2.getAttribute('x')).toBe('0')
   })
 
+  it('aligns to the left edge of the smallest (narrowest) element', () => {
+    const small = svgCanvas.addSVGElementsFromJson({ element: 'rect', attr: { id: 'sm-small', x: 50, y: 0, width: 10, height: 10 } })
+    const big = svgCanvas.addSVGElementsFromJson({ element: 'rect', attr: { id: 'sm-big', x: 0, y: 0, width: 40, height: 40 } })
+    svgCanvas.selectOnly([small, big], true)
+
+    svgCanvas.alignSelectedElements('l', 'smallest')
+
+    // 'smallest' picks the narrowest bbox (small @ x=50) as the reference edge.
+    expect(small.getAttribute('x')).toBe('50')
+    expect(big.getAttribute('x')).toBe('50')
+  })
+
+  it('aligns to the left edge of the largest (widest) element', () => {
+    const small = svgCanvas.addSVGElementsFromJson({ element: 'rect', attr: { id: 'lg-small', x: 50, y: 0, width: 10, height: 10 } })
+    const big = svgCanvas.addSVGElementsFromJson({ element: 'rect', attr: { id: 'lg-big', x: 0, y: 0, width: 40, height: 40 } })
+    svgCanvas.selectOnly([small, big], true)
+
+    svgCanvas.alignSelectedElements('l', 'largest')
+
+    // 'largest' picks the widest bbox (big @ x=0) as the reference edge.
+    expect(small.getAttribute('x')).toBe('0')
+    expect(big.getAttribute('x')).toBe('0')
+  })
+
   it('distributes selected elements horizontally, mapping distances to the right elements', () => {
     // Selection order (A,B,C) deliberately differs from left-to-right order
     // (B,C,A) so the sorted-clone -> original-index mapping is exercised.
