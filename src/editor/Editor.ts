@@ -15,6 +15,7 @@ import type { ISvgCanvas } from '@svgedit/svgcanvas'
 import SvgCanvas from '@svgedit/svgcanvas'
 import ConfigObj from './ConfigObj.js'
 import { DocumentIO } from './DocumentIO.js'
+import { ExportManager } from './ExportManager.js'
 import type Rulers from './Rulers.js'
 import { initEditor } from './editorInit.js'
 import LeftPanel from './panels/LeftPanel.js'
@@ -57,11 +58,8 @@ class Editor {
   storagePromptState: 'ignore' | 'waiting' | 'closed'
   title: string
   $click: typeof $click
-  customExportImage: boolean
-  customExportPDF: boolean
   callbacks: ReadyCallback[]
   curContext: string | null
-  exportWindowName: string | null
   docprops: boolean
   shortcuts: ShortcutDef[]
   /** Embed-API server instance; accessible for calling .ready() and wiring canvas events. */
@@ -75,6 +73,7 @@ class Editor {
   // --- Properties (startup forward-declared) ---
   configObj: ConfigObj
   documentIO: DocumentIO
+  exportManager: ExportManager
   svgCanvas!: ISvgCanvas
   i18next!: I18nextFacade
   $svgEditor!: HTMLElement
@@ -86,19 +85,29 @@ class Editor {
   mainMenu: MainMenu
   rulers!: Rulers
   canvMenu!: HTMLElement | null
-  exportWindow!: Window | null
   defaultImageURL!: string
   uiContext!: string
   selectedElement!: Element | null
   multiselected!: boolean
   enableToolCancel!: boolean
   modeEvent!: CustomEvent | null
-  exportWindowCt!: number
   goodLangs!: string[]
   storage!: Storage | null
   isReady!: boolean
   setPanning!: (active: boolean) => void
   setConfig!: (opts: Record<string, unknown>, cfgCfg?: { overwrite?: boolean; allowInitialUserOverride?: boolean }) => void
+
+  // --- Export state: delegated to ExportManager (backward-compat for MainMenu / editorInit) ---
+  get exportWindow (): Window | null { return this.exportManager.exportWindow }
+  set exportWindow (v: Window | null) { this.exportManager.exportWindow = v }
+  get exportWindowCt (): number { return this.exportManager.exportWindowCt }
+  set exportWindowCt (v: number) { this.exportManager.exportWindowCt = v }
+  get exportWindowName (): string | null { return this.exportManager.exportWindowName }
+  set exportWindowName (v: string | null) { this.exportManager.exportWindowName = v }
+  get customExportImage (): boolean { return this.exportManager.customExportImage }
+  set customExportImage (v: boolean) { this.exportManager.customExportImage = v }
+  get customExportPDF (): boolean { return this.exportManager.customExportPDF }
+  set customExportPDF (v: boolean) { this.exportManager.customExportPDF = v }
 
   constructor (div: HTMLElement | null = null) {
     this.extensionsAdded = false
@@ -118,15 +127,13 @@ class Editor {
     this.svgCanvas = null as unknown as ISvgCanvas
     this.$click = $click
     this.isReady = false
-    this.customExportImage = false
-    this.customExportPDF = false
     this.configObj = new ConfigObj(this)
     this.configObj.pref = this.configObj.pref.bind(this.configObj)
     this.setConfig = this.configObj.setConfig.bind(this.configObj)
     this.documentIO = new DocumentIO(this)
+    this.exportManager = new ExportManager(this)
     this.callbacks = []
     this.curContext = null
-    this.exportWindowName = null
     this.docprops = false
     this.configObj.preferences = false
     this.canvMenu = null
@@ -642,34 +649,7 @@ class Editor {
    * @listens module:svgcanvas.SvgCanvas#event:exported
    */
   exportHandler (_win: unknown, data: { issues: string[]; exportWindowName: string; bloburl?: string; datauri?: string; type: string }): void {
-    const { issues, exportWindowName } = data
-    this.exportWindow = window.open('', exportWindowName) // A hack to get the window via JSON-able name without opening a new one
-    if (!this.exportWindow || this.exportWindow.closed) {
-      seAlert(this.i18next.t('notification.popupWindowBlocked'))
-      return
-    }
-
-    this.exportWindow.location.href = data.bloburl ?? data.datauri ?? ''
-    const done = this.configObj.pref('export_notice_done')
-    if (done !== 'all') {
-      let note = this.i18next.t('notification.saveFromBrowser', {
-        type: data.type
-      })
-
-      // Check if there are issues
-      if (issues.length) {
-        const pre = '\n \u2022 '
-        note +=
-          '\n\n' +
-          this.i18next.t('notification.noteTheseIssues') +
-          pre +
-          issues.join(pre)
-      }
-      // Note that this will also prevent the notice even though new issues may appear later.
-      // May want to find a way to deal with that without annoying the user
-      this.configObj.pref('export_notice_done', 'all')
-      seAlert(note)
-    }
+    this.exportManager.handleExported(_win, data)
   }
 
   setBackground (color: string, url: string): void {
