@@ -72,13 +72,15 @@ test.describe('M2 theme toggle', () => {
         document.dispatchEvent(new CustomEvent('svgedit-themechange', { detail: { theme: 'light' } }))
       }
     })
-    // Allow the canvas redraw to complete (rAF tick)
-    await page.waitForTimeout(50)
+    // Allow the canvas redraw to complete: wait two animation frames (the redraw is
+    // scheduled on rAF) rather than guessing with a fixed delay.
+    await page.evaluate(() => new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => r()))))
     const lightSum = await rulerXInkSum(page)
 
     // Toggle to dark via the real shadow button (same as the existing toggle test)
     await page.locator('#theme_toggle').evaluate((el: any) => el.shadowRoot.querySelector('button').click())
-    await page.waitForTimeout(50)
+    // Wait two animation frames for the rAF-scheduled ruler redraw to land.
+    await page.evaluate(() => new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => r()))))
     const darkSum = await rulerXInkSum(page)
 
     // Sanity: both reads must have returned real pixel data (not -1 / not empty canvas)

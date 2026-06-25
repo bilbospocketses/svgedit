@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures.js'
-import { setSvgSource, visitAndApproveStorage } from './helpers.js'
+import { setRotationAngle, setSvgSource, visitAndApproveStorage } from './helpers.js'
 
 /**
  * Move selected elements programmatically via svgCanvas API.
@@ -63,9 +63,6 @@ test.describe('Group transform preservation', () => {
       </g>
     </svg>`)
 
-    // Wait for SVG to be loaded
-    await page.waitForSelector('#svgroot', { timeout: 5000 })
-
     // Click on one of the paths inside the group
     // This should select the parent group
     const firstPath = page.locator('#svg_2')
@@ -88,11 +85,7 @@ test.describe('Group transform preservation', () => {
     expect(groupTransform).toContain('translate')
 
     // Test 3: Rotate the group
-    await page.locator('#angle').evaluate(el => {
-      const input = el.shadowRoot.querySelector('input')
-      input.value = '5'
-      input.dispatchEvent(new Event('change', { bubbles: true }))
-    })
+    await setRotationAngle(page, 5)
 
     // Verify group transform has rotate
     groupTransform = await selectedGroup.getAttribute('transform')
@@ -115,8 +108,6 @@ test.describe('Group transform preservation', () => {
       </g>
     </svg>`)
 
-    await page.waitForSelector('#svgroot', { timeout: 5000 })
-
     // Select the group by clicking the rect
     await page.locator('#testRect').click()
 
@@ -137,17 +128,11 @@ test.describe('Group transform preservation', () => {
       </g>
     </svg>`)
 
-    await page.waitForSelector('#svgroot', { timeout: 5000 })
-
     // Select the group
     await page.locator('#testCircle').click()
 
     // Rotate first
-    await page.locator('#angle').evaluate(el => {
-      const input = el.shadowRoot.querySelector('input')
-      input.value = '45'
-      input.dispatchEvent(new Event('change', { bubbles: true }))
-    })
+    await setRotationAngle(page, 45)
 
     // Then move
     await moveSelected(page, -20, 0)
@@ -165,8 +150,6 @@ test.describe('Group transform preservation', () => {
         <rect id="testRect" x="0" y="0" width="50" height="50" fill="green"/>
       </g>
     </svg>`)
-
-    await page.waitForSelector('#svgroot', { timeout: 5000 })
 
     // Click to select the group
     const rect = page.locator('#testRect')
@@ -222,8 +205,6 @@ test.describe('Group transform preservation', () => {
       </g>
     </svg>`)
 
-    await page.waitForSelector('#svgroot', { timeout: 5000 })
-
     // Get initial bounding boxes before ungrouping
     const path1Box = await page.locator('#path1').boundingBox()
     const path2Box = await page.locator('#path2').boundingBox()
@@ -235,8 +216,8 @@ test.describe('Group transform preservation', () => {
     // Ungroup via API (Ctrl+Shift+G is NOT a registered shortcut in svgedit)
     await ungroupSelected(page)
 
-    // Wait for ungroup to complete
-    await page.waitForTimeout(100)
+    // Wait for ungroup to complete: the group element is removed once ungrouping lands.
+    await expect(page.locator('#testGroup')).toHaveCount(0)
 
     // Verify paths still exist and have transforms
     const path1Transform = await page.locator('#path1').getAttribute('transform')
@@ -271,18 +252,14 @@ test.describe('Group transform preservation', () => {
       </g>
     </svg>`)
 
-    await page.waitForSelector('#svgroot', { timeout: 5000 })
-
     // Select the group by clicking one of its children
     await page.locator('#rect1').click()
 
     // Ungroup via API (ungroupSelectedElement leaves all children selected)
     await ungroupSelected(page)
-    await page.waitForTimeout(200)
 
     // Verify ungroup worked: group should be gone, rects at top level
-    const groupExists = await page.locator('#testGroup').count()
-    expect(groupExists).toBe(0)
+    await expect(page.locator('#testGroup')).toHaveCount(0)
 
     // All three rects are still selected after ungroup.
     // Get positions before moving.
