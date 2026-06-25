@@ -250,30 +250,24 @@ export async function initEditor (editor: Editor): Promise<void> {
   let panning = false; let keypan = false
   let previousMode = 'select'
 
+  // Pan the workarea by the pointer delta while a pan is active. Shared by the
+  // mouseup and mousemove listeners; only mouseup also ends the pan. (The old
+  // `if (evt.type === 'mouseup')` inside each copy was dead code in mousemove and
+  // always-true in mouseup — replaced by the explicit `panning = false` below.)
+  const doPan = (evt: MouseEvent): boolean => {
+    if (panning === false) { return true }
+    editor.workarea.scrollLeft -= (evt.clientX - lastX)
+    editor.workarea.scrollTop -= (evt.clientY - lastY)
+    lastX = evt.clientX
+    lastY = evt.clientY
+    return false
+  }
   $id('svgcanvas')?.addEventListener('mouseup', (evt) => {
-    if (panning === false) { return true }
-
-    editor.workarea.scrollLeft -= (evt.clientX - lastX)
-    editor.workarea.scrollTop -= (evt.clientY - lastY)
-
-    lastX = evt.clientX
-    lastY = evt.clientY
-
-    if (evt.type === 'mouseup') { panning = false }
-    return false
+    const handled = doPan(evt)
+    panning = false
+    return handled
   })
-  $id('svgcanvas')?.addEventListener('mousemove', (evt) => {
-    if (panning === false) { return true }
-
-    editor.workarea.scrollLeft -= (evt.clientX - lastX)
-    editor.workarea.scrollTop -= (evt.clientY - lastY)
-
-    lastX = evt.clientX
-    lastY = evt.clientY
-
-    if (evt.type === 'mouseup') { panning = false }
-    return false
-  })
+  $id('svgcanvas')?.addEventListener('mousemove', doPan)
   $id('svgcanvas')?.addEventListener('mousedown', (evt) => {
     editor.enableToolCancel = false
     if (evt.button === 1 || keypan === true) {

@@ -470,16 +470,18 @@ export default class ConfigObj {
         cfgObj[key] = val
       }
     }
+    // Shared "skip this key" guard for overwrite-protected setConfig: when
+    // overwrite is disabled, refuse to clobber a value already protected either
+    // globally (preventAllURLConfig) or by the per-branch `extra` condition.
+    const blockedByOverwrite = (extra: boolean): boolean =>
+      cfgCfg.overwrite === false && Boolean(this.curConfig.preventAllURLConfig || extra)
     Object.entries(opts).forEach(([key, val]) => {
       // Only allow prefs defined in configObj.defaultPrefs or...
       // Own-property check, not truthiness: `this.defaultPrefs[key]` would treat
       // inherited members (toString, valueOf, __proto__, …) as known prefs and
       // write them into curPrefs, corrupting it (#43).
       if (Object.prototype.hasOwnProperty.call(this.defaultPrefs, key)) {
-        if (cfgCfg.overwrite === false && (
-          this.curConfig.preventAllURLConfig ||
-          this.curPrefs[key])
-        ) {
+        if (blockedByOverwrite(Boolean(this.curPrefs[key]))) {
           return
         }
         if (cfgCfg.allowInitialUserOverride === true) {
@@ -488,22 +490,16 @@ export default class ConfigObj {
           this.pref(key, val)
         }
       } else if (['extensions', 'userExtensions', 'allowedOrigins'].includes(key)) {
-        if (cfgCfg.overwrite === false &&
-          (
-            this.curConfig.preventAllURLConfig ||
-            ['allowedOrigins'].includes(key) ||
-            (key === 'extensions' && this.curConfig.lockExtensions)
-          )
-        ) {
+        if (blockedByOverwrite(
+          ['allowedOrigins'].includes(key) ||
+          (key === 'extensions' && this.curConfig.lockExtensions === true)
+        )) {
           return
         }
         this.curConfig[key] = (this.curConfig[key] as unknown[]).concat(val as unknown[]) // We will handle any dupes later
       // Only allow other configObj.curConfig if defined in configObj.defaultConfig
       } else if ({}.hasOwnProperty.call(this.defaultConfig, key)) {
-        if (cfgCfg.overwrite === false && (
-          this.curConfig.preventAllURLConfig ||
-          {}.hasOwnProperty.call(this.curConfig, key)
-        )) {
+        if (blockedByOverwrite({}.hasOwnProperty.call(this.curConfig, key))) {
           return
         }
         // Potentially overwriting of previously set config
