@@ -37,6 +37,23 @@ export const init = (canvas: ISvgCanvas): void => {
 }
 
 /**
+ * Translate every "x,y" coordinate pair in a polyline/polygon `points`
+ * attribute by (tx, ty) and write the result back; a no-op for an empty value.
+ * Shared by the two clipPath point-shifting branches in {@link updateClipPath}.
+ * Point coordinates are unitless user-space numbers, so plain `Number()` (not
+ * `convertToNum`, which resolves units against a named attribute) is correct.
+ */
+const translatePolyPoints = (poly: Element, tx: number, ty: number): void => {
+  const points = (poly.getAttribute('points') ?? '').trim()
+  if (!points) return
+  const updated = points.split(/\s+/).map((pair) => {
+    const [x, y] = pair.split(',')
+    return `${Number(x) + tx},${Number(y) + ty}`
+  })
+  poly.setAttribute('points', updated.join(' '))
+}
+
+/**
  * Updates a `<clipPath>` element's values based on the given translation.
  * @function module:recalculate.updateClipPath
  * @param attr - The clip-path attribute value containing the clipPath's ID
@@ -80,16 +97,7 @@ export const updateClipPath = (attr: string, tx: number, ty: number, elem?: Elem
       path.setAttribute('x2', String(convertToNum('x2', path.getAttribute('x2') ?? '0') + tx))
       path.setAttribute('y2', String(convertToNum('y2', path.getAttribute('y2') ?? '0') + ty))
     } else if (tag === 'polyline' || tag === 'polygon') {
-      const points = (path.getAttribute('points') ?? '').trim()
-      if (points) {
-        const updated = points.split(/\s+/).map((pair) => {
-          const [x, y] = pair.split(',')
-          const nx = Number(x) + tx
-          const ny = Number(y) + ty
-          return `${nx},${ny}`
-        })
-        path.setAttribute('points', updated.join(' '))
-      }
+      translatePolyPoints(path, tx, ty)
     } else {
       path.setAttribute('transform', `translate(${tx},${ty})`)
     }
@@ -108,16 +116,7 @@ export const updateClipPath = (attr: string, tx: number, ty: number, elem?: Elem
   }
   const tag = (path.tagName || '').toLowerCase()
   if ((tag === 'polyline' || tag === 'polygon') && !(path as SVGPolygonElement | SVGPolylineElement).points?.numberOfItems) {
-    const points = (path.getAttribute('points') ?? '').trim()
-    if (points) {
-      const updated = points.split(/\s+/).map((pair) => {
-        const [x, y] = pair.split(',')
-        const nx = Number(x) + tx
-        const ny = Number(y) + ty
-        return `${nx},${ny}`
-      })
-      path.setAttribute('points', updated.join(' '))
-    }
+    translatePolyPoints(path, tx, ty)
     return attr
   }
   const newTranslate = svgCanvas.getSvgRoot().createSVGTransform()
@@ -378,19 +377,7 @@ export const recalculateDimensions = (selected: Element): InstanceType<typeof Ba
     tlist.removeItem(N - 2)
     tlist.removeItem(N - 3)
 
-    if (selected.tagName === 'use') {
-      const mExisting = transformListToTransform(
-        getTransformList(selected)
-      ).matrix
-      const mNew = matrixMultiply(mExisting, m)
-
-      tlist.clear()
-      const newTransform = svgroot.createSVGTransform()
-      newTransform.setMatrix(mNew)
-      tlist.appendItem(newTransform)
-    } else {
-      remapElement(selected, changes, m)
-    }
+    remapElement(selected, changes, m)
 
     if (angle) {
       const matrix = transformListToTransform(tlist).matrix
@@ -433,19 +420,7 @@ export const recalculateDimensions = (selected: Element): InstanceType<typeof Ba
     )
     tlist.removeItem(0)
 
-    if (selected.tagName === 'use') {
-      const mExisting = transformListToTransform(
-        getTransformList(selected)
-      ).matrix
-      const mNew = matrixMultiply(mExisting, m)
-
-      tlist.clear()
-      const newTransform = svgroot.createSVGTransform()
-      newTransform.setMatrix(mNew)
-      tlist.appendItem(newTransform)
-    } else {
-      remapElement(selected, changes, m)
-    }
+    remapElement(selected, changes, m)
 
     if (angle) {
       if (!hasMatrixTransform(tlist)) {
@@ -471,19 +446,7 @@ export const recalculateDimensions = (selected: Element): InstanceType<typeof Ba
     m = transformListToTransform(tlist).matrix
     tlist.clear()
 
-    if (selected.tagName === 'use') {
-      const mExisting = transformListToTransform(
-        getTransformList(selected)
-      ).matrix
-      const mNew = matrixMultiply(mExisting, m)
-
-      tlist.clear()
-      const newTransform = svgroot.createSVGTransform()
-      newTransform.setMatrix(mNew)
-      tlist.appendItem(newTransform)
-    } else {
-      remapElement(selected, changes, m)
-    }
+    remapElement(selected, changes, m)
   } else {
     // Rotation or other transformations
     if (angle) {
