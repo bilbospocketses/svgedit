@@ -334,6 +334,23 @@ describe('path', function () {
     assert.ok(rel.includes('a10,20 30 0 1 40,50'))
   })
 
+  it('Test convertPath preserves absolute arc parameters', function () {
+    unitsInit({
+      getRoundDigits () { return 5 }
+    })
+
+    const path = document.createElementNS(NS.SVG, 'path')
+    path.setAttribute('d', 'M0,0 A30,50 20 0 1 100,100')
+
+    // Absolute arc must retain radii (30,50), x-axis rotation (20), and the
+    // large-arc + sweep flags (0 1) through both relative and absolute conversion.
+    const rel = pathModule.convertPath(path, true)
+    assert.ok(rel.includes('30,50 20 0 1'), `relative-conversion arc dropped params: ${rel}`)
+
+    const abs = pathModule.convertPath(path)
+    assert.ok(abs.includes('30,50 20 0 1'), `absolute-conversion arc dropped params: ${abs}`)
+  })
+
   it('Test recalcRotatedPath with no current path', function () {
     const [mockPathContext] = getMockContexts()
     pathModule.init(mockPathContext)
