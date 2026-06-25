@@ -16,6 +16,7 @@ import SvgCanvas from '@svgedit/svgcanvas'
 import ConfigObj from './ConfigObj.js'
 import { DocumentIO } from './DocumentIO.js'
 import { ExportManager } from './ExportManager.js'
+import { EditorSelection } from './EditorSelection.js'
 import type Rulers from './Rulers.js'
 import { initEditor } from './editorInit.js'
 import LeftPanel from './panels/LeftPanel.js'
@@ -74,6 +75,7 @@ class Editor {
   configObj: ConfigObj
   documentIO: DocumentIO
   exportManager: ExportManager
+  selection: EditorSelection
   svgCanvas!: ISvgCanvas
   i18next!: I18nextFacade
   $svgEditor!: HTMLElement
@@ -87,8 +89,6 @@ class Editor {
   canvMenu!: HTMLElement | null
   defaultImageURL!: string
   uiContext!: string
-  selectedElement!: Element | null
-  multiselected!: boolean
   enableToolCancel!: boolean
   modeEvent!: CustomEvent | null
   goodLangs!: string[]
@@ -108,6 +108,12 @@ class Editor {
   set customExportImage (v: boolean) { this.exportManager.customExportImage = v }
   get customExportPDF (): boolean { return this.exportManager.customExportPDF }
   set customExportPDF (v: boolean) { this.exportManager.customExportPDF = v }
+
+  // --- Selection state: delegated to EditorSelection (single source of truth + change emitter) ---
+  get selectedElement (): Element | null { return this.selection.selectedElement }
+  set selectedElement (v: Element | null) { this.selection.selectedElement = v }
+  get multiselected (): boolean { return this.selection.multiselected }
+  set multiselected (v: boolean) { this.selection.multiselected = v }
 
   constructor (div: HTMLElement | null = null) {
     this.extensionsAdded = false
@@ -132,6 +138,7 @@ class Editor {
     this.setConfig = this.configObj.setConfig.bind(this.configObj)
     this.documentIO = new DocumentIO(this)
     this.exportManager = new ExportManager(this)
+    this.selection = new EditorSelection()
     this.callbacks = []
     this.curContext = null
     this.docprops = false
@@ -781,8 +788,10 @@ class Editor {
     }
     const isNode = mode === 'pathedit'
     // if this.elems[1] is present, then we have more than one element
-    this.selectedElement = elems.length === 1 || !elems[1] ? elems[0] ?? null : null
-    this.multiselected = elems.length >= 2 && !!elems[1]
+    this.selection.setSelection(
+      elems.length === 1 || !elems[1] ? elems[0] ?? null : null,
+      elems.length >= 2 && !!elems[1]
+    )
     if (this.selectedElement && !isNode) {
       this.topPanel.update()
     } // if (elem)
