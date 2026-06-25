@@ -154,7 +154,10 @@ describe('sanitize', function () {
     svg.append(g)
 
     sanitize.sanitizeSvg(g)
-    assert.ok(true)
+    // sanitize no-ops non-element nodes, so the comment survives untouched
+    assert.equal(g.childNodes.length, 1)
+    assert.equal(g.firstChild.nodeType, 8) // COMMENT_NODE
+    assert.equal(g.firstChild.nodeValue, 'This is a comment')
   })
 
   it('sanitizeSvg() handles nested groups', function () {
