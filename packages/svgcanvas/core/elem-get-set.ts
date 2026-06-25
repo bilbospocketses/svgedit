@@ -378,19 +378,20 @@ const setZoomMethod = (zoomLevel: number): void => {
 }
 
 /**
-* Change the current stroke/fill color/gradient value.
-* @function module:elem-get-set.SvgCanvas#setColor
-*/
-const setColorMethod = (type: string, val: string, preventUndo?: boolean): void => {
-  const selectedElements: (Element | null)[] = svgCanvas.getSelectedElements()
-  svgCanvas.setCurShape(type, val)
-  svgCanvas.setCurProperties(`${type}_paint`, { type: 'solidColor' })
+ * Collect the non-`<g>` elements a shape attribute should apply to: each `<g>`
+ * in the selection is flattened to its non-group descendants (via
+ * {@link walkTree}); other elements are taken as-is. `include` gates ONLY the
+ * top-level non-group elements (not descendants flattened out of a group), so
+ * `setColor` can exclude top-level polyline/line for `fill` while still
+ * colouring those shapes when they sit inside a selected group.
+ */
+const collectNonGroupElements = (
+  selectedElements: (Element | null)[],
+  include: (elem: Element) => boolean = () => true
+): Element[] => {
   const elems: Element[] = []
-
   const addNonG = (e: Element): void => {
-    if (e.nodeName !== 'g') {
-      elems.push(e)
-    }
+    if (e.nodeName !== 'g') { elems.push(e) }
   }
   let i = selectedElements.length
   while (i--) {
@@ -398,15 +399,26 @@ const setColorMethod = (type: string, val: string, preventUndo?: boolean): void 
     if (elem) {
       if (elem.tagName === 'g') {
         walkTree(elem, addNonG)
-      } else if (type === 'fill') {
-        if (elem.tagName !== 'polyline' && elem.tagName !== 'line') {
-          elems.push(elem)
-        }
-      } else {
+      } else if (include(elem)) {
         elems.push(elem)
       }
     }
   }
+  return elems
+}
+
+/**
+* Change the current stroke/fill color/gradient value.
+* @function module:elem-get-set.SvgCanvas#setColor
+*/
+const setColorMethod = (type: string, val: string, preventUndo?: boolean): void => {
+  const selectedElements: (Element | null)[] = svgCanvas.getSelectedElements()
+  svgCanvas.setCurShape(type, val)
+  svgCanvas.setCurProperties(`${type}_paint`, { type: 'solidColor' })
+  const elems = collectNonGroupElements(
+    selectedElements,
+    (elem) => type !== 'fill' || (elem.tagName !== 'polyline' && elem.tagName !== 'line')
+  )
   if (elems.length > 0) {
     if (!preventUndo) {
       svgCanvas.changeSelectedAttribute(type, val, elems)
@@ -552,24 +564,7 @@ const setStrokeWidthMethod = (val: number): void => {
   }
   svgCanvas.setCurProperties('stroke_width', val)
 
-  const elems: Element[] = []
-
-  const addNonG = (e: Element): void => {
-    if (e.nodeName !== 'g') {
-      elems.push(e)
-    }
-  }
-  let i = selectedElements.length
-  while (i--) {
-    const elem = selectedElements[i]
-    if (elem) {
-      if (elem.tagName === 'g') {
-        walkTree(elem, addNonG)
-      } else {
-        elems.push(elem)
-      }
-    }
-  }
+  const elems = collectNonGroupElements(selectedElements)
   if (elems.length > 0) {
     svgCanvas.changeSelectedAttribute('stroke-width', val, elems)
     svgCanvas.call('changed', selectedElements)
@@ -583,19 +578,7 @@ const setStrokeWidthMethod = (val: number): void => {
 const setStrokeAttrMethod = (attr: string, val: string | number): void => {
   const selectedElements: (Element | null)[] = svgCanvas.getSelectedElements()
   svgCanvas.setCurShape(attr.replace('-', '_'), val)
-  const elems: Element[] = []
-
-  let i = selectedElements.length
-  while (i--) {
-    const elem = selectedElements[i]
-    if (elem) {
-      if (elem.tagName === 'g') {
-        walkTree(elem, (e: Element) => { if (e.nodeName !== 'g') { elems.push(e) } })
-      } else {
-        elems.push(elem)
-      }
-    }
-  }
+  const elems = collectNonGroupElements(selectedElements)
   if (elems.length > 0) {
     svgCanvas.changeSelectedAttribute(attr, val, elems)
     svgCanvas.call('changed', selectedElements)
@@ -621,6 +604,32 @@ const notifyTextChange = (textElements: Element[]): void => {
 }
 
 /**
+ * Shared scaffold for the text-attribute setters: resolve the selected text
+ * elements, narrow to those whose value actually changes, optionally record the
+ * value as current text state (`curTextKey`), apply the attribute, optionally
+ * reset the text cursor when no selected element has content, then notify
+ * listeners. `curTextKey` is set for font family/colour/size; `setCursor` is
+ * suppressed for text-anchor and font-colour (matching prior per-method code).
+ */
+const applyTextAttr = (
+  attr: string,
+  value: string | number,
+  opts: { curTextKey?: string; setCursor?: boolean } = {}
+): void => {
+  const { curTextKey, setCursor = true } = opts
+  const textElements = getSelectedTextElements()
+  const changedTextElements = getChangedTextElements(textElements, attr, value)
+  if (curTextKey) { svgCanvas.setCurText(curTextKey, value) }
+  if (changedTextElements.length > 0) {
+    svgCanvas.changeSelectedAttribute(attr, value, changedTextElements)
+  }
+  if (setCursor && !textElements.some(el => el.textContent)) {
+    svgCanvas.textActions.setCursor()
+  }
+  notifyTextChange(changedTextElements)
+}
+
+/**
  * Check if all selected text elements are in bold.
  */
 const getBoldMethod = (): boolean => {
@@ -632,16 +641,7 @@ const getBoldMethod = (): boolean => {
  * Make the selected element(s) bold or normal.
  */
 const setBoldMethod = (b: boolean): void => {
-  const textElements = getSelectedTextElements()
-  const value = b ? 'bold' : 'normal'
-  const changedTextElements = getChangedTextElements(textElements, 'font-weight', value)
-  if (changedTextElements.length > 0) {
-    svgCanvas.changeSelectedAttribute('font-weight', value, changedTextElements)
-  }
-  if (!textElements.some(el => el.textContent)) {
-    svgCanvas.textActions.setCursor()
-  }
-  notifyTextChange(changedTextElements)
+  applyTextAttr('font-weight', b ? 'bold' : 'normal')
 }
 
 /**
@@ -710,88 +710,42 @@ const getItalicMethod = (): boolean => {
  * Make the selected element(s) italic or normal.
  */
 const setItalicMethod = (i: boolean): void => {
-  const textElements = getSelectedTextElements()
-  const value = i ? 'italic' : 'normal'
-  const changedTextElements = getChangedTextElements(textElements, 'font-style', value)
-  if (changedTextElements.length > 0) {
-    svgCanvas.changeSelectedAttribute('font-style', value, changedTextElements)
-  }
-  if (!textElements.some(el => el.textContent)) {
-    svgCanvas.textActions.setCursor()
-  }
-  notifyTextChange(changedTextElements)
+  applyTextAttr('font-style', i ? 'italic' : 'normal')
 }
 
 /**
  * Set the new text anchor.
  */
 const setTextAnchorMethod = (value: string): void => {
-  const textElements = getSelectedTextElements()
-  const changedTextElements = getChangedTextElements(textElements, 'text-anchor', value)
-  if (changedTextElements.length > 0) {
-    svgCanvas.changeSelectedAttribute('text-anchor', value, changedTextElements)
-  }
-  notifyTextChange(changedTextElements)
+  applyTextAttr('text-anchor', value, { setCursor: false })
 }
 
 /**
  * Set the new letter spacing.
  */
 const setLetterSpacingMethod = (value: string): void => {
-  const textElements = getSelectedTextElements()
-  const changedTextElements = getChangedTextElements(textElements, 'letter-spacing', value)
-  if (changedTextElements.length > 0) {
-    svgCanvas.changeSelectedAttribute('letter-spacing', value, changedTextElements)
-  }
-  if (!textElements.some(el => el.textContent)) {
-    svgCanvas.textActions.setCursor()
-  }
-  notifyTextChange(changedTextElements)
+  applyTextAttr('letter-spacing', value)
 }
 
 /**
  * Set the new word spacing.
  */
 const setWordSpacingMethod = (value: string): void => {
-  const textElements = getSelectedTextElements()
-  const changedTextElements = getChangedTextElements(textElements, 'word-spacing', value)
-  if (changedTextElements.length > 0) {
-    svgCanvas.changeSelectedAttribute('word-spacing', value, changedTextElements)
-  }
-  if (!textElements.some(el => el.textContent)) {
-    svgCanvas.textActions.setCursor()
-  }
-  notifyTextChange(changedTextElements)
+  applyTextAttr('word-spacing', value)
 }
 
 /**
  * Set the new text length.
  */
 const setTextLengthMethod = (value: string): void => {
-  const textElements = getSelectedTextElements()
-  const changedTextElements = getChangedTextElements(textElements, 'textLength', value)
-  if (changedTextElements.length > 0) {
-    svgCanvas.changeSelectedAttribute('textLength', value, changedTextElements)
-  }
-  if (!textElements.some(el => el.textContent)) {
-    svgCanvas.textActions.setCursor()
-  }
-  notifyTextChange(changedTextElements)
+  applyTextAttr('textLength', value)
 }
 
 /**
  * Set the new length adjust.
  */
 const setLengthAdjustMethod = (value: string): void => {
-  const textElements = getSelectedTextElements()
-  const changedTextElements = getChangedTextElements(textElements, 'lengthAdjust', value)
-  if (changedTextElements.length > 0) {
-    svgCanvas.changeSelectedAttribute('lengthAdjust', value, changedTextElements)
-  }
-  if (!textElements.some(el => el.textContent)) {
-    svgCanvas.textActions.setCursor()
-  }
-  notifyTextChange(changedTextElements)
+  applyTextAttr('lengthAdjust', value)
 }
 
 const getFontFamilyMethod = (): string => {
@@ -802,29 +756,14 @@ const getFontFamilyMethod = (): string => {
  * Set the new font family.
  */
 const setFontFamilyMethod = (val: string): void => {
-  const textElements = getSelectedTextElements()
-  const changedTextElements = getChangedTextElements(textElements, 'font-family', val)
-  svgCanvas.setCurText('font_family', val)
-  if (changedTextElements.length > 0) {
-    svgCanvas.changeSelectedAttribute('font-family', val, changedTextElements)
-  }
-  if (!textElements.some(el => el.textContent)) {
-    svgCanvas.textActions.setCursor()
-  }
-  notifyTextChange(changedTextElements)
+  applyTextAttr('font-family', val, { curTextKey: 'font_family' })
 }
 
 /**
  * Set the new font color.
  */
 const setFontColorMethod = (val: string): void => {
-  const textElements = getSelectedTextElements()
-  const changedTextElements = getChangedTextElements(textElements, 'fill', val)
-  svgCanvas.setCurText('fill', val)
-  if (changedTextElements.length > 0) {
-    svgCanvas.changeSelectedAttribute('fill', val, changedTextElements)
-  }
-  notifyTextChange(changedTextElements)
+  applyTextAttr('fill', val, { curTextKey: 'fill', setCursor: false })
 }
 
 const getFontColorMethod = (): string => {
@@ -839,16 +778,7 @@ const getFontSizeMethod = (): number => {
  * Applies the given font size to the selected element.
  */
 const setFontSizeMethod = (val: number): void => {
-  const textElements = getSelectedTextElements()
-  const changedTextElements = getChangedTextElements(textElements, 'font-size', val)
-  svgCanvas.setCurText('font_size', val)
-  if (changedTextElements.length > 0) {
-    svgCanvas.changeSelectedAttribute('font-size', val, changedTextElements)
-  }
-  if (!textElements.some(el => el.textContent)) {
-    svgCanvas.textActions.setCursor()
-  }
-  notifyTextChange(changedTextElements)
+  applyTextAttr('font-size', val, { curTextKey: 'font_size' })
 }
 
 const getTextMethod = (): string => {
