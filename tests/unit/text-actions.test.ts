@@ -117,9 +117,9 @@ describe('TextActions', () => {
   describe('setInputElem', () => {
     it('should set the input element', () => {
       const newInput = document.createElement('input')
-      textActionsMethod.setInputElem(newInput)
-      // Method should not throw and should be callable
-      expect(true).toBe(true)
+      expect(() => {
+        textActionsMethod.setInputElem(newInput)
+      }).not.toThrow()
     })
   })
 
@@ -157,16 +157,17 @@ describe('TextActions', () => {
       emptyText.addEventListener = vi.fn()
       svgRoot.append(emptyText)
 
-      textActionsMethod.start(emptyText)
-      textActionsMethod.init()
-
-      expect(true).toBe(true) // Should not throw
+      expect(() => {
+        textActionsMethod.start(emptyText)
+        textActionsMethod.init()
+      }).not.toThrow()
     })
 
     it('should return early if no current text', () => {
-      textActionsMethod.init()
       // Should not throw when called without a current text element
-      expect(true).toBe(true)
+      expect(() => {
+        textActionsMethod.init()
+      }).not.toThrow()
     })
   })
 
@@ -247,35 +248,33 @@ describe('TextActions', () => {
 
   describe('mouseDown', () => {
     it('should handle mouse down event', () => {
-      textActionsMethod.start(textElement)
-
       const mockEvent = { pageX: 100, pageY: 100 }
-      textActionsMethod.mouseDown(mockEvent, textElement, 100, 100)
-
       // Should set focus (via private method)
-      expect(true).toBe(true) // Method executed without error
+      expect(() => {
+        textActionsMethod.start(textElement)
+        textActionsMethod.mouseDown(mockEvent, textElement, 100, 100)
+      }).not.toThrow()
     })
   })
 
   describe('mouseMove', () => {
     it('should handle mouse move event', () => {
-      textActionsMethod.start(textElement)
-      textActionsMethod.mouseMove(110, 100)
-
       // Method should execute without error
-      expect(true).toBe(true)
+      expect(() => {
+        textActionsMethod.start(textElement)
+        textActionsMethod.mouseMove(110, 100)
+      }).not.toThrow()
     })
   })
 
   describe('mouseUp', () => {
     it('should handle mouse up event', () => {
-      textActionsMethod.start(textElement)
-
       const mockEvent = { target: textElement, pageX: 100, pageY: 100 }
-      textActionsMethod.mouseUp(mockEvent, 100, 100)
-
       // Method should execute without error
-      expect(true).toBe(true)
+      expect(() => {
+        textActionsMethod.start(textElement)
+        textActionsMethod.mouseUp(mockEvent, 100, 100)
+      }).not.toThrow()
     })
 
     it('should exit text mode if clicked outside text element', () => {
@@ -294,21 +293,21 @@ describe('TextActions', () => {
 
   describe('setCursor', () => {
     it('should set cursor position', () => {
-      textActionsMethod.start(textElement)
-      textActionsMethod.init()
-      textActionsMethod.setCursor(0)
-
       // Method should execute without error
-      expect(true).toBe(true)
+      expect(() => {
+        textActionsMethod.start(textElement)
+        textActionsMethod.init()
+        textActionsMethod.setCursor(0)
+      }).not.toThrow()
     })
 
     it('should accept undefined index', () => {
-      textActionsMethod.start(textElement)
-      textActionsMethod.init()
-      textActionsMethod.setCursor(undefined)
-
       // Should not throw
-      expect(true).toBe(true)
+      expect(() => {
+        textActionsMethod.start(textElement)
+        textActionsMethod.init()
+        textActionsMethod.setCursor(undefined)
+      }).not.toThrow()
     })
   })
 
@@ -374,11 +373,11 @@ describe('TextActions', () => {
     it('should handle text with transform attribute', () => {
       textElement.setAttribute('transform', 'rotate(45 100 100)')
 
-      textActionsMethod.start(textElement)
-      textActionsMethod.init()
-
       // Should handle transformed text without error
-      expect(true).toBe(true)
+      expect(() => {
+        textActionsMethod.start(textElement)
+        textActionsMethod.init()
+      }).not.toThrow()
     })
 
     it('should handle empty text element', () => {
@@ -396,55 +395,62 @@ describe('TextActions', () => {
       orphanText.getEndPositionOfChar = vi.fn((i) => ({ x: 100 + (i + 1) * 10, y: 100 }))
       orphanText.getBBox = vi.fn(() => ({ x: 100, y: 90, width: 60, height: 20 }))
 
-      textActionsMethod.start(orphanText)
-      textActionsMethod.init()
-      expect(true).toBe(true)
+      expect(() => {
+        textActionsMethod.start(orphanText)
+        textActionsMethod.init()
+      }).not.toThrow()
     })
 
     it('should handle setCursor with undefined index', () => {
-      textActionsMethod.start(textElement)
-      textActionsMethod.init()
-      textActionsMethod.setCursor(undefined)
-      expect(true).toBe(true)
+      expect(() => {
+        textActionsMethod.start(textElement)
+        textActionsMethod.init()
+        textActionsMethod.setCursor(undefined)
+      }).not.toThrow()
     })
 
     it('should handle setCursor with empty input', () => {
       inputElement.value = ''
-      textActionsMethod.start(textElement)
-      textActionsMethod.init()
-      textActionsMethod.setCursor()
-      expect(true).toBe(true)
+      expect(() => {
+        textActionsMethod.start(textElement)
+        textActionsMethod.init()
+        textActionsMethod.setCursor()
+      }).not.toThrow()
     })
 
     it('should handle text with no transform', () => {
       textElement.removeAttribute('transform')
-      textActionsMethod.start(textElement)
-      textActionsMethod.init()
-      expect(true).toBe(true)
+      expect(() => {
+        textActionsMethod.start(textElement)
+        textActionsMethod.init()
+      }).not.toThrow()
     })
 
     it('should handle getIndexFromPoint with single character', () => {
       textElement.textContent = 'A'
-      textActionsMethod.start(textElement)
-      textActionsMethod.init()
-      textActionsMethod.mouseDown({ pageX: 100, pageY: 100 }, textElement, 100, 100)
-      expect(true).toBe(true)
+      expect(() => {
+        textActionsMethod.start(textElement)
+        textActionsMethod.init()
+        textActionsMethod.mouseDown({ pageX: 100, pageY: 100 }, textElement, 100, 100)
+      }).not.toThrow()
     })
 
     it('should handle getIndexFromPoint outside text range', () => {
       textElement.getCharNumAtPosition = vi.fn(() => -1)
-      textActionsMethod.start(textElement)
-      textActionsMethod.init()
-      textActionsMethod.mouseDown({ pageX: 50, pageY: 100 }, textElement, 50, 100)
-      expect(true).toBe(true)
+      expect(() => {
+        textActionsMethod.start(textElement)
+        textActionsMethod.init()
+        textActionsMethod.mouseDown({ pageX: 50, pageY: 100 }, textElement, 50, 100)
+      }).not.toThrow()
     })
 
     it('should handle getIndexFromPoint at end of text', () => {
       textElement.getCharNumAtPosition = vi.fn(() => 100)
-      textActionsMethod.start(textElement)
-      textActionsMethod.init()
-      textActionsMethod.mouseDown({ pageX: 200, pageY: 100 }, textElement, 200, 100)
-      expect(true).toBe(true)
+      expect(() => {
+        textActionsMethod.start(textElement)
+        textActionsMethod.init()
+        textActionsMethod.mouseDown({ pageX: 200, pageY: 100 }, textElement, 200, 100)
+      }).not.toThrow()
     })
 
     it('should handle mouseUp clicking outside text', () => {
@@ -474,47 +480,52 @@ describe('TextActions', () => {
       svgCanvas.getCurrentMode = vi.fn(() => 'select')
       textActionsMethod.clear()
       svgCanvas.getCurrentMode = originalGetMode
-      expect(true).toBe(true)
+      expect(svgCanvas.setCurrentMode).not.toHaveBeenCalled()
     })
 
     it('should handle init with no current text', () => {
-      textActionsMethod.init()
-      expect(true).toBe(true)
+      expect(() => {
+        textActionsMethod.init()
+      }).not.toThrow()
     })
 
     it('should handle mouseMove during selection', () => {
-      textActionsMethod.start(textElement)
-      textActionsMethod.init()
-      textActionsMethod.mouseDown({ pageX: 100, pageY: 100 }, textElement, 100, 100)
-      textActionsMethod.mouseMove(120, 100)
-      textActionsMethod.mouseMove(130, 100)
-      expect(true).toBe(true)
+      expect(() => {
+        textActionsMethod.start(textElement)
+        textActionsMethod.init()
+        textActionsMethod.mouseDown({ pageX: 100, pageY: 100 }, textElement, 100, 100)
+        textActionsMethod.mouseMove(120, 100)
+        textActionsMethod.mouseMove(130, 100)
+      }).not.toThrow()
     })
 
     it('should handle mouseMove without shift key', () => {
       const evt = { shiftKey: false, clientX: 100, clientY: 100 }
-      textActionsMethod.mouseMove(10, 20, evt)
-      expect(true).toBe(true)
+      expect(() => {
+        textActionsMethod.mouseMove(10, 20, evt)
+      }).not.toThrow()
     })
 
     it('should handle mouseDown with different mouse button', () => {
       const evt = { button: 2 }
-      textActionsMethod.mouseDown(evt, null, 10, 20)
-      expect(true).toBe(true)
+      expect(() => {
+        textActionsMethod.mouseDown(evt, null, 10, 20)
+      }).not.toThrow()
     })
 
     it('should handle mouseUp with valid cursor position', () => {
       const elem = document.createElementNS(NS.SVG, 'text')
       elem.textContent = 'test'
       const evt = { target: elem }
-      textActionsMethod.mouseUp(evt, elem, 10, 20)
-      expect(true).toBe(true)
+      expect(() => {
+        textActionsMethod.mouseUp(evt, elem, 10, 20)
+      }).not.toThrow()
     })
 
     it('should handle toSelectMode with valid element', () => {
       const elem = document.createElementNS(NS.SVG, 'text')
       textActionsMethod.toSelectMode(elem)
-      expect(true).toBe(true)
+      expect(svgCanvas.setCurrentMode).toHaveBeenCalledWith('select')
     })
   })
 })
