@@ -40,6 +40,12 @@ on:
 
 permissions: read-all
 
+# Cancel a PR's superseded in-progress run; never cancel push/schedule runs
+# (they publish the score and feed the required Scorecard analysis context). #130.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   analysis:
     name: Scorecard analysis
