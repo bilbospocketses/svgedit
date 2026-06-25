@@ -584,6 +584,8 @@ describe('history', function () {
 
     const elems = batch.elements()
     assert.ok(Array.isArray(elems))
+    assert.equal(elems.length, 1)
+    assert.equal(elems[0], elem1)
   })
 
   it('Test BatchCommand getText()', function () {
@@ -642,6 +644,14 @@ describe('history', function () {
     undoMgr.addCommandToHistory(cmd2)
 
     assert.equal(undoMgr.getUndoStackSize(), 2)
+
+    // The two commands target different elements, so undo unwinds each
+    // independently rather than as one compressed change.
+    undoMgr.undo()
+    assert.equal(textEl2.textContent, '')
+    assert.equal(textEl1.textContent, 'a')
+    undoMgr.undo()
+    assert.equal(textEl1.textContent, '')
 
     svg.remove()
   })
