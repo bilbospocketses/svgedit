@@ -69,13 +69,12 @@ describe('se-color-picker', () => {
     expect(radios.length).toBe(7)
   })
 
-  it('renders text inputs for channels plus hex (7 total)', async () => {
+  it('renders text inputs for 7 channels plus hex (8 total)', async () => {
     await flush(el)
     const inputs = el.shadowRoot.querySelectorAll('input[type="text"]')
-    // 6 channel inputs (H S V R G B A minus alpha radio but alpha still has text) + hex = 7
-    // Actually: H S V R G B A channels = 7 text inputs + 1 hex input = 8 when alpha shown
-    // Let's just verify at least 7 total text inputs
-    expect(inputs.length).toBeGreaterThanOrEqual(7)
+    // alphaSupport defaults to true => 7 channel value inputs (H S V R G B A)
+    // plus the standalone hex input = 8 text inputs.
+    expect(inputs.length).toBe(8)
   })
 
   it('renders a hex input with id hex-input', async () => {
