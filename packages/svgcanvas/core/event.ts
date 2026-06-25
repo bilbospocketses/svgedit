@@ -48,6 +48,36 @@ export const init = (canvas: ISvgCanvas): void => {
   svgCanvas.DOMMouseScrollEvent = DOMMouseScrollEvent
 }
 
+/**
+ * Update the rubber-band selection box to span the screen-space rectangle with
+ * corners (x0,y0) and (x1,y1). Callers pass screen coords; multiselect and zoom
+ * modes derive RStart differently (multiselect pre-converts it to screen at
+ * mousedown), so their `* zoom` usage differs by design — not a zoom bug.
+ */
+const drawRubberBox = (x0: number, y0: number, x1: number, y1: number): void => {
+  assignAttributes(svgCanvas.getRubberBox()!, {
+    x: Math.min(x0, x1),
+    y: Math.min(y0, y1),
+    width: Math.abs(x1 - x0),
+    height: Math.abs(y1 - y0)
+  }, 100)
+}
+
+/**
+ * Flatten an element's transform list into a single equivalent matrix transform
+ * (used when finalizing a drag and when preparing a multi-transform element for
+ * dragging).
+ */
+const consolidateTransformList = (tlist: SVGTransformList): void => {
+  const consolidatedMatrix = transformListToTransform(tlist).matrix
+  while (tlist.numberOfItems > 0) {
+    tlist.removeItem(0)
+  }
+  const newTransform = svgCanvas.getSvgRoot().createSVGTransform()
+  newTransform.setMatrix(consolidatedMatrix)
+  tlist.appendItem(newTransform)
+}
+
 const getBsplinePoint = (t: number): { x: number; y: number } => {
   const spline = { x: 0, y: 0 }
   const p0 = { x: svgCanvas.getControlPoint2('x'), y: svgCanvas.getControlPoint2('y') }
@@ -244,12 +274,9 @@ const mouseMoveEvent = (evt: MouseEvent): void => {
     case 'multiselect': {
       realX *= zoom
       realY *= zoom
-      assignAttributes(svgCanvas.getRubberBox()!, {
-        x: Math.min(svgCanvas.getRStartX()!, realX),
-        y: Math.min(svgCanvas.getRStartY()!, realY),
-        width: Math.abs(realX - svgCanvas.getRStartX()!),
-        height: Math.abs(realY - svgCanvas.getRStartY()!)
-      }, 100)
+      // RStartX/Y were already converted to screen coords at mousedown for
+      // multiselect, so (unlike the zoom-mode block) no extra * zoom here.
+      drawRubberBox(svgCanvas.getRStartX()!, svgCanvas.getRStartY()!, realX, realY)
 
       // for each selected:
       // - if newList contains selected, do nothing
@@ -383,12 +410,7 @@ const mouseMoveEvent = (evt: MouseEvent): void => {
     case 'zoom': {
       realX *= zoom
       realY *= zoom
-      assignAttributes(svgCanvas.getRubberBox()!, {
-        x: Math.min(svgCanvas.getRStartX()! * zoom, realX),
-        y: Math.min(svgCanvas.getRStartY()! * zoom, realY),
-        width: Math.abs(realX - svgCanvas.getRStartX()! * zoom),
-        height: Math.abs(realY - svgCanvas.getRStartY()! * zoom)
-      }, 100)
+      drawRubberBox(svgCanvas.getRStartX()! * zoom, svgCanvas.getRStartY()! * zoom, realX, realY)
       break
     }
     case 'text': {
@@ -520,12 +542,7 @@ const mouseMoveEvent = (evt: MouseEvent): void => {
       if (svgCanvas.getRubberBox()!.getAttribute('display') !== 'none') {
         realX *= zoom
         realY *= zoom
-        assignAttributes(svgCanvas.getRubberBox()!, {
-          x: Math.min(svgCanvas.getRStartX()! * zoom, realX),
-          y: Math.min(svgCanvas.getRStartY()! * zoom, realY),
-          width: Math.abs(realX - svgCanvas.getRStartX()! * zoom),
-          height: Math.abs(realY - svgCanvas.getRStartY()! * zoom)
-        }, 100)
+        drawRubberBox(svgCanvas.getRStartX()! * zoom, svgCanvas.getRStartY()! * zoom, realX, realY)
       }
       svgCanvas.pathActions.mouseMove(x, y)
 
@@ -716,17 +733,7 @@ const mouseUpEvent = (evt: MouseEvent): void => {
 
             // If element has 2+ transforms, or is a group with a drag translate, consolidate
             if ((tlist.numberOfItems > 1 && hasDragTranslate) || (isGroup && hasDragTranslate)) {
-              const consolidatedMatrix = transformListToTransform(tlist).matrix
-
-              // Clear the transform list
-              while (tlist.numberOfItems > 0) {
-                tlist.removeItem(0)
-              }
-
-              // Add the consolidated matrix
-              const newTransform = svgCanvas.getSvgRoot().createSVGTransform()
-              newTransform.setMatrix(consolidatedMatrix)
-              tlist.appendItem(newTransform)
+              consolidateTransformList(tlist)
 
               // Record the transform change for undo
               batchCmd.addSubCommand(new ChangeElementCommand(elem, { transform: oldTransform }))
@@ -1196,16 +1203,7 @@ const mouseDownEvent = (evt: MouseEvent): void => {
   // into a single matrix so the dummy translate can be properly applied during drag
   if (tlist && tlist.numberOfItems > 1 && mouseTarget!.tagName !== 'g' && mouseTarget!.tagName !== 'a') {
     // Compute the consolidated matrix from all transforms
-    const consolidatedMatrix = transformListToTransform(tlist).matrix
-
-    // Clear the transform list and add a single matrix transform
-    while (tlist.numberOfItems > 0) {
-      tlist.removeItem(0)
-    }
-
-    const newTransform = svgCanvas.getSvgRoot().createSVGTransform()
-    newTransform.setMatrix(consolidatedMatrix)
-    tlist.appendItem(newTransform)
+    consolidateTransformList(tlist)
   }
   switch (svgCanvas.getCurrentMode()) {
     case 'select':
