@@ -687,8 +687,7 @@ describe('coords', function () {
     coords.remapElement(polyline, attrs, m)
 
     const points = polyline.getAttribute('points')
-    // Points should be transformed
-    assert.ok(points !== '10,10 20,20 30,10')
+    assert.equal(points, '25,25 45,45 65,25')
   })
 
   it('Test remapElement with polygon', function () {
@@ -711,8 +710,7 @@ describe('coords', function () {
     coords.remapElement(polygon, attrs, m)
 
     const points = polygon.getAttribute('points')
-    // Points should be transformed
-    assert.ok(points !== '10,10 20,10 15,20')
+    assert.equal(points, '30,30 50,30 40,50')
   })
 
   it('Test remapElement with g (group) element', function () {
@@ -725,9 +723,9 @@ describe('coords', function () {
     m.d = 2
     coords.remapElement(g, attrs, m)
 
-    // Group elements get handled (may or may not add transform)
-    // Just verify it doesn't crash
-    assert.ok(g !== null)
+    // A <g> with no gsvg data-storage entry is a no-op: left untouched.
+    assert.equal(g.getAttribute('transform'), null)
+    assert.equal(g.childNodes.length, 0)
   })
 
   it('Test flipBoxCoordinate with percentage values', function () {
@@ -792,8 +790,7 @@ describe('coords', function () {
     coords.remapElement(path, attrs, m)
 
     const d = path.getAttribute('d')
-    // Path should be transformed (coordinates change)
-    assert.ok(d !== 'M10,10 C20,20 30,30 40,40')
+    assert.equal(d, 'M25,25 C45,45 65,65 85,85')
   })
 
   it('Test remapElement with stroke gradient', function () {
@@ -858,8 +855,12 @@ describe('coords', function () {
     const changes = { x: 10, y: 10, width: 50, height: 50 }
     coords.remapElement(rect, changes, m)
 
-    // Should apply transform for skew
-    assert.ok(true) // Just test it doesn't crash
+    // rect branch remaps x/y through the matrix and scales w/h by m.a/m.d
+    // (skew m.b is not representable on a rect, so it is dropped).
+    assert.equal(rect.getAttribute('x'), '10')
+    assert.equal(rect.getAttribute('y'), '15')
+    assert.equal(rect.getAttribute('width'), '50')
+    assert.equal(rect.getAttribute('height'), '50')
   })
 
   it('Test remapElement with ellipse and negative radii', function () {
@@ -896,8 +897,9 @@ describe('coords', function () {
     const changes = { cx: 50, cy: 50, r: 25 }
     coords.remapElement(circle, changes, m)
 
-    assert.ok(circle.getAttribute('cx') !== '50' ||
-              circle.getAttribute('r') !== '25')
+    assert.equal(circle.getAttribute('cx'), '100')
+    assert.equal(circle.getAttribute('cy'), '100')
+    assert.equal(circle.getAttribute('r'), '50')
   })
 
   it('Test remapElement with line and rotation', function () {
@@ -917,8 +919,11 @@ describe('coords', function () {
     const changes = { x1: 0, y1: 0, x2: 10, y2: 10 }
     coords.remapElement(line, changes, m)
 
-    // Line should be remapped
-    assert.ok(true)
+    // 90deg rotation (a=0,b=1,c=-1,d=0) remaps each endpoint
+    assert.equal(line.getAttribute('x1'), '0')
+    assert.equal(line.getAttribute('y1'), '0')
+    assert.equal(line.getAttribute('x2'), '-10')
+    assert.equal(line.getAttribute('y2'), '10')
   })
 
   it('Test remapElement with path d attribute update', function () {
@@ -933,7 +938,7 @@ describe('coords', function () {
     const changes = { d: 'M 10,10 L 20,20' }
     coords.remapElement(path, changes, m)
 
-    assert.ok(path.getAttribute('d') !== null)
+    assert.equal(path.getAttribute('d'), 'M20,20 L40,40')
   })
 
   it('Test remapElement with rect having both fill and stroke gradients', function () {
@@ -980,7 +985,10 @@ describe('coords', function () {
     const changes = { x: 10, y: 10, width: 0, height: 50 }
     coords.remapElement(rect, changes, m)
 
-    assert.ok(true) // Should not crash
+    assert.equal(rect.getAttribute('x'), '20')
+    assert.equal(rect.getAttribute('y'), '20')
+    assert.equal(rect.getAttribute('width'), '0')
+    assert.equal(rect.getAttribute('height'), '100')
   })
 
   it('Test remapElement with zero-height rect', function () {
@@ -998,7 +1006,10 @@ describe('coords', function () {
     const changes = { x: 10, y: 10, width: 50, height: 0 }
     coords.remapElement(rect, changes, m)
 
-    assert.ok(true) // Should not crash
+    assert.equal(rect.getAttribute('x'), '20')
+    assert.equal(rect.getAttribute('y'), '20')
+    assert.equal(rect.getAttribute('width'), '100')
+    assert.equal(rect.getAttribute('height'), '0')
   })
 
   it('Test remapElement with zero-radius circle', function () {
@@ -1015,7 +1026,9 @@ describe('coords', function () {
     const changes = { cx: 50, cy: 50, r: 0 }
     coords.remapElement(circle, changes, m)
 
-    assert.ok(true) // Should not crash
+    assert.equal(circle.getAttribute('cx'), '100')
+    assert.equal(circle.getAttribute('cy'), '100')
+    assert.equal(circle.getAttribute('r'), '0')
   })
 
   it('Test remapElement with symbol element', function () {
@@ -1030,7 +1043,9 @@ describe('coords', function () {
     const changes = {}
     coords.remapElement(symbol, changes, m)
 
-    assert.ok(true)
+    // default switch branch: no-op, defining attrs untouched
+    assert.equal(symbol.getAttribute('viewBox'), '0 0 100 100')
+    assert.equal(symbol.getAttribute('transform'), null)
   })
 
   it('Test remapElement with defs element', function () {
@@ -1044,7 +1059,8 @@ describe('coords', function () {
     const changes = {}
     coords.remapElement(defs, changes, m)
 
-    assert.ok(true)
+    assert.equal(defs.getAttribute('transform'), null)
+    assert.equal(defs.childNodes.length, 0)
   })
 
   it('Test remapElement with marker element', function () {
@@ -1060,7 +1076,9 @@ describe('coords', function () {
     const changes = {}
     coords.remapElement(marker, changes, m)
 
-    assert.ok(true)
+    assert.equal(marker.getAttribute('markerWidth'), '10')
+    assert.equal(marker.getAttribute('markerHeight'), '10')
+    assert.equal(marker.getAttribute('transform'), null)
   })
 
   it('Test remapElement with style element', function () {
@@ -1075,6 +1093,7 @@ describe('coords', function () {
     const changes = {}
     coords.remapElement(style, changes, m)
 
-    assert.ok(true)
+    assert.equal(style.textContent, '.cls { fill: red; }')
+    assert.equal(style.getAttribute('transform'), null)
   })
 })
