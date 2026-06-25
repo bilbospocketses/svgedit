@@ -28,6 +28,12 @@ on:
 permissions:
   contents: read
 
+# Non-blocking signal workflow (schedule + manual only); a manual dispatch
+# supersedes a running canary. #130.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   e2e-chrome-beta:
     runs-on: ubuntu-latest
