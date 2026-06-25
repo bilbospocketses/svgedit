@@ -1,6 +1,20 @@
 import { test, expect } from './fixtures.js'
 import { setRotationAngle, setSvgSource, visitAndApproveStorage } from './helpers.js'
 
+/**
+ * Move the currently selected element(s) via the svgCanvas API.
+ *
+ * Arrow-key shortcuts are only bound after the extensions_added event fires,
+ * which is fire-and-forget in e2e, so the keyboard handler may never attach.
+ * Calling moveSelectedElements() directly exercises the same transform logic
+ * deterministically, decoupled from the shortcut-registration lifecycle.
+ */
+async function moveSelected (page, dx: number, dy: number) {
+  await page.evaluate(([dx, dy]) => {
+    window.svgEditor.svgCanvas.moveSelectedElements(dx, dy)
+  }, [dx, dy])
+}
+
 test.describe('Regression issues', () => {
   test.beforeEach(async ({ page }) => {
     await visitAndApproveStorage(page)
@@ -143,43 +157,94 @@ test.describe('Regression issues', () => {
       </g>
     </svg>`)
 
-    await page.waitForSelector('#svgroot', { timeout: 5000 })
-
-    // Get the circle element and its initial bounding box
+    // Clicking the deeply-nested circle selects the outermost group #svg_1.
     const circle = page.locator('#svg_3')
     await circle.click()
+    await expect.poll(() => page.evaluate(() =>
+      window.svgEditor.svgCanvas.getSelectedElements().filter(Boolean)[0]?.id
+    )).toBe('svg_1')
 
-    // Get initial position via getBoundingClientRect
-    const initialBBox = await circle.evaluate(el => {
-      const rect = el.getBoundingClientRect()
-      return { x: rect.x, y: rect.y, width: rect.width, height: rect.height }
+    const bbox = () => circle.evaluate(el => {
+      const r = el.getBoundingClientRect()
+      return { x: r.x, y: r.y, width: r.width, height: r.height }
     })
 
-    // Move using arrow keys (small movements to test stability)
-    await page.keyboard.press('ArrowRight')
-    await page.keyboard.press('ArrowDown')
+    // The real #462 fix is about STABILITY: an element under stacked skew /
+    // rotate / scale transforms must move by the *same* screen amount for the
+    // *same* nudge, every time — it must not "jump around" or drift. We assert
+    // that directly: capture the bbox delta of one move, repeat the identical
+    // move, and require the second delta to equal the first (repeatable
+    // increments) while being non-zero (the move actually took effect).
+    //
+    // Movement is driven through svgCanvas.moveSelectedElements rather than arrow
+    // keys: the arrow-key handler is bound only after the extensions_added event,
+    // which is fire-and-forget in e2e, so a real ArrowRight press is a silent
+    // no-op here (verified: zero bbox change). The old test pressed arrow keys and
+    // then asserted only `delta < 100`, which passed trivially because the element
+    // never moved at all — it never exercised the #462 transform path.
+    const STEP = 10
 
-    // Get position after movement
-    const afterMoveBBox = await circle.evaluate(el => {
-      const rect = el.getBoundingClientRect()
-      return { x: rect.x, y: rect.y, width: rect.width, height: rect.height }
-    })
+    const b0 = await bbox()
+    await moveSelected(page, STEP, STEP)
+    const b1 = await bbox()
+    await moveSelected(page, STEP, STEP)
+    const b2 = await bbox()
 
-    // The element should have moved roughly in the expected direction
-    // Due to transforms, the actual pixel movement may vary, but it should be reasonable
-    // Key check: The element should NOT have jumped wildly (e.g., more than 200px difference)
-    const deltaX = Math.abs(afterMoveBBox.x - initialBBox.x)
-    const deltaY = Math.abs(afterMoveBBox.y - initialBBox.y)
+    const d1 = { x: b1.x - b0.x, y: b1.y - b0.y, w: b1.width - b0.width, h: b1.height - b0.height }
+    const d2 = { x: b2.x - b1.x, y: b2.y - b1.y, w: b2.width - b1.width, h: b2.height - b1.height }
 
-    // Movement should be small and controlled (less than 100px for a single arrow key press)
-    expect(deltaX).toBeLessThan(100)
-    expect(deltaY).toBeLessThan(100)
+    // Each move must actually displace the element (non-zero, and never a wild jump).
+    expect(Math.hypot(d1.x, d1.y)).toBeGreaterThan(1)
+    expect(Math.hypot(d1.x, d1.y)).toBeLessThan(100)
 
-    // Element dimensions should remain stable (not get distorted)
-    expect(Math.abs(afterMoveBBox.width - initialBBox.width)).toBeLessThan(5)
-    expect(Math.abs(afterMoveBBox.height - initialBBox.height)).toBeLessThan(5)
+    // Stability: the second identical move produces the same delta as the first,
+    // within 1px. Equal repeatable increments are exactly what #462 guarantees;
+    // a regression (jumping / drift) would make d2 diverge from d1.
+    expect(Math.abs(d2.x - d1.x)).toBeLessThanOrEqual(1)
+    expect(Math.abs(d2.y - d1.y)).toBeLessThanOrEqual(1)
+
+    // No distortion: dimensions stay constant across both moves (translation only).
+    expect(Math.abs(d1.w)).toBeLessThanOrEqual(1)
+    expect(Math.abs(d1.h)).toBeLessThanOrEqual(1)
+    expect(Math.abs(d2.w)).toBeLessThanOrEqual(1)
+    expect(Math.abs(d2.h)).toBeLessThanOrEqual(1)
   })
 
+  // TODO(audit #16Nrf): This test cannot be tightened honestly — leaving it as
+  // the original weak shell (buried `if (pointGripVisible)`). Two blockers, both
+  // verified empirically against a fresh build (see rework investigation):
+  //
+  //  1. The user route into path-edit (double-click a path, or click an
+  //     already-selected path) CANNOT be driven headlessly. Driving real
+  //     page.mouse clicks on the path leaves svgCanvas in 'select' mode through
+  //     repeated clicks and NEVER creates any #pathpointgrip_* — the same
+  //     extension/shortcut-registration gap documented in group-transforms.spec.ts.
+  //     So `await expect(page.locator('#pathpointgrip_0')).toBeVisible()` after a
+  //     real interaction times out.
+  //
+  //  2. Forcing path-edit via the underlying API (svgCanvas.pathActions.toEditMode,
+  //     exactly what the click handler calls) DOES create grips — but it surfaces
+  //     a real product bug, so a faithful position assertion fails legitimately:
+  //     after ungrouping `<g transform="translate(100,100)">`, the child path keeps
+  //     a normalized `matrix(1 0 0 1 100 100)` transform (ungroup leaves it on the
+  //     element by design — see group-transforms.spec.ts "ungroup preserves
+  //     element positions"). Path-edit point grips honor a path's transform matrix
+  //     ONLY when the element has a non-zero rotation: core/path-method.ts
+  //     Path.update() sets `this.matrix` solely under `if (getRotationAngle(elem))`,
+  //     else `this.matrix = null`, and getGripPtMethod skips the matrix when it is
+  //     null. Result: for a pure-translate matrix the grips render at the path's
+  //     LOCAL coords, offset from the rendered path by exactly the translate.
+  //     Measured: path top-left at screen (440,229); grip for point (0,0) at
+  //     (340,129) — off by (-100,-100). A no-transform path's grips align exactly,
+  //     isolating the fault to the un-applied translate. This is the very symptom
+  //     #391 is about ("path edit points were not at correct positions after
+  //     ungrouping"), so the #391 fix is incomplete for the non-rotation case.
+  //
+  //  Honest failure > fake green: not weakening to a trivially-true bound, and not
+  //  asserting a position the product gets wrong. Unblock when (a) path-edit can be
+  //  entered deterministically in e2e, AND (b) the grip-matrix bug is fixed (apply
+  //  the element's full transform in Path.update(), not just rotation) OR ungroup
+  //  bakes a pure-translate into the child path's `d`.
   test('issue 391: selection box position after ungrouping and path edit', async ({ page }) => {
     // This tests the fix for issue #391 where selection boxes and path edit points
     // were not at correct positions after ungrouping and double-clicking to edit a path
@@ -255,8 +320,16 @@ test.describe('Regression issues', () => {
   })
 
   test('issue 404: border width during resize at zoom', async ({ page }) => {
-    // This tests the fix for issue #404 where border width appeared incorrect
-    // during resize when zoom was not at 100%
+    // This tests the fix for issue #404 where the selection-box border width
+    // rendered incorrectly during a resize while zoom was not at 100%.
+    //
+    // The invariant #404 guarantees: the selection outline (#selectedBox0) is a
+    // zoom-compensated overlay, so its border renders at a constant 1px on screen
+    // at ANY zoom and at every moment of a resize drag (core/select.ts computes
+    // offset = 1/zoom for the outline). A regression made the border balloon with
+    // zoom during the drag. The old test never resized at all — it only pressed an
+    // arrow key (a no-op headless) and re-read the element's stroke-width attribute,
+    // so it never touched the resize-at-zoom path this issue is about.
     await setSvgSource(page, `<svg width="640" height="480" xmlns="http://www.w3.org/2000/svg">
       <g class="layer">
         <title>Layer 1</title>
@@ -264,29 +337,63 @@ test.describe('Regression issues', () => {
       </g>
     </svg>`)
 
-    await page.waitForSelector('#svgroot', { timeout: 5000 })
+    // Zoom to 150% — the whole point of #404 is non-100% zoom.
+    await page.evaluate(() => { window.svgEditor.svgCanvas.setZoom(1.5) })
+    await expect.poll(() => page.evaluate(() => window.svgEditor.svgCanvas.getZoom())).toBe(1.5)
 
-    // Set zoom to 150%
-    await page.evaluate(() => {
-      window.svgEditor.svgCanvas.setZoom(1.5)
-    })
-
-    // Wait for zoom to apply
-    await page.waitForTimeout(200)
-
-    // Select the rectangle
     const rect = page.locator('#svg_1')
     await rect.click({ force: true })
 
-    // Get the initial stroke-width
-    const initialStrokeWidth = await rect.getAttribute('stroke-width')
-    expect(initialStrokeWidth).toBe('10')
+    // The selection outline appears once the element is selected.
+    const outline = page.locator('#selectedBox0')
+    await expect(outline).toBeAttached()
 
-    // After any interaction, stroke-width should remain constant
-    await page.keyboard.press('ArrowRight')
-    await page.waitForTimeout(100)
+    // Rendered (on-screen) border width of the selection outline. Computed style
+    // is in px; this is what the user actually sees and what #404 is about.
+    const outlineBorderPx = () => outline.evaluate(el =>
+      parseFloat(getComputedStyle(el).strokeWidth)
+    )
+    // Read the SE resize-grip's current screen centre so we can drag it.
+    const seGripCentre = () => page.evaluate(() => {
+      const g = document.getElementById('selectorGrip_resize_se')
+      if (!g) return null
+      const r = g.getBoundingClientRect()
+      return { x: r.x + r.width / 2, y: r.y + r.height / 2 }
+    })
 
-    const afterMoveStrokeWidth = await rect.getAttribute('stroke-width')
-    expect(afterMoveStrokeWidth).toBe('10')
+    // Border is 1px on screen at 150% zoom before resizing.
+    expect(await outlineBorderPx()).toBeCloseTo(1, 1)
+
+    const grip = await seGripCentre()
+    expect(grip).not.toBeNull()
+
+    // Drive a REAL resize: press the SE grip and drag it outward. We sample the
+    // border mid-drag (while currentMode === 'resize') and again after release.
+    await page.mouse.move(grip!.x, grip!.y)
+    await page.mouse.down()
+    await page.mouse.move(grip!.x + 45, grip!.y + 30, { steps: 6 })
+
+    // Mid-resize the canvas is genuinely in resize mode (proves the drag took).
+    expect(await page.evaluate(() => window.svgEditor.svgCanvas.getCurrentMode())).toBe('resize')
+    // Core assertion: the outline border is STILL 1px on screen during the resize
+    // at 150% zoom — it must not scale with zoom. This is the #404 invariant.
+    expect(await outlineBorderPx()).toBeCloseTo(1, 1)
+
+    await page.mouse.up()
+
+    // And it remains 1px after the resize commits.
+    expect(await outlineBorderPx()).toBeCloseTo(1, 1)
+
+    // Sanity: the resize actually changed the element (a scale was baked into its
+    // transform), so the border assertions above were exercised against a real
+    // resize rather than a vacuous no-op.
+    const committedTransform = await rect.getAttribute('transform')
+    expect(committedTransform).toMatch(/matrix\(/)
+    const m = committedTransform!.match(/matrix\(([^)]+)\)/)![1].trim().split(/[\s,]+/).map(Number)
+    expect(m[0]).toBeGreaterThan(1) // x-scale grew
+    expect(m[3]).toBeGreaterThan(1) // y-scale grew
+
+    // The element's own stroke-width attribute is untouched by the resize.
+    expect(await rect.getAttribute('stroke-width')).toBe('10')
   })
 })
