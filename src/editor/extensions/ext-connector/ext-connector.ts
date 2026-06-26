@@ -33,8 +33,8 @@ export default {
     const seNs = svgCanvas.getEditorNS()
     await loadExtensionTranslation(name, (lang) => import(`./locale/${lang}.js`))
 
-    let startX: number
-    let startY: number
+    let startX: number | undefined
+    let startY: number | undefined
     let curLine: SVGPolylineElement
     let startElem: Element
     let endElem: Element
@@ -455,8 +455,9 @@ export default {
         const zoom = svgCanvas.getZoom()
         const x = opts.mouse_x / zoom
         const y = opts.mouse_y / zoom
-        /** @todo  We have a concern if startX or startY are undefined */
-        if (!startX || !startY) return
+        // startX/startY are unset until the first connector mouseMove; guard on
+        // `undefined` (not falsy) so a legitimate 0 coordinate is not rejected (#19a).
+        if (startX === undefined || startY === undefined) return
 
         const diffX = x - startX
         const diffY = y - startY
@@ -556,9 +557,15 @@ export default {
 
         // Update the end point of the connector
         const bb = svgCanvas.getStrokedBBox([endElem]) as ConnBB
+        // startX/startY are set by the connector mouseMove that always precedes this
+        // mouseUp; capture + guard on `undefined` (not falsy) to keep a 0 coordinate
+        // valid (#19a). Local consts let TS narrow them (a closure `let` is not narrowed).
+        const sx = startX
+        const sy = startY
+        if (sx === undefined || sy === undefined) return undefined
         const pt = getBBintersect(
-          startX,
-          startY,
+          sx,
+          sy,
           bb,
           getOffset('start', curLine)
         )
