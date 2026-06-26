@@ -434,7 +434,12 @@ export default class ConfigObj {
             encodeURIComponent(storeKey)
           ) + '=([^;]+)')
         )
-        this.defaultPrefs[key] = result ? decodeURIComponent(result[1] ?? '') : ''
+        // Only overwrite the default when a cookie is actually present — mirror
+        // the storage path's `if (val)` guard. Previously a missing cookie
+        // clobbered the default with '' (#18).
+        if (result) {
+          this.defaultPrefs[key] = decodeURIComponent(result[1] ?? '')
+        }
       }
     })
   }
