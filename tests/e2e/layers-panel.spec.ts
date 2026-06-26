@@ -67,4 +67,28 @@ test.describe('Layers panel', () => {
     await page.locator('se-prompt-dialog input').press('Escape')
     await expect.poll(() => layerNames(page)).resolves.toEqual(before)
   })
+
+  // C3 (audit #29 / #140): the layer rows are operable cells (role=button + tabindex)
+  // with screen-reader labels and keyboard activation. jsdom has no real focus/a11y
+  // model, so these run in the browser.
+  test('C3 layer rows expose button roles and screen-reader labels', async ({ page }) => {
+    const visCell = page.locator('#layerlist tbody tr.layer td.layervis').first()
+    const nameCell = page.locator('#layerlist tbody tr.layer td.layername').first()
+    await expect(visCell).toHaveAttribute('role', 'button')
+    await expect(visCell).toHaveAttribute('tabindex', '0')
+    await expect(visCell).toHaveAttribute('aria-label', /^Toggle visibility of layer /)
+    await expect(visCell).toHaveAttribute('aria-pressed', /^(true|false)$/)
+    await expect(nameCell).toHaveAttribute('role', 'button')
+    await expect(nameCell).toHaveAttribute('tabindex', '0')
+    await expect(nameCell).toHaveAttribute('aria-label', /^Select layer /)
+  })
+
+  test('C3 the visibility cell toggles with the keyboard (Enter)', async ({ page }) => {
+    const visCell = page.locator('#layerlist tbody tr.layer td.layervis').first()
+    await expect(visCell).toHaveAttribute('aria-pressed', 'true')
+    await visCell.focus()
+    await visCell.press('Enter')
+    await expect(visCell).toHaveClass(/layerinvis/)
+    await expect(visCell).toHaveAttribute('aria-pressed', 'false')
+  })
 })
