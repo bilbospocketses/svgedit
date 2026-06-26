@@ -384,8 +384,6 @@ export const getControlPointsMethod = (seg: Segment): Record<string, SVGLineElem
       display: 'inline'
     })
 
-    cpt[`c${i}_line`] = ctrlLine
-
     // create it
     const pointGrip = addCtrlGripMethod(id)
     cpt[`c${i}`] = pointGrip
@@ -395,7 +393,6 @@ export const getControlPointsMethod = (seg: Segment): Record<string, SVGLineElem
       cy: pt.y,
       display: 'inline'
     })
-    cpt['c' + i] = pointGrip
   }
   return cpt
 }

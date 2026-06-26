@@ -42,6 +42,13 @@ const NEAR_ZERO = 1e-10
 // Create a throwaway SVG element for matrix operations
 const svg = document.createElementNS(NS.SVG, 'svg')
 
+/**
+ * Create an SVGTransform from a matrix, with fallbacks for environments
+ * (some browsers, jsdom) that reject `createSVGTransformFromMatrix` or
+ * `setMatrix` on a live `SVGMatrix`: (1) direct, (2) blank transform +
+ * `setMatrix`, (3-4) the same two via a plain-object matrix copy
+ * (`createFallback`) for when the live matrix instance itself is rejected.
+ */
 const createTransformFromMatrix = (m: SVGMatrix): SVGTransform => {
   const createFallback = (matrix: SVGMatrix): SVGMatrix => {
     const fallback = svg.createSVGMatrix()

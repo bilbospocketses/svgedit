@@ -105,13 +105,6 @@ export const convertUnit = (val: string | number, unit?: string): number | strin
   return shortFloat((val as number) / (typeMap_[resolvedUnit] ?? 1))
 }
 
-/**
- * Sets an element's attribute based on the unit in its current value.
- */
-export const setUnitAttr = (elem: Element, attr: string, val: string): void => {
-  elem.setAttribute(attr, val)
-}
-
 const attrsToConvert: Record<string, string[]> = {
   line: ['x1', 'x2', 'y1', 'y2'],
   circle: ['cx', 'cy', 'r'],
@@ -158,7 +151,7 @@ export const convertToNum = (attr: string, val: string): number => {
     if (hAttrs.includes(attr)) {
       return num * height
     }
-    return num * Math.sqrt((width * width) + (height * height)) / Math.sqrt(2)
+    return num * Math.hypot(width, height) / Math.sqrt(2)
   }
   const match = /^([+-]?[\d.]+)([a-z%]*)$/i.exec(val)
   if (!match) { return NaN }
