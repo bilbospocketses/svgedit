@@ -149,7 +149,7 @@ export class SvgEditEmbed {
       try {
         h(payload)
       } catch (err) {
-        console.error(`SvgEditEmbed: event handler for "${name}" threw`, err)
+        console.error('SvgEditEmbed: event handler threw for event:', name, err)
       }
     })
   }
