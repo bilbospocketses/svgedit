@@ -9,6 +9,7 @@ import {
   type PathActionsLike
 } from '../typed-events.js'
 import topPanelHTML from './TopPanel.html'
+import { setDialogVisibility } from '../dialogs/setDialogVisibility.js'
 
 const { $qa, $id, $click, isValidUnit, getTypeMap, convertUnit } = SvgCanvas
 
@@ -498,7 +499,7 @@ class TopPanel {
     const $editorDialog = $id('se-svg-editor-dialog')
     if (!$editorDialog || $editorDialog.getAttribute('dialog') === 'open') return
     const origSource = this.editor.svgCanvas.getSvgString()
-    $editorDialog.setAttribute('dialog', 'open')
+    setDialogVisibility($editorDialog, true)
     $editorDialog.setAttribute('value', origSource)
     $editorDialog.setAttribute('copysec', String(Boolean(forSaving)))
     $editorDialog.setAttribute('applysec', String(!forSaving))

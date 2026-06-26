@@ -4,6 +4,7 @@ import { isChrome } from '@svgedit/svgcanvas/common/browser.js'
 import type ConfigObj from './ConfigObj.js'
 import type Rulers from './Rulers.js'
 import { typedDetail, type SeImgPropDetail, type SeEditPrefsDetail, type SeExportDetail } from './typed-events.js'
+import { setDialogVisibility } from './dialogs/setDialogVisibility.js'
 
 const { $id, $click, convertUnit, isValidUnit } = SvgCanvas
 const homePage = 'https://github.com/bilbospocketses/svgedit'
@@ -47,7 +48,7 @@ class MainMenu {
   hideDocProperties (): void {
     const $imgDialog = $id('se-img-prop')
     if (!$imgDialog) return
-    $imgDialog.setAttribute('dialog', 'close')
+    setDialogVisibility($imgDialog, false)
     $imgDialog.setAttribute('save', (this.editor.configObj.pref('img_save') as string | undefined) ?? '')
     this.editor.docprops = false
   }
@@ -56,7 +57,7 @@ class MainMenu {
   hidePreferences (): void {
     const $editDialog = $id('se-edit-prefs')
     if (!$editDialog) return
-    $editDialog.setAttribute('dialog', 'close')
+    setDialogVisibility($editDialog, false)
     this.editor.configObj.preferences = false
   }
 
@@ -187,7 +188,7 @@ class MainMenu {
     $imgDialog.setAttribute('width', String(resW))
     $imgDialog.setAttribute('height', String(resH))
     $imgDialog.setAttribute('title', this.editor.svgCanvas.getDocumentTitle() ?? '')
-    $imgDialog.setAttribute('dialog', 'open')
+    setDialogVisibility($imgDialog, true)
   }
 
   /** Open the editor-preferences dialog, pre-filling current grid, ruler, and background values. */
@@ -217,7 +218,7 @@ class MainMenu {
       String(this.editor.configObj.curConfig.gridColor)
     )
     $editDialog.setAttribute('canvasbg', String(canvasBg ?? ''))
-    $editDialog.setAttribute('dialog', 'open')
+    setDialogVisibility($editDialog, true)
   }
 
   /** Navigate to the SVG-edit project homepage in a new browser tab. */
@@ -244,9 +245,7 @@ class MainMenu {
      * Associate all button actions as well as non-button keyboard shortcuts.
      */
     $click($id('tool_export') as EventTarget, function () {
-      document
-        .getElementById('se-export-dialog')
-        ?.setAttribute('dialog', 'open')
+      setDialogVisibility(document.getElementById('se-export-dialog'), true)
     })
     $id('se-export-dialog')?.addEventListener(
       'change',

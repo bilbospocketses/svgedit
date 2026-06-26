@@ -19,6 +19,7 @@ import Rulers from './Rulers.js'
 import SvgCanvas from '@svgedit/svgcanvas'
 import type Editor from './Editor.js'
 import { typedDetail, type SeChangeDetail, type SeSvgSourceDetail, type SeCmenuDetail } from './typed-events.js'
+import { setDialogVisibility } from './dialogs/setDialogVisibility.js'
 import { applyInitialTheme } from './styles/theme.js'
 import { registerForeignHtml } from './foreignHtml.js'
 import { moveSelectedToLayerWithConfirm } from './layerMove.js'
@@ -186,7 +187,7 @@ export async function initEditor (editor: Editor): Promise<void> {
     resW = convertUnit(res.w) + editor.configObj.curConfig.baseUnit
     resH = convertUnit(res.h) + editor.configObj.curConfig.baseUnit
   }
-  $id('se-img-prop')?.setAttribute('dialog', 'close')
+  setDialogVisibility($id('se-img-prop'), false)
   $id('se-img-prop')?.setAttribute('title', editor.svgCanvas.getDocumentTitle() ?? '')
   $id('se-img-prop')?.setAttribute('width', String(resW))
   $id('se-img-prop')?.setAttribute('height', String(resH))

@@ -19,6 +19,7 @@
  */
 import './storageDialog.js'
 import { getSvgEditor } from '../../svgEditorInstance.js'
+import { setDialogVisibility } from '../../dialogs/setDialogVisibility.js'
 import { contentStorageKey, titleStorageKey, saveSvgContent } from './content-store.js'
 
 /**
@@ -107,7 +108,7 @@ export default {
     // manage the change in the storageDialog
 
     storageBox.addEventListener('change', (e: Event) => {
-      storageBox.setAttribute('dialog', 'close')
+      setDialogVisibility(storageBox, false)
       const detail = (e as CustomEvent<{ trigger?: string; select?: string; checkbox?: boolean }>).detail
       if (detail?.trigger === 'ok') {
         if (detail?.select !== 'noPrefsOrContent') {
@@ -247,7 +248,7 @@ export default {
           // From svg-editor.js
           svgEditor.storagePromptState = 'waiting'
           const $storageDialog = $id('se-storage-dialog')!
-          $storageDialog.setAttribute('dialog', 'open')
+          setDialogVisibility($storageDialog, true)
           $storageDialog.setAttribute('storage', String(options))
         } else if (!noStorageOnLoad || forceStorage) {
           setupBeforeUnloadListener()

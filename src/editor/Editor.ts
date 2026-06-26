@@ -28,6 +28,7 @@ import MainMenu from './MainMenu.js'
 import { EmbedServer } from '../embed/server.js'
 import { setSvgEditor } from './svgEditorInstance.js'
 import { typedDetail } from './typed-events.js'
+import { setDialogVisibility } from './dialogs/setDialogVisibility.js'
 import { setPaletteWithErrors } from './components/palette-store.js'
 
 /**
@@ -960,7 +961,7 @@ class Editor {
 
   hideSourceEditor (): void {
     const $editorDialog = $id('se-svg-editor-dialog')
-    $editorDialog?.setAttribute('dialog', 'closed')
+    setDialogVisibility($editorDialog, false)
   }
 
   async saveSourceEditor (e: CustomEvent): Promise<void> {
@@ -1019,7 +1020,7 @@ class Editor {
     this.svgCanvas.setConfig(this.configObj.curConfig)
     const $editorDialog = $id('se-svg-editor-dialog')
     const origSource = this.svgCanvas.getSvgString()
-    $editorDialog?.setAttribute('dialog', 'open')
+    setDialogVisibility($editorDialog, true)
     $editorDialog?.setAttribute('value', origSource)
   }
 
