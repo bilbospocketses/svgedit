@@ -161,8 +161,6 @@ describe('math', function () {
       .translate(100, 200)
       .scale(2)
     I = matrixMultiply(someMatrix, someMatrix.inverse())
-    console.log(I)
-    console.log('-----------------------------------------')
     assert.ok(
       isIdentity(I),
       'Matrix multiplied by its inverse should be identity'
