@@ -8,6 +8,10 @@
 import { dragmove } from './dragmove/dragmove.js'
 import { getSvgEditor } from '../../svgEditorInstance.js'
 
+// Fixed viewBox origin for the mini overview (legacy constant offsets).
+const OVERVIEW_VIEWBOX_ORIGIN_X = 640
+const OVERVIEW_VIEWBOX_ORIGIN_Y = 480
+
 export default {
   name: 'overview_window',
   init () {
@@ -67,8 +71,8 @@ export default {
       const viewWidth = parseFloat(getComputedStyle($id('svgroot')!, null).width.replace('px', ''))
       const viewHeight = parseFloat(getComputedStyle($id('svgroot')!, null).height.replace('px', ''))
 
-      const viewX = 640
-      const viewY = 480
+      const viewX = OVERVIEW_VIEWBOX_ORIGIN_X
+      const viewY = OVERVIEW_VIEWBOX_ORIGIN_Y
 
       const svgWidthOld = parseFloat(getComputedStyle($id('overviewMiniView')!, null).width.replace('px', ''))
       const svgHeightNew = viewHeight / viewWidth * svgWidthOld
@@ -98,13 +102,16 @@ export default {
       updateViewPortFromViewBox()
     }
     const onEnd = (el: HTMLElement, parent: Element, _x: number, _y: number) => {
-      if ((el.offsetLeft + el.offsetWidth) > parseFloat(getComputedStyle(parent, null).width.replace('px', ''))) {
-        el.style.left = (parseFloat(getComputedStyle(parent, null).width.replace('px', '')) - el.offsetWidth) + 'px'
+      const parentStyle = getComputedStyle(parent, null)
+      const parentWidth = parseFloat(parentStyle.width.replace('px', ''))
+      const parentHeight = parseFloat(parentStyle.height.replace('px', ''))
+      if ((el.offsetLeft + el.offsetWidth) > parentWidth) {
+        el.style.left = (parentWidth - el.offsetWidth) + 'px'
       } else if (el.offsetLeft < 0) {
         el.style.left = '0px'
       }
-      if ((el.offsetTop + el.offsetHeight) > parseFloat(getComputedStyle(parent, null).height.replace('px', ''))) {
-        el.style.top = (parseFloat(getComputedStyle(parent, null).height.replace('px', '')) - el.offsetHeight) + 'px'
+      if ((el.offsetTop + el.offsetHeight) > parentHeight) {
+        el.style.top = (parentHeight - el.offsetHeight) + 'px'
       } else if (el.offsetTop < 0) {
         el.style.top = '0px'
       }

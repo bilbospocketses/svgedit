@@ -122,14 +122,14 @@ export default {
     svgEditor.workarea.addEventListener('drop', importImage)
 
     const clickClear = async function () {
-      const [x, y] = svgEditor.configObj.curConfig.dimensions as [number | string, number]
+      const [x, y] = svgEditor.configObj.curConfig.dimensions as [number | 'fit', number]
       const ok = await seConfirm(svgEditor.i18next.t('notification.QwantToClear'))
       if (ok === 'Cancel') {
         return
       }
       svgEditor.leftPanel.clickSelect()
       svgEditor.svgCanvas.clear()
-      svgEditor.svgCanvas.setResolution(x as number | 'fit', y)
+      svgEditor.svgCanvas.setResolution(x, y)
       svgEditor.updateCanvas(true)
       svgEditor.zoomImage()
       svgEditor.layersPanel.populateLayers()
