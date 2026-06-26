@@ -11,22 +11,10 @@
    */
 import { fileOpen, fileSave } from 'browser-fs-access'
 import { getSvgEditor } from '../../svgEditorInstance.js'
+import { loadExtensionTranslation } from '../loadExtensionTranslation.js'
 
 const name = 'opensave'
 let handle: FileSystemFileHandle | null = null
-
-const loadExtensionTranslation = async function (): Promise<void> {
-  const svgEditor = getSvgEditor()
-  let translationModule: Record<string, unknown>
-  const lang = svgEditor.configObj.pref('lang')
-  try {
-    translationModule = await import(`./locale/${String(lang)}.js`) as Record<string, unknown>
-  } catch (_error) {
-    console.warn(`Missing translation (${String(lang)}) for ${name} - using 'en'`)
-    translationModule = await import('./locale/en.js')
-  }
-  svgEditor.i18next.addResourceBundle(lang as string, 'translation', translationModule.default as Record<string, unknown>)
-}
 
 export default {
   name,
@@ -34,7 +22,7 @@ export default {
     const svgEditor = getSvgEditor()
     const svgCanvas = svgEditor.svgCanvas
     const { $id, $click } = svgCanvas
-    await loadExtensionTranslation()
+    await loadExtensionTranslation(name, (lang) => import(`./locale/${lang}.js`), 'translation')
     const importImage = (e: Event) => {
       // This handler runs for both file-input `change` events (e.target is HTMLInputElement)
       // and `drop` events on the drop zone (e is DragEvent with e.dataTransfer).

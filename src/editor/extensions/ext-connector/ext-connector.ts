@@ -7,6 +7,7 @@
  */
 
 import { getSvgEditor } from '../../svgEditorInstance.js'
+import { loadExtensionTranslation } from '../loadExtensionTranslation.js'
 
 const name = 'connector'
 
@@ -22,19 +23,6 @@ interface Connection {
   start_y: number
 }
 
-const loadExtensionTranslation = async function (): Promise<void> {
-  const svgEditor = getSvgEditor()
-  let translationModule: Record<string, unknown>
-  const lang = svgEditor.configObj.pref('lang')
-  try {
-    translationModule = await import(`./locale/${String(lang)}.js`) as Record<string, unknown>
-  } catch (_error) {
-    console.warn(`Missing translation (${String(lang)}) for ${name} - using 'en'`)
-    translationModule = await import('./locale/en.js')
-  }
-  svgEditor.i18next.addResourceBundle(lang as string, name, translationModule.default as Record<string, unknown>)
-}
-
 export default {
   name,
   async init (S: { svgroot: SVGSVGElement; selectorManager: ReturnType<typeof import('@svgedit/svgcanvas')['default']['prototype']['getSelectorManager']> }) {
@@ -43,7 +31,7 @@ export default {
     const { getElement, $id, $click, addSVGElementsFromJson } = svgCanvas
     const { svgroot, selectorManager } = S
     const seNs = svgCanvas.getEditorNS()
-    await loadExtensionTranslation()
+    await loadExtensionTranslation(name, (lang) => import(`./locale/${lang}.js`))
 
     let startX: number
     let startY: number

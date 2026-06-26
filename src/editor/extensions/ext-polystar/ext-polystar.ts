@@ -8,21 +8,9 @@
 
 import { getSvgEditor } from '../../svgEditorInstance.js'
 import { buildStarPoints, buildRegularPolygonPoints } from './polystar-points.js'
+import { loadExtensionTranslation } from '../loadExtensionTranslation.js'
 
 const name = 'polystar'
-
-const loadExtensionTranslation = async function (): Promise<void> {
-  const svgEditor = getSvgEditor()
-  let translationModule: Record<string, unknown>
-  const lang = svgEditor.configObj.pref('lang')
-  try {
-    translationModule = await import(`./locale/${String(lang)}.js`) as Record<string, unknown>
-  } catch (_error) {
-    console.warn(`Missing translation (${String(lang)}) for ${name} - using 'en'`)
-    translationModule = await import('./locale/en.js')
-  }
-  svgEditor.i18next.addResourceBundle(lang as string, name, translationModule.default as Record<string, unknown>)
-}
 
 export default {
   name,
@@ -35,7 +23,7 @@ export default {
     let selElems: (Element | null)[]
     let started = false
     let newFO: Element
-    await loadExtensionTranslation()
+    await loadExtensionTranslation(name, (lang) => import(`./locale/${lang}.js`))
 
     /**
      * @param on true=display

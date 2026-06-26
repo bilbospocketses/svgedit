@@ -7,28 +7,16 @@
  */
 
 import { getSvgEditor } from '../../svgEditorInstance.js'
+import { loadExtensionTranslation } from '../loadExtensionTranslation.js'
 
 const name = 'eyedropper'
-
-const loadExtensionTranslation = async function (): Promise<void> {
-  const svgEditor = getSvgEditor()
-  let translationModule: Record<string, unknown>
-  const lang = svgEditor.configObj.pref('lang')
-  try {
-    translationModule = await import(`./locale/${String(lang)}.js`) as Record<string, unknown>
-  } catch (_error) {
-    console.warn(`Missing translation (${String(lang)}) for ${name} - using 'en'`)
-    translationModule = await import('./locale/en.js')
-  }
-  svgEditor.i18next.addResourceBundle(lang as string, name, translationModule.default as Record<string, unknown>)
-}
 
 export default {
   name,
   async init () {
     const svgEditor = getSvgEditor()
     const svgCanvas = svgEditor.svgCanvas
-    await loadExtensionTranslation()
+    await loadExtensionTranslation(name, (lang) => import(`./locale/${lang}.js`))
     const { ChangeElementCommand } = svgCanvas.history
     const addToHistory = (cmd: InstanceType<typeof ChangeElementCommand>): void => { svgCanvas.undoMgr.addCommandToHistory(cmd) }
     const currentStyle: Record<string, string | number | null> = {}
