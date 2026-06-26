@@ -594,10 +594,11 @@ export async function initEditor (editor: Editor): Promise<void> {
   type ScHandler = (...args: unknown[]) => unknown
   const sc = editor.svgCanvas as { bind?: (name: string, fn: ScHandler) => ScHandler | undefined } | null
   if (sc != null && typeof sc.bind === 'function') {
+    const EMBED_CHANGE_DEBOUNCE_MS = 200
     let changeTimer: ReturnType<typeof setTimeout> | null = null
     const scheduleChange = (): void => {
       if (changeTimer) clearTimeout(changeTimer)
-      changeTimer = setTimeout(() => { editor._embedServer?.emit('change', {}) }, 200)
+      changeTimer = setTimeout(() => { editor._embedServer?.emit('change', {}) }, EMBED_CHANGE_DEBOUNCE_MS)
     }
     const prevChanged = sc.bind('changed', (...args: unknown[]) => {
       if (prevChanged) prevChanged(...args)
