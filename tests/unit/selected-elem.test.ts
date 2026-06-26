@@ -76,6 +76,33 @@ describe('selected-elem', () => {
     expect(big.getAttribute('x')).toBe('0')
   })
 
+  it('#33 aligns tops to the shortest element for a vertical align (height, not width)', () => {
+    // Narrowest != shortest: `tall` is narrow+tall, `short` is wide+short. A vertical
+    // align must reference the element with the smallest HEIGHT, not the smallest width.
+    const tall = svgCanvas.addSVGElementsFromJson({ element: 'rect', attr: { id: 'v-tall', x: 0, y: 50, width: 10, height: 100 } })
+    const short = svgCanvas.addSVGElementsFromJson({ element: 'rect', attr: { id: 'v-short', x: 0, y: 20, width: 100, height: 10 } })
+    svgCanvas.selectOnly([tall, short], true)
+
+    svgCanvas.alignSelectedElements('t', 'smallest')
+
+    // Shortest element is `short` (height 10); its top (y=20) is the reference.
+    expect(short.getAttribute('y')).toBe('20')
+    expect(tall.getAttribute('y')).toBe('20')
+  })
+
+  it('#33 aligns bottoms to the tallest element for a vertical align', () => {
+    const tall = svgCanvas.addSVGElementsFromJson({ element: 'rect', attr: { id: 'vb-tall', x: 0, y: 0, width: 10, height: 100 } })
+    const short = svgCanvas.addSVGElementsFromJson({ element: 'rect', attr: { id: 'vb-short', x: 0, y: 0, width: 100, height: 10 } })
+    svgCanvas.selectOnly([tall, short], true)
+
+    svgCanvas.alignSelectedElements('b', 'largest')
+
+    // Tallest element is `tall` (height 100); its bottom (y=100) is the reference,
+    // so short's bottom moves to 100 -> y = 90.
+    expect(short.getAttribute('y')).toBe('90')
+    expect(tall.getAttribute('y')).toBe('0')
+  })
+
   it('distributes selected elements horizontally, mapping distances to the right elements', () => {
     // Selection order (A,B,C) deliberately differs from left-to-right order
     // (B,C,A) so the sorted-clone -> original-index mapping is exercised.
