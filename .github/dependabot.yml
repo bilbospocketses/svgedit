@@ -6,10 +6,10 @@
 #
 # Two ecosystems wired:
 #   - npm: covers the dep graph in package.json (Vite, Vitest, Playwright,
-#     jspdf, dompurify, elix, etc.) plus the packages/svgcanvas workspace.
+#     jspdf, dompurify, lit, etc.) plus the packages/svgcanvas workspace.
 #     Dependabot auto-discovers all package.json files under the root.
-#   - github-actions: maintains the SHA-pinned action refs in
-#     .github/workflows/ci.yml. Upstream actions tag new versions periodically;
+#   - github-actions: maintains the SHA-pinned action refs across the
+#     workflows under .github/workflows/. Upstream actions tag new versions periodically;
 #     without this Dependabot would never bump our pins and we would drift on
 #     security fixes shipped in the actions themselves.
 #
