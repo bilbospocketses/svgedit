@@ -223,21 +223,30 @@ class LayersPanel {
     let text = ''
     while (layer--) {
       const name = drawing.getLayerName(layer)
+      const visible = drawing.getLayerVisibility(name)
       const layerTr = document.createElement('tr')
       layerTr.className = (name === currentLayerName) ? 'layer layersel' : 'layer'
       const layerVis = document.createElement('td')
-      layerVis.className = (!drawing.getLayerVisibility(name)) ? 'layerinvis layervis' : 'layervis'
+      layerVis.className = (!visible) ? 'layerinvis layervis' : 'layervis'
+      // Keyboard/SR-operable visibility toggle (#140).
+      layerVis.setAttribute('role', 'button')
+      layerVis.setAttribute('tabindex', '0')
+      layerVis.setAttribute('aria-label', `Toggle visibility of layer ${name}`)
+      layerVis.setAttribute('aria-pressed', visible ? 'true' : 'false')
 
-      // fix the eye icon lost at right layers
+      // fix the eye icon lost at right layers (sizing moved to svgedit.css; #141)
       const _eye = document.createElement('img')
       _eye.src = './images/eye.svg'
-      _eye.style.width = '14px'
-      _eye.style.height = '14px'
+      _eye.alt = '' // decorative — the cell is labelled via aria-label
       layerVis.appendChild(_eye)
 
       const layerName = document.createElement('td')
       layerName.className = 'layername'
       layerName.textContent = name
+      // Keyboard/SR-operable layer selection (#140).
+      layerName.setAttribute('role', 'button')
+      layerName.setAttribute('tabindex', '0')
+      layerName.setAttribute('aria-label', `Select layer ${name}`)
       layerTr.appendChild(layerVis)
       layerTr.appendChild(layerName)
       layerlist.appendChild(layerTr)
@@ -247,19 +256,26 @@ class LayersPanel {
     $id('selLayerNames')?.setAttribute('options', text)
     $id('selLayerNames')?.setAttribute('values', values)
     // handle selection of layer
+    const selectLayer = (target: HTMLElement): void => {
+      const rows = $id('layerlist')?.querySelectorAll('tr.layer') ?? []
+      rows.forEach((trEl: Element) => { trEl.classList.remove('layersel') })
+      target.parentElement?.classList.add('layersel')
+      this.editor.svgCanvas.setCurrentLayer(target.textContent ?? '')
+      // run extension when different layer is selected from listener
+      this.editor.svgCanvas.runExtensions({ action: 'layersChanged' })
+    }
     const nelements = $id('layerlist')?.querySelectorAll('td.layername') ?? []
     nelements.forEach((element: Element) => {
       element.addEventListener('mouseup', (evt: Event) => {
-        const trElements = $id('layerlist')?.querySelectorAll('tr.layer') ?? []
-        trElements.forEach((trEl: Element) => {
-          trEl.classList.remove('layersel')
-        })
-        const target = evt.currentTarget as HTMLElement
-        target.parentElement?.classList.add('layersel')
-        this.editor.svgCanvas.setCurrentLayer(target.textContent ?? '')
-        // run extension when different layer is selected from listener
-        this.editor.svgCanvas.runExtensions({ action: 'layersChanged' })
+        selectLayer(evt.currentTarget as HTMLElement)
         evt.preventDefault()
+      })
+      element.addEventListener('keydown', (evt: Event) => {
+        const key = (evt as KeyboardEvent).key
+        if (key === 'Enter' || key === ' ') {
+          selectLayer(evt.currentTarget as HTMLElement)
+          evt.preventDefault()
+        }
       })
       element.addEventListener('mouseover', (evt: Event) => {
         this.toggleHighlightLayer((evt.currentTarget as HTMLElement).textContent ?? undefined)
@@ -268,17 +284,27 @@ class LayersPanel {
         this.toggleHighlightLayer()
       })
     })
+    const toggleVis = (target: HTMLElement): void => {
+      const ele = target.parentElement?.querySelector('td.layername')
+      const name = ele?.textContent ?? ''
+      const vis = target.classList.contains('layerinvis')
+      this.editor.svgCanvas.setLayerVisibility(name, vis)
+      target.classList.toggle('layerinvis')
+      target.setAttribute('aria-pressed', vis ? 'true' : 'false')
+      // run extension if layer visibility is changed from listener
+      this.editor.svgCanvas.runExtensions({ action: 'layerVisChanged' })
+    }
     const elements = $id('layerlist')?.querySelectorAll('td.layervis') ?? []
     elements.forEach((element: Element) => {
       safeClick(element as HTMLElement, (evt: Event) => {
-        const target = evt.currentTarget as HTMLElement
-        const ele = target.parentElement?.querySelector('td.layername')
-        const name = ele?.textContent ?? ''
-        const vis = target.classList.contains('layerinvis')
-        this.editor.svgCanvas.setLayerVisibility(name, vis)
-        target.classList.toggle('layerinvis')
-        // run extension if layer visibility is changed from listener
-        this.editor.svgCanvas.runExtensions({ action: 'layerVisChanged' })
+        toggleVis(evt.currentTarget as HTMLElement)
+      })
+      element.addEventListener('keydown', (evt: Event) => {
+        const key = (evt as KeyboardEvent).key
+        if (key === 'Enter' || key === ' ') {
+          toggleVis(evt.currentTarget as HTMLElement)
+          evt.preventDefault()
+        }
       })
     })
 
