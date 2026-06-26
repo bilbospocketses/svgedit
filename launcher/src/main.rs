@@ -11,6 +11,8 @@ mod supervisor;
 mod install_acl;
 #[cfg(windows)]
 mod job_object;
+#[cfg(windows)]
+mod widestr;
 
 fn main() {
     log::init("svgedit-launcher");

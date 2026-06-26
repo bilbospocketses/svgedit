@@ -28,15 +28,6 @@ pub use imp::InstanceGuard;
 #[cfg(windows)]
 mod imp {
     use anyhow::Result;
-    use std::ffi::OsStr;
-    use std::os::windows::ffi::OsStrExt;
-
-    fn to_wide(s: &str) -> Vec<u16> {
-        OsStr::new(s)
-            .encode_wide()
-            .chain(std::iter::once(0))
-            .collect()
-    }
 
     pub struct InstanceGuard {
         handle: windows::Win32::Foundation::HANDLE,
@@ -55,7 +46,7 @@ mod imp {
         use windows::Win32::Foundation::{GetLastError, ERROR_ALREADY_EXISTS};
         use windows::Win32::System::Threading::CreateMutexW;
 
-        let wide = to_wide(name);
+        let wide = crate::widestr::to_wide(name);
         let handle = unsafe { CreateMutexW(None, false, PCWSTR::from_raw(wide.as_ptr()))? };
         let last = unsafe { GetLastError() };
         if last == ERROR_ALREADY_EXISTS {
