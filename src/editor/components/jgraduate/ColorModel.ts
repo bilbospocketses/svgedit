@@ -157,7 +157,7 @@ export function validateHex (hex: string): string {
 }
 
 /** Convert an integer 0–255 to a zero-padded 2-char lowercase hex string. */
-function intToHex (dec: number): string {
+export function intToHex (dec: number): string {
   let result = (dec | 0).toString(16)
   if (result.length === 1) result = '0' + result
   return result.toLowerCase()
