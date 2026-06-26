@@ -566,7 +566,7 @@ const deleteSelectedElements = (): void => {
       const { nextSibling } = t
       t.remove()
       const elem = t
-      selectedCopy.push(selected)
+      selectedCopy.push(elem)
       batchCmd.addSubCommand(new RemoveElementCommand(elem, nextSibling, parent))
     }
   })

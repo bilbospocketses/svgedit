@@ -51,6 +51,22 @@ export const mergeDeep = (
 
 type ElementMatcher = (el: Element, sel: string) => boolean | undefined
 
+// Shared selector matchers for the getClosest/getParents/getParentsUntil
+// fallback walkers. The `[attr=value]` matcher parses the value, so e.g.
+// `[data-role=toolbar]` matches by attribute value — not by an attribute
+// literally named "data-role=toolbar" (the bug the per-function copies had, #53).
+const SELECTOR_MATCHERS: Record<string, ElementMatcher> = {
+  '.': (el, sel) => el.classList?.contains(sel.slice(1)),
+  '#': (el, sel) => (el as HTMLElement).id === sel.slice(1),
+  '[': (el, sel) => {
+    const parts = sel.slice(1, -1).split('=').map((s: string) => s.replace(/["']/g, ''))
+    const attr = parts[0] ?? ''
+    const val = parts[1]
+    return val ? el.getAttribute(attr) === val : el.hasAttribute(attr)
+  },
+  tag: (el, sel) => el.tagName?.toLowerCase() === sel
+}
+
 /**
  * Get the closest matching element up the DOM tree.
  * Uses native Element.closest() when possible for better performance.
@@ -68,20 +84,8 @@ export const getClosest = (elem: Element | null, selector: string): Element | nu
   }
 
   // Fallback implementation for edge cases
-  const selectorMatcher: Record<string, ElementMatcher> = {
-    '.': (el, sel) => el.classList?.contains(sel.slice(1)),
-    '#': (el, sel) => (el as HTMLElement).id === sel.slice(1),
-    '[': (el, sel) => {
-      const parts = sel.slice(1, -1).split('=').map((s: string) => s.replace(/["']/g, ''))
-      const attr = parts[0] ?? ''
-      const val = parts[1]
-      return val ? el.getAttribute(attr) === val : el.hasAttribute(attr)
-    },
-    tag: (el, sel) => el.tagName?.toLowerCase() === sel
-  }
-
   const firstChar = selector.charAt(0)
-  const matcher: ElementMatcher = selectorMatcher[firstChar] ?? selectorMatcher['tag'] as ElementMatcher
+  const matcher: ElementMatcher = SELECTOR_MATCHERS[firstChar] ?? SELECTOR_MATCHERS['tag'] as ElementMatcher
 
   for (
     let current: Node | null = elem;
@@ -101,16 +105,10 @@ export const getClosest = (elem: Element | null, selector: string): Element | nu
  */
 export const getParents = (elem: Node | null, selector?: string): Node[] | null => {
   const parents: Node[] = []
-  const matchers: Record<string, ElementMatcher> = {
-    '.': (el, sel) => el.classList?.contains(sel.slice(1)),
-    '#': (el, sel) => (el as HTMLElement).id === sel.slice(1),
-    '[': (el, sel) => el.hasAttribute(sel.slice(1, -1)),
-    tag: (el, sel) => el.tagName?.toLowerCase() === sel
-  }
 
   const firstChar = selector?.charAt(0)
   const matcher: ElementMatcher | null = selector
-    ? (firstChar !== undefined && firstChar in matchers ? matchers[firstChar] : matchers['tag']) as ElementMatcher
+    ? (firstChar !== undefined && firstChar in SELECTOR_MATCHERS ? SELECTOR_MATCHERS[firstChar] : SELECTOR_MATCHERS['tag']) as ElementMatcher
     : null
 
   for (let current: Node | null = elem; current && current !== document; current = current.parentNode) {
@@ -130,17 +128,10 @@ export const getParentsUntil = (
 ): Node[] | null => {
   const parents: Node[] = []
 
-  const matchers: Record<string, ElementMatcher> = {
-    '.': (el, sel) => el.classList?.contains(sel.slice(1)),
-    '#': (el, sel) => (el as HTMLElement).id === sel.slice(1),
-    '[': (el, sel) => el.hasAttribute(sel.slice(1, -1)),
-    tag: (el, sel) => el.tagName?.toLowerCase() === sel
-  }
-
   const getMatcherFn = (selectorStr: string | undefined): ElementMatcher | null => {
     if (!selectorStr) return null
     const firstChar = selectorStr.charAt(0)
-    return (firstChar in matchers ? matchers[firstChar] : matchers['tag']) as ElementMatcher
+    return (firstChar in SELECTOR_MATCHERS ? SELECTOR_MATCHERS[firstChar] : SELECTOR_MATCHERS['tag']) as ElementMatcher
   }
 
   const parentMatcher = getMatcherFn(parent)
