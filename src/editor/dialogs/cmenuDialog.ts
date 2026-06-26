@@ -1,75 +1,16 @@
-import { LitElement, html, css } from 'lit'
+import { LitElement, html } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import { classMap } from 'lit/directives/class-map.js'
 import { styleMap } from 'lit/directives/style-map.js'
 import SvgCanvas from '@svgedit/svgcanvas'
+import { contextMenuStyles } from './contextMenuStyles.js'
 
 const { $id } = SvgCanvas
 
 /** Context menu dialog for canvas operations, mapping right-click position and actions to edit commands */
 @customElement('se-cmenu_canvas-dialog')
 export class SeCMenuCanvasDialog extends LitElement {
-  static styles = css`
-    .contextMenu {
-      position: absolute;
-      z-index: 99999;
-      border: solid 1px var(--se-border);
-      background: var(--se-surface);
-      padding: 5px 0;
-      margin: 0px;
-      font: 12px/15px var(--se-font-sans);
-      border-radius: var(--se-radius-sm);
-      box-shadow: var(--se-shadow-overlay);
-    }
-
-    .contextMenu li {
-      list-style: none;
-      padding: 0px;
-      margin: 0px;
-    }
-
-    .contextMenu .shortcut {
-      width: 115px;
-      text-align: right;
-      float: right;
-    }
-
-    .contextMenu a {
-      -moz-user-select: none;
-      -webkit-user-select: none;
-      user-select: none;
-      color: var(--se-text);
-      text-decoration: none;
-      display: block;
-      line-height: 20px;
-      height: 20px;
-      background-position: 6px center;
-      background-repeat: no-repeat;
-      outline: none;
-      padding: 0px 15px 1px 20px;
-    }
-
-    .contextMenu li.hover a {
-      background-color: var(--se-accent);
-      color: var(--se-on-accent);
-      cursor: default;
-    }
-
-    .contextMenu li.disabled a {
-      color: var(--se-text-muted);
-      pointer-events: none;
-    }
-
-    .contextMenu li.hover.disabled a {
-      background-color: transparent;
-    }
-
-    .contextMenu li.separator {
-      border-top: solid 1px var(--se-border);
-      padding-top: 5px;
-      margin-top: 5px;
-    }
-  `
+  static styles = contextMenuStyles
 
   @property({ attribute: 'tools-cut' }) accessor toolsCut = ''
   @property({ attribute: 'tools-copy' }) accessor toolsCopy = ''

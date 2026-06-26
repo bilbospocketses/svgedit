@@ -1,8 +1,5 @@
 import { LitElement, html, css } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
-import SvgCanvas from '@svgedit/svgcanvas'
-
-const { $id } = SvgCanvas
 
 /**
  * SeExportDialog — export-format picker dialog.
@@ -107,11 +104,11 @@ export class SeExportDialog extends LitElement {
       }
     })
     this.dispatchEvent(triggerEvent)
-    $id('se-export-dialog')?.setAttribute('dialog', 'close')
+    this.setAttribute('dialog', 'close')
   }
 
   private _onCancel = (): void => {
-    $id('se-export-dialog')?.setAttribute('dialog', 'close')
+    this.setAttribute('dialog', 'close')
   }
 
   private _onQualityChange = (e: Event): void => {
