@@ -11,7 +11,7 @@ import { LitElement, html, svg, css, nothing } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import SvgCanvas from '@svgedit/svgcanvas'
 import type Paint from '@svgedit/svgcanvas/core/paint.js'
-import { invertHex, type ColorModel } from './ColorModel.js'
+import { invertHex, intToHex, type ColorModel } from './ColorModel.js'
 import './se-color-picker.js'
 import './se-color-slider.js'
 import './se-gradient-stop.js'
@@ -359,8 +359,7 @@ export class SeGradientEditor extends LitElement {
   private _renderSolidPicker () {
     const stopColor = this._stops[0]?.color ?? '#ff0000'
     const raw = stopColor.startsWith('#') ? stopColor.slice(1) : stopColor
-    let alphaHex = Math.round(this._opacity / 100 * 255).toString(16)
-    if (alphaHex.length < 2) alphaHex = '0' + alphaHex
+    const alphaHex = intToHex(Math.round(this._opacity / 100 * 255))
     const ahex = raw + alphaHex
 
     return html`
@@ -651,8 +650,7 @@ export class SeGradientEditor extends LitElement {
 
   private _renderStopColorPicker (stop: GradientStop) {
     const raw = stop.color.startsWith('#') ? stop.color.slice(1) : stop.color
-    let alphaHex = Math.round(stop.opacity * 255).toString(16)
-    if (alphaHex.length < 2) alphaHex = '0' + alphaHex
+    const alphaHex = intToHex(Math.round(stop.opacity * 255))
     const ahex = raw + alphaHex
 
     return html`

@@ -8,6 +8,7 @@
  */
 import { LitElement, svg, css } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
+import { hexToRgba } from './ColorModel.js'
 
 const PICKER_D =
   'M-6.2,0.9c3.6-4,6.7-4.3,6.7-12.4c-0.2,7.9,3.1,8.8,6.5,12.4c3.5,3.8,2.9,9.6,0,12.3c-3.1,2.8-10.4,2.7-13.2,0C-9.6,9.9-9.4,4.4-6.2,0.9z'
@@ -42,10 +43,8 @@ export class SeGradientStop extends LitElement {
 
   render() {
     const strokeWidth = this.selected ? 2 : 1
-    // Parse hex color and apply opacity for fill
-    const r = parseInt(this.color.slice(1, 3), 16)
-    const g = parseInt(this.color.slice(3, 5), 16)
-    const b = parseInt(this.color.slice(5, 7), 16)
+    // Parse hex colour (shared helper) and apply this stop's opacity for fill
+    const { r, g, b } = hexToRgba(this.color)
     const fill = `rgba(${r},${g},${b},${this.opacity})`
 
     return svg`

@@ -4,10 +4,20 @@ import {
   rgbToHsv,
   hexToRgba,
   rgbaToHex,
+  intToHex,
   validateHex,
   invertHex,
   ColorModel
 } from '../../src/editor/components/jgraduate/ColorModel.ts'
+
+describe('intToHex (#126 — now shared by se-gradient-editor)', () => {
+  it('zero-pads a byte to 2 lowercase hex chars', () => {
+    expect(intToHex(0)).toBe('00')
+    expect(intToHex(15)).toBe('0f')
+    expect(intToHex(128)).toBe('80')
+    expect(intToHex(255)).toBe('ff')
+  })
+})
 
 // ---------------------------------------------------------------------------
 // hsvToRgb
