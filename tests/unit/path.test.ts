@@ -2,7 +2,7 @@ import { NS } from '../../packages/svgcanvas/core/namespaces.js'
 import * as utilities from '../../packages/svgcanvas/core/utilities.js'
 import { convertPath as convertPathActions } from '../../packages/svgcanvas/core/path-actions.js'
 import * as pathModule from '../../packages/svgcanvas/core/path.js'
-import { Path, Segment, toPathSeg, init as initPathMethod } from '../../packages/svgcanvas/core/path-method.js'
+import { Path, Segment, toPathSeg, SEG_TYPE, TYPE_TO_CMD, init as initPathMethod } from '../../packages/svgcanvas/core/path-method.js'
 import { getPathData } from '../../packages/svgcanvas/core/path-data.js'
 import type { PathSeg } from '../../packages/svgcanvas/core/path-method.js'
 import { init as unitsInit } from '../../packages/svgcanvas/core/units.js'
@@ -461,6 +461,15 @@ describe('path', function () {
     // without the transform applied, the grips sit at (0,0) and (10,0).
     assert.deepEqual(pathModule.getGripPt(pathObj.segs[0]), { x: 100, y: 100 })
     assert.deepEqual(pathModule.getGripPt(pathObj.segs[1]), { x: 110, y: 100 })
+  })
+
+  it('#15 SEG_TYPE constants map to their SVGPathSeg command letters', () => {
+    // Named seg-type constants replace the bare 1/2/4/6 magic numbers in
+    // path-actions; assert each maps to the right command so a mis-edit is caught.
+    assert.equal(TYPE_TO_CMD[SEG_TYPE.CLOSEPATH], 'Z')
+    assert.equal(TYPE_TO_CMD[SEG_TYPE.MOVETO], 'M')
+    assert.equal(TYPE_TO_CMD[SEG_TYPE.LINETO], 'L')
+    assert.equal(TYPE_TO_CMD[SEG_TYPE.CUBICBEZIER], 'C')
   })
 
   it('Test convertPath with smooth quadratic curve', function () {
