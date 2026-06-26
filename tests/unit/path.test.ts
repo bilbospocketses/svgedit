@@ -440,6 +440,29 @@ describe('path', function () {
     }
   })
 
+  it('#30 path-edit grips honor a pure-translate transform, not just rotation', () => {
+    // ungroupSelectedElement leaves a pure-translate matrix(1 0 0 1 tx ty) on the
+    // child by design. Path.update() used to set its matrix only when the element
+    // was rotated, so grips for a translated path rendered at the element's LOCAL
+    // coords — offset from the rendered path by the translate.
+    const svg = document.createElementNS(NS.SVG, 'svg')
+    const path = document.createElementNS(NS.SVG, 'path')
+    path.setAttribute('d', 'M0,0 L10,0')
+    path.setAttribute('transform', 'translate(100,100)')
+    svg.append(path)
+
+    const [mockPathContext, mockUtilitiesContext] = getMockContexts(svg)
+    pathModule.init(mockPathContext)
+    utilities.init(mockUtilitiesContext)
+    const pathObj = new Path(path)
+    pathObj.update()
+
+    // Local (0,0) and (10,0) must map through translate(100,100) to canvas coords;
+    // without the transform applied, the grips sit at (0,0) and (10,0).
+    assert.deepEqual(pathModule.getGripPt(pathObj.segs[0]), { x: 100, y: 100 })
+    assert.deepEqual(pathModule.getGripPt(pathObj.segs[1]), { x: 110, y: 100 })
+  })
+
   it('Test convertPath with smooth quadratic curve', function () {
     const path = document.createElementNS(NS.SVG, 'path')
     path.setAttribute('d', 'M0,0 Q10,10 20,0 T40,0')
