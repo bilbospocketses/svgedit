@@ -11,7 +11,7 @@ import { LitElement, html, svg, css, nothing } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import SvgCanvas from '@svgedit/svgcanvas'
 import type Paint from '@svgedit/svgcanvas/core/paint.js'
-import { invertHex, intToHex, type ColorModel } from './ColorModel.js'
+import { invertHex, intToHex, clamp, type ColorModel } from './ColorModel.js'
 import './se-color-picker.js'
 import './se-color-slider.js'
 import './se-gradient-stop.js'
@@ -29,11 +29,6 @@ interface GradientStop {
 let stopIdCounter = 0
 function nextStopId (): string {
   return 'gs_' + String(++stopIdCounter)
-}
-
-/** Clamp a number to [min, max]. */
-function clamp (v: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, v))
 }
 
 /** Full gradient editor supporting solid color, linear, and radial gradients with stop management */
