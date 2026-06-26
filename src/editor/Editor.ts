@@ -30,6 +30,16 @@ import { setSvgEditor } from './svgEditorInstance.js'
 import { typedDetail } from './typed-events.js'
 import { setPaletteWithErrors } from './components/palette-store.js'
 
+/**
+ * Augment Window so the editor instance is reachable as the legacy `svgEditor`
+ * global (used by some extensions and external embedders).
+ */
+declare global {
+  interface Window {
+    svgEditor: Editor
+  }
+}
+
 /** Narrow i18next facade — matches the surface from locale.ts. */
 interface I18nextFacade {
   t: (key: string, vars?: Record<string, unknown>) => string
@@ -76,7 +86,7 @@ class Editor {
   exportManager: ExportManager
   selection: EditorSelection
   uiCoordinator: UICoordinator
-  svgCanvas!: ISvgCanvas
+  svgCanvas!: ISvgCanvas // assigned in editorInit() once the DOM canvas element exists
   i18next!: I18nextFacade
   $svgEditor!: HTMLElement
   workarea!: HTMLElement
@@ -130,7 +140,6 @@ class Editor {
      */
     this.title = 'untitled.svg'
 
-    this.svgCanvas = null as unknown as ISvgCanvas
     this.$click = $click
     this.isReady = false
     this.configObj = new ConfigObj(this)
@@ -372,12 +381,16 @@ class Editor {
     this.mainMenu = new MainMenu(this)
     // makes svgEditor accessible as a global variable
     setSvgEditor(this)
-    ;(window as unknown as Record<string, unknown>).svgEditor = this
+    window.svgEditor = this
 
     // Embed-API wire-in (Task 11). Activates only when ?embed=1 OR window.parent !== window.
     // Default dialog handlers wrap existing window.seAlert / window.seConfirm (see ambient declarations above).
     // svgCanvas event binding is deferred to init() where svgCanvas is actually created.
-    ;(this as { _embedServer: EmbedServer })._embedServer = new EmbedServer(this as unknown as { svgCanvas: Record<string, unknown> } & Record<string, unknown>, {
+    // EmbedServer drives its host dynamically over the RPC layer (editor.svgCanvas[method] /
+    // editor[method]), so it types the host as a dynamic record on purpose; bridging the typed
+    // Editor through `unknown` is irreducible without weakening that contract. The readonly
+    // `_embedServer` is assignable here because this is its declaring constructor.
+    this._embedServer = new EmbedServer(this as unknown as { svgCanvas: Record<string, unknown> } & Record<string, unknown>, {
       version: SVGEDIT_VERSION,
       defaultDialogHandlers: {
         alert: (msg) => { seAlert(msg); return Promise.resolve() },
