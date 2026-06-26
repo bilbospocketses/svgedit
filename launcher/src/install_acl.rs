@@ -65,16 +65,6 @@ pub fn ensure_writable(install_root: &Path) -> Result<()> {
 }
 
 #[cfg(windows)]
-fn to_wide(s: &str) -> Vec<u16> {
-    use std::ffi::OsStr;
-    use std::os::windows::ffi::OsStrExt;
-    OsStr::new(s)
-        .encode_wide()
-        .chain(std::iter::once(0))
-        .collect()
-}
-
-#[cfg(windows)]
 fn run_elevated_icacls(install_root: &Path) -> Result<i32> {
     use windows::core::PCWSTR;
     use windows::Win32::Foundation::CloseHandle;
@@ -83,9 +73,9 @@ fn run_elevated_icacls(install_root: &Path) -> Result<i32> {
 
     let parameters = icacls_args(install_root);
 
-    let verb = to_wide("runas");
-    let file = to_wide("icacls.exe");
-    let params = to_wide(&parameters);
+    let verb = crate::widestr::to_wide("runas");
+    let file = crate::widestr::to_wide("icacls.exe");
+    let params = crate::widestr::to_wide(&parameters);
 
     let mut info = SHELLEXECUTEINFOW {
         cbSize: std::mem::size_of::<SHELLEXECUTEINFOW>() as u32,
