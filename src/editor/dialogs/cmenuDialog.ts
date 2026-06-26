@@ -82,17 +82,41 @@ export class SeCMenuCanvasDialog extends LitElement {
     }))
   }
 
-  private _onCut = (e: Event): void => { e.preventDefault(); this._dispatchMenuChange('cut') }
-  private _onCopy = (e: Event): void => { e.preventDefault(); this._dispatchMenuChange('copy') }
-  private _onPaste = (e: Event): void => { e.preventDefault(); this._dispatchMenuChange('paste') }
-  private _onPasteInPlace = (e: Event): void => { e.preventDefault(); this._dispatchMenuChange('paste_in_place') }
-  private _onDelete = (e: Event): void => { e.preventDefault(); this._dispatchMenuChange('delete') }
-  private _onGroup = (e: Event): void => { e.preventDefault(); this._dispatchMenuChange('group') }
-  private _onUngroup = (e: Event): void => { e.preventDefault(); this._dispatchMenuChange('ungroup') }
-  private _onMoveFront = (e: Event): void => { e.preventDefault(); this._dispatchMenuChange('move_front') }
-  private _onMoveUp = (e: Event): void => { e.preventDefault(); this._dispatchMenuChange('move_up') }
-  private _onMoveDown = (e: Event): void => { e.preventDefault(); this._dispatchMenuChange('move_down') }
-  private _onMoveBack = (e: Event): void => { e.preventDefault(); this._dispatchMenuChange('move_back') }
+  private _onItemClick = (e: Event, action: string, disabled: boolean): void => {
+    e.preventDefault()
+    // Disabled items are inert (the `.disabled` class was visual-only before #3).
+    if (disabled) return
+    this._dispatchMenuChange(action)
+  }
+
+  private _enabledItems(): HTMLAnchorElement[] {
+    return [...(this.shadowRoot?.querySelectorAll<HTMLAnchorElement>(
+      'a[role="menuitem"]:not([aria-disabled="true"])'
+    ) ?? [])]
+  }
+
+  // Roving-focus keyboard support for the WAI-ARIA `menu` pattern (#3): Arrow/Home/End
+  // move focus, Enter/Space activate the focused item, Escape closes.
+  private _onMenuKeydown = (e: KeyboardEvent): void => {
+    if (e.key === 'Escape') { this.menuOpen = false; return }
+    const items = this._enabledItems()
+    if (!items.length) return
+    const active = this.shadowRoot?.activeElement as HTMLAnchorElement | null
+    const idx = active ? items.indexOf(active) : -1
+    let next: number
+    switch (e.key) {
+      case 'ArrowDown': next = (idx + 1) % items.length; break
+      case 'ArrowUp': next = (idx - 1 + items.length) % items.length; break
+      case 'Home': next = 0; break
+      case 'End': next = items.length - 1; break
+      case 'Enter': case ' ':
+        if (idx >= 0) { e.preventDefault(); items[idx]?.click() }
+        return
+      default: return
+    }
+    e.preventDefault()
+    items[next]?.focus()
+  }
 
   private _isDisabled(action: string): boolean {
     // The external API uses href-style tokens: '#cut', '#copy', etc.
@@ -112,46 +136,55 @@ export class SeCMenuCanvasDialog extends LitElement {
     return false
   }
 
+  updated(changed: Map<string, unknown>): void {
+    // On open, move focus into the menu so arrow keys + Enter work (WAI-ARIA menu, #3).
+    if (changed.has('menuOpen') && this.menuOpen) {
+      this._enabledItems()[0]?.focus()
+    }
+  }
+
   render() {
+    const items: Array<{ action: string; label: string; shortcut?: string; separator?: boolean }> = [
+      { action: 'cut', label: this.toolsCut, shortcut: 'META+X' },
+      { action: 'copy', label: this.toolsCopy, shortcut: 'META+C' },
+      { action: 'paste', label: this.toolsPaste },
+      { action: 'paste_in_place', label: this.toolsPasteInPlace },
+      { action: 'delete', label: this.toolsDelete, shortcut: 'BACKSPACE', separator: true },
+      { action: 'group', label: this.toolsGroup, shortcut: 'G', separator: true },
+      { action: 'ungroup', label: this.toolsUngroup, shortcut: 'G' },
+      { action: 'move_front', label: this.toolsMoveFront, shortcut: 'CTRL+SHFT+]', separator: true },
+      { action: 'move_up', label: this.toolsMoveUp, shortcut: 'CTRL+]' },
+      { action: 'move_down', label: this.toolsMoveDown, shortcut: 'CTRL+[' },
+      { action: 'move_back', label: this.toolsMoveBack, shortcut: 'CTRL+SHFT+[' }
+    ]
     return html`
-      <ul id="cmenu_canvas" class="contextMenu" style=${styleMap({
-        display: this.menuOpen ? 'block' : 'none',
-        top: this.menuTop,
-        left: this.menuLeft
-      })}>
-        <li class=${classMap({ disabled: this._isDisabled('cut') })}>
-          <a href="#cut" id="se-cut" @click=${this._onCut}>${this.toolsCut}<span class="shortcut">META+X</span></a>
-        </li>
-        <li class=${classMap({ disabled: this._isDisabled('copy') })}>
-          <a href="#copy" id="se-copy" @click=${this._onCopy}>${this.toolsCopy}<span class="shortcut">META+C</span></a>
-        </li>
-        <li class=${classMap({ disabled: this._isDisabled('paste') })}>
-          <a href="#paste" id="se-paste" @click=${this._onPaste}>${this.toolsPaste}</a>
-        </li>
-        <li class=${classMap({ disabled: this._isDisabled('paste_in_place') })}>
-          <a href="#paste_in_place" id="se-paste-in-place" @click=${this._onPasteInPlace}>${this.toolsPasteInPlace}</a>
-        </li>
-        <li class=${classMap({ separator: true, disabled: this._isDisabled('delete') })}>
-          <a href="#delete" id="se-delete" @click=${this._onDelete}>${this.toolsDelete}<span class="shortcut">BACKSPACE</span></a>
-        </li>
-        <li class=${classMap({ separator: true, disabled: this._isDisabled('group') })}>
-          <a href="#group" id="se-group" @click=${this._onGroup}>${this.toolsGroup}<span class="shortcut">G</span></a>
-        </li>
-        <li class=${classMap({ disabled: this._isDisabled('ungroup') })}>
-          <a href="#ungroup" id="se-ungroup" @click=${this._onUngroup}>${this.toolsUngroup}<span class="shortcut">G</span></a>
-        </li>
-        <li class=${classMap({ separator: true, disabled: this._isDisabled('move_front') })}>
-          <a href="#move_front" id="se-move-front" @click=${this._onMoveFront}>${this.toolsMoveFront}<span class="shortcut">CTRL+SHFT+]</span></a>
-        </li>
-        <li class=${classMap({ disabled: this._isDisabled('move_up') })}>
-          <a href="#move_up" id="se-move-up" @click=${this._onMoveUp}>${this.toolsMoveUp}<span class="shortcut">CTRL+]</span></a>
-        </li>
-        <li class=${classMap({ disabled: this._isDisabled('move_down') })}>
-          <a href="#move_down" id="se-move-down" @click=${this._onMoveDown}>${this.toolsMoveDown}<span class="shortcut">CTRL+[</span></a>
-        </li>
-        <li class=${classMap({ disabled: this._isDisabled('move_back') })}>
-          <a href="#move_back" id="se-move-back" @click=${this._onMoveBack}>${this.toolsMoveBack}<span class="shortcut">CTRL+SHFT+[</span></a>
-        </li>
+      <ul
+        id="cmenu_canvas"
+        class="contextMenu"
+        role="menu"
+        aria-label="Canvas context menu"
+        @keydown=${this._onMenuKeydown}
+        style=${styleMap({
+          display: this.menuOpen ? 'block' : 'none',
+          top: this.menuTop,
+          left: this.menuLeft
+        })}
+      >
+        ${items.map((item) => {
+          const disabled = this._isDisabled(item.action)
+          return html`
+            <li role="presentation" class=${classMap({ separator: !!item.separator, disabled })}>
+              <a
+                href="#${item.action}"
+                id="se-${item.action.replace(/_/g, '-')}"
+                role="menuitem"
+                tabindex="-1"
+                aria-disabled=${disabled ? 'true' : 'false'}
+                @click=${(e: Event) => this._onItemClick(e, item.action, disabled)}
+              >${item.label}${item.shortcut ? html`<span class="shortcut">${item.shortcut}</span>` : ''}</a>
+            </li>
+          `
+        })}
       </ul>
     `
   }
