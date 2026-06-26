@@ -2,9 +2,8 @@ import { test, expect } from './fixtures.js'
 import { visitAndApproveStorage } from './helpers.js'
 
 const layerNames = async (page) => {
-  return page.$$eval('#layerlist tbody tr.layer td.layername', (nodes) =>
-    nodes.map((n) => n.textContent.trim())
-  )
+  const texts = await page.locator('#layerlist tbody tr.layer td.layername').allTextContents()
+  return texts.map((t) => t.trim())
 }
 
 const toggleVisibilityFor = async (page, name) => {
@@ -45,11 +44,10 @@ test.describe('Layers panel', () => {
     await expect.poll(() => layerNames(page)).resolves.toContain('Renamed Layer')
 
     await toggleVisibilityFor(page, 'Renamed Layer')
-    const visibilityClass = await page.$eval(
-      '#layerlist tbody tr.layer td.layername:has-text("Renamed Layer")',
-      (node) => node.parentElement?.querySelector('td.layervis')?.className || ''
-    )
-    expect(visibilityClass).toContain('layerinvis')
+    const renamedRow = page.locator('#layerlist tbody tr.layer', {
+      has: page.locator('td.layername', { hasText: 'Renamed Layer' })
+    })
+    await expect(renamedRow.locator('td.layervis')).toHaveClass(/layerinvis/)
 
     const panelHandle = page.locator('div#sidepanel_handle').first()
     await panelHandle.click()
