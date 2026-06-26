@@ -9,6 +9,7 @@
 import { LitElement, html, css, nothing } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import PaintBox from './PaintBox.js'
+import { maskImageStyle } from './component-utils.js'
 import type { ISvgCanvas } from '@svgedit/svgcanvas'
 import type Paint from '@svgedit/svgcanvas/core/paint.js'
 import './jgraduate/se-gradient-editor.js'
@@ -155,7 +156,7 @@ export class SePaintPicker extends LitElement {
 
     return html`
       <div id="picker" @click=${this._onTriggerClick} title=${t(this.label)}>
-        <span id="logo" class="se-icon" aria-hidden="true" style=${`-webkit-mask-image:url("${imgSrc}");mask-image:url("${imgSrc}")`}></span>
+        <span id="logo" class="se-icon" aria-hidden="true" style=${maskImageStyle(imgSrc)}></span>
         <label title=${t('config.pick_paint_opavity')}></label>
         <div id="block"></div>
       </div>

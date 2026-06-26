@@ -2,6 +2,7 @@ import { LitElement, html, css, nothing } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import { t } from '../locale.js'
 import { getSvgEditor } from '../svgEditorInstance.js'
+import { maskImageStyle } from './component-utils.js'
 
 /**
  * SeListItem — option item inside a `<se-list>` dropdown.
@@ -66,7 +67,7 @@ export class SeListItem extends LitElement {
               class="se-icon"
               aria-hidden="true"
               title=${t(this.title)}
-              style=${`width:${this.imgHeight || '24px'};height:${this.imgHeight || '24px'};-webkit-mask-image:url("${imgPath + '/' + this.src}");mask-image:url("${imgPath + '/' + this.src}")`}
+              style=${`width:${this.imgHeight || '24px'};height:${this.imgHeight || '24px'};${maskImageStyle(imgPath + '/' + this.src)}`}
             ></span>`
           : nothing}
         ${this.option ? t(this.option) : nothing}

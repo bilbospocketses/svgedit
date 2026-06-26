@@ -3,20 +3,7 @@ import { customElement, property, state } from 'lit/decorators.js'
 import { classMap } from 'lit/directives/class-map.js'
 import { t } from '../locale.js'
 import { getSvgEditor } from '../svgEditorInstance.js'
-
-/**
- * Boolean attribute contract for `pressed` / `disabled` / `opened`:
- * reflect as the string `'true'` so DOM queries like `[pressed]` and
- * regex matchers like `toHaveAttribute('pressed', /./)` succeed. Lit's
- * default Boolean reflect emits `''`, which fails single-character matchers.
- */
-const boolAttr = {
-  reflect: true,
-  converter: {
-    fromAttribute: (v: string | null) => v !== null,
-    toAttribute: (v: boolean) => v ? 'true' : null
-  }
-} as const
+import { boolAttr, maskImageStyle } from './component-utils.js'
 
 /**
  * SeFlyingButton — toolbar flyout button with slotted secondary actions.
@@ -187,7 +174,7 @@ export class SeFlyingButton extends LitElement {
           <span
             class="se-icon"
             aria-hidden="true"
-            style=${`-webkit-mask-image:url("${iconSrc}");mask-image:url("${iconSrc}")`}
+            style=${maskImageStyle(iconSrc)}
           ></span>
           <div class="handle" @click=${this._onClick}></div>
         </div>

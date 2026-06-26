@@ -4,6 +4,7 @@ import { ifDefined } from 'lit/directives/if-defined.js'
 import { t } from '../locale.js'
 import { matchShortcut } from '../common/shortcut.js'
 import { getSvgEditor } from '../svgEditorInstance.js'
+import { boolAttr, maskImageStyle } from './component-utils.js'
 
 /**
  * SeButton — icon-button custom element.
@@ -28,23 +29,6 @@ import { getSvgEditor } from '../svgEditorInstance.js'
  * @property() accessor style. Forward host's `style` attribute to inner div via
  * `this.getAttribute('style')` in render().
  */
-
-/**
- * Reflecting Boolean attribute converter: emit the string `'true'` (not Lit's
- * default empty string) so DOM queries like `#tools_left *[pressed]` — used by
- * LeftPanel.updateLeftPanel to clear the previously-active tool's highlight —
- * actually match. Mirrors the converter in seFlyingButton; the two MUST agree
- * because updateLeftPanel clears highlights via the [pressed] attribute selector.
- * Without reflection, a button set `pressed` via the property never grows the
- * attribute, so the clear-loop matches nothing and tool highlights accumulate.
- */
-const boolAttr = {
-  reflect: true,
-  converter: {
-    fromAttribute: (v: string | null) => v !== null,
-    toAttribute: (v: boolean) => (v ? 'true' : null)
-  }
-} as const
 
 @customElement('se-button')
 export class SeButton extends LitElement {
@@ -135,7 +119,7 @@ export class SeButton extends LitElement {
         <span
           class="se-icon"
           aria-hidden="true"
-          style=${imgSrc ? `-webkit-mask-image:url("${imgSrc}");mask-image:url("${imgSrc}")` : ''}
+          style=${imgSrc ? maskImageStyle(imgSrc) : ''}
         ></span>
       </div>
     `

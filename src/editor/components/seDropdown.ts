@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import { classMap } from 'lit/directives/class-map.js'
+import { maskImageStyle } from './component-utils.js'
 
 /**
  * SeDropdown — toolbar dropdown with slotted options + popup container.
@@ -129,7 +130,7 @@ export class SeDropdown extends LitElement {
         aria-expanded=${this._open ? 'true' : 'false'}
         @click=${this._onToggle}
       >
-        <span class="se-icon" part="icon" aria-hidden="true" style=${`-webkit-mask-image:url("${this.src}");mask-image:url("${this.src}")`}></span>
+        <span class="se-icon" part="icon" aria-hidden="true" style=${maskImageStyle(this.src)}></span>
       </button>
       <div
         class=${classMap({ popup: true, open: this._open })}

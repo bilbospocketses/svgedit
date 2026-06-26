@@ -2,6 +2,7 @@ import { LitElement, html, css } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import { styleMap } from 'lit/directives/style-map.js'
 import { getSvgEditor } from '../svgEditorInstance.js'
+import { maskImageStyle } from './component-utils.js'
 
 /**
  * SeZoom — numeric spin input with slotted dropdown of zoom-level options.
@@ -198,7 +199,7 @@ export class SeZoom extends LitElement {
 
     return html`
       <div id="tool-wrapper">
-        <span id="icon" class="se-icon" aria-hidden="true" style=${`width:18px;height:18px;${iconSrc ? `-webkit-mask-image:url("${iconSrc}");mask-image:url("${iconSrc}")` : ''}`}></span>
+        <span id="icon" class="se-icon" aria-hidden="true" style=${`width:18px;height:18px;${iconSrc ? maskImageStyle(iconSrc) : ''}`}></span>
         <input
           .value=${this.value}
           @click=${this._handleInputClick}
@@ -222,7 +223,7 @@ export class SeZoom extends LitElement {
           >&#x25BC;</div>
         </div>
         <div id="down" @click=${this._handleClick}>
-          <span class="se-icon" aria-hidden="true" style=${`width:16px;height:8px;-webkit-mask-image:url("${arrowDownSrc}");mask-image:url("${arrowDownSrc}")`}></span>
+          <span class="se-icon" aria-hidden="true" style=${`width:16px;height:8px;${maskImageStyle(arrowDownSrc)}`}></span>
         </div>
       </div>
       <div id="options-container" style=${optionsStyle}>

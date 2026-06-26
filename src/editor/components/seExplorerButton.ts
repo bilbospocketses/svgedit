@@ -4,22 +4,9 @@ import { classMap } from 'lit/directives/class-map.js'
 import { unsafeHTML } from 'lit/directives/unsafe-html.js'
 import SvgCanvas from '@svgedit/svgcanvas'
 import { getSvgEditor } from '../svgEditorInstance.js'
+import { boolAttr, maskImageStyle } from './component-utils.js'
 
 const { $id } = SvgCanvas
-
-/**
- * Boolean attribute contract for `pressed` / `disabled`:
- * reflect as the string `'true'` so DOM queries like `[pressed]` and
- * regex matchers like `toHaveAttribute('pressed', /./)` succeed. Lit's
- * default Boolean reflect emits `''`, which fails single-character matchers.
- */
-const boolAttr = {
-  reflect: true,
-  converter: {
-    fromAttribute: (v: string | null) => v !== null,
-    toAttribute: (v: boolean) => v ? 'true' : null
-  }
-} as const
 
 /**
  * SeExplorerButton — toolbar explorer button with shape library and menu popups.
@@ -196,7 +183,7 @@ export class SeExplorerButton extends LitElement {
           <span
             class="se-icon"
             aria-hidden="true"
-            style=${`-webkit-mask-image:url("${iconSrc}");mask-image:url("${iconSrc}")`}
+            style=${maskImageStyle(iconSrc)}
           ></span>
           <div class="handle" @click=${this._onClick}></div>
         </div>
