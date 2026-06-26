@@ -153,12 +153,28 @@ export class SePalette extends LitElement {
   private _renderSquare(rgb: string) {
     if (rgb === 'none') {
       return html`
-        <div class="square" data-rgb=${rgb}>
-          <img src=${NO_COLOR_SVG_DATA_URL} alt="No color" style="width:15px;height:15px" />
+        <div class="square" data-rgb=${rgb} role="button" tabindex="0"
+          aria-label="No color" @keydown=${this._onSquareKeydown}>
+          <img src=${NO_COLOR_SVG_DATA_URL} alt="" style="width:15px;height:15px" />
         </div>
       `
     }
-    return html`<div class="square" data-rgb=${rgb} style="background-color:${rgb}"></div>`
+    return html`<div class="square" data-rgb=${rgb} role="button" tabindex="0"
+      aria-label=${`Color ${rgb}`} style="background-color:${rgb}"
+      @keydown=${this._onSquareKeydown}></div>`
+  }
+
+  // Resolve + dispatch the change for a swatch element. Shared by mouse + keyboard.
+  private _selectSwatch(target: HTMLElement, picker: 'fill' | 'stroke') {
+    let color = target.dataset['rgb']
+    // Webkit-based browsers returned 'initial' here for no stroke
+    if (color === 'none' || color === 'transparent' || color === 'initial') {
+      color = 'none'
+    }
+    this.dispatchEvent(new CustomEvent('change', {
+      detail: { picker, color },
+      bubbles: false  // CRITICAL: preserve API contract — not bubbling
+    }))
   }
 
   private _onSquareClick = (evt: MouseEvent) => {
@@ -171,15 +187,17 @@ export class SePalette extends LitElement {
     evt.preventDefault()
     // shift key or right click for stroke
     const picker = evt.shiftKey || evt.button === 2 ? 'stroke' : 'fill'
-    let color = target.dataset['rgb']
-    // Webkit-based browsers returned 'initial' here for no stroke
-    if (color === 'none' || color === 'transparent' || color === 'initial') {
-      color = 'none'
-    }
-    this.dispatchEvent(new CustomEvent('change', {
-      detail: { picker, color },
-      bubbles: false  // CRITICAL: preserve API contract — not bubbling
-    }))
+    this._selectSwatch(target, picker)
+  }
+
+  // Keyboard activation for the focusable swatches (#29): Enter/Space selects the
+  // fill; Shift+Enter/Space selects the stroke (mirrors the mouse shift behaviour).
+  private _onSquareKeydown = (evt: KeyboardEvent) => {
+    if (evt.key !== 'Enter' && evt.key !== ' ') return
+    const target = evt.currentTarget
+    if (!(target instanceof HTMLElement)) return
+    evt.preventDefault()
+    this._selectSwatch(target, evt.shiftKey ? 'stroke' : 'fill')
   }
 
   private _toggleExpand = (e: Event) => {
