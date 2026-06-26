@@ -25,11 +25,11 @@ import { maskImageStyle, seIconMask } from './component-utils.js'
  *   - Constructor-time `svgEditor.configObj.curConfig.imgPath` access (moved to render())
  *   - `@class` / `@function` JSDoc tags (Tier B style; reference components don't use them)
  *
- * Inverted-guard attributeChangedCallback:
- *   The original code runs its "sync inputElement.value" block when oldValue === newValue
- *   (guard is inverted — should be oldValue !== newValue). This behavior is preserved via
- *   an attributeChangedCallback override that calls super then adds the parseInt-mismatch
- *   re-sync path. See TODO comment below.
+ * Same-value input re-sync (attributeChangedCallback):
+ *   Runs the "sync inputElement.value" block when oldValue === newValue. Intentional
+ *   (characterized in audit #121), not an inverted-guard bug: Lit skips re-rendering an
+ *   unchanged `.value=` binding, so a same-value re-set of `value` re-syncs a drifted input.
+ *   See the inline comment below.
  *
  * Change event dispatch:
  *   Fires in updated() when `value` property changes (mirrors original attributeChangedCallback
@@ -162,10 +162,12 @@ export class SeZoom extends LitElement {
     this._options = []
   }
 
-  // TODO: see todo #10 — inverted-guard attributeChangedCallback: runs inner block when
-  // old===new; preserved as-is. When oldValue === newValue, if parseInt of the current input
-  // value doesn't match parseInt of newValue, re-sync the input. This fires even when the
-  // attribute didn't actually change (the condition should logically be oldValue !== newValue).
+  // attributeChangedCallback re-syncs the inner input when `value` is re-set to the SAME
+  // value. Intentional (characterized in audit #121 — not the dead "inverted guard" it was
+  // originally labelled): Lit's `.value=${this.value}` binding skips the re-render on an
+  // unchanged value, so when the editor re-applies the current zoom an uncommitted/drifted
+  // input would otherwise stay stale. On a same-value re-set, if the displayed value no
+  // longer matches, re-sync it. (A `!==` condition would be redundant — Lit re-renders then.)
   attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null): void {
     super.attributeChangedCallback(name, oldValue, newValue)
     if (oldValue === newValue && name === 'value') {
