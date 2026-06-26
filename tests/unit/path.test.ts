@@ -65,16 +65,15 @@ describe('path', function () {
   })
 
   it('#94 selected_pts sorts point indexes numerically, not lexicographically', () => {
-    // Drive addPtsToSelection directly with a minimal `this`: it only needs
-    // svgCanvas.getPathObj (for the static subpathIsClosed) and
-    // svgCanvas.addPtsToSelection, so we avoid the full Path constructor.
+    // Drive addPtsToSelection directly with a minimal `this`: it needs its own
+    // subpathIsClosed (an instance method since #18) + svgCanvas.addPtsToSelection,
+    // so we avoid the full Path constructor.
     initPathMethod({
       setPathObj () {},
-      getPathObj: () => ({ eachSeg () {} }),
       addPtsToSelection () {}
     })
 
-    const fakeThis = { segs: [], selected_pts: [] }
+    const fakeThis = { segs: [], selected_pts: [], subpathIsClosed: () => false }
     for (const i of [1, 2, 10]) {
       fakeThis.segs[i] = { ptgrip: {}, select () {} }
     }
