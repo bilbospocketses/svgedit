@@ -10,10 +10,10 @@
 import { NS } from './namespaces.js'
 import { ChangeElementCommand } from './history.js'
 import {
-  transformPoint, getMatrix
+  transformPoint, getMatrix, isIdentity
 } from './math.js'
 import {
-  assignAttributes, getRotationAngle,
+  assignAttributes,
   getElement
 } from './utilities.js'
 import { getPathData, getPathDataReadonly, setPathData } from './path-data.js'
@@ -1018,12 +1018,17 @@ export class Path {
   */
   update (): this {
     const { elem } = this
-    if (getRotationAngle(elem)) {
-      this.matrix = getMatrix(elem)
-      this.imatrix = this.matrix.inverse()
-    } else {
+    // Apply the element's full transform (not just rotation) when positioning
+    // grips. A pure-translate matrix(1 0 0 1 tx ty) — e.g. left on a child by
+    // ungroupSelectedElement — must be honored too, else grips render at the
+    // path's local coords, offset by the translate (#30).
+    const m = getMatrix(elem)
+    if (isIdentity(m)) {
       this.matrix = null
       this.imatrix = null
+    } else {
+      this.matrix = m
+      this.imatrix = m.inverse()
     }
 
     const updateData = getPathDataReadonly(elem)
