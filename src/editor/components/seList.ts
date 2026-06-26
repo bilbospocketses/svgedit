@@ -80,23 +80,38 @@ export class SeList extends LitElement {
 
   // Saved reference for removal in disconnectedCallback
   private _mousedownHandler: ((e: MouseEvent) => void) | null = null
+  // Index of the keyboard-active option (roving tabindex); -1 when none.
+  private _activeIndex = -1
 
   render() {
     return html`
-      <label>${t(this.label)}</label>
+      <label id="se-list-label">${t(this.label)}</label>
       <div
         id="select-container"
-        tabindex="0"
         title=${ifDefined(this.title ? t(this.title) : undefined)}
         style=${[
           this.width ? `width:${this.width};` : '',
           this.height ? `height:${this.height};` : ''
         ].join('')}
       >
-        <div id="selected-value" @click=${this._toggleList}>
+        <div
+          id="selected-value"
+          role="combobox"
+          tabindex="0"
+          aria-haspopup="listbox"
+          aria-controls="options-container"
+          aria-labelledby="se-list-label"
+          aria-expanded=${this.isDropdownOpen ? 'true' : 'false'}
+          @click=${this._toggleList}
+        >
           ${this._renderSelectedValue()}
         </div>
-        <div id="options-container" class=${this.isDropdownOpen ? '' : 'closed'}>
+        <div
+          id="options-container"
+          role="listbox"
+          aria-labelledby="se-list-label"
+          class=${this.isDropdownOpen ? '' : 'closed'}
+        >
           <slot></slot>
         </div>
       </div>
@@ -174,6 +189,10 @@ export class SeList extends LitElement {
     // focusout on the shadow container — composed events cross shadow boundary to host
     this.addEventListener('focusout', this._onFocusOut)
 
+    // Keyboard nav for the combobox/listbox (#120): trigger keydowns (closed) and
+    // focused-option keydowns (open) both bubble to the host.
+    this.addEventListener('keydown', this._onKeydown)
+
     // Outside-click closes dropdown
     this._mousedownHandler = (e: MouseEvent) => {
       if (this.isDropdownOpen) {
@@ -190,6 +209,7 @@ export class SeList extends LitElement {
     super.disconnectedCallback()
     this.removeEventListener('selectedindexchange', this._onSelectedIndexChange)
     this.removeEventListener('focusout', this._onFocusOut)
+    this.removeEventListener('keydown', this._onKeydown)
     if (this._mousedownHandler) {
       window.removeEventListener('mousedown', this._mousedownHandler, { capture: true })
       this._mousedownHandler = null
@@ -210,7 +230,87 @@ export class SeList extends LitElement {
     }
   }
 
-  private _onFocusOut = (_e: Event) => {
+  private _onFocusOut = (e: FocusEvent) => {
+    // Keep the list open while focus moves within the component (between options,
+    // or back to the trigger); only close when focus leaves entirely.
+    const next = e.relatedTarget as Node | null
+    if (next && (this.contains(next) || this.shadowRoot?.contains(next))) return
     this.isDropdownOpen = false
+  }
+
+  private get _items(): HTMLElement[] {
+    return Array.from(this.querySelectorAll('se-list-item'))
+  }
+
+  private _onKeydown = (e: KeyboardEvent) => {
+    const items = this._items
+    if (!this.isDropdownOpen) {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        this._openList()
+      }
+      return
+    }
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault()
+        this._focusItem(Math.min(this._activeIndex + 1, items.length - 1))
+        break
+      case 'ArrowUp':
+        e.preventDefault()
+        this._focusItem(Math.max(this._activeIndex - 1, 0))
+        break
+      case 'Home':
+        e.preventDefault()
+        this._focusItem(0)
+        break
+      case 'End':
+        e.preventDefault()
+        this._focusItem(items.length - 1)
+        break
+      case 'Enter':
+      case ' ': {
+        e.preventDefault()
+        const active = items[this._activeIndex]
+        if (active) this._selectItem(active)
+        break
+      }
+      case 'Escape':
+        e.preventDefault()
+        this.isDropdownOpen = false
+        this._focusTrigger()
+        break
+    }
+  }
+
+  private _openList() {
+    this.isDropdownOpen = true
+    void this.updateComplete.then(() => {
+      this._setDropdownListPosition()
+      const items = this._items
+      const selected = items.findIndex((el) => el.getAttribute('value') === this.value)
+      this._focusItem(selected >= 0 ? selected : 0)
+    })
+  }
+
+  private _focusItem(index: number) {
+    const items = this._items
+    if (!items.length) return
+    items.forEach((el, i) => el.setAttribute('tabindex', i === index ? '0' : '-1'))
+    this._activeIndex = index
+    items[index]?.focus()
+  }
+
+  private _focusTrigger() {
+    const trigger = this.shadowRoot?.querySelector('#selected-value') as HTMLElement | null
+    trigger?.focus()
+  }
+
+  private _selectItem(item: HTMLElement) {
+    const value = item.getAttribute('value') ?? ''
+    this.value = value
+    this.dispatchEvent(new CustomEvent('change', { bubbles: true, composed: true, detail: { value } }))
+    this.isDropdownOpen = false
+    this._focusTrigger()
   }
 }
