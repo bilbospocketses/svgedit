@@ -201,6 +201,7 @@ export class SeZoom extends LitElement {
       <div id="tool-wrapper">
         <span id="icon" class="se-icon" aria-hidden="true" style=${`width:18px;height:18px;${iconSrc ? maskImageStyle(iconSrc) : ''}`}></span>
         <input
+          aria-label="Zoom level"
           .value=${this.value}
           @click=${this._handleInputClick}
           @change=${this._handleInput}
@@ -209,20 +210,28 @@ export class SeZoom extends LitElement {
         <div id="spinner">
           <div
             id="arrow-up"
+            role="button"
+            tabindex="0"
+            aria-label="Zoom in"
             @click=${this._increment}
+            @keydown=${this._onControlKeydown}
             @mousedown=${this._onArrowUpMouseDown}
             @mouseleave=${this._onArrowUpMouseLeave}
             @mouseup=${this._onArrowUpMouseUp}
           >&#x25B2;</div>
           <div
             id="arrow-down"
+            role="button"
+            tabindex="0"
+            aria-label="Zoom out"
             @click=${this._decrement}
+            @keydown=${this._onControlKeydown}
             @mousedown=${this._onArrowDownMouseDown}
             @mouseleave=${this._onArrowDownMouseLeave}
             @mouseup=${this._onArrowDownMouseUp}
           >&#x25BC;</div>
         </div>
-        <div id="down" @click=${this._handleClick}>
+        <div id="down" role="button" tabindex="0" aria-label="Zoom presets" @click=${this._handleClick} @keydown=${this._onControlKeydown}>
           <span class="se-icon" aria-hidden="true" style=${`width:16px;height:8px;${maskImageStyle(arrowDownSrc)}`}></span>
         </div>
       </div>
@@ -259,6 +268,18 @@ export class SeZoom extends LitElement {
     const inputEl = this.shadowRoot?.querySelector('input') as HTMLInputElement | null
     inputEl?.select()
     void this.updateComplete.then(() => { this._initPopup() })
+  }
+
+  // Keyboard activation for the role="button" stepper / presets controls (#119):
+  // Enter or Space triggers the same action as a click, scoped by control id.
+  private _onControlKeydown = (e: KeyboardEvent) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return
+    e.preventDefault()
+    switch ((e.currentTarget as HTMLElement).id) {
+      case 'arrow-up': this._increment(); break
+      case 'arrow-down': this._decrement(); break
+      case 'down': this._handleClick(); break
+    }
   }
 
   private _handleSelect = (e: Event) => {
