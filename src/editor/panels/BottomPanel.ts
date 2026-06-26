@@ -130,7 +130,7 @@ class BottomPanel {
     })
   }
 
-  handleColorPicker (type: string, evt: Event): void {
+  handleColorPicker (type: 'fill' | 'stroke', evt: Event): void {
     const { paint } = typedDetail<SePaintDetail>(evt)
     this.editor.svgCanvas.setPaint(type, paint)
     this.updateToolButtonState()

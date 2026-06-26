@@ -433,7 +433,7 @@ const setColorMethod = (type: string, val: string, preventUndo?: boolean): void 
 * Apply the current gradient to selected element's fill or stroke.
 * @function module:elem-get-set.SvgCanvas#setGradient
 */
-const setGradientMethod = (type: string): void => {
+const setGradientMethod = (type: 'fill' | 'stroke'): void => {
   if (!svgCanvas.getCurProperties(`${type}_paint`) ||
     svgCanvas.getCurProperties(`${type}_paint`).type === 'solidColor') { return }
   const canvas = svgCanvas
@@ -535,7 +535,7 @@ const findDuplicateGradient = (grad: SVGGradientElement | null): SVGGradientElem
 * Set a color/gradient to a fill/stroke.
 * @function module:elem-get-set.SvgCanvas#setPaint
 */
-const setPaintMethod = (type: string, paint: ConstructorParameters<typeof Paint>[0]): void => {
+const setPaintMethod = (type: 'fill' | 'stroke', paint: ConstructorParameters<typeof Paint>[0]): void => {
   const p = new Paint(paint)
   svgCanvas.setPaintOpacity(type, p.alpha / 100, true)
 
