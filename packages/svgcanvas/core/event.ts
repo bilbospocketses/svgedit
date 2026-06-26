@@ -131,7 +131,7 @@ const updateTransformList = (svgRoot: SVGSVGElement, element: Element, dx: numbe
   if (!tlist) { return }
   if (tlist.numberOfItems) {
     const firstItem = tlist.getItem(0)
-    if (firstItem.type === 2) { // SVG_TRANSFORM_TRANSLATE = 2
+    if (firstItem.type === SVGTransform.SVG_TRANSFORM_TRANSLATE) {
       tlist.replaceItem(xform, 0)
     } else {
       tlist.insertItemBefore(xform, 0)
@@ -726,7 +726,7 @@ const mouseUpEvent = (evt: MouseEvent): void => {
 
             // Check if the first transform is a translate (the drag transform we added)
             const firstTransform = tlist.getItem(0)
-            const hasDragTranslate = firstTransform.type === 2 // SVG_TRANSFORM_TRANSLATE
+            const hasDragTranslate = firstTransform.type === SVGTransform.SVG_TRANSFORM_TRANSLATE
 
             // For groups, we always consolidate the transforms (recalculateDimensions returns null for groups)
             const isGroup = elem.tagName === 'g' || elem.tagName === 'a'
