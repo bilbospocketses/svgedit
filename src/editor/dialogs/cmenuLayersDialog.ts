@@ -1,14 +1,15 @@
-import { LitElement, html } from 'lit'
+import { html } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import { styleMap } from 'lit/directives/style-map.js'
 import SvgCanvas from '@svgedit/svgcanvas'
+import { CMenuDialogBase } from './cmenuDialogBase.js'
 import { contextMenuStyles } from './contextMenuStyles.js'
 
 const { $id } = SvgCanvas
 
 /** Context menu dialog for layer operations, mapping right-click actions to layer commands */
 @customElement('se-cmenu-layers')
-export class SeCMenuLayersDialog extends LitElement {
+export class SeCMenuLayersDialog extends CMenuDialogBase {
   static styles = contextMenuStyles
 
   @property() accessor value = ''
@@ -23,9 +24,7 @@ export class SeCMenuLayersDialog extends LitElement {
   @state() private accessor menuLeft = '0px'
 
   source = ''
-  private _workarea: Element | undefined
   private _sidePanels: Element | null = null
-  private _workareaListenersAttached = false
 
   init(i18next: { t: (key: string) => string }): void {
     this.setAttribute('layers-dupe', i18next.t('layers.dupe'))
@@ -99,7 +98,7 @@ export class SeCMenuLayersDialog extends LitElement {
       this.source = newValue
       if (newValue !== '' && newValue !== undefined) {
         this._detachWorkareaListeners()
-        this._workarea = $id(newValue) ?? undefined
+        this._workarea = $id(newValue)
         this._attachWorkareaListeners()
       }
     }
@@ -109,25 +108,22 @@ export class SeCMenuLayersDialog extends LitElement {
     super.connectedCallback()
     if (this.value !== '') {
       this.source = this.value
-      this._workarea = $id(this.value) ?? undefined
+      this._workarea = $id(this.value)
     }
     this._attachWorkareaListeners()
   }
 
-  private _attachWorkareaListeners(): void {
-    if (this._workareaListenersAttached || this._workarea === undefined) return
-    this._workareaListenersAttached = true
-    this._workarea.addEventListener('contextmenu', this._onMenuOpen as EventListener)
+  protected _bindWorkareaListeners(workarea: Element): void {
+    workarea.addEventListener('contextmenu', this._onMenuOpen as EventListener)
     if (this.leftclick === 'true') {
-      this._workarea.addEventListener('click', this._onMenuOpen as EventListener)
+      workarea.addEventListener('click', this._onMenuOpen as EventListener)
     }
-    this._workarea.addEventListener('mousedown', this._onMenuClose as EventListener)
+    workarea.addEventListener('mousedown', this._onMenuClose as EventListener)
     this._sidePanels = $id('sidepanels')
     this._sidePanels?.addEventListener('mousedown', this._onMenuClose as EventListener)
   }
 
-  private _detachWorkareaListeners(): void {
-    if (!this._workareaListenersAttached) return
+  protected _unbindWorkareaListeners(): void {
     this._workarea?.removeEventListener('contextmenu', this._onMenuOpen as EventListener)
     if (this.leftclick === 'true') {
       this._workarea?.removeEventListener('click', this._onMenuOpen as EventListener)
@@ -135,11 +131,5 @@ export class SeCMenuLayersDialog extends LitElement {
     this._workarea?.removeEventListener('mousedown', this._onMenuClose as EventListener)
     this._sidePanels?.removeEventListener('mousedown', this._onMenuClose as EventListener)
     this._sidePanels = null
-    this._workareaListenersAttached = false
-  }
-
-  override disconnectedCallback(): void {
-    super.disconnectedCallback()
-    this._detachWorkareaListeners()
   }
 }

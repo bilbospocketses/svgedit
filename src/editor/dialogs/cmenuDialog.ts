@@ -1,15 +1,16 @@
-import { LitElement, html } from 'lit'
+import { html } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import { classMap } from 'lit/directives/class-map.js'
 import { styleMap } from 'lit/directives/style-map.js'
 import SvgCanvas from '@svgedit/svgcanvas'
+import { CMenuDialogBase } from './cmenuDialogBase.js'
 import { contextMenuStyles } from './contextMenuStyles.js'
 
 const { $id } = SvgCanvas
 
 /** Context menu dialog for canvas operations, mapping right-click position and actions to edit commands */
 @customElement('se-cmenu_canvas-dialog')
-export class SeCMenuCanvasDialog extends LitElement {
+export class SeCMenuCanvasDialog extends CMenuDialogBase {
   static styles = contextMenuStyles
 
   @property({ attribute: 'tools-cut' }) accessor toolsCut = ''
@@ -30,9 +31,6 @@ export class SeCMenuCanvasDialog extends LitElement {
   @state() private accessor menuOpen = false
   @state() private accessor menuTop = '0px'
   @state() private accessor menuLeft = '0px'
-
-  private _workarea: Element | null = null
-  private _workareaListenersAttached = false
 
   init(i18next: { t: (key: string) => string }): void {
     this.setAttribute('tools-cut', i18next.t('tools.cut'))
@@ -195,22 +193,13 @@ export class SeCMenuCanvasDialog extends LitElement {
     this._attachWorkareaListeners()
   }
 
-  private _attachWorkareaListeners(): void {
-    if (this._workareaListenersAttached || this._workarea === null) return
-    this._workareaListenersAttached = true
-    this._workarea.addEventListener('contextmenu', this._onMenuOpen as EventListener)
-    this._workarea.addEventListener('mousedown', this._onMenuClose as EventListener)
+  protected _bindWorkareaListeners(workarea: Element): void {
+    workarea.addEventListener('contextmenu', this._onMenuOpen as EventListener)
+    workarea.addEventListener('mousedown', this._onMenuClose as EventListener)
   }
 
-  private _detachWorkareaListeners(): void {
-    if (!this._workareaListenersAttached) return
+  protected _unbindWorkareaListeners(): void {
     this._workarea?.removeEventListener('contextmenu', this._onMenuOpen as EventListener)
     this._workarea?.removeEventListener('mousedown', this._onMenuClose as EventListener)
-    this._workareaListenersAttached = false
-  }
-
-  override disconnectedCallback(): void {
-    super.disconnectedCallback()
-    this._detachWorkareaListeners()
   }
 }

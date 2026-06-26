@@ -51,3 +51,45 @@ describe('se-cmenu_canvas-dialog #3 ARIA menu', () => {
     expect(el.menuOpen).toBe(false)
   })
 })
+
+// The canvas context menu binds contextmenu/mousedown listeners to #workarea on
+// connect and removes them on disconnect. Audit #137 hoists that lifecycle into a
+// shared base class; these pin the behavior so the extraction stays a pure refactor.
+describe('se-cmenu_canvas-dialog #137 workarea listener lifecycle', () => {
+  afterEach(() => { document.body.textContent = '' })
+
+  const mountWithWorkarea = async () => {
+    const workarea = document.createElement('div')
+    workarea.id = 'workarea'
+    document.body.append(workarea)
+    const el = document.createElement('se-cmenu_canvas-dialog') as unknown as {
+      menuOpen: boolean
+      updateComplete: Promise<unknown>
+      remove: () => void
+    }
+    document.body.append(el as unknown as Node)
+    await el.updateComplete
+    return { el, workarea }
+  }
+
+  it('opens the menu on a contextmenu event over the workarea', async () => {
+    const { el, workarea } = await mountWithWorkarea()
+    expect(el.menuOpen).toBe(false)
+    workarea.dispatchEvent(new MouseEvent('contextmenu', { button: 2, bubbles: true }))
+    expect(el.menuOpen).toBe(true)
+  })
+
+  it('closes the menu on a non-right mousedown over the workarea', async () => {
+    const { el, workarea } = await mountWithWorkarea()
+    el.menuOpen = true
+    workarea.dispatchEvent(new MouseEvent('mousedown', { button: 0, bubbles: true }))
+    expect(el.menuOpen).toBe(false)
+  })
+
+  it('detaches the workarea listeners once the dialog is removed', async () => {
+    const { el, workarea } = await mountWithWorkarea()
+    el.remove()
+    workarea.dispatchEvent(new MouseEvent('contextmenu', { button: 2, bubbles: true }))
+    expect(el.menuOpen).toBe(false)
+  })
+})
