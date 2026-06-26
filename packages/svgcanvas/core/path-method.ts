@@ -1078,16 +1078,16 @@ export class Path {
       grips[i] = seg?.ptgrip ?? null
     }
 
-    const closedSubpath = Path.subpathIsClosed(this.selected_pts[0] ?? 0)
+    const closedSubpath = this.subpathIsClosed(this.selected_pts[0] ?? 0)
     svgCanvas.addPtsToSelection({ grips: grips.filter((g): g is SVGCircleElement => g !== null), closedSubpath })
   }
 
-  // STATIC
-  static subpathIsClosed (index: number): boolean {
+  // Check if the subpath containing `index` is closed (a Z before the next M).
+  // Instance method (#18): operate on `this` directly rather than re-fetching the
+  // active path via svgCanvas.getPathObj() — the caller is always this same Path.
+  subpathIsClosed (index: number): boolean {
     let clsd = false
-    // Check if subpath is already open
-    const path = svgCanvas.getPathObj() as Path
-    path.eachSeg(function (i) {
+    this.eachSeg(function (i) {
       if (i <= index) { return true }
       if (this.type === 2) {
         // Found M first, so open
