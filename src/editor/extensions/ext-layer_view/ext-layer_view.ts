@@ -19,8 +19,11 @@ export default {
     const { $id, $click } = svgCanvas
     await loadExtensionTranslation(name, (lang) => import(`./locale/${lang}.js`))
 
+    // The toggle button is created in callback(); query + cast it in one place.
+    const layerViewBtn = () => $id('tool_layerView') as HTMLElement & { pressed: boolean }
+
     const clickLayerView = () => {
-      const btn = $id('tool_layerView') as HTMLElement & { pressed: boolean }
+      const btn = layerViewBtn()
       btn.pressed = !btn.pressed
       updateLayerView()
     }
@@ -28,10 +31,11 @@ export default {
     const updateLayerView = () => {
       const drawing = svgCanvas.getCurrentDrawing()
       const curLayer = drawing.getCurrentLayerName()
+      const pressed = layerViewBtn().pressed
       let layer = drawing.getNumLayers()
       while (layer--) {
         const name = drawing.getLayerName(layer)
-        if (name !== curLayer && ($id('tool_layerView') as HTMLElement & { pressed: boolean }).pressed) {
+        if (name !== curLayer && pressed) {
           drawing.setLayerVisibility(name, false)
         } else {
           drawing.setLayerVisibility(name, true)
@@ -40,7 +44,7 @@ export default {
       $id('layerlist')!.querySelectorAll('tr.layer').forEach(
         function (el: Element) {
           const layervis = el.querySelector('td.layervis')
-          const vis = el.classList.contains('layersel') || !($id('tool_layerView') as HTMLElement & { pressed: boolean }).pressed ? 'layervis' : 'layerinvis layervis'
+          const vis = el.classList.contains('layersel') || !pressed ? 'layervis' : 'layerinvis layervis'
           layervis?.setAttribute('class', vis)
         }
       )
@@ -50,16 +54,18 @@ export default {
       name: svgEditor.i18next.t(`${name}:name`),
       // The callback should be used to load the DOM with the appropriate UI items
       layersChanged () {
-        if (($id('tool_layerView') as HTMLElement & { pressed: boolean }).pressed) {
+        const btn = layerViewBtn()
+        if (btn.pressed) {
           updateLayerView()
-        } if (svgEditor.configObj.curConfig.layerView) {
+        }
+        if (svgEditor.configObj.curConfig.layerView) {
           svgEditor.configObj.curConfig.layerView = false
-          ;($id('tool_layerView') as HTMLElement & { pressed: boolean }).pressed = true
+          btn.pressed = true
           updateLayerView()
         }
       },
       layerVisChanged () {
-        const btn = $id('tool_layerView') as HTMLElement & { pressed: boolean }
+        const btn = layerViewBtn()
         if (btn.pressed) {
           btn.pressed = false
         }

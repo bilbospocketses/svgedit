@@ -108,14 +108,10 @@ export default {
 
         // Positions helper
         svgEditor.workarea.addEventListener('mousemove', (e: MouseEvent) => {
-          const x = e.clientX
-          const y = e.clientY
-
-          if (svgCanvas.getMode() === name) {
-            helperCursor.style.top = y + 'px'
-            helperCursor.style.left = x + 12 + 'px'
-            styleHelper()
-          }
+          if (svgCanvas.getMode() !== name) return
+          helperCursor.style.top = e.clientY + 'px'
+          helperCursor.style.left = e.clientX + 12 + 'px'
+          styleHelper()
         })
 
         svgEditor.workarea.addEventListener('mouseleave', () => {

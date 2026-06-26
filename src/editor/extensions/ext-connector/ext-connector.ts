@@ -100,6 +100,8 @@ export default {
      * @param side - The side of the line ("start" or "end") where the marker may be present.
      * @returns - Returns the calculated offset if a marker is present, otherwise returns 0.
      */
+    // stroke-width is scaled by this factor to approximate the marker size.
+    const MARKER_SIZE_FACTOR = 5
     const getOffset = (side: string, line: Element) => {
       // Check for marker attribute on the given side ("marker-start" or "marker-end")
       const hasMarker = line.getAttribute('marker-' + side)
@@ -108,7 +110,7 @@ export default {
       // TODO: This factor should ideally be based on the actual size of the marker.
       // parseFloat handles `"2"`, `"2px"`, etc. — prior code multiplied a raw string
       // by 5 producing NaN-ish results (item #18.1 — pre-existing runtime bug).
-      const size = parseFloat(line.getAttribute('stroke-width') ?? '0') * 5
+      const size = parseFloat(line.getAttribute('stroke-width') ?? '0') * MARKER_SIZE_FACTOR
 
       // Return calculated size if marker is present, otherwise return 0.
       return hasMarker ? size : 0
@@ -132,9 +134,7 @@ export default {
         : '#tool_clone, #tool_topath, #tool_angle, #xy_panel { display: none !important; }'
 
       // Update the display property of the <style> element itself based on the 'on' value.
-      if ($id('connector_rules')) {
-        $id('connector_rules')!.style.display = on ? 'block' : 'none'
-      }
+      connRules.style.display = on ? 'block' : 'none'
     }
 
     /**
@@ -463,7 +463,6 @@ export default {
 
         const mode = svgCanvas.getMode()
         if (mode === 'connector' && started) {
-          // const sw = curLine.getAttribute('stroke-width') * 3;
           // Set start point (adjusts based on bb)
           const pt = getBBintersect(
             x,

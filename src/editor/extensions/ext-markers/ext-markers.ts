@@ -59,7 +59,9 @@ export default {
 
     // duplicate shapes to support unfilled (open) marker types with an _o suffix
     ['leftarrow', 'rightarrow', 'box', 'mcircle'].forEach((v) => {
-      markerTypes[v + '_o'] = markerTypes[v]!
+      // structuredClone so the open (_o) variant is an independent copy rather than
+      // an alias of the filled marker (the "duplicate shapes" comment above intends this).
+      markerTypes[v + '_o'] = structuredClone(markerTypes[v]!)
     })
 
     /**
