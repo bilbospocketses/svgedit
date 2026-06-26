@@ -228,8 +228,8 @@ class SvgCanvas implements ISvgCanvas {
   declare setBBoxZoom: (val: unknown, editorW: number, editorH: number) => { zoom: number; bbox: unknown } | undefined
   declare setCurrentZoom: (zoomLevel: number) => void
   declare setColor: (type: string, val: string, preventUndo?: boolean) => void
-  declare setGradient: (type: string) => void
-  declare setPaint: (type: string, paint: any) => void
+  declare setGradient: (type: 'fill' | 'stroke') => void
+  declare setPaint: (type: 'fill' | 'stroke', paint: any) => void
   declare getResolution: () => { w: number; h: number; zoom: number }
   declare setResolution: (x: number | 'fit', y: number) => boolean
 

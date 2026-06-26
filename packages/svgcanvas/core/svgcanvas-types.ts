@@ -178,8 +178,8 @@ export interface ISvgCanvas {
   setBBoxZoom: (val: unknown, editorW: number, editorH: number) => { zoom: number; bbox: unknown } | undefined
   setCurrentZoom: (zoomLevel: number) => void
   setColor: (type: string, val: string, preventUndo?: boolean) => void
-  setGradient: (type: string) => void
-  setPaint: (type: string, paint: any) => void
+  setGradient: (type: 'fill' | 'stroke') => void
+  setPaint: (type: 'fill' | 'stroke', paint: any) => void
   getResolution: () => { w: number; h: number; zoom: number }
   setResolution: (x: number | 'fit', y: number) => boolean
 
