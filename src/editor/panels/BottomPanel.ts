@@ -27,19 +27,19 @@ class BottomPanel {
   }
 
   get selectedElement () {
-    return this.editor.selectedElement
+    return this.editor.selection.selectedElement
   }
 
   get multiselected () {
-    return this.editor.multiselected
+    return this.editor.selection.multiselected
   }
 
   changeStrokeWidth (e: Event): void {
     let val = Number((e.target as HTMLInputElement).value)
     if (
       val === 0 &&
-      this.editor.selectedElement &&
-      ['line', 'polyline'].includes(this.editor.selectedElement.nodeName)
+      this.editor.selection.selectedElement &&
+      ['line', 'polyline'].includes(this.editor.selection.selectedElement.nodeName)
     ) {
       val = 1
     }
@@ -219,12 +219,12 @@ class BottomPanel {
   updateColorpickers (apply: boolean): void {
     ;($id('fill_color') as SePaintPickerElement | null)?.updatePaint(
       this.editor.svgCanvas,
-      this.editor.selectedElement,
+      this.editor.selection.selectedElement,
       apply
     )
     ;($id('stroke_color') as SePaintPickerElement | null)?.updatePaint(
       this.editor.svgCanvas,
-      this.editor.selectedElement,
+      this.editor.selection.selectedElement,
       apply
     )
   }
