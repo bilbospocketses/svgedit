@@ -78,3 +78,31 @@ describe('se-zoom accessibility (#119)', () => {
     expect(el.showOptions).toBe(true)
   })
 })
+
+describe('se-zoom #121 same-value input re-sync (characterization)', () => {
+  afterEach(() => {
+    document.body.textContent = ''
+    vi.restoreAllMocks()
+  })
+
+  // The attributeChangedCallback re-syncs the input on oldValue === newValue, which the
+  // audit flagged as an "inverted guard". It is intentional, not dead: Lit's
+  // `.value=${this.value}` binding skips the re-render when the bound value is unchanged,
+  // so a same-value re-set (the editor re-applying the current zoom) would leave a drifted
+  // input untouched without it. This pins that behaviour.
+  it('re-syncs a drifted input when the value attribute is re-set to the same value', async () => {
+    const el = document.createElement('se-zoom') as any
+    el.value = '100'
+    document.body.append(el)
+    await el.updateComplete
+    const input = el.shadowRoot.querySelector('input')
+    expect(input.value).toBe('100')
+
+    // An uncommitted edit drifts the displayed input away from the bound value.
+    input.value = '50'
+    // Re-set value to the SAME value: Lit dedups the equal `.value=`, so the guard is the
+    // only thing that re-syncs the input. Without it the input would stay at '50'.
+    el.attributeChangedCallback('value', '100', '100')
+    expect(input.value).toBe('100')
+  })
+})
