@@ -555,8 +555,9 @@ class PathActions {
 
     ({ id } = evt.target as Element & { id: string })
     let curPt: number
-    if (id.startsWith('pathpointgrip_')) {
-      curPt = path.cur_pt = Number.parseInt(id.slice(14))
+    const PATHPOINTGRIP_PREFIX = 'pathpointgrip_'
+    if (id.startsWith(PATHPOINTGRIP_PREFIX)) {
+      curPt = path.cur_pt = Number.parseInt(id.slice(PATHPOINTGRIP_PREFIX.length))
       path.dragging = [startX, startY]
       const seg = path.segs[curPt]!
 
