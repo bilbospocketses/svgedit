@@ -14,7 +14,8 @@ const outputPath = resolve(__dirname, 'rotation-recalc-demo.png')
 const browser = await chromium.launch()
 const page = await browser.newPage({ viewport: { width: 1800, height: 980 } })
 await page.goto(`file://${htmlPath}`)
-await page.waitForTimeout(500) // let fonts render
+await page.waitForLoadState('networkidle') // assets settled, instead of a fixed sleep
+await page.evaluate(() => document.fonts.ready) // fonts laid out before the shot
 await page.screenshot({ path: outputPath, fullPage: true })
 await browser.close()
 
