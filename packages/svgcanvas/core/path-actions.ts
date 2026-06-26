@@ -19,7 +19,7 @@ import {
   getBBox
 } from './utilities.js'
 import type { PathSeg, Segment } from './path-method.js'
-import { Path, toPathSeg } from './path-method.js'
+import { Path, toPathSeg, SEG_TYPE } from './path-method.js'
 import { getPathData, getPathDataReadonly, setPathData } from './path-data.js'
 import type { SVGPathDataCommand } from './path-data.js'
 
@@ -476,7 +476,7 @@ class PathActions {
 
             const stretchyData = getPathDataReadonly(stretchy)
             sSeg = stretchyData[1] ? toPathSeg(stretchyData[1]) : null
-            const newEntry: SVGPathDataCommand = sSeg?.pathSegType === 4
+            const newEntry: SVGPathDataCommand = sSeg?.pathSegType === SEG_TYPE.LINETO
               ? { type: 'L', values: [absX, absY] }
               : { type: 'C', values: [(sSeg?.x1 ?? 0) / zoom, (sSeg?.y1 ?? 0) / zoom, absX, absY, absX, absY] }
 
@@ -529,7 +529,7 @@ class PathActions {
           sSeg = stretchyData2[1] ? toPathSeg(stretchyData2[1]) : null
           const rx = svgCanvas.round(x)
           const ry = svgCanvas.round(y)
-          const nextEntry: SVGPathDataCommand = sSeg?.pathSegType === 4
+          const nextEntry: SVGPathDataCommand = sSeg?.pathSegType === SEG_TYPE.LINETO
             ? { type: 'L', values: [rx, ry] }
             : { type: 'C', values: [(sSeg?.x1 ?? 0) / zoom, (sSeg?.y1 ?? 0) / zoom, (sSeg?.x2 ?? 0) / zoom, (sSeg?.y2 ?? 0) / zoom, rx, ry] }
           const data = getPathData(drawnPath)
@@ -644,7 +644,7 @@ class PathActions {
           let lastX = last?.x ?? 0
           let lastY = last?.y ?? 0
 
-          if (last?.pathSegType === 6) {
+          if (last?.pathSegType === SEG_TYPE.CUBICBEZIER) {
             lastX += (lastX - (last?.x2 ?? 0))
             lastY += (lastY - (last?.y2 ?? 0))
           } else if (this.#firstCtrl) {
@@ -657,7 +657,7 @@ class PathActions {
         const stretchy = getElement('path_stretch_line') as SVGPathElement | null
         if (stretchy) {
           const prevCmd = drawnMoveData[index] ? toPathSeg(drawnMoveData[index]) : null
-          if (prevCmd?.pathSegType === 6) {
+          if (prevCmd?.pathSegType === SEG_TYPE.CUBICBEZIER) {
             const prevX = (prevCmd.x ?? 0) + ((prevCmd.x ?? 0) - (prevCmd.x2 ?? 0))
             const prevY = (prevCmd.y ?? 0) + ((prevCmd.y ?? 0) - (prevCmd.y2 ?? 0))
             svgCanvas.replacePathSeg(
@@ -888,7 +888,7 @@ class PathActions {
       if (!cmd) continue
       const seg = toPathSeg(cmd)
       const type = seg.pathSegType
-      if (type === 1) { continue }
+      if (type === SEG_TYPE.CLOSEPATH) { continue }
       const pts: number[] = []
       for (const n of ['', '1', '2'] as const) {
         const x = seg['x' + n] as number | undefined
@@ -961,15 +961,15 @@ class PathActions {
     let startItem: PathSeg | null = null
 
     path.eachSeg(function (this: Segment, i: number) {
-      if (this.type === 2 && i <= index) {
+      if (this.type === SEG_TYPE.MOVETO && i <= index) {
         startItem = this.item
       }
       if (i <= index) return true
-      if (this.type === 2) {
+      if (this.type === SEG_TYPE.MOVETO) {
         openPt = i
         return false
       }
-      if (this.type === 1) {
+      if (this.type === SEG_TYPE.CLOSEPATH) {
         openPt = false
         return false
       }
@@ -1016,7 +1016,7 @@ class PathActions {
       if (!cmd) continue
       const item = toPathSeg(cmd)
 
-      if (item.pathSegType === 2) {
+      if (item.pathSegType === SEG_TYPE.MOVETO) {
         lastM = i
       } else if (i === index) {
         if (lastM !== undefined) {
@@ -1026,7 +1026,7 @@ class PathActions {
           // Adjust indices after removal
           i--
         }
-      } else if (item.pathSegType === 1 && index < i) {
+      } else if (item.pathSegType === SEG_TYPE.CLOSEPATH && index < i) {
         zSeg = i - 1
         ocData.splice(i, 1)
         setPathData(elem, ocData)
@@ -1083,28 +1083,28 @@ class PathActions {
         const cmd = cleanData[len]
         if (!cmd) continue
         const item = toPathSeg(cmd)
-        if (item.pathSegType === 1) {
+        if (item.pathSegType === SEG_TYPE.CLOSEPATH) {
           const prevCmd = cleanData[len - 1]
           const nprevCmd = cleanData[len - 2]
           const prev = prevCmd ? toPathSeg(prevCmd) : null
           const nprev = nprevCmd ? toPathSeg(nprevCmd) : null
-          if (prev?.pathSegType === 2) {
+          if (prev?.pathSegType === SEG_TYPE.MOVETO) {
             remItems(len - 1, 2)
             cleanup()
             break
-          } else if (nprev?.pathSegType === 2) {
+          } else if (nprev?.pathSegType === SEG_TYPE.MOVETO) {
             remItems(len - 2, 3)
             cleanup()
             break
           }
-        } else if (item.pathSegType === 2 && len > 0) {
+        } else if (item.pathSegType === SEG_TYPE.MOVETO && len > 0) {
           const prevCmd2 = cleanData[len - 1]
           const prevType = prevCmd2 ? toPathSeg(prevCmd2).pathSegType : undefined
-          if (prevType === 2) {
+          if (prevType === SEG_TYPE.MOVETO) {
             remItems(len - 1, 1)
             cleanup()
             break
-          } else if (prevType === 1 && cleanData.length - 1 === len) {
+          } else if (prevType === SEG_TYPE.CLOSEPATH && cleanData.length - 1 === len) {
             remItems(len, 1)
             cleanup()
             break
@@ -1167,11 +1167,11 @@ class PathActions {
       const cmd = fixData[i]
       if (!cmd) continue
       const item = toPathSeg(cmd)
-      if (item.pathSegType === 2) {
+      if (item.pathSegType === SEG_TYPE.MOVETO) {
         lastM = item
       }
 
-      if (item.pathSegType === 1) {
+      if (item.pathSegType === SEG_TYPE.CLOSEPATH) {
         const prevCmd = fixData[i - 1]
         const prev = prevCmd ? toPathSeg(prevCmd) : null
         if (prev && lastM && (prev.x !== lastM.x || prev.y !== lastM.y)) {

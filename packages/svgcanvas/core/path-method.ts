@@ -60,6 +60,18 @@ export const TYPE_TO_CMD: Record<number, string> = {
   19: 't'
 }
 
+/**
+ * Named SVGPathSeg ABS type constants, replacing the bare 1/2/4/6 magic numbers
+ * in the path-edit comparisons. Values match the SVGPathSeg enumeration
+ * (see TYPE_TO_CMD above: Z=1, M=2, L=4, C=6).
+ */
+export const SEG_TYPE = {
+  CLOSEPATH: 1,
+  MOVETO: 2,
+  LINETO: 4,
+  CUBICBEZIER: 6
+} as const
+
 /** Inverse of TYPE_TO_CMD — maps command letter strings to their numeric type constants. */
 export const CMD_TO_TYPE: Record<string, number> = Object.fromEntries(
   Object.entries(TYPE_TO_CMD).map(([k, v]) => [v, Number(k)])
