@@ -3,7 +3,7 @@ import { customElement, property, state } from 'lit/decorators.js'
 import { ifDefined } from 'lit/directives/if-defined.js'
 import { t } from '../locale.js'
 import { getSvgEditor } from '../svgEditorInstance.js'
-import { maskImageStyle } from './component-utils.js'
+import { maskImageStyle, seIconMask } from './component-utils.js'
 
 /**
  * SeList — dropdown container custom element.
@@ -62,10 +62,7 @@ export class SeList extends LitElement {
     }
     .se-icon {
       display: inline-block;
-      background-color: var(--se-icon);
-      -webkit-mask-position: center; mask-position: center;
-      -webkit-mask-size: contain; mask-size: contain;
-      -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+      ${seIconMask}
       vertical-align: middle;
     }
   `

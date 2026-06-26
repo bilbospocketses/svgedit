@@ -2,7 +2,7 @@ import { LitElement, html, css, nothing } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import { ifDefined } from 'lit/directives/if-defined.js'
 import { t } from '../locale.js'
-import { maskImageStyle } from './component-utils.js'
+import { maskImageStyle, seIconMask } from './component-utils.js'
 
 /**
  * SeInput — form-control custom element.
@@ -36,10 +36,7 @@ export class SeInput extends LitElement {
       position: relative;
       width: 12px;
       height: 12px;
-      background-color: var(--se-icon);
-      -webkit-mask-position: center; mask-position: center;
-      -webkit-mask-size: contain; mask-size: contain;
-      -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+      ${seIconMask}
     }
     #label {
       bottom: 1px;

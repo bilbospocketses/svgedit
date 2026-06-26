@@ -3,7 +3,7 @@ import { customElement, property, state } from 'lit/decorators.js'
 import { classMap } from 'lit/directives/class-map.js'
 import { t } from '../locale.js'
 import { getSvgEditor } from '../svgEditorInstance.js'
-import { boolAttr, maskImageStyle } from './component-utils.js'
+import { boolAttr, maskImageStyle, seIconMask } from './component-utils.js'
 
 /**
  * SeFlyingButton — toolbar flyout button with slotted secondary actions.
@@ -50,10 +50,7 @@ export class SeFlyingButton extends LitElement {
       display: block;
       width: 100%;
       height: 100%;
-      background-color: var(--se-icon);
-      -webkit-mask-position: center; mask-position: center;
-      -webkit-mask-size: contain; mask-size: contain;
-      -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+      ${seIconMask}
     }
     .overall.pressed .handle {
       background-color: var(--se-accent-subtle) !important;

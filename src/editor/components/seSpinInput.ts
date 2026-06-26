@@ -3,7 +3,7 @@ import { customElement, property } from 'lit/decorators.js'
 import { ifDefined } from 'lit/directives/if-defined.js'
 import { t } from '../locale.js'
 import { getSvgEditor } from '../svgEditorInstance.js'
-import { maskImageStyle } from './component-utils.js'
+import { maskImageStyle, seIconMask } from './component-utils.js'
 
 /**
  * SESpinInput — number-input custom element with optional icon or label.
@@ -68,10 +68,7 @@ export class SESpinInput extends LitElement {
       top: 2px;
       width: 24px;
       height: 24px;
-      background-color: var(--se-icon);
-      -webkit-mask-position: center; mask-position: center;
-      -webkit-mask-size: contain; mask-size: contain;
-      -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+      ${seIconMask}
     }
     span#label {
       bottom: -0.5em;

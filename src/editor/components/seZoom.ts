@@ -2,7 +2,7 @@ import { LitElement, html, css } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import { styleMap } from 'lit/directives/style-map.js'
 import { getSvgEditor } from '../svgEditorInstance.js'
-import { maskImageStyle } from './component-utils.js'
+import { maskImageStyle, seIconMask } from './component-utils.js'
 
 /**
  * SeZoom — numeric spin input with slotted dropdown of zoom-level options.
@@ -62,10 +62,7 @@ export class SeZoom extends LitElement {
     }
     .se-icon {
       display: inline-block;
-      background-color: var(--se-icon);
-      -webkit-mask-position: center; mask-position: center;
-      -webkit-mask-size: contain; mask-size: contain;
-      -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+      ${seIconMask}
     }
     #spinner {
       display: flex;
