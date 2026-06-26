@@ -116,7 +116,7 @@ hr {
   padding-right: 2px;
   width: 125px;
   height: 20px;
-  border: 0px;
+  border: 0;
   overflow: hidden;
   display: flex;
   justify-content: center;
@@ -569,9 +569,6 @@ input[type=text] {
 
 #tool_opacity {
   right: 0;
-}
-
-#tool_opacity {
   overflow: visible;
 }
 
