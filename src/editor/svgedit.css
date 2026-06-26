@@ -181,7 +181,7 @@ hr {
 
 #selLayerNames {
   display: block;
-  top: -8px;
+  top: calc(-1 * var(--se-space-3)); /* -8px, onto the spacing scale */
   position: relative;
 }
 
@@ -295,22 +295,19 @@ hr {
 
 /*—————————————————————————————*/
 
-#tools_top {
-  grid-area: top;
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  align-content: flex-start;
-  background-color: var(--se-bg);
-  min-height: var(--se-toolbar-h);
-}
-
+#tools_top,
 #tools_top>* {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
   background-color: var(--se-bg);
+}
+
+#tools_top {
+  grid-area: top;
+  align-items: flex-start;
+  align-content: flex-start;
+  min-height: var(--se-toolbar-h);
 }
 
 /*—————————————————————————————*/
