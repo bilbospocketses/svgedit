@@ -106,3 +106,34 @@ describe('se-zoom #121 same-value input re-sync (characterization)', () => {
     expect(input.value).toBe('100')
   })
 })
+
+describe('se-zoom #116 outside-close uses composedPath, not e.target', () => {
+  afterEach(() => {
+    document.body.textContent = ''
+    vi.restoreAllMocks()
+  })
+
+  const open = async () => {
+    const el = document.createElement('se-zoom') as any
+    el.value = '100'
+    document.body.append(el)
+    await el.updateComplete
+    el.showOptions = true
+    return el
+  }
+
+  it('keeps the dropdown open for a click inside the component (incl. slotted options)', async () => {
+    const el = await open()
+    // A slotted option click: e.target is the option (not the host), but the host is in the
+    // composedPath, so it is an INSIDE click and must not close the dropdown.
+    const slotted = document.createElement('se-text')
+    el._handleClose({ target: slotted, composedPath: () => [slotted, el, document.body, document] } as unknown as MouseEvent)
+    expect(el.showOptions).toBe(true)
+  })
+
+  it('closes the dropdown for a click outside the component', async () => {
+    const el = await open()
+    el._handleClose({ target: document.body, composedPath: () => [document.body, document] } as unknown as MouseEvent)
+    expect(el.showOptions).toBe(false)
+  })
+})

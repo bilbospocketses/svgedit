@@ -300,7 +300,10 @@ export class SeZoom extends LitElement {
   }
 
   private _handleClose(e: MouseEvent) {
-    if (e.target !== this) {
+    // Close when the click is outside the component. composedPath() pierces the shadow
+    // tree and includes slotted ancestors, so a click on the host, its shadow children, or
+    // a slotted option all count as inside (e.target alone missed slotted options) — #116.
+    if (!e.composedPath().includes(this)) {
       this.showOptions = false
       const inputEl = this.shadowRoot?.querySelector('input') as HTMLInputElement | null
       inputEl?.blur()
