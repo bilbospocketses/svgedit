@@ -294,10 +294,11 @@ export class SeColorPicker extends LitElement {
           </div>
 
           <div class="hex-row">
-            <label>Hex:</label>
+            <label for="hex-input">Hex:</label>
             <input
               type="text"
               id="hex-input"
+              aria-label="Hex color value"
               .value=${m.hex}
               @keydown=${this._onHexKeydown}
               @blur=${this._onHexBlur}
@@ -318,6 +319,7 @@ export class SeColorPicker extends LitElement {
       <input
         type="radio"
         name="mode"
+        aria-label=${label + ' channel'}
         .checked=${this._mode === ch}
         @change=${() => this._setMode(ch)}
       >
@@ -326,6 +328,7 @@ export class SeColorPicker extends LitElement {
         type="text"
         .value=${String(value)}
         data-channel=${ch}
+        aria-label=${label + ' value'}
         @keydown=${this._onChannelKeydown}
         @blur=${this._onChannelBlur}
       >
