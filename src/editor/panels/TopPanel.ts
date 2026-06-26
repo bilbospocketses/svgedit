@@ -42,11 +42,11 @@ class TopPanel {
   }
 
   get selectedElement () {
-    return this.editor.selectedElement
+    return this.editor.selection.selectedElement
   }
 
   get multiselected () {
-    return this.editor.multiselected
+    return this.editor.selection.multiselected
   }
 
   get path (): PathActionsLike {
@@ -155,7 +155,7 @@ class TopPanel {
   }
 
   async promptImgURL ({ cancelDeletes = false } = {}): Promise<void> {
-    const selectedEl = this.editor.selectedElement
+    const selectedEl = this.editor.selection.selectedElement
     if (!selectedEl) return
     let curhref = this.editor.svgCanvas.getHref(selectedEl) ?? ''
     curhref = curhref.startsWith('data:') ? '' : curhref
@@ -174,7 +174,7 @@ class TopPanel {
    * Updates the context panel tools based on the selected element.
    */
   updateContextPanel () {
-    let elem = this.editor.selectedElement
+    let elem = this.editor.selection.selectedElement
     // If element has just been deleted, consider it null
     if (!elem?.parentNode) {
       elem = null
@@ -568,10 +568,10 @@ class TopPanel {
 
   clickGroup () {
     // group
-    if (this.editor.multiselected) {
+    if (this.editor.selection.multiselected) {
       this.editor.svgCanvas.groupSelectedElements()
       // ungroup
-    } else if (this.editor.selectedElement) {
+    } else if (this.editor.selection.selectedElement) {
       this.editor.svgCanvas.ungroupSelectedElement()
     }
   }
@@ -615,7 +615,7 @@ class TopPanel {
 
         const unitData = getTypeMap()
 
-        const selEl = this.editor.selectedElement as (Element & Record<string, unknown>) | null
+        const selEl = this.editor.selection.selectedElement as (Element & Record<string, unknown>) | null
         if (
           selEl?.[attr] ||
           this.editor.svgCanvas.getMode() === 'pathedit' ||
@@ -632,13 +632,13 @@ class TopPanel {
   }
 
   convertToPath () {
-    if (this.editor.selectedElement) {
+    if (this.editor.selection.selectedElement) {
       this.editor.svgCanvas.convertToPath()
     }
   }
 
   reorientPath () {
-    if (this.editor.selectedElement) {
+    if (this.editor.selection.selectedElement) {
       this.path.reorient()
     }
   }
@@ -647,7 +647,7 @@ class TopPanel {
    * Flip selected element(s) horizontally.
    */
   clickFlipHorizontal () {
-    if (this.editor.selectedElement || this.multiselected) {
+    if (this.editor.selection.selectedElement || this.multiselected) {
       this.editor.svgCanvas.flipSelectedElements(-1, 1)
     }
   }
@@ -656,13 +656,13 @@ class TopPanel {
    * Flip selected element(s) vertically.
    */
   clickFlipVertical () {
-    if (this.editor.selectedElement || this.multiselected) {
+    if (this.editor.selection.selectedElement || this.multiselected) {
       this.editor.svgCanvas.flipSelectedElements(1, -1)
     }
   }
 
   async makeHyperlink (): Promise<void> {
-    if (this.editor.selectedElement || this.multiselected) {
+    if (this.editor.selection.selectedElement || this.multiselected) {
       const url = await sePrompt(
         this.editor.i18next.t('notification.enterNewLinkURL'),
         'http://'
@@ -709,19 +709,19 @@ class TopPanel {
    * an element has been selected.
    */
   deleteSelected () {
-    if (this.editor.selectedElement || this.editor.multiselected) {
+    if (this.editor.selection.selectedElement || this.editor.selection.multiselected) {
       this.editor.svgCanvas.deleteSelectedElements()
     }
   }
 
   moveToTopSelected () {
-    if (this.editor.selectedElement) {
+    if (this.editor.selection.selectedElement) {
       this.editor.svgCanvas.moveToTopSelectedElement()
     }
   }
 
   moveToBottomSelected () {
-    if (this.editor.selectedElement) {
+    if (this.editor.selection.selectedElement) {
       this.editor.svgCanvas.moveToBottomSelectedElement()
     }
   }
@@ -848,9 +848,9 @@ class TopPanel {
         selectBtn.pressed = true
         selectBtn.src = 'select_node.svg'
       }
-      this.editor.multiselected = false
+      this.editor.selection.multiselected = false
       if (elems.length) {
-        this.editor.selectedElement = elems[0] ?? null
+        this.editor.selection.selectedElement = elems[0] ?? null
       }
     } else {
       setTimeout(() => {
