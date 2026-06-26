@@ -16,6 +16,17 @@ describe('ConfigObj', () => {
     expect(regexEscape('a+b?')).toBe('a\\+b\\?')
   })
 
+  it('loadContentAndPrefs cookie path keeps the default when no cookie is present (#18)', () => {
+    const editor = { ...stubEditor(), storage: null }
+    const cfg = new ConfigObj(editor)
+    cfg.curConfig.forceStorage = true
+    cfg.defaultPrefs = { _m8bTestPref: 'origdefault' }
+    cfg.loadContentAndPrefs()
+    // No `svg-edit-_m8bTestPref` cookie exists; the cookie path must preserve the
+    // default (it used to clobber it with ''), matching the storage path's `if (val)`.
+    expect(cfg.defaultPrefs._m8bTestPref).toBe('origdefault')
+  })
+
   it('merges defaults and respects allowInitialUserOverride', () => {
     const editor = stubEditor()
     const cfg = new ConfigObj(editor)
