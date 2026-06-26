@@ -84,6 +84,20 @@ describe('se-color-picker', () => {
     expect(hexInput.tagName.toLowerCase()).toBe('input')
   })
 
+  it('#M11 labels the hex, channel value, and channel mode inputs for screen readers', async () => {
+    await flush(el)
+    const root = el.shadowRoot
+    expect(root.querySelector('#hex-input').getAttribute('aria-label')).toBe('Hex color value')
+
+    const channelInputs = [...root.querySelectorAll('input[data-channel]')]
+    expect(channelInputs.length).toBe(7)
+    channelInputs.forEach((inp) => expect(inp.getAttribute('aria-label')).toMatch(/ value$/))
+
+    const modeRadios = [...root.querySelectorAll('input[type="radio"]')]
+    expect(modeRadios.length).toBe(7)
+    modeRadios.forEach((r) => expect(r.getAttribute('aria-label')).toMatch(/ channel$/))
+  })
+
   it('renders Ok and Cancel buttons', async () => {
     await flush(el)
     const buttons = el.shadowRoot.querySelectorAll('.buttons button')
