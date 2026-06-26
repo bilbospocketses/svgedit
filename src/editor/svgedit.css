@@ -155,6 +155,8 @@ hr {
 
 #layerlist td.layervis * {
   display: block;
+  width: 14px;
+  height: 14px;
 }
 
 #layerlist td.layerinvis * {
