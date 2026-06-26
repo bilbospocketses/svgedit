@@ -37,3 +37,44 @@ describe('se-zoom option listeners', () => {
     assert.equal(clickRemoves, 1) // RED before the fix: prior listener never removed (0)
   })
 })
+
+describe('se-zoom accessibility (#119)', () => {
+  afterEach(() => {
+    document.body.textContent = ''
+    vi.restoreAllMocks()
+  })
+
+  const mount = async () => {
+    const el = document.createElement('se-zoom') as any
+    el.value = '100'
+    document.body.append(el)
+    await el.updateComplete
+    return el
+  }
+
+  it('exposes the steppers and presets toggle as keyboard/SR-operable buttons with labels', async () => {
+    const root = (await mount()).shadowRoot
+    for (const id of ['arrow-up', 'arrow-down', 'down']) {
+      const ctl = root.querySelector('#' + id)
+      expect(ctl.getAttribute('role')).toBe('button')
+      expect(ctl.getAttribute('tabindex')).toBe('0')
+      expect(ctl.getAttribute('aria-label')).toBeTruthy()
+    }
+    expect(root.querySelector('input').getAttribute('aria-label')).toBeTruthy()
+  })
+
+  it('Enter on arrow-up increments and Space on arrow-down decrements the value', async () => {
+    const el = await mount()
+    const root = el.shadowRoot
+    root.querySelector('#arrow-up').dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
+    expect(el.value).toBe('110')
+    root.querySelector('#arrow-down').dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }))
+    expect(el.value).toBe('100')
+  })
+
+  it('Enter on the presets toggle opens the options', async () => {
+    const el = await mount()
+    el.shadowRoot.querySelector('#down').dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
+    expect(el.showOptions).toBe(true)
+  })
+})
