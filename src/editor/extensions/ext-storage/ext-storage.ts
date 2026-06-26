@@ -36,24 +36,19 @@ const expireCookie = (cookie: string) => {
 }
 
 /**
- * Replace `storagePrompt` parameter within URL.
- * @todo Replace the string manipulation with `searchParams.set`
+ * Set or remove the `storagePrompt` query parameter and navigate, via the URL
+ * API rather than brittle regex string-surgery (#112). A truthy `val` sets the
+ * param; a falsy one (empty / undefined) removes it, matching the prior behaviour.
  */
 const replaceStoragePrompt = (val?: string) => {
-  const valStr = val ? 'storagePrompt=' + val : ''
-
   const loc = top!.location // Allow this to work with the embedded editor as well
-  if (loc.href.includes('storagePrompt=')) {
-    loc.href = loc.href.replace(/([&?])storagePrompt=[^&]*(&?)/, function (
-      _n0,
-      n1,
-      amp
-    ) {
-      return (valStr ? n1 : '') + valStr + (!valStr && amp ? n1 : amp || '')
-    })
+  const url = new URL(loc.href)
+  if (val) {
+    url.searchParams.set('storagePrompt', val)
   } else {
-    loc.href += (loc.href.includes('?') ? '&' : '?') + valStr
+    url.searchParams.delete('storagePrompt')
   }
+  loc.href = url.href
 }
 
 export default {

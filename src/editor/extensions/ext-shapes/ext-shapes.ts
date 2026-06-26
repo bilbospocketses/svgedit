@@ -7,21 +7,9 @@
  */
 import { getSvgEditor } from '../../svgEditorInstance.js'
 import { isSafePathData, isSafeExtPath } from '@svgedit/svgcanvas/core/validators.js'
+import { loadExtensionTranslation } from '../loadExtensionTranslation.js'
 
 const name = 'shapes'
-
-const loadExtensionTranslation = async function (): Promise<void> {
-  const svgEditor = getSvgEditor()
-  let translationModule: Record<string, unknown>
-  const lang = svgEditor.configObj.pref('lang')
-  try {
-    translationModule = await import(`./locale/${String(lang)}.js`) as Record<string, unknown>
-  } catch (_error) {
-    console.warn(`Missing translation (${String(lang)}) for ${name} - using 'en'`)
-    translationModule = await import('./locale/en.js')
-  }
-  svgEditor.i18next.addResourceBundle(lang as string, name, translationModule.default as Record<string, unknown>)
-}
 
 export default {
   name,
@@ -31,7 +19,7 @@ export default {
     const { $id, $click } = canv
     const svgroot = canv.getSvgRoot()
     let lastBBox: DOMRect | { x: number; y: number; width: number; height: number } = { x: 0, y: 0, width: 0, height: 0 }
-    await loadExtensionTranslation()
+    await loadExtensionTranslation(name, (lang) => import(`./locale/${lang}.js`))
 
     const modeId = 'shapelib'
     const startClientPos: { x: number; y: number } = { x: 0, y: 0 }

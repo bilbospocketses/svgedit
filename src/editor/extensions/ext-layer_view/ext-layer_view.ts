@@ -7,21 +7,9 @@
  */
 
 import { getSvgEditor } from '../../svgEditorInstance.js'
+import { loadExtensionTranslation } from '../loadExtensionTranslation.js'
 
 const name = 'layer_view'
-
-const loadExtensionTranslation = async function (): Promise<void> {
-  const svgEditor = getSvgEditor()
-  let translationModule: Record<string, unknown>
-  const lang = svgEditor.configObj.pref('lang')
-  try {
-    translationModule = await import(`./locale/${String(lang)}.js`) as Record<string, unknown>
-  } catch (_error) {
-    console.warn(`Missing translation (${String(lang)}) for ${name} - using 'en'`)
-    translationModule = await import('./locale/en.js')
-  }
-  svgEditor.i18next.addResourceBundle(lang as string, name, translationModule.default as Record<string, unknown>)
-}
 
 export default {
   name,
@@ -29,7 +17,7 @@ export default {
     const svgEditor = getSvgEditor()
     const svgCanvas = svgEditor.svgCanvas
     const { $id, $click } = svgCanvas
-    await loadExtensionTranslation()
+    await loadExtensionTranslation(name, (lang) => import(`./locale/${lang}.js`))
 
     const clickLayerView = () => {
       const btn = $id('tool_layerView') as HTMLElement & { pressed: boolean }
