@@ -1618,8 +1618,7 @@ export {
   shortFloat,
   convertUnit,
   getTypeMap,
-  isValidUnit,
-  setUnitAttr
+  isValidUnit
 } from './core/units.js'
 export {
   assignAttributes,

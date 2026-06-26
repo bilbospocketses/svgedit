@@ -143,18 +143,16 @@ const moveUpDownSelected = (dir: 'Up' | 'Down'): void => {
     list.reverse()
   }
 
-  Array.prototype.forEach.call(list, (el: Element) => {
+  for (const el of list) {
     if (!foundCur) {
       if (el === selected) {
         foundCur = true
       }
-      return true
+      continue
     }
-    if (closest === undefined) {
-      closest = el
-    }
-    return false
-  })
+    closest = el
+    break
+  }
   if (!closest) {
     return
   }

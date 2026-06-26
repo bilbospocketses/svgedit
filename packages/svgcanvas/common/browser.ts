@@ -15,44 +15,42 @@ export class BrowserDetector {
   #userAgent: string = navigator.userAgent
   #cachedResults: Map<string, boolean> = new Map()
 
+  /** Memoize a boolean capability check with a single Map lookup. */
+  #memo (key: string, compute: () => boolean): boolean {
+    let result = this.#cachedResults.get(key)
+    if (result === undefined) {
+      result = compute()
+      this.#cachedResults.set(key, result)
+    }
+    return result
+  }
+
   /**
    * Detects if the browser is Gecko-based
    */
   get isGecko (): boolean {
-    if (!this.#cachedResults.has('isGecko')) {
-      this.#cachedResults.set('isGecko', this.#userAgent.includes('Gecko/'))
-    }
-    return this.#cachedResults.get('isGecko') ?? false
+    return this.#memo('isGecko', () => this.#userAgent.includes('Gecko/'))
   }
 
   /**
    * Detects if the browser is Chrome
    */
   get isChrome (): boolean {
-    if (!this.#cachedResults.has('isChrome')) {
-      this.#cachedResults.set('isChrome', this.#userAgent.includes('Chrome/'))
-    }
-    return this.#cachedResults.get('isChrome') ?? false
+    return this.#memo('isChrome', () => this.#userAgent.includes('Chrome/'))
   }
 
   /**
    * Detects if the platform is macOS
    */
   get isMac (): boolean {
-    if (!this.#cachedResults.has('isMac')) {
-      this.#cachedResults.set('isMac', this.#userAgent.includes('Macintosh'))
-    }
-    return this.#cachedResults.get('isMac') ?? false
+    return this.#memo('isMac', () => this.#userAgent.includes('Macintosh'))
   }
 
   /**
    * Tests if the browser supports accurate text character positioning
    */
   get supportsGoodTextCharPos (): boolean {
-    if (!this.#cachedResults.has('supportsGoodTextCharPos')) {
-      this.#cachedResults.set('supportsGoodTextCharPos', this.#testTextCharPos())
-    }
-    return this.#cachedResults.get('supportsGoodTextCharPos') ?? false
+    return this.#memo('supportsGoodTextCharPos', () => this.#testTextCharPos())
   }
 
   /**

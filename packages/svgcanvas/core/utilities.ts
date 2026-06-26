@@ -6,7 +6,7 @@
  */
 
 import { NS } from './namespaces.js'
-import { setUnitAttr, getTypeMap, shortFloat } from './units.js'
+import { getTypeMap, shortFloat } from './units.js'
 import {
   hasMatrixTransform,
   transformListToTransform,
@@ -1157,7 +1157,7 @@ export const getElement = (id: string): Element | null => {
  * Assigns multiple attributes to an element.
  * @function module:utilities.assignAttributes
  * @param [suspendLength] - Milliseconds to suspend redraw
- * @param [unitCheck=false] - Boolean to indicate the need to use units.setUnitAttr
+ * @param [unitCheck=false] - Legacy no-op flag, kept for API compatibility
  */
 export const assignAttributes = (
   elem: Element,
@@ -1166,6 +1166,7 @@ export const assignAttributes = (
   unitCheck?: boolean
 ): void => {
   void suspendLength // parameter kept for API compatibility
+  void unitCheck // legacy no-op flag (unit handling was never implemented)
   for (const [key, value] of Object.entries(attrs)) {
     const ns =
       key.startsWith('xml:')
@@ -1184,10 +1185,8 @@ export const assignAttributes = (
     const strValue = String(value)
     if (ns) {
       elem.setAttributeNS(ns, key, strValue)
-    } else if (!unitCheck) {
-      elem.setAttribute(key, strValue)
     } else {
-      setUnitAttr(elem, key, strValue)
+      elem.setAttribute(key, strValue)
     }
   }
 }
