@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
+import { setDialogVisibility } from './setDialogVisibility.js'
 
 /**
  * SeExportDialog — export-format picker dialog.
@@ -104,11 +105,11 @@ export class SeExportDialog extends LitElement {
       }
     })
     this.dispatchEvent(triggerEvent)
-    this.setAttribute('dialog', 'close')
+    setDialogVisibility(this, false)
   }
 
   private _onCancel = (): void => {
-    this.setAttribute('dialog', 'close')
+    setDialogVisibility(this, false)
   }
 
   private _onQualityChange = (e: Event): void => {
