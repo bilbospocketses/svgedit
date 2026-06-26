@@ -420,13 +420,26 @@ export default class ConfigObj {
       return
     }
 
+    // Cookie/storage pref values always arrive as strings. Coerce each back to the
+    // type of its default so a boolean pref isn't a truthy 'false' string and a
+    // numeric pref stays numeric for arithmetic/comparison consumers (#31).
+    const coerceToDefaultType = (raw: string, def: unknown): unknown => {
+      if (typeof def === 'boolean') return raw === 'true'
+      if (typeof def === 'number') {
+        const n = Number(raw)
+        return Number.isNaN(n) ? def : n
+      }
+      return raw // string (and any other) default keeps the raw string
+    }
+
     // LOAD PREFS
     Object.keys(this.defaultPrefs).forEach((key) => {
       const storeKey = 'svg-edit-' + key
       if (this.editor.storage) {
         const val = this.editor.storage.getItem(storeKey)
         if (val) {
-          this.defaultPrefs[key] = String(val) // Convert to string for FF (.value fails in Webkit)
+          // String() first for FF (.value fails in Webkit), then coerce to the default's type.
+          this.defaultPrefs[key] = coerceToDefaultType(String(val), this.defaultPrefs[key])
         }
       } else {
         const result = document.cookie.match(
@@ -438,7 +451,7 @@ export default class ConfigObj {
         // the storage path's `if (val)` guard. Previously a missing cookie
         // clobbered the default with '' (#18).
         if (result) {
-          this.defaultPrefs[key] = decodeURIComponent(result[1] ?? '')
+          this.defaultPrefs[key] = coerceToDefaultType(decodeURIComponent(result[1] ?? ''), this.defaultPrefs[key])
         }
       }
     })
