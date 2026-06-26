@@ -1,9 +1,9 @@
 // src/embed/server.ts
-import { PROTOCOL_VERSION, isValidEnvelope, isElementHandle, ERROR_CODES } from './protocol.js'
-import type { EmbedEnvelope, EmbedCall, ElementHandle, ChromeState, ChromePreset } from './protocol.js'
+import { PROTOCOL_VERSION, isValidEnvelope, isElementHandle, ERROR_CODES, isValidDialogTimeoutMs } from './protocol.js'
+import type { EmbedEnvelope, EmbedCall, ElementHandle, ChromeState } from './protocol.js'
 import { isOriginAllowed } from './origin.js'
 import { parseEmbedURLParams } from './url-params.js'
-import { applyChrome, resolveChromePreset } from './chrome.js'
+import { applyChrome, resolveChromePreset, isChromePreset } from './chrome.js'
 import { applyTheme, resolveInitialTheme } from './theme.js'
 
 export type DialogKind = 'prompt' | 'alert' | 'confirm'
@@ -185,16 +185,16 @@ export class EmbedServer {
     }
     if (env.method === '__setChrome') {
       const arg = env.args[0]
-      const state: ChromeState = typeof arg === 'string'
-        ? resolveChromePreset(arg as ChromePreset)
-        : arg as ChromeState
-      applyChrome(document.body, state)
+      const state: ChromeState | null = isChromePreset(arg)
+        ? resolveChromePreset(arg)
+        : (typeof arg === 'object' && arg !== null ? arg : null)
+      if (state) applyChrome(document.body, state)
       this.reply({ ns: 'svgedit', v: 1, kind: 'result', id: env.id, result: null }, callerOrigin)
       return
     }
     if (env.method === '__setDialogTimeout') {
       const ms = env.args[0]
-      if (typeof ms === 'number' && Number.isInteger(ms) && ms > 0) {
+      if (isValidDialogTimeoutMs(ms)) {
         this.dialogTimeoutMs = ms
       }
       this.reply({ ns: 'svgedit', v: 1, kind: 'result', id: env.id, result: null }, callerOrigin)
@@ -218,7 +218,6 @@ export class EmbedServer {
       this.reply({
         ns: 'svgedit', v: 1, kind: 'error', id: env.id,
         message: error.message ?? String(err),
-        ...(error.stack !== undefined && { stack: error.stack }),
         ...(error.code !== undefined && { code: error.code })
       }, callerOrigin)
     }

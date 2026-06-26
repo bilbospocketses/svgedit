@@ -1,6 +1,12 @@
 import type { ChromePreset, ChromeState } from './protocol.js'
 
 const CHROME_ELEMENTS = ['menu', 'toolbox', 'layers', 'palette', 'statusbar', 'header'] as const
+const CHROME_PRESETS = ['full', 'minimal', 'none'] as const
+
+/** Runtime guard for the {@link ChromePreset} union (URL/RPC inputs are untrusted). */
+export function isChromePreset (v: unknown): v is ChromePreset {
+  return typeof v === 'string' && (CHROME_PRESETS as readonly string[]).includes(v)
+}
 
 export function resolveChromePreset (preset: ChromePreset): Required<ChromeState> {
   switch (preset) {
@@ -10,6 +16,10 @@ export function resolveChromePreset (preset: ChromePreset): Required<ChromeState
       return { menu: false, toolbox: true, layers: false, palette: false, statusbar: false, header: false }
     case 'none':
       return { menu: false, toolbox: false, layers: false, palette: false, statusbar: false, header: false }
+    default: {
+      const _exhaustive: never = preset
+      throw new Error(`unknown chrome preset: ${String(_exhaustive)}`)
+    }
   }
 }
 

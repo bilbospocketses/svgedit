@@ -10,7 +10,9 @@ async function main (): Promise<void> {
   // non-loopback bind via SVGEDIT_BIND_HOST is opt-in LAN exposure, so relax it.
   const server = createServer(LOOPBACK_HOSTS.has(HOST) ? {} : { allowedHosts: null })
   server.listen(port, HOST, () => {
-    process.stdout.write(`svgedit server listening on http://${HOST}:${port}/\n`)
+    // Bracket IPv6 literals so the logged URL is well-formed (e.g. http://[::1]:8100/).
+    const displayHost = HOST.includes(':') ? `[${HOST}]` : HOST
+    process.stdout.write(`svgedit server listening on http://${displayHost}:${port}/\n`)
   })
 
   const shutdown = (): void => {

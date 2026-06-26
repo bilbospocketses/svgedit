@@ -1,5 +1,13 @@
 export const PROTOCOL_VERSION = 1
 
+// Upper bound on the host-settable dialog timeout, so a malicious/buggy host
+// cannot set an effectively-infinite timeout. Shared by url-params (URL) and
+// EmbedServer.__setDialogTimeout (RPC) so the rule lives in one place.
+export const MAX_DIALOG_TIMEOUT_MS = 600000
+export function isValidDialogTimeoutMs (ms: unknown): ms is number {
+  return typeof ms === 'number' && Number.isInteger(ms) && ms > 0 && ms <= MAX_DIALOG_TIMEOUT_MS
+}
+
 export type EmbedEventName =
   | 'ready' | 'change' | 'save' | 'selection-changed'
   | 'theme-changed' | 'extension-error' | 'error' | 'destroy'
@@ -54,14 +62,12 @@ export type ReadyPayload = {
   capabilities: string[]
 }
 
-const KINDS = new Set(['call', 'result', 'error', 'event', 'dialog-request', 'dialog-response'])
-
 export function isValidEnvelope (env: unknown): env is EmbedEnvelope {
   if (typeof env !== 'object' || env === null) return false
   const e = env as Record<string, unknown>
   if (e.ns !== 'svgedit') return false
   if (e.v !== 1) return false
-  if (typeof e.kind !== 'string' || !KINDS.has(e.kind)) return false
+  if (typeof e.kind !== 'string') return false
   switch (e.kind) {
     case 'call':
       return typeof e.id === 'number' && typeof e.method === 'string' && Array.isArray(e.args)

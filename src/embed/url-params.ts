@@ -1,4 +1,6 @@
 import { parseAllowedOrigins } from './origin.js'
+import { isValidDialogTimeoutMs } from './protocol.js'
+import { isChromePreset } from './chrome.js'
 import type { ChromePreset } from './protocol.js'
 
 export type EmbedURLParams = {
@@ -10,7 +12,6 @@ export type EmbedURLParams = {
   dialogTimeoutMs: number
 }
 
-const CHROME_PRESETS: readonly ChromePreset[] = ['full', 'minimal', 'none']
 const DEFAULT_DIALOG_TIMEOUT_MS = 30000
 
 export function parseEmbedURLParams (params: URLSearchParams): EmbedURLParams {
@@ -18,9 +19,7 @@ export function parseEmbedURLParams (params: URLSearchParams): EmbedURLParams {
   const embedMode = embedRaw === '1' || embedRaw === 'true'
 
   const chromeRaw = params.get('chrome')
-  const chrome = chromeRaw && (CHROME_PRESETS as readonly string[]).includes(chromeRaw)
-    ? chromeRaw as ChromePreset
-    : undefined
+  const chrome = isChromePreset(chromeRaw) ? chromeRaw : undefined
 
   const themeRaw = params.get('theme')
   const theme = themeRaw && themeRaw.length > 0 ? themeRaw : undefined
@@ -33,7 +32,7 @@ export function parseEmbedURLParams (params: URLSearchParams): EmbedURLParams {
 
   const timeoutRaw = params.get('dialogTimeout')
   const timeoutParsed = timeoutRaw === null ? NaN : Number(timeoutRaw)
-  const dialogTimeoutMs = Number.isInteger(timeoutParsed) && timeoutParsed > 0
+  const dialogTimeoutMs = isValidDialogTimeoutMs(timeoutParsed)
     ? timeoutParsed
     : DEFAULT_DIALOG_TIMEOUT_MS
 

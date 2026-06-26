@@ -12,6 +12,7 @@ type DialogHandler = (text: string, defaultValue?: string) => Promise<unknown>
 
 export class SvgEditEmbed {
   protected readonly iframe: HTMLIFrameElement
+  protected readonly iframeOrigin: string
   protected readonly allowedOrigins: readonly string[]
   private listener: ((e: MessageEvent) => void) | null = null
   private readonly _ready: Promise<ReadyPayload>
@@ -26,7 +27,8 @@ export class SvgEditEmbed {
 
   constructor (iframe: HTMLIFrameElement, opts: SvgEditEmbedOptions = {}) {
     this.iframe = iframe
-    this.allowedOrigins = opts.allowedOrigins ?? [new URL(iframe.src, window.location.href).origin]
+    this.iframeOrigin = new URL(iframe.src, window.location.href).origin
+    this.allowedOrigins = opts.allowedOrigins ?? [this.iframeOrigin]
     if (this.allowedOrigins.includes('*')) {
       console.warn('SvgEditEmbed: wildcard origin enabled — only safe for dev/test')
     }
@@ -65,7 +67,7 @@ export class SvgEditEmbed {
     const env = { ns: 'svgedit' as const, v: 1 as const, kind: 'call' as const, id, method, args }
     const cw = this.iframe.contentWindow
     if (cw) {
-      cw.postMessage(env, new URL(this.iframe.src, window.location.href).origin)
+      cw.postMessage(env, this.iframeOrigin)
     }
   }
 
@@ -143,7 +145,13 @@ export class SvgEditEmbed {
   }
 
   private dispatchEvent (name: EmbedEventName, payload: unknown): void {
-    this.eventHandlers.get(name)?.forEach(h => h(payload))
+    this.eventHandlers.get(name)?.forEach(h => {
+      try {
+        h(payload)
+      } catch (err) {
+        console.error('SvgEditEmbed: event handler threw for event:', name, err)
+      }
+    })
   }
 
   setDialogHandler (kind: DialogKind, handler: DialogHandler): () => void {
@@ -162,7 +170,7 @@ export class SvgEditEmbed {
     const respEnv = { ns: 'svgedit' as const, v: 1 as const, kind: 'dialog-response' as const, id: env.id, response }
     const cw = this.iframe.contentWindow
     if (cw) {
-      cw.postMessage(respEnv, new URL(this.iframe.src, window.location.href).origin)
+      cw.postMessage(respEnv, this.iframeOrigin)
     }
   }
 
