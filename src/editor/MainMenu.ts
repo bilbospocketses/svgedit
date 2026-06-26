@@ -75,8 +75,11 @@ class MainMenu {
       seAlert(this.editor.i18next.t('notification.invalidAttrValGiven'))
       return false
     }
-    const resW = w === 'fit' ? 'fit' as const : Number(w)
-    const resH = h === 'fit' ? Number(h) : Number(h)
+    // setResolution only accepts 'fit' for the width: it fits the whole canvas
+    // to content and ignores the height arg. So 'fit' in either field triggers a
+    // full fit; otherwise both are numeric. (Previously h==='fit' made resH NaN.)
+    const resW = (w === 'fit' || h === 'fit') ? 'fit' as const : Number(w)
+    const resH = h === 'fit' ? 0 : Number(h)
     if (!this.editor.svgCanvas.setResolution(resW, resH)) {
       seAlert(this.editor.i18next.t('notification.noContentToFitTo'))
       return false
