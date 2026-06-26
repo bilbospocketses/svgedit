@@ -28,11 +28,11 @@ import { maskImageStyle } from './component-utils.js'
 @customElement('se-list-item')
 export class SeListItem extends LitElement {
   static styles = css`
-    [aria-label="option"] {
+    .option {
       padding: 0.25rem 0.125rem !important;
       background-color: var(--se-surface);
     }
-    [aria-label="option"]:hover {
+    .option:hover {
       background-color: var(--se-accent-subtle);
     }
     .selected {
@@ -54,12 +54,27 @@ export class SeListItem extends LitElement {
   @property({ attribute: 'img-height' }) accessor imgHeight = ''
   @property() accessor selected = ''
 
+  connectedCallback() {
+    super.connectedCallback()
+    // The light-DOM host carries the listbox option semantics (role / selection /
+    // roving tabindex) so they share the consumer's DOM scope with the seList
+    // combobox — ARIA id-references don't cross the shadow boundary (#120).
+    if (!this.hasAttribute('role')) this.setAttribute('role', 'option')
+    if (!this.hasAttribute('tabindex')) this.setAttribute('tabindex', '-1')
+    this.setAttribute('aria-selected', this.selected === 'true' ? 'true' : 'false')
+  }
+
+  updated(changed: Map<string, unknown>) {
+    if (changed.has('selected')) {
+      this.setAttribute('aria-selected', this.selected === 'true' ? 'true' : 'false')
+    }
+  }
+
   render() {
     const imgPath = getSvgEditor().configObj.curConfig.imgPath
     return html`
       <div
-        aria-label="option"
-        class=${this.selected === 'true' ? 'selected' : ''}
+        class=${this.selected === 'true' ? 'option selected' : 'option'}
         @mousedown=${this._onMousedown}
       >
         ${this.src
