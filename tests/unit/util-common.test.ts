@@ -63,5 +63,11 @@ describe('common util helpers', () => {
 
     const untilMid = getParentsUntil(inner, '#mid', '.inner')?.map(el => el.tagName.toLowerCase())
     expect(untilMid).toEqual(['span'])
+
+    // [attr=value] must match by value, not by an attribute literally named
+    // "data-role=panel" (the per-function matcher copies had this bug, #53).
+    mid.setAttribute('data-role', 'panel')
+    expect(getParents(inner, '[data-role=panel]')?.map(el => (el as Element).id)).toEqual(['mid'])
+    expect(getParentsUntil(inner, 'body', '[data-role=panel]')?.map(el => (el as Element).id)).toEqual(['mid'])
   })
 })
