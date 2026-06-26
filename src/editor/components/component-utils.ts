@@ -12,6 +12,8 @@
  * @license MIT
  */
 
+import { css } from 'lit'
+
 /**
  * Reflecting Boolean attribute converter: reflect as the string `'true'` (not
  * Lit's default empty string) so DOM queries like `#tools_left *[pressed]` —
@@ -48,3 +50,15 @@ export const maskImageStyle = (url: string): string => {
   const u = escapeCssUrl(url)
   return `-webkit-mask-image:url("${u}");mask-image:url("${u}")`
 }
+
+/**
+ * The shared `.se-icon` mask declarations (icon tint + center/contain/no-repeat)
+ * duplicated verbatim across the se-* icon components (#114). Interpolate into a
+ * component's own `.se-icon` rule, which keeps its component-specific size.
+ */
+export const seIconMask = css`
+  background-color: var(--se-icon);
+  -webkit-mask-position: center; mask-position: center;
+  -webkit-mask-size: contain; mask-size: contain;
+  -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+`

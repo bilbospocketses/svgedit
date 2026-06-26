@@ -4,7 +4,7 @@ import { classMap } from 'lit/directives/class-map.js'
 import { unsafeHTML } from 'lit/directives/unsafe-html.js'
 import SvgCanvas from '@svgedit/svgcanvas'
 import { getSvgEditor } from '../svgEditorInstance.js'
-import { boolAttr, maskImageStyle } from './component-utils.js'
+import { boolAttr, maskImageStyle, seIconMask } from './component-utils.js'
 
 const { $id } = SvgCanvas
 
@@ -44,10 +44,7 @@ export class SeExplorerButton extends LitElement {
       display: block;
       width: 100%;
       height: 100%;
-      background-color: var(--se-icon);
-      -webkit-mask-position: center; mask-position: center;
-      -webkit-mask-size: contain; mask-size: contain;
-      -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+      ${seIconMask}
     }
     .overall.pressed,
     .menu-item.pressed {

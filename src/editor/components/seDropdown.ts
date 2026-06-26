@@ -1,7 +1,7 @@
 import { LitElement, html, css } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import { classMap } from 'lit/directives/class-map.js'
-import { maskImageStyle } from './component-utils.js'
+import { maskImageStyle, seIconMask } from './component-utils.js'
 
 /**
  * SeDropdown — toolbar dropdown with slotted options + popup container.
@@ -70,10 +70,7 @@ export class SeDropdown extends LitElement {
     .se-icon {
       width: 18px;
       height: 18px;
-      background-color: var(--se-icon);
-      -webkit-mask-position: center; mask-position: center;
-      -webkit-mask-size: contain; mask-size: contain;
-      -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+      ${seIconMask}
     }
     .popup {
       position: absolute;

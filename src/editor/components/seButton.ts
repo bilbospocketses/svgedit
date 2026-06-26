@@ -4,7 +4,7 @@ import { ifDefined } from 'lit/directives/if-defined.js'
 import { t } from '../locale.js'
 import { matchShortcut } from '../common/shortcut.js'
 import { getSvgEditor } from '../svgEditorInstance.js'
-import { boolAttr, maskImageStyle } from './component-utils.js'
+import { boolAttr, maskImageStyle, seIconMask } from './component-utils.js'
 
 /**
  * SeButton — icon-button custom element.
@@ -66,10 +66,7 @@ export class SeButton extends LitElement {
       display: block;
       width: 100%;
       height: 100%;
-      background-color: var(--se-icon);
-      -webkit-mask-position: center; mask-position: center;
-      -webkit-mask-size: contain; mask-size: contain;
-      -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+      ${seIconMask}
     }
     :host(:hover) div:not(.disabled):not(.pressed) .se-icon { background-color: var(--se-icon-hover); }
     .pressed .se-icon { background-color: var(--se-accent); }
