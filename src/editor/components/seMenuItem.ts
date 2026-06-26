@@ -3,6 +3,7 @@ import { customElement, property } from 'lit/decorators.js'
 import { t } from '../locale.js'
 import { matchShortcut } from '../common/shortcut.js'
 import { getSvgEditor } from '../svgEditorInstance.js'
+import { maskImageStyle } from './component-utils.js'
 
 /**
  * SeMenuItem — menu-item custom element with optional icon and keyboard shortcut.
@@ -54,13 +55,13 @@ export class SeMenuItem extends LitElement {
 
   render() {
     const shortcut = this.getAttribute('shortcut') ?? ''
-    const imgSrc = this.src ? getSvgEditor().configObj.curConfig.imgPath + '/' + this.src : undefined
+    const imgSrc = this.src ? getSvgEditor().configObj.curConfig.imgPath + '/' + this.src : ''
     const labelText = `${t(this.label)} ${shortcut ? `(${shortcut})` : ''}`
 
     return html`
       <button type="button" role="menuitem" part="item">
         ${this.src
-          ? html`<span class="se-icon" aria-hidden="true" style=${`-webkit-mask-image:url("${imgSrc}");mask-image:url("${imgSrc}")`}></span>`
+          ? html`<span class="se-icon" aria-hidden="true" style=${maskImageStyle(imgSrc)}></span>`
           : nothing}
         <span part="label">${labelText}</span>
       </button>

@@ -2,6 +2,7 @@ import { LitElement, html, css, nothing } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import { ifDefined } from 'lit/directives/if-defined.js'
 import { t } from '../locale.js'
+import { maskImageStyle } from './component-utils.js'
 
 /**
  * SeInput — form-control custom element.
@@ -64,7 +65,7 @@ export class SeInput extends LitElement {
     return html`
       <div class="wrap" title=${t(this.title)}>
         ${this.src && !this.label
-          ? html`<span class="se-icon" part="icon" aria-hidden="true" style=${`-webkit-mask-image:url("${this.src}");mask-image:url("${this.src}")`}></span>`
+          ? html`<span class="se-icon" part="icon" aria-hidden="true" style=${maskImageStyle(this.src)}></span>`
           : nothing}
         ${this.label
           ? html`<span id="label" part="label">${t(this.label)}</span>`

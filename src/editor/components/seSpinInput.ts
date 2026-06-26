@@ -3,6 +3,7 @@ import { customElement, property } from 'lit/decorators.js'
 import { ifDefined } from 'lit/directives/if-defined.js'
 import { t } from '../locale.js'
 import { getSvgEditor } from '../svgEditorInstance.js'
+import { maskImageStyle } from './component-utils.js'
 
 /**
  * SESpinInput — number-input custom element with optional icon or label.
@@ -102,7 +103,7 @@ export class SESpinInput extends LitElement {
   render() {
     const shortcut = this.getAttribute('shortcut')
     const divTitle = `${t(this.title)} ${shortcut ? '[' + t(shortcut) + ']' : ''}`
-    const imgSrc = this.src ? getSvgEditor().configObj.curConfig.imgPath + '/' + this.src : undefined
+    const imgSrc = this.src ? getSvgEditor().configObj.curConfig.imgPath + '/' + this.src : ''
     const showImg = !!this.src && !this.label
     const showLabel = !!this.label
     const divClass = showImg ? 'imginside' : ''
@@ -110,7 +111,7 @@ export class SESpinInput extends LitElement {
     return html`
       <div class=${divClass} title=${divTitle}>
         ${showImg
-          ? html`<span class="se-icon" aria-hidden="true" style=${`-webkit-mask-image:url("${imgSrc}");mask-image:url("${imgSrc}")`}></span>`
+          ? html`<span class="se-icon" aria-hidden="true" style=${maskImageStyle(imgSrc)}></span>`
           : nothing}
         ${showLabel
           ? html`<span id="label" part="label">${t(this.label)}</span>`
