@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (audit #29 Wave-2 minors -- 2026-06-26)
+
+- **`getParents`/`getParentsUntil` `[attr=value]` selectors now match by value.**
+  Both passed the whole `attr=value` string to `hasAttribute`, searching for an
+  attribute literally named that. The correct parser (already in `getClosest`) is
+  now a single shared matcher used by all three fallback walkers (#52/#53).
+- **Deleting an element that is the sole child of an `<a>` reports the removed
+  wrapper** in the `changed` event, rather than the original selection (#42).
+- **The resolution dialog's "fit" height no longer corrupts the canvas.** A `fit`
+  height produced `Number('fit')` = `NaN`; `fit` in either field now triggers a
+  full content-fit, numeric otherwise (#15/#30).
+- **A missing preference cookie no longer wipes the configured default.**
+  `ConfigObj`'s cookie load path set the default to `''` when no cookie was present;
+  it now preserves the default, matching the localStorage path (#18).
+- **Embed RPC inputs are validated.** `__setChrome` accepted an unchecked argument
+  that could crash `applyChrome`; it now validates the preset/object. Error replies
+  no longer leak the stack trace to the host frame (PR #212).
+
+### Changed (audit #29 Wave-2 minors -- 2026-06-26)
+
+- Extracted shared helpers/constants: launcher `widestr` (`to_wide`), engine
+  `clamp` (jgraduate), native `SVGTransform` constants for transform-type checks,
+  a named `pathpointgrip_` prefix, and a browser-capability `#memo`. Deduplicated
+  repeated `$id`/`getComputedStyle` lookups across extensions; tightened the embed
+  dialog-timeout validation and cached the iframe origin.
+- Colour-picker channel/hex inputs + R/G/B/A mode radios gained `aria-label`s, and
+  the editor viewport now allows pinch-zoom (`user-scalable=no` removed).
+- Build/config tidy: normalised `tsconfig` `moduleResolution` casing, removed dead
+  `.editorconfig`/dependabot references, added `engines.npm` + `packageManager`.
+
+### Removed (audit #29 Wave-2 minors -- 2026-06-26)
+
+- The no-op `setUnitAttr` wrapper, its dead `unitCheck` branch in `assignAttributes`,
+  and its public re-export.
+
 ### Fixed (setBlur undoable-change leak -- 2026-06-24)
 
 - **`setBlur(val, false)` no longer leaves an undoable change open.** A blur call
