@@ -72,4 +72,27 @@ describe('ConfigObj', () => {
     expect(cfg.curConfig.extensions).not.toContain('x')
     expect(cfg.curConfig.allowedOrigins ?? []).not.toContain('https://evil.example')
   })
+
+  it('#31 coerces a stored boolean pref string back to a boolean', () => {
+    const editor = stubEditor()
+    editor.storage.setItem('svg-edit-myBool', 'true')
+    const cfg = new ConfigObj(editor)
+    cfg.curConfig.forceStorage = true
+    cfg.defaultPrefs = { myBool: false }
+    cfg.loadContentAndPrefs()
+    // Was a truthy 'true' string before #31; now a real boolean.
+    expect(cfg.defaultPrefs.myBool).toBe(true)
+  })
+
+  it('#31 coerces a stored numeric pref to a number and leaves strings as strings', () => {
+    const editor = stubEditor()
+    editor.storage.setItem('svg-edit-myNum', '42')
+    editor.storage.setItem('svg-edit-myStr', 'hello')
+    const cfg = new ConfigObj(editor)
+    cfg.curConfig.forceStorage = true
+    cfg.defaultPrefs = { myNum: 0, myStr: 'def' }
+    cfg.loadContentAndPrefs()
+    expect(cfg.defaultPrefs.myNum).toBe(42)
+    expect(cfg.defaultPrefs.myStr).toBe('hello')
+  })
 })
