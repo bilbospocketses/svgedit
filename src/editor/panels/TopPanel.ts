@@ -33,6 +33,11 @@ class TopPanel {
   // applied live on each keystroke. The arrow defers `this.editor` until first use.
   private readonly fontSizePreview = new LivePreviewSession(() => this.editor.svgCanvas.undoMgr)
 
+  // Rotation reuses the session (single `transform` attr). Rect-radius can't (it
+  // sets rx+ry together), so it snapshots the originals for one command on commit.
+  private readonly rotationPreview = new LivePreviewSession(() => this.editor.svgCanvas.undoMgr)
+  private _rectRadiusOrig: { rx: string | null; ry: string | null } | null = null
+
   /**
    * @param editor svgedit handler
    */
@@ -552,7 +557,39 @@ class TopPanel {
   }
 
   changeRectRadius (e: Event): void {
-    this.editor.svgCanvas.setRectRadius((e.target as HTMLInputElement).value)
+    const svgCanvas = this.editor.svgCanvas
+    const selected = svgCanvas.getSelectedElements()[0]
+    if (selected?.tagName !== 'rect') { return }
+    const val = (e.target as HTMLInputElement).value
+    if (e.type === 'input') {
+      // rx+ry change together, so snapshot the originals once (the undo-trap fix)
+      // and preview without recording a per-keystroke command.
+      if (!this._rectRadiusOrig) {
+        this._rectRadiusOrig = { rx: selected.getAttribute('rx'), ry: selected.getAttribute('ry') }
+      }
+      svgCanvas.setRectRadius(val, true)
+    } else if (this._rectRadiusOrig) {
+      svgCanvas.setRectRadius(val, true)
+      this._finishRectRadius()
+    } else {
+      svgCanvas.setRectRadius(val)
+    }
+  }
+
+  /** Commit an open rect-radius preview into one rx/ry undo command (#4; also focusout). */
+  private _finishRectRadius = (): void => {
+    const orig = this._rectRadiusOrig
+    this._rectRadiusOrig = null
+    if (!orig) { return }
+    const svgCanvas = this.editor.svgCanvas
+    const selected = svgCanvas.getSelectedElements()[0]
+    if (selected?.tagName !== 'rect') { return }
+    const rx = selected.getAttribute('rx')
+    const ry = selected.getAttribute('ry')
+    if (orig.rx === rx && orig.ry === ry) { return }
+    const { ChangeElementCommand } = svgCanvas.history
+    svgCanvas.addCommandToHistory(new ChangeElementCommand(selected, { rx: orig.rx, ry: orig.ry }, 'Radius'))
+    svgCanvas.call('changed', [selected])
   }
 
   changeFontSize (e: Event): void {
@@ -565,8 +602,12 @@ class TopPanel {
   }
 
   changeRotationAngle (e: Event): void {
+    const svgCanvas = this.editor.svgCanvas
     const val = (e.target as HTMLInputElement).value
-    this.editor.svgCanvas.setRotationAngle(val)
+    this.rotationPreview.handle(
+      e.type, 'transform', svgCanvas.getSelectedElements(),
+      (preventUndo) => svgCanvas.setRotationAngle(val, preventUndo)
+    )
     const reorientEl = $id('tool_reorient')
     if (reorientEl) {
       if (Number.parseInt(val) === 0) {
@@ -954,8 +995,12 @@ class TopPanel {
     safeClick($id('tool_add_subpath'), this.addSubPath.bind(this))
     safeClick($id('tool_node_link'), this.linkControlPoints.bind(this))
     $id('angle')?.addEventListener('change', this.changeRotationAngle.bind(this))
+    $id('angle')?.addEventListener('input', this.changeRotationAngle.bind(this))
+    $id('angle')?.addEventListener('focusout', () => this.rotationPreview.finishIfOpen())
     $id('blur')?.addEventListener('change', this.changeBlur.bind(this))
     $id('rect_rx')?.addEventListener('change', this.changeRectRadius.bind(this))
+    $id('rect_rx')?.addEventListener('input', this.changeRectRadius.bind(this))
+    $id('rect_rx')?.addEventListener('focusout', this._finishRectRadius)
     $id('font_size')?.addEventListener('change', this.changeFontSize.bind(this))
     $id('font_size')?.addEventListener('input', this.changeFontSize.bind(this))
     $id('font_size')?.addEventListener('focusout', () => this.fontSizePreview.finishIfOpen())

@@ -908,7 +908,7 @@ const setLinkURLMethod = (val: string): void => {
 /**
  * Sets the `rx` and `ry` values to the selected `rect` element.
  */
-const setRectRadiusMethod = (val: string | number): void => {
+const setRectRadiusMethod = (val: string | number, preventUndo = false): void => {
   const { ChangeElementCommand } = svgCanvas.history
   const selectedElements: (Element | null)[] = svgCanvas.getSelectedElements()
   const selected = selectedElements[0]
@@ -931,7 +931,11 @@ const setRectRadiusMethod = (val: string | number): void => {
 
   selected.setAttribute('rx', String(radius))
   selected.setAttribute('ry', String(radius))
-  svgCanvas.addCommandToHistory(new ChangeElementCommand(selected, { rx: oldRx, ry: oldRy }, 'Radius'))
+  // Live preview (#4): the editor snapshots the original rx/ry and records one
+  // command on commit (rx+ry change together), so skip the per-keystroke command.
+  if (!preventUndo) {
+    svgCanvas.addCommandToHistory(new ChangeElementCommand(selected, { rx: oldRx, ry: oldRy }, 'Radius'))
+  }
   svgCanvas.call('changed', [selected])
 }
 

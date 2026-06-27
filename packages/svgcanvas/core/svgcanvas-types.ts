@@ -164,7 +164,7 @@ export interface ISvgCanvas {
   setTextContent: (val: string) => void
   setImageURL: (val: string) => void
   setLinkURL: (val: string) => void
-  setRectRadius: (val: string | number) => void
+  setRectRadius: (val: string | number, preventUndo?: boolean) => void
   makeHyperlink: (url: string) => void
   removeHyperlink: () => void
   setSegType: (newType: number) => void
