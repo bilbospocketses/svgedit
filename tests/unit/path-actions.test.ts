@@ -241,6 +241,43 @@ describe('PathActions', () => {
 
       expect(mockPath.movePts).toHaveBeenCalled()
     })
+
+    const setupRubberBandScene = () => {
+      pathActionsMethod.toEditMode(pathElement)
+      svgCanvas.getCurrentMode.mockReturnValue('pathedit')
+      mockPath.dragging = null
+      const mkSeg = (index) => ({ index, item: { x: index * 10, y: index * 10 }, select: vi.fn(), next: null, prev: null })
+      const segs = [mkSeg(0), mkSeg(1), mkSeg(2)]
+      segs[0].next = segs[1]; segs[1].prev = segs[0]; segs[1].next = segs[2]; segs[2].prev = segs[1]
+      mockPath.selected_pts = []
+      mockPath.eachSeg = vi.fn((cb) => segs.forEach((s, i) => cb.call(s, i)))
+      const rb = document.createElementNS(NS.SVG, 'rect')
+      rb.setAttribute('x', '0'); rb.setAttribute('y', '0'); rb.setAttribute('width', '500'); rb.setAttribute('height', '500')
+      svgRoot.append(rb)
+      svgCanvas.getRubberBox.mockReturnValue(rb)
+      return segs
+    }
+
+    it('measures the rubber-band box once per move, not once per path segment (#58)', () => {
+      setupRubberBandScene()
+      svgCanvas.getRubberBox.mockClear()
+
+      pathActionsMethod.mouseMove(50, 50)
+
+      // The rubber-band box is invariant across segments, so it must be looked
+      // up once per move — not re-fetched + re-measured inside the per-segment loop.
+      expect(svgCanvas.getRubberBox).toHaveBeenCalledTimes(1)
+    })
+
+    it('selects the path points whose grips fall inside the rubber-band box (#58)', () => {
+      const segs = setupRubberBandScene()
+
+      pathActionsMethod.mouseMove(50, 50)
+
+      // Grips at (0,0),(10,10),(20,20) all fall within the 0,0,500x500 box.
+      expect(segs[1].select).toHaveBeenCalledWith(true)
+      expect(mockPath.selected_pts).toContain(1)
+    })
   })
 
   describe('mouseUp', () => {
