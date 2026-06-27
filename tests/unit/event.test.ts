@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { NS } from '../../packages/svgcanvas/core/namespaces.js'
 import { init as initEvent } from '../../packages/svgcanvas/core/event.js'
 
@@ -190,5 +190,22 @@ describe('event', () => {
     expect(() => {
       canvas.mouseDownEvent({ button: 0 })
     }).not.toThrow()
+  })
+
+  it('reads the workarea computed style once per shift+wheel, not twice (#73)', () => {
+    const workarea = document.createElement('div')
+    workarea.id = 'workarea'
+    root.append(workarea)
+
+    const gcsSpy = vi.spyOn(window, 'getComputedStyle')
+    try {
+      canvas.DOMMouseScrollEvent({ shiftKey: true, clientX: 10, clientY: 10, preventDefault () {}, wheelDelta: 120 })
+    } catch {
+      // Downstream zoom math may throw under jsdom (empty computed sizes); we
+      // only care that the workarea's computed style is read once per wheel.
+    }
+
+    const workareaReads = gcsSpy.mock.calls.filter((c) => c[0] === workarea).length
+    expect(workareaReads).toBe(1)
   })
 })
