@@ -244,4 +244,36 @@ describe('event', () => {
     expect(canvas.addToSelection).toHaveBeenCalledWith([elemB])
     expect(canvas.removeFromSelection).not.toHaveBeenCalled()
   })
+
+  // Audit #29 perf finding #72: dragging selected elements re-measured each
+  // element's bbox (getBBox -> forced layout) on every move. The local bbox is
+  // invariant under the drag translate, so it's cached at drag start and threaded
+  // into the selector resize, avoiding the per-move re-measure.
+  it('caches the element bbox at drag start and reuses it for the selector resize (#72)', () => {
+    const elemA = createSvgElement('rect')
+    elemA.setAttribute('x', '10')
+    elemA.setAttribute('y', '10')
+    elemA.setAttribute('width', '40')
+    elemA.setAttribute('height', '30')
+    contentGroup.append(elemA)
+
+    canvas.setStarted(true)
+    canvas.setCurrentMode('select')
+    canvas.getSelectedElements = () => [elemA]
+    canvas.getStartX = () => 0
+    canvas.getStartY = () => 0
+    canvas.getId = () => 'svg_1'
+    canvas.textActions = { init () {} }
+    canvas.call = vi.fn()
+    const resizeSpy = vi.fn()
+    canvas.selectorManager.requestSelector = () => ({ resize: resizeSpy })
+
+    // Move well past the 4px drag threshold to trigger the selector resize loop.
+    canvas.mouseMoveEvent({ clientX: 100, clientY: 100, button: 0, preventDefault () {} })
+
+    // bbox cached at drag start, and resize() received that cached bbox (not undefined).
+    expect(canvas.dragStartBBoxes?.get(elemA)).toBeDefined()
+    expect(resizeSpy).toHaveBeenCalled()
+    expect(resizeSpy.mock.calls[0][0]).toBeDefined()
+  })
 })
