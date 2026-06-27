@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (audit #29 per-frame perf cluster -- 2026-06-27)
+
+- Path-edit rubber-band point selection reads the rubber-band box once per pointer
+  move instead of re-fetching and re-measuring it inside the per-segment loop (#58).
+- `deletePathNode` cleanup reads the path data once per pass instead of re-reading
+  it on every loop iteration (O(n^2) -> O(n) array clones) (#60).
+- Dragging a path node batches its segment writes (the node, the next segment's
+  control point, and a closed-subpath mate) into a single path-data round-trip
+  instead of two or three (#57).
+- The selection box reuses the root `<svg>` for its identity matrix instead of
+  allocating a throwaway `<svg>` element on every resize tick (#63).
+- The shift+wheel zoom handler resolves the work-area computed style once per
+  event instead of twice (#73).
+- Dragging selected elements caches each element's local bbox at drag start and
+  reuses it for the per-move selector resize, instead of re-measuring (`getBBox`)
+  on every move (#72).
+
+### Fixed (audit #29 per-frame perf cluster -- 2026-06-27)
+
+- `getMouseTarget` no longer crashes when the event target's ancestor chain does
+  not reach the current group/layer (an element in a non-current layer, or a
+  detached subtree); it falls back to the svg root, matching its other fallbacks (#68).
+
+### Added (audit #29 per-frame perf cluster -- 2026-06-27)
+
+- Regression guards confirming three audit "per-frame" findings are over-claims:
+  control-point grips are reused by id rather than recreated each move (#61);
+  `getIntersectionList` builds its element-bbox cache once per rubber-band session
+  and reuses it (#64); the multiselect mousemove updates the selection
+  incrementally rather than rebuilding it (#71).
+
 ### Fixed (audit #29 deferred-batch drain -- 2026-06-27)
 
 - **Dimension inputs preview live and commit a single undo entry.** Typing into a
