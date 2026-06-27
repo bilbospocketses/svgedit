@@ -37,6 +37,7 @@ class TopPanel {
   // sets rx+ry together), so it snapshots the originals for one command on commit.
   private readonly rotationPreview = new LivePreviewSession(() => this.editor.svgCanvas.undoMgr)
   private _rectRadiusOrig: { rx: string | null; ry: string | null } | null = null
+  private _blurPreviewOpen = false
 
   /**
    * @param editor svgedit handler
@@ -619,7 +620,29 @@ class TopPanel {
   }
 
   changeBlur (e: Event): void {
-    this.editor.svgCanvas.setBlur(Number((e.target as HTMLInputElement).value) / 10, true)
+    const svgCanvas = this.editor.svgCanvas
+    const val = Number((e.target as HTMLInputElement).value) / 10
+    if (e.type === 'input') {
+      // Live preview: snapshot the original filter state on the first keystroke,
+      // then preview each value with no per-keystroke history (#4).
+      if (!this._blurPreviewOpen) {
+        svgCanvas.beginBlurPreview()
+        this._blurPreviewOpen = true
+      }
+      svgCanvas.setBlurNoUndo(val)
+    } else if (this._blurPreviewOpen) {
+      svgCanvas.setBlurNoUndo(val)
+      this._finishBlur()
+    } else {
+      svgCanvas.setBlur(val, true) // direct commit (no preview ran)
+    }
+  }
+
+  /** Commit an open blur preview into one undo entry (#4; also focusout). */
+  private _finishBlur = (): void => {
+    if (!this._blurPreviewOpen) { return }
+    this._blurPreviewOpen = false
+    this.editor.svgCanvas.finishBlurPreview()
   }
 
   clickGroup () {
@@ -998,6 +1021,8 @@ class TopPanel {
     $id('angle')?.addEventListener('input', this.changeRotationAngle.bind(this))
     $id('angle')?.addEventListener('focusout', () => this.rotationPreview.finishIfOpen())
     $id('blur')?.addEventListener('change', this.changeBlur.bind(this))
+    $id('blur')?.addEventListener('input', this.changeBlur.bind(this))
+    $id('blur')?.addEventListener('focusout', this._finishBlur)
     $id('rect_rx')?.addEventListener('change', this.changeRectRadius.bind(this))
     $id('rect_rx')?.addEventListener('input', this.changeRectRadius.bind(this))
     $id('rect_rx')?.addEventListener('focusout', this._finishRectRadius)
