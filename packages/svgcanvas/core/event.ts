@@ -621,6 +621,235 @@ const mouseOutEvent = (evt: MouseEvent): void => {
   }
 }
 
+/** Apply stroke/fill properties from the selected element. Text also gets font props. */
+const applySelectedElemProps = (selected: Element): void => {
+  switch (selected.tagName) {
+    case 'g':
+    case 'use':
+    case 'image':
+    case 'foreignObject':
+      break
+    case 'text':
+      svgCanvas.setCurText('font_size', selected.getAttribute('font-size'))
+      svgCanvas.setCurText('font_family', selected.getAttribute('font-family'))
+      svgCanvas.setCurProperties('fill', selected.getAttribute('fill'))
+      svgCanvas.setCurProperties('fill_opacity', selected.getAttribute('fill-opacity'))
+      svgCanvas.setCurProperties('stroke', selected.getAttribute('stroke'))
+      svgCanvas.setCurProperties('stroke_opacity', selected.getAttribute('stroke-opacity'))
+      svgCanvas.setCurProperties('stroke_width', selected.getAttribute('stroke-width'))
+      svgCanvas.setCurProperties('stroke_dasharray', selected.getAttribute('stroke-dasharray'))
+      svgCanvas.setCurProperties('stroke_linejoin', selected.getAttribute('stroke-linejoin'))
+      svgCanvas.setCurProperties('stroke_linecap', selected.getAttribute('stroke-linecap'))
+      break
+    default:
+      svgCanvas.setCurProperties('fill', selected.getAttribute('fill'))
+      svgCanvas.setCurProperties('fill_opacity', selected.getAttribute('fill-opacity'))
+      svgCanvas.setCurProperties('stroke', selected.getAttribute('stroke'))
+      svgCanvas.setCurProperties('stroke_opacity', selected.getAttribute('stroke-opacity'))
+      svgCanvas.setCurProperties('stroke_width', selected.getAttribute('stroke-width'))
+      svgCanvas.setCurProperties('stroke_dasharray', selected.getAttribute('stroke-dasharray'))
+      svgCanvas.setCurProperties('stroke_linejoin', selected.getAttribute('stroke-linejoin'))
+      svgCanvas.setCurProperties('stroke_linecap', selected.getAttribute('stroke-linecap'))
+  }
+}
+
+/**
+ * Finalize a mouse-up in 'select' mode: apply the single element's props + grips,
+ * commit a drag/resize into history (or handle a no-move path-select / shift-
+ * deselect), then strip the non-scaling-stroke style. Self-contained — the
+ * caller returns immediately after.
+ */
+const finalizeSelectModeMouseUp = (
+  selectedElements: (Element | null)[],
+  realX: number,
+  realY: number,
+  evt: MouseEvent,
+  tempJustSelected: Element | null
+): void => {
+  if (selectedElements[0]) {
+    // if we only have one selected element
+    if (!selectedElements[1]) {
+      // set our current stroke/fill properties to the element's
+      const selected = selectedElements[0]
+      applySelectedElemProps(selected)
+      svgCanvas.selectorManager.requestSelector(selected)!.showGrips(true)
+    }
+    // if it was being dragged/resized
+    if (realX !== svgCanvas.getRStartX()! || realY !== svgCanvas.getRStartY()!) {
+      // Only recalculate dimensions after actual dragging/resizing to avoid
+      // unwanted transform flattening on simple clicks
+
+      // Create a single batch command for all moved elements
+      const batchCmd = new BatchCommand('position')
+
+      selectedElements.forEach((elem) => {
+        if (!elem) return
+
+        const tlist = getTransformList(elem)
+        if (!tlist || tlist.numberOfItems === 0) return
+
+        // Get the transform from BEFORE the drag started
+        const oldTransform = svgCanvas.dragStartTransforms?.get(elem) || ''
+
+        // Check if the first transform is a translate (the drag transform we added)
+        const firstTransform = tlist.getItem(0)
+        const hasDragTranslate = firstTransform.type === SVGTransform.SVG_TRANSFORM_TRANSLATE
+
+        // For groups, we always consolidate the transforms (recalculateDimensions returns null for groups)
+        const isGroup = elem.tagName === 'g' || elem.tagName === 'a'
+
+        // If element has 2+ transforms, or is a group with a drag translate, consolidate
+        if ((tlist.numberOfItems > 1 && hasDragTranslate) || (isGroup && hasDragTranslate)) {
+          consolidateTransformList(tlist)
+
+          // Record the transform change for undo
+          batchCmd.addSubCommand(new ChangeElementCommand(elem, { transform: oldTransform }))
+          return
+        }
+
+        // For non-group elements with simple transforms, try recalculateDimensions
+        const cmd = svgCanvas.recalculateDimensions(elem)
+        if (cmd) {
+          batchCmd.addSubCommand(cmd)
+        } else {
+          // recalculateDimensions returned null
+          // Check if the transform actually changed and record it manually
+          const newTransform = elem.getAttribute('transform') || ''
+          if (newTransform !== oldTransform) {
+            batchCmd.addSubCommand(new ChangeElementCommand(elem, { transform: oldTransform }))
+          }
+        }
+      })
+
+      if (!batchCmd.isEmpty()) {
+        svgCanvas.addCommandToHistory(batchCmd)
+      }
+
+      // Clear the stored transforms AND reset the flag together
+      delete svgCanvas.dragStartTransforms
+      svgCanvas.hasDragStartTransform = false
+
+      const len = selectedElements.length
+      for (let i = 0; i < len; ++i) {
+        if (!selectedElements[i]) { break }
+        svgCanvas.selectorManager.requestSelector(selectedElements[i]!)!.resize()
+      }
+      // no change in position/size, so maybe we should move to pathedit
+    } else {
+      const t = evt.target
+      if (selectedElements[0].nodeName === 'path' && !selectedElements[1]) {
+        svgCanvas.pathActions.select(selectedElements[0])
+        // if it was a path
+        // else, if it was selected and this is a shift-click, remove it from selection
+      } else if (evt.shiftKey && tempJustSelected !== t) {
+        svgCanvas.removeFromSelection([t as Element])
+      }
+    } // no change in mouse position
+
+    // Remove non-scaling stroke
+    const elem = selectedElements[0]
+    if (elem) {
+      elem.removeAttribute('style')
+
+      // we don't remove the style elements for contents of foreignObjects
+      // because that is a valid way to style them
+      if (elem.localName === 'foreignObject') {
+        walkTree(elem, (el) => {
+          (el as HTMLElement).style.removeProperty('pointer-events')
+        })
+      } else {
+        walkTree(elem, (el) => {
+          el.removeAttribute('style')
+        })
+      }
+    }
+  }
+}
+
+/**
+ * The drawn element wasn't kept (too small / cancelled): release its id and
+ * remove it, then — if the click landed on a real shape — switch to select mode
+ * and select it (walking up through group / `<a>` wrappers first).
+ */
+const discardUnkeptElement = (element: Element, evt: MouseEvent): void => {
+  svgCanvas.getCurrentDrawing().releaseId(svgCanvas.getId())
+  element.remove()
+
+  let t: EventTarget | null = evt.target
+
+  // Walk up through groups and <a> link wrappers to the top-level group
+  while ((t as Element | null)?.parentNode?.parentNode && (t as Element).parentNode?.parentNode instanceof Element && ['g', 'a'].includes(((t as Element).parentNode!.parentNode as Element).tagName)) {
+    t = (t as Element).parentNode
+  }
+  // if we are not in the middle of creating a path, and we've clicked on some shape,
+  // then go to Select mode.
+  // WebKit returns <div> when the canvas is clicked, Firefox/Opera return <svg>
+  if ((svgCanvas.getCurrentMode() !== 'path' || !svgCanvas.getDrawnPath()) &&
+    t &&
+    ((t as Element).parentNode as Element)?.id !== 'selectorParentGroup' &&
+    (t as Element).id !== 'svgcanvas' && (t as Element).id !== 'svgroot'
+  ) {
+    // switch into "select" mode if we've clicked on an element
+    svgCanvas.setMode('select')
+    svgCanvas.selectOnly([t as Element], true)
+  }
+}
+
+/**
+ * Finalize a freshly-created element that was kept: flag addedNew, run the fade-in
+ * opacity animation (when applicable), and after it completes record the
+ * InsertElementCommand, clean up the element, and (re)select it.
+ */
+const finalizeNewElement = (element: Element, evt: MouseEvent, useUnit: boolean): void => {
+  /**
+* @name module:svgcanvas.SvgCanvas#addedNew
+*/
+  svgCanvas.addedNew = true
+
+  if (useUnit) { convertAttrs(element) }
+
+  let aniDur = 0.2
+  let cAni: SVGAnimateElement
+  const curShape = svgCanvas.getStyle()
+  const opacAni = svgCanvas.getOpacAni()
+  if (typeof opacAni.beginElement === 'function' && Number.parseFloat(element.getAttribute('opacity') ?? '0') !== curShape.opacity) {
+    cAni = opacAni.cloneNode(true) as SVGAnimateElement
+    cAni.setAttribute('to', curShape.opacity)
+    cAni.setAttribute('dur', String(aniDur))
+    element.appendChild(cAni)
+    try {
+      // Fails in FF4 on foreignObject
+      cAni.beginElement()
+    } catch { /* Fails in FF4 on foreignObject — intentionally ignored */ }
+  } else {
+    aniDur = 0
+  }
+
+  // Ideally this would be done on the endEvent of the animation,
+  // but that doesn't seem to be supported in Webkit
+  // element is non-null here (we are in the `else if (element)` branch)
+  const elementNonNull = element
+  setTimeout(() => {
+    if (cAni) { cAni.remove() }
+    elementNonNull.setAttribute('opacity', curShape.opacity)
+    elementNonNull.setAttribute('style', 'pointer-events:inherit')
+    cleanupElement(elementNonNull)
+    if (svgCanvas.getCurrentMode() === 'path') {
+      svgCanvas.pathActions.toEditMode(elementNonNull)
+    } else if (svgCanvas.getCurConfig().selectNew) {
+      const modes = ['circle', 'ellipse', 'square', 'rect', 'fhpath', 'line', 'fhellipse', 'fhrect', 'star', 'polygon', 'shapelib']
+      if (modes.indexOf(svgCanvas.getCurrentMode()) !== -1 && !evt.altKey) {
+        svgCanvas.setMode('select')
+      }
+      svgCanvas.selectOnly([elementNonNull], true)
+    }
+    // we create the insert command that is stored on the stack
+    // undo means to call cmd.unapply(), redo means to call cmd.apply()
+    svgCanvas.addCommandToHistory(new InsertElementCommand(elementNonNull))
+    svgCanvas.call('changed', [elementNonNull])
+  }, aniDur * 1000)
+}
+
 // - in create mode, the element's opacity is set properly, we create an InsertElementCommand
 // and store it on the Undo stack
 // - in move/resize mode, the element's attributes which were affected by the move/resize are
@@ -660,38 +889,6 @@ const mouseUpEvent = (evt: MouseEvent): void => {
   // TODO: Make true when in multi-unit mode
   const useUnit = false // (svgCanvas.getCurConfig().baseUnit !== 'px');
   svgCanvas.setStarted(false)
-  let t: EventTarget | null
-  /** Apply stroke/fill properties from the selected element. Text also gets font props. */
-  const applySelectedElemProps = (selected: Element): void => {
-    switch (selected.tagName) {
-      case 'g':
-      case 'use':
-      case 'image':
-      case 'foreignObject':
-        break
-      case 'text':
-        svgCanvas.setCurText('font_size', selected.getAttribute('font-size'))
-        svgCanvas.setCurText('font_family', selected.getAttribute('font-family'))
-        svgCanvas.setCurProperties('fill', selected.getAttribute('fill'))
-        svgCanvas.setCurProperties('fill_opacity', selected.getAttribute('fill-opacity'))
-        svgCanvas.setCurProperties('stroke', selected.getAttribute('stroke'))
-        svgCanvas.setCurProperties('stroke_opacity', selected.getAttribute('stroke-opacity'))
-        svgCanvas.setCurProperties('stroke_width', selected.getAttribute('stroke-width'))
-        svgCanvas.setCurProperties('stroke_dasharray', selected.getAttribute('stroke-dasharray'))
-        svgCanvas.setCurProperties('stroke_linejoin', selected.getAttribute('stroke-linejoin'))
-        svgCanvas.setCurProperties('stroke_linecap', selected.getAttribute('stroke-linecap'))
-        break
-      default:
-        svgCanvas.setCurProperties('fill', selected.getAttribute('fill'))
-        svgCanvas.setCurProperties('fill_opacity', selected.getAttribute('fill-opacity'))
-        svgCanvas.setCurProperties('stroke', selected.getAttribute('stroke'))
-        svgCanvas.setCurProperties('stroke_opacity', selected.getAttribute('stroke-opacity'))
-        svgCanvas.setCurProperties('stroke_width', selected.getAttribute('stroke-width'))
-        svgCanvas.setCurProperties('stroke_dasharray', selected.getAttribute('stroke-dasharray'))
-        svgCanvas.setCurProperties('stroke_linejoin', selected.getAttribute('stroke-linejoin'))
-        svgCanvas.setCurProperties('stroke_linecap', selected.getAttribute('stroke-linecap'))
-    }
-  }
 
   // For resize/multiselect: do cleanup, then run the same select-mode logic
   const mode = svgCanvas.getCurrentMode()
@@ -705,104 +902,7 @@ const mouseUpEvent = (evt: MouseEvent): void => {
 
   switch (svgCanvas.getCurrentMode()) {
     case 'select':
-      if (selectedElements[0]) {
-        // if we only have one selected element
-        if (!selectedElements[1]) {
-          // set our current stroke/fill properties to the element's
-          const selected = selectedElements[0]
-          applySelectedElemProps(selected)
-          svgCanvas.selectorManager.requestSelector(selected)!.showGrips(true)
-        }
-        // if it was being dragged/resized
-        if (realX !== svgCanvas.getRStartX()! || realY !== svgCanvas.getRStartY()!) {
-          // Only recalculate dimensions after actual dragging/resizing to avoid
-          // unwanted transform flattening on simple clicks
-
-          // Create a single batch command for all moved elements
-          const batchCmd = new BatchCommand('position')
-
-          selectedElements.forEach((elem) => {
-            if (!elem) return
-
-            const tlist = getTransformList(elem)
-            if (!tlist || tlist.numberOfItems === 0) return
-
-            // Get the transform from BEFORE the drag started
-            const oldTransform = svgCanvas.dragStartTransforms?.get(elem) || ''
-
-            // Check if the first transform is a translate (the drag transform we added)
-            const firstTransform = tlist.getItem(0)
-            const hasDragTranslate = firstTransform.type === SVGTransform.SVG_TRANSFORM_TRANSLATE
-
-            // For groups, we always consolidate the transforms (recalculateDimensions returns null for groups)
-            const isGroup = elem.tagName === 'g' || elem.tagName === 'a'
-
-            // If element has 2+ transforms, or is a group with a drag translate, consolidate
-            if ((tlist.numberOfItems > 1 && hasDragTranslate) || (isGroup && hasDragTranslate)) {
-              consolidateTransformList(tlist)
-
-              // Record the transform change for undo
-              batchCmd.addSubCommand(new ChangeElementCommand(elem, { transform: oldTransform }))
-              return
-            }
-
-            // For non-group elements with simple transforms, try recalculateDimensions
-            const cmd = svgCanvas.recalculateDimensions(elem)
-            if (cmd) {
-              batchCmd.addSubCommand(cmd)
-            } else {
-              // recalculateDimensions returned null
-              // Check if the transform actually changed and record it manually
-              const newTransform = elem.getAttribute('transform') || ''
-              if (newTransform !== oldTransform) {
-                batchCmd.addSubCommand(new ChangeElementCommand(elem, { transform: oldTransform }))
-              }
-            }
-          })
-
-          if (!batchCmd.isEmpty()) {
-            svgCanvas.addCommandToHistory(batchCmd)
-          }
-
-          // Clear the stored transforms AND reset the flag together
-          delete svgCanvas.dragStartTransforms
-          svgCanvas.hasDragStartTransform = false
-
-          const len = selectedElements.length
-          for (let i = 0; i < len; ++i) {
-            if (!selectedElements[i]) { break }
-            svgCanvas.selectorManager.requestSelector(selectedElements[i]!)!.resize()
-          }
-          // no change in position/size, so maybe we should move to pathedit
-        } else {
-          t = evt.target
-          if (selectedElements[0].nodeName === 'path' && !selectedElements[1]) {
-            svgCanvas.pathActions.select(selectedElements[0])
-            // if it was a path
-            // else, if it was selected and this is a shift-click, remove it from selection
-          } else if (evt.shiftKey && tempJustSelected !== t) {
-            svgCanvas.removeFromSelection([t as Element])
-          }
-        } // no change in mouse position
-
-        // Remove non-scaling stroke
-        const elem = selectedElements[0]
-        if (elem) {
-          elem.removeAttribute('style')
-
-          // we don't remove the style elements for contents of foreignObjects
-          // because that is a valid way to style them
-          if (elem.localName === 'foreignObject') {
-            walkTree(elem, (el) => {
-              (el as HTMLElement).style.removeProperty('pointer-events')
-            })
-          } else {
-            walkTree(elem, (el) => {
-              el.removeAttribute('style')
-            })
-          }
-        }
-      }
+      finalizeSelectModeMouseUp(selectedElements, realX, realY, evt, tempJustSelected)
       return
     case 'zoom': {
       svgCanvas.getRubberBox()!.setAttribute('display', 'none')
@@ -993,76 +1093,9 @@ const mouseUpEvent = (evt: MouseEvent): void => {
   })
 
   if (!keep && element) {
-    svgCanvas.getCurrentDrawing().releaseId(svgCanvas.getId())
-    element.remove()
-    element = null
-
-    t = evt.target
-
-    // Walk up through groups and <a> link wrappers to the top-level group
-    while ((t as Element | null)?.parentNode?.parentNode && (t as Element).parentNode?.parentNode instanceof Element && ['g', 'a'].includes(((t as Element).parentNode!.parentNode as Element).tagName)) {
-      t = (t as Element).parentNode
-    }
-    // if we are not in the middle of creating a path, and we've clicked on some shape,
-    // then go to Select mode.
-    // WebKit returns <div> when the canvas is clicked, Firefox/Opera return <svg>
-    if ((svgCanvas.getCurrentMode() !== 'path' || !svgCanvas.getDrawnPath()) &&
-      t &&
-      ((t as Element).parentNode as Element)?.id !== 'selectorParentGroup' &&
-      (t as Element).id !== 'svgcanvas' && (t as Element).id !== 'svgroot'
-    ) {
-      // switch into "select" mode if we've clicked on an element
-      svgCanvas.setMode('select')
-      svgCanvas.selectOnly([t as Element], true)
-    }
+    discardUnkeptElement(element, evt)
   } else if (element) {
-    /**
-* @name module:svgcanvas.SvgCanvas#addedNew
-*/
-    svgCanvas.addedNew = true
-
-    if (useUnit) { convertAttrs(element) }
-
-    let aniDur = 0.2
-    let cAni: SVGAnimateElement
-    const curShape = svgCanvas.getStyle()
-    const opacAni = svgCanvas.getOpacAni()
-    if (typeof opacAni.beginElement === 'function' && Number.parseFloat(element.getAttribute('opacity') ?? '0') !== curShape.opacity) {
-      cAni = opacAni.cloneNode(true) as SVGAnimateElement
-      cAni.setAttribute('to', curShape.opacity)
-      cAni.setAttribute('dur', String(aniDur))
-      element.appendChild(cAni)
-      try {
-        // Fails in FF4 on foreignObject
-        cAni.beginElement()
-      } catch { /* Fails in FF4 on foreignObject — intentionally ignored */ }
-    } else {
-      aniDur = 0
-    }
-
-    // Ideally this would be done on the endEvent of the animation,
-    // but that doesn't seem to be supported in Webkit
-    // element is non-null here (we are in the `else if (element)` branch)
-    const elementNonNull = element
-    setTimeout(() => {
-      if (cAni) { cAni.remove() }
-      elementNonNull.setAttribute('opacity', curShape.opacity)
-      elementNonNull.setAttribute('style', 'pointer-events:inherit')
-      cleanupElement(elementNonNull)
-      if (svgCanvas.getCurrentMode() === 'path') {
-        svgCanvas.pathActions.toEditMode(elementNonNull)
-      } else if (svgCanvas.getCurConfig().selectNew) {
-        const modes = ['circle', 'ellipse', 'square', 'rect', 'fhpath', 'line', 'fhellipse', 'fhrect', 'star', 'polygon', 'shapelib']
-        if (modes.indexOf(svgCanvas.getCurrentMode()) !== -1 && !evt.altKey) {
-          svgCanvas.setMode('select')
-        }
-        svgCanvas.selectOnly([elementNonNull], true)
-      }
-      // we create the insert command that is stored on the stack
-      // undo means to call cmd.unapply(), redo means to call cmd.apply()
-      svgCanvas.addCommandToHistory(new InsertElementCommand(elementNonNull))
-      svgCanvas.call('changed', [elementNonNull])
-    }, aniDur * 1000)
+    finalizeNewElement(element, evt, useUnit)
   }
   svgCanvas.setStartTransform(null)
 }
