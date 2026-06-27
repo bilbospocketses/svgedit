@@ -556,17 +556,21 @@ const setPaintMethod = (type: 'fill' | 'stroke', paint: ConstructorParameters<ty
 * Sets the stroke width for the current selected elements.
 * @function module:elem-get-set.SvgCanvas#setStrokeWidth
 */
-const setStrokeWidthMethod = (val: number): void => {
+const setStrokeWidthMethod = (val: number, preventUndo = false): void => {
   const selectedElements: (Element | null)[] = svgCanvas.getSelectedElements()
   if (val === 0 && ['line', 'path'].includes(svgCanvas.getMode())) {
-    svgCanvas.setStrokeWidth(1)
+    svgCanvas.setStrokeWidth(1, preventUndo)
     return
   }
   svgCanvas.setCurProperties('stroke_width', val)
 
   const elems = collectNonGroupElements(selectedElements)
   if (elems.length > 0) {
-    svgCanvas.changeSelectedAttribute('stroke-width', val, elems)
+    if (preventUndo) {
+      svgCanvas.changeSelectedAttributeNoUndo('stroke-width', val, elems)
+    } else {
+      svgCanvas.changeSelectedAttribute('stroke-width', val, elems)
+    }
     svgCanvas.call('changed', selectedElements)
   }
 }
@@ -614,14 +618,18 @@ const notifyTextChange = (textElements: Element[]): void => {
 const applyTextAttr = (
   attr: string,
   value: string | number,
-  opts: { curTextKey?: string; setCursor?: boolean } = {}
+  opts: { curTextKey?: string; setCursor?: boolean; preventUndo?: boolean } = {}
 ): void => {
-  const { curTextKey, setCursor = true } = opts
+  const { curTextKey, setCursor = true, preventUndo = false } = opts
   const textElements = getSelectedTextElements()
   const changedTextElements = getChangedTextElements(textElements, attr, value)
   if (curTextKey) { svgCanvas.setCurText(curTextKey, value) }
   if (changedTextElements.length > 0) {
-    svgCanvas.changeSelectedAttribute(attr, value, changedTextElements)
+    if (preventUndo) {
+      svgCanvas.changeSelectedAttributeNoUndo(attr, value, changedTextElements)
+    } else {
+      svgCanvas.changeSelectedAttribute(attr, value, changedTextElements)
+    }
   }
   if (setCursor && !textElements.some(el => el.textContent)) {
     svgCanvas.textActions.setCursor()
@@ -777,8 +785,8 @@ const getFontSizeMethod = (): number => {
 /**
  * Applies the given font size to the selected element.
  */
-const setFontSizeMethod = (val: number): void => {
-  applyTextAttr('font-size', val, { curTextKey: 'font_size' })
+const setFontSizeMethod = (val: number, preventUndo = false): void => {
+  applyTextAttr('font-size', val, { curTextKey: 'font_size', preventUndo })
 }
 
 const getTextMethod = (): string => {

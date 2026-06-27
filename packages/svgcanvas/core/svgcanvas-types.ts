@@ -159,7 +159,7 @@ export interface ISvgCanvas {
   setFontColor: (val: string) => void
   getFontColor: () => string
   getFontSize: () => number
-  setFontSize: (val: number) => void
+  setFontSize: (val: number, preventUndo?: boolean) => void
   getText: () => string
   setTextContent: (val: string) => void
   setImageURL: (val: string) => void
@@ -168,7 +168,7 @@ export interface ISvgCanvas {
   makeHyperlink: (url: string) => void
   removeHyperlink: () => void
   setSegType: (newType: number) => void
-  setStrokeWidth: (val: number) => void
+  setStrokeWidth: (val: number, preventUndo?: boolean) => void
   getTitle: (elem?: Element) => string | undefined
   setGroupTitle: (val: string) => void
   setStrokeAttr: (attr: string, val: string | number) => void
@@ -466,7 +466,7 @@ export interface ISvgCanvas {
   setFillPaint (paint: any): void
   getStrokeWidth (): number | string
   getStyle (): Record<string, any>
-  setOpacity (val: string): void
+  setOpacity (val: string, preventUndo?: boolean): void
   getFillOpacity (): number
   getStrokeOpacity (): string
   setPaintOpacity (type: string, val: number, preventUndo?: boolean): void

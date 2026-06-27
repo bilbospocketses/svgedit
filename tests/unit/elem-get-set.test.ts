@@ -37,6 +37,7 @@ describe('elem-get-set', () => {
       runExtensions () {},
       call: vi.fn(),
       changeSelectedAttribute: vi.fn(),
+      changeSelectedAttributeNoUndo: vi.fn(),
       getDOMDocument () { return document },
       getSvgContent () { return svgContent },
       getSelectedElements () { return this.selectedElements || [] },
@@ -125,6 +126,31 @@ describe('elem-get-set', () => {
 
     historyStack[0].apply(null)
     expect(g.querySelector('title')).toBeNull()
+  })
+
+  // Audit #29 item #4: setStrokeWidth gains a `preventUndo` flag so the toolbar
+  // can live-preview each keystroke without recording a per-keystroke command
+  // (the editor wraps the previews in one beginUndoableChange/finishUndoableChange).
+  it('setStrokeWidth() records undo by default (changeSelectedAttribute) (#4)', () => {
+    const rect = createSvgElement('rect')
+    svgContent.append(rect)
+    canvas.selectedElements = [rect]
+
+    canvas.setStrokeWidth(5)
+
+    expect(canvas.changeSelectedAttribute).toHaveBeenCalledWith('stroke-width', 5, [rect])
+    expect(canvas.changeSelectedAttributeNoUndo).not.toHaveBeenCalled()
+  })
+
+  it('setStrokeWidth(val, true) previews without undo (changeSelectedAttributeNoUndo) (#4)', () => {
+    const rect = createSvgElement('rect')
+    svgContent.append(rect)
+    canvas.selectedElements = [rect]
+
+    canvas.setStrokeWidth(5, true)
+
+    expect(canvas.changeSelectedAttributeNoUndo).toHaveBeenCalledWith('stroke-width', 5, [rect])
+    expect(canvas.changeSelectedAttribute).not.toHaveBeenCalled()
   })
 
   it('setDocumentTitle() inserts and removes title with undo/redo', () => {

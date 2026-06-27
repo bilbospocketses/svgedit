@@ -209,7 +209,7 @@ class SvgCanvas implements ISvgCanvas {
   declare setFontColor: (val: string) => void
   declare getFontColor: () => string
   declare getFontSize: () => number
-  declare setFontSize: (val: number) => void
+  declare setFontSize: (val: number, preventUndo?: boolean) => void
   declare getText: () => string
   declare setTextContent: (val: string) => void
   declare setImageURL: (val: string) => void
@@ -218,7 +218,7 @@ class SvgCanvas implements ISvgCanvas {
   declare makeHyperlink: (url: string) => void
   declare removeHyperlink: () => void
   declare setSegType: (newType: number) => void
-  declare setStrokeWidth: (val: number) => void
+  declare setStrokeWidth: (val: number, preventUndo?: boolean) => void
   declare getTitle: (elem?: Element) => string | undefined
   declare setGroupTitle: (val: string) => void
   declare setStrokeAttr: (attr: string, val: string | number) => void
@@ -1363,9 +1363,13 @@ class SvgCanvas implements ISvgCanvas {
    * Sets the given opacity on the current selected elements.
    * @function module:svgcanvas.SvgCanvas#setOpacity
    */
-  setOpacity (val: string): void {
+  setOpacity (val: string, preventUndo = false): void {
     this.curShape.opacity = val
-    this.changeSelectedAttribute('opacity', val)
+    if (preventUndo) {
+      this.changeSelectedAttributeNoUndo('opacity', val)
+    } else {
+      this.changeSelectedAttribute('opacity', val)
+    }
   }
 
   /** Return the current fill opacity from the active shape properties */

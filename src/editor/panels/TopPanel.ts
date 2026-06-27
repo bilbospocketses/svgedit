@@ -10,6 +10,7 @@ import {
 } from '../typed-events.js'
 import topPanelHTML from './TopPanel.html'
 import { setDialogVisibility } from '../dialogs/setDialogVisibility.js'
+import { LivePreviewSession } from './LivePreviewSession.js'
 
 const { $qa, $id, $click, isValidUnit, getTypeMap, convertUnit } = SvgCanvas
 
@@ -27,6 +28,10 @@ class TopPanel {
   // without undo, wrapped in one beginUndoableChange/finishUndoableChange so the
   // whole edit commits as a single undo entry from the pre-edit value.
   private _attrUndoOpen = false
+
+  // Live-preview session for font-size (audit #29 #4): one undo entry per edit,
+  // applied live on each keystroke. The arrow defers `this.editor` until first use.
+  private readonly fontSizePreview = new LivePreviewSession(() => this.editor.svgCanvas.undoMgr)
 
   /**
    * @param editor svgedit handler
@@ -551,7 +556,12 @@ class TopPanel {
   }
 
   changeFontSize (e: Event): void {
-    this.editor.svgCanvas.setFontSize(Number((e.target as HTMLInputElement).value))
+    const val = Number((e.target as HTMLInputElement).value)
+    const svgCanvas = this.editor.svgCanvas
+    this.fontSizePreview.handle(
+      e.type, 'font-size', svgCanvas.getSelectedElements(),
+      (preventUndo) => svgCanvas.setFontSize(val, preventUndo)
+    )
   }
 
   changeRotationAngle (e: Event): void {
@@ -947,6 +957,8 @@ class TopPanel {
     $id('blur')?.addEventListener('change', this.changeBlur.bind(this))
     $id('rect_rx')?.addEventListener('change', this.changeRectRadius.bind(this))
     $id('font_size')?.addEventListener('change', this.changeFontSize.bind(this))
+    $id('font_size')?.addEventListener('input', this.changeFontSize.bind(this))
+    $id('font_size')?.addEventListener('focusout', () => this.fontSizePreview.finishIfOpen())
     safeClick($id('tool_ungroup'), this.clickGroup.bind(this))
     safeClick($id('tool_bold'), this.clickBold.bind(this))
     safeClick($id('tool_italic'), this.clickItalic.bind(this))
