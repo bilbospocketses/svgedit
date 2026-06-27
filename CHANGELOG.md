@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The rotation-angle and rect-corner-radius controls now live-preview the same way.
   Rotation reuses the session; rect-radius snapshots the original `rx`/`ry` and
   records one command on commit (the two change together).
+- The blur control now live-previews too. A new engine snapshot API
+  (`beginBlurPreview`/`finishBlurPreview`) records one undo entry spanning the
+  original to final state across the new-filter, adjust-existing, and remove cases.
+  This completes live-preview for all numeric toolbar controls.
 
 ### Fixed (audit #29 -- 2026-06-27)
 
