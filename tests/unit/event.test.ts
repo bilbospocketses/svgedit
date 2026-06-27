@@ -208,4 +208,40 @@ describe('event', () => {
     const workareaReads = gcsSpy.mock.calls.filter((c) => c[0] === workarea).length
     expect(workareaReads).toBe(1)
   })
+
+  // Audit #29 perf finding #71: the multiselect mousemove was alleged to do a
+  // "full selection rebuild" every tick. It does not — it diffs the new
+  // intersection list against the current selection and only adds/removes the
+  // difference. These pin that incremental behaviour.
+  const driveMultiselectMove = (selected, intersection) => {
+    canvas.setRubberBox(createSvgElement('rect'))
+    canvas.setStarted(true)
+    canvas.setCurrentMode('multiselect')
+    canvas.getRStartX = () => 0
+    canvas.getRStartY = () => 0
+    canvas.getId = () => 'svg_1'
+    canvas.textActions = { init () {} }
+    canvas.getSelectedElements = () => selected
+    canvas.getIntersectionList = () => intersection
+    canvas.addToSelection = vi.fn()
+    canvas.removeFromSelection = vi.fn()
+    canvas.mouseMoveEvent({ clientX: 50, clientY: 50, button: 0, preventDefault () {} })
+  }
+
+  it('does not churn the selection when the intersection is unchanged (#71)', () => {
+    const elemA = createSvgElement('rect')
+    driveMultiselectMove([elemA], [elemA])
+
+    expect(canvas.addToSelection).not.toHaveBeenCalled()
+    expect(canvas.removeFromSelection).not.toHaveBeenCalled()
+  })
+
+  it('adds only the newly-intersected elements to the multiselect (#71)', () => {
+    const elemA = createSvgElement('rect')
+    const elemB = createSvgElement('rect')
+    driveMultiselectMove([elemA], [elemA, elemB])
+
+    expect(canvas.addToSelection).toHaveBeenCalledWith([elemB])
+    expect(canvas.removeFromSelection).not.toHaveBeenCalled()
+  })
 })
