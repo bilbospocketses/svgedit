@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (audit #29 item #4 live-preview -- 2026-06-27)
+
+- The opacity, stroke-width, and font-size toolbar controls now live-preview each
+  keystroke/spin as you type (matching the dimension inputs), while still recording
+  a single undo entry per edit spanning the pre-edit value to the final value. Each
+  engine setter gained a `preventUndo` flag and the editor wraps the previews in one
+  `beginUndoableChange`/`finishUndoableChange` (shared `LivePreviewSession`).
+
 ### Fixed (audit #29 -- 2026-06-27)
 
 - When a freshly-drawn element is discarded (too small / cancelled), the mouse-up
