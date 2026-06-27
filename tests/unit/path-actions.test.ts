@@ -4,6 +4,14 @@ import { init as pathActionsInit, pathActionsMethod } from '../../packages/svgca
 import { init as utilitiesInit } from '../../packages/svgcanvas/core/utilities.js'
 import { init as unitsInit } from '../../packages/svgcanvas/core/units.js'
 import { NS } from '../../packages/svgcanvas/core/namespaces.js'
+import { getPathData } from '../../packages/svgcanvas/core/path-data.js'
+
+// Pass-through spy on getPathData so we can prove cleanup() reads the path data
+// once per pass rather than once per segment (audit #29 perf #60).
+vi.mock('../../packages/svgcanvas/core/path-data.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../packages/svgcanvas/core/path-data.js')>()
+  return { ...actual, getPathData: vi.fn((...args) => actual.getPathData(...args)) }
+})
 
 describe('PathActions', () => {
   let svgRoot
@@ -512,6 +520,26 @@ describe('PathActions', () => {
       expect(mockPath.deleteSeg).toHaveBeenCalled()
       expect(mockPath.init).toHaveBeenCalled()
       expect(mockPath.clearSelection).toHaveBeenCalled()
+    })
+
+    it('reads the path data once per cleanup pass, not once per segment (#60)', () => {
+      pathActionsMethod.toEditMode(pathElement)
+      mockPath.selected_pts = [1]
+      Object.defineProperty(pathActionsMethod, 'canDeleteNodes', {
+        get: () => true,
+        configurable: true
+      })
+      // Many segments, no redundant M/Z: cleanup() iterates every segment without
+      // finding a removable one — the worst case for the per-iteration re-read.
+      let d = 'M0,0'
+      for (let i = 1; i <= 40; i++) d += ` L${i},${i}`
+      pathElement.setAttribute('d', d)
+      vi.mocked(getPathData).mockClear()
+
+      pathActionsMethod.deletePathNode()
+
+      // cleanup() must read the path data once per pass, not once per while-iteration.
+      expect(vi.mocked(getPathData).mock.calls.length).toBeLessThanOrEqual(3)
     })
   })
 
