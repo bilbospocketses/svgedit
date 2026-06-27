@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (audit #29 mouseUpEvent extraction -- 2026-06-27)
+
+- The 440-line `mouseUpEvent` handler is split into four named, documented
+  sub-functions -- `applySelectedElemProps`, `finalizeSelectModeMouseUp` (the
+  select case), `discardUnkeptElement` (the not-kept discard branch), and
+  `finalizeNewElement` (the new-element finalize branch) -- dropping the handler
+  to ~240 lines. Behaviour-preserving internal refactor, locked by 22 new
+  `mouseUpEvent` characterization tests (M12).
+
 ### Changed (audit #29 per-frame perf cluster -- 2026-06-27)
 
 - Path-edit rubber-band point selection reads the rubber-band box once per pointer
