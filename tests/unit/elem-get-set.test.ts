@@ -153,6 +153,34 @@ describe('elem-get-set', () => {
     expect(canvas.changeSelectedAttribute).not.toHaveBeenCalled()
   })
 
+  // Audit #29 item #4 (tier 2): setRectRadius gains a `preventUndo` flag so the
+  // editor can live-preview rx/ry without recording a per-keystroke command (it
+  // snapshots the originals and records one command on commit, since rx+ry change
+  // together and beginUndoableChange tracks a single attribute).
+  it('setRectRadius() sets rx/ry and records one command by default (#4)', () => {
+    const rect = createSvgElement('rect')
+    svgContent.append(rect)
+    canvas.selectedElements = [rect]
+
+    canvas.setRectRadius(8)
+
+    expect(rect.getAttribute('rx')).toBe('8')
+    expect(rect.getAttribute('ry')).toBe('8')
+    expect(historyStack).toHaveLength(1)
+  })
+
+  it('setRectRadius(val, true) previews rx/ry without recording undo (#4)', () => {
+    const rect = createSvgElement('rect')
+    svgContent.append(rect)
+    canvas.selectedElements = [rect]
+
+    canvas.setRectRadius(8, true)
+
+    expect(rect.getAttribute('rx')).toBe('8')
+    expect(rect.getAttribute('ry')).toBe('8')
+    expect(historyStack).toHaveLength(0)
+  })
+
   it('setDocumentTitle() inserts and removes title with undo/redo', () => {
     canvas.setDocumentTitle('Doc')
     const docTitle = svgContent.querySelector(':scope > title')

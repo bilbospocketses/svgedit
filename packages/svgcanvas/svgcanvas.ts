@@ -214,7 +214,7 @@ class SvgCanvas implements ISvgCanvas {
   declare setTextContent: (val: string) => void
   declare setImageURL: (val: string) => void
   declare setLinkURL: (val: string) => void
-  declare setRectRadius: (val: string | number) => void
+  declare setRectRadius: (val: string | number, preventUndo?: boolean) => void
   declare makeHyperlink: (url: string) => void
   declare removeHyperlink: () => void
   declare setSegType: (newType: number) => void
