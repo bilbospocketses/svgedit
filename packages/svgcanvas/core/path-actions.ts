@@ -1071,7 +1071,11 @@ class PathActions {
     }
 
     const cleanup = (): boolean => {
-      let cleanData = getPathData(path.elem)
+      // Read the path data once per cleanup pass. The loop only mutates cleanData
+      // via remItems, which is always immediately followed by a recursive cleanup()
+      // + break, so re-reading the full path data on every iteration was redundant
+      // (O(n) clones per pass — audit #29 perf #60).
+      const cleanData = getPathData(path.elem)
       let len = cleanData.length
 
       const remItems = (pos: number, count: number): void => {
@@ -1082,7 +1086,6 @@ class PathActions {
       if (len <= 1) { return true }
 
       while (len--) {
-        cleanData = getPathData(path.elem)
         const cmd = cleanData[len]
         if (!cmd) continue
         const item = toPathSeg(cmd)
