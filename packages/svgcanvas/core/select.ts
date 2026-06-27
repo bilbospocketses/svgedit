@@ -8,7 +8,6 @@
 
 import { getRotationAngle, getBBox } from './utilities.js'
 import { transformListToTransform, transformBox, transformPoint, matrixMultiply, getTransformList } from './math.js'
-import { NS } from './namespaces'
 import { warn } from '../common/logger.js'
 import type { ISvgCanvas } from './svgcanvas-types.js'
 
@@ -135,9 +134,10 @@ export class Selector {
       offset += 2 / zoom
     }
 
-    // find the transformations applied to the parent of the selected element
-    const svg = document.createElementNS(NS.SVG, 'svg')
-    let parentTransformationMatrix = svg.createSVGMatrix()
+    // find the transformations applied to the parent of the selected element.
+    // Reuse the root <svg> for the identity matrix instead of allocating a
+    // throwaway <svg> element on every resize tick (audit #29 perf #63).
+    let parentTransformationMatrix = svgCanvas.getSvgRoot().createSVGMatrix()
     let currentElt: Element | ParentNode | null = selected
     while (currentElt && (currentElt as Element).parentNode) {
       const parent = (currentElt as Element).parentNode as Element | null
