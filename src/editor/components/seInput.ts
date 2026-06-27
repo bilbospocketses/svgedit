@@ -71,16 +71,36 @@ export class SeInput extends LitElement {
           part="input"
           .value=${this.value}
           size=${ifDefined(this.size || undefined)}
+          @input=${this._onInput}
           @change=${this._onChange}
-          @keyup=${this._onChange}
+          @keyup=${this._onKeyup}
         />
       </div>
     `
   }
 
-  // Class-field arrow auto-binds `this` (avoids @typescript-eslint/unbound-method
-   // false-positive on Lit's `@event=${this._handler}` pattern, which Lit binds itself).
+  // Class-field arrows auto-bind `this` (avoids @typescript-eslint/unbound-method
+  // false-positive on Lit's `@event=${this._handler}` pattern, which Lit binds itself).
+
+  // Live preview as the user types: a `input` event so consumers can update without
+  // committing to history (#4). The native `input` is `composed`, so stop it and
+  // re-emit a single host-level event.
+  private _onInput = (e: Event) => {
+    e.stopPropagation()
+    this.value = (e.target as HTMLInputElement).value
+    this.dispatchEvent(new Event('input', { bubbles: true, composed: true }))
+  }
+
+  // Commit on blur (native change) — one undoable `change`.
   private _onChange = (e: Event) => {
+    e.stopPropagation()
+    this.value = (e.target as HTMLInputElement).value
+    this.dispatchEvent(new Event('change', { bubbles: true, composed: true }))
+  }
+
+  // Enter commits without waiting for blur.
+  private _onKeyup = (e: KeyboardEvent) => {
+    if (e.key !== 'Enter') return
     this.value = (e.target as HTMLInputElement).value
     this.dispatchEvent(new Event('change', { bubbles: true, composed: true }))
   }
