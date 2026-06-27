@@ -63,7 +63,9 @@ import type {
 import type {
   setBlurNoUndo,
   setBlurOffsets,
-  setBlur
+  setBlur,
+  beginBlurPreview,
+  finishBlurPreview
 } from './blur-event.js'
 import type {
   getClosest,
@@ -307,6 +309,8 @@ export interface ISvgCanvas {
   setBlurNoUndo: typeof setBlurNoUndo
   setBlurOffsets: typeof setBlurOffsets
   setBlur: typeof setBlur
+  beginBlurPreview: typeof beginBlurPreview
+  finishBlurPreview: typeof finishBlurPreview
   smoothControlPoints: typeof pathModule.smoothControlPoints
   getTypeMap: typeof getTypeMap
   history: typeof history

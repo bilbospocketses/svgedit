@@ -40,7 +40,9 @@ import {
   init as blurInit,
   setBlurNoUndo,
   setBlurOffsets,
-  setBlur
+  setBlur,
+  beginBlurPreview,
+  finishBlurPreview
 } from './core/blur-event.js'
 import { sanitizeSvg } from './core/sanitize.js'
 import { setForeignContentMethod } from './core/foreign.js'
@@ -361,6 +363,8 @@ class SvgCanvas implements ISvgCanvas {
   declare setBlurNoUndo: typeof setBlurNoUndo
   declare setBlurOffsets: typeof setBlurOffsets
   declare setBlur: typeof setBlur
+  declare beginBlurPreview: typeof beginBlurPreview
+  declare finishBlurPreview: typeof finishBlurPreview
   declare smoothControlPoints: typeof pathModule.smoothControlPoints
   declare getTypeMap: typeof getTypeMap
   declare history: typeof history
@@ -1557,6 +1561,8 @@ class SvgCanvas implements ISvgCanvas {
     this.setBlurNoUndo = setBlurNoUndo
     this.setBlurOffsets = setBlurOffsets
     this.setBlur = setBlur
+    this.beginBlurPreview = beginBlurPreview
+    this.finishBlurPreview = finishBlurPreview
     this.smoothControlPoints = pathModule.smoothControlPoints
     this.getTypeMap = getTypeMap
     this.history = history

@@ -8,6 +8,15 @@ import type { ISvgCanvas } from './svgcanvas-types.js'
 
 let svgCanvas = null as unknown as ISvgCanvas
 
+/** Snapshot of the original filter state captured at the start of a live blur preview (#4). */
+interface BlurPreviewSnapshot {
+  elem: Element
+  origFilterAttr: string | null
+  filterExisted: boolean
+  origStdDev: string | null
+}
+let blurPreview: BlurPreviewSnapshot | null = null
+
 /**
 * @function module:blur.init
 */
@@ -211,5 +220,65 @@ export const setBlur = (val: number, complete: boolean): void => {
     svgCanvas.undoMgr.beginUndoableChange('stdDeviation', [blurElem])
     svgCanvas.setBlurNoUndo(blurVal)
     finishChange()
+  }
+}
+
+/**
+* Snapshot the element's original filter state at the start of a live blur preview
+* so finishBlurPreview() can record one undo entry spanning original -> final (#4).
+* @function module:svgcanvas.SvgCanvas#beginBlurPreview
+*/
+export const beginBlurPreview = (): void => {
+  const elem = svgCanvas.getSelectedElements()[0]
+  if (!elem) { blurPreview = null; return }
+  const filter = svgCanvas.getElement(`${(elem).id}_blur`)
+  const blurElem = filter ? getFeGaussianBlurElem(filter) : null
+  blurPreview = {
+    elem,
+    origFilterAttr: elem.getAttribute('filter'),
+    filterExisted: Boolean(filter),
+    origStdDev: blurElem ? blurElem.getAttribute('stdDeviation') : null
+  }
+}
+
+/**
+* Close a live blur preview (started by beginBlurPreview, previewed via
+* setBlurNoUndo) into a single undo entry covering the new-filter, adjust-existing,
+* and remove cases (#4). A no-op preview records nothing.
+* @function module:svgcanvas.SvgCanvas#finishBlurPreview
+*/
+export const finishBlurPreview = (): void => {
+  const snap = blurPreview
+  blurPreview = null
+  if (!snap) { return }
+  const { InsertElementCommand, ChangeElementCommand, BatchCommand } = svgCanvas.history
+  const { elem } = snap
+
+  // Normalize the empty filter attr left by setBlurNoUndo(0) to "removed" so the
+  // committed state matches setBlur(0) and undo/redo toggle a clean attribute.
+  if (elem.getAttribute('filter') === '') { elem.removeAttribute('filter') }
+
+  const filter = svgCanvas.getElement(`${(elem).id}_blur`)
+  const blurElem = filter ? getFeGaussianBlurElem(filter) : null
+  const curFilterAttr = elem.getAttribute('filter')
+  const curStdDev = blurElem ? blurElem.getAttribute('stdDeviation') : null
+
+  const batchCmd = new BatchCommand('Change blur')
+  // A <filter> created during the preview: its final stdDeviation rides along in the
+  // element reference, so the InsertElementCommand captures the whole filter.
+  if (filter && !snap.filterExisted) {
+    batchCmd.addSubCommand(new InsertElementCommand(filter))
+  }
+  // The element's filter attribute ('' and null both mean "no filter").
+  if ((curFilterAttr ?? '') !== (snap.origFilterAttr ?? '')) {
+    batchCmd.addSubCommand(new ChangeElementCommand(elem, { filter: snap.origFilterAttr }))
+  }
+  // stdDeviation change on a filter that ALREADY existed (a new filter carries its
+  // value in the InsertElementCommand above).
+  if (snap.filterExisted && blurElem && curStdDev !== snap.origStdDev) {
+    batchCmd.addSubCommand(new ChangeElementCommand(blurElem, { stdDeviation: snap.origStdDev }))
+  }
+  if (!batchCmd.isEmpty()) {
+    svgCanvas.addCommandToHistory(batchCmd)
   }
 }
