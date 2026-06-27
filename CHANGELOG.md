@@ -7,6 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (audit #29 deferred-batch drain -- 2026-06-27)
+
+- **Dimension inputs preview live and commit a single undo entry.** Typing into a
+  size/position field (rect/circle/ellipse dimensions, `x`/`y`, line + image coords)
+  dispatched `change` on every keystroke, applying each intermediate value and
+  pushing one undo entry per character. The inputs now preview each keystroke without
+  recording history and commit the whole edit as one undoable change on blur/Enter,
+  from the pre-edit value (#4).
+- **Preference values from cookies/localStorage are coerced to their default's type.**
+  A boolean preference such as `save_notice_done` came back as the truthy string
+  `'false'`, and numeric preferences stayed strings; each loaded value is now coerced
+  to the type of its default (#31).
+- **"Align to smallest/largest" uses the alignment axis.** The reference element was
+  chosen by width for every alignment, so a vertical align (top/middle/bottom)
+  referenced the narrowest element instead of the shortest; it now sorts by height for
+  vertical aligns and width for horizontal (#33).
+- **Ruler gutter borders follow the theme.** The X/Y ruler borders were a hardcoded
+  `#777` that did not adapt to the dark theme; they now use the `--se-border` token (#2).
+
+### Changed (audit #29 deferred-batch drain -- 2026-06-27)
+
+- `se-input`/`se-spin-input` now emit a host `input` event per keystroke (live preview)
+  and a host `change` only on commit (blur/Enter/spin-button), instead of firing
+  `change` on every keystroke (#4).
+- The canvas and layers context-menu dialogs share a new `CMenuDialogBase` for the
+  workarea right-click listener lifecycle (#137).
+- The `dialog` show/hide attribute is toggled through a single `setDialogVisibility`
+  helper across the editor; the stray `'closed'` value is normalised to `'close'`
+  (every consumer reads `=== 'open'`) (#139).
+- `Path.subpathIsClosed` is an instance method instead of a static that refetched the
+  path each call (#18).
+- `#selLayerNames`' magic `top: -8px` is expressed on the spacing scale, and the
+  duplicated `#tools_top` flex declarations are hoisted into a shared rule (#8/#18).
+
+### Added (audit #29 -- 2026-06-27)
+
+- Coverage/regression tests: the paint-picker swatch opens the editor (confirming the
+  #129 "click-swallow" report is an over-claim, with a guard against a future
+  regression); the layers-panel rows expose button roles + screen-reader labels and
+  toggle by keyboard (C3); the layers-panel e2e and the visual-screenshot helper were
+  modernised to web-first locators/waits.
+
 ### Fixed (audit #29 Wave-2 minors -- 2026-06-26)
 
 - **`getParents`/`getParentsUntil` `[attr=value]` selectors now match by value.**
