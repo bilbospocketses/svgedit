@@ -695,27 +695,30 @@ class PathActions {
       }
     } else {
       path.selected_pts = []
-      path.eachSeg(function (this: Segment, _i: number) {
-        const seg = this // eslint-disable-line @typescript-eslint/no-this-alias -- eachSeg callback binds `this` to the segment
-        if (!seg.next && !seg.prev) return
+      // The rubber-band box is invariant across segments, so fetch + measure it
+      // once per move rather than re-fetching/re-measuring it inside the loop
+      // (a redundant reflow per segment — audit #29 perf #58).
+      const rubberBox = svgCanvas.getRubberBox()
+      const rbb = rubberBox ? getBBox(rubberBox) : null
+      if (rbb) {
+        path.eachSeg(function (this: Segment, _i: number) {
+          const seg = this // eslint-disable-line @typescript-eslint/no-this-alias -- eachSeg callback binds `this` to the segment
+          if (!seg.next && !seg.prev) return
 
-        const rubberBox = svgCanvas.getRubberBox()
-        const rbb = getBBox(rubberBox!)
-        if (!rbb) return
+          const pt = svgCanvas.getGripPt(seg)
+          const ptBb = {
+            x: pt.x,
+            y: pt.y,
+            width: 0,
+            height: 0
+          }
 
-        const pt = svgCanvas.getGripPt(seg)
-        const ptBb = {
-          x: pt.x,
-          y: pt.y,
-          width: 0,
-          height: 0
-        }
+          const sel = rectsIntersect(rbb, ptBb)
 
-        const sel = rectsIntersect(rbb, ptBb)
-
-        seg.select(sel)
-        if (sel) { path.selected_pts.push(seg.index) }
-      })
+          seg.select(sel)
+          if (sel) { path.selected_pts.push(seg.index) }
+        })
+      }
     }
   }
 
