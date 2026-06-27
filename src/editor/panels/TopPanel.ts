@@ -23,6 +23,10 @@ const safeClick = (el: HTMLElement | null, handler: EventListenerOrEventListener
  */
 class TopPanel {
   editor: Editor
+  // True while a live-preview dimension edit is open (#4): the keystrokes preview
+  // without undo, wrapped in one beginUndoableChange/finishUndoableChange so the
+  // whole edit commits as a single undo entry from the pre-edit value.
+  private _attrUndoOpen = false
 
   /**
    * @param editor svgedit handler
@@ -628,8 +632,33 @@ class TopPanel {
       }
     }
 
-    this.editor.svgCanvas.changeSelectedAttribute(attr, val)
+    const svgCanvas = this.editor.svgCanvas
+    if (e.type === 'input') {
+      // Live preview: open one undoable change on the first keystroke, then apply
+      // each keystroke without recording a command (#4).
+      if (!this._attrUndoOpen) {
+        svgCanvas.undoMgr.beginUndoableChange(attr, svgCanvas.getSelectedElements())
+        this._attrUndoOpen = true
+      }
+      svgCanvas.changeSelectedAttributeNoUndo(attr, val)
+    } else if (this._attrUndoOpen) {
+      // Commit the previewed edit: apply the final value, then close the undoable
+      // change captured at the first keystroke -> one undo entry (pre-edit -> final).
+      svgCanvas.changeSelectedAttributeNoUndo(attr, val)
+      this._finishAttrEdit()
+    } else {
+      // No preview ran (path-node inputs, or a programmatic change) — commit directly.
+      svgCanvas.changeSelectedAttribute(attr, val)
+    }
     return true
+  }
+
+  /** Close the live-preview undoable change (if open), recording a single command (#4). */
+  private _finishAttrEdit = (): void => {
+    if (!this._attrUndoOpen) return
+    this._attrUndoOpen = false
+    const cmd = this.editor.svgCanvas.undoMgr.finishUndoableChange()
+    if (!cmd.isEmpty()) this.editor.svgCanvas.undoMgr.addCommandToHistory(cmd)
   }
 
   convertToPath () {
@@ -954,31 +983,26 @@ class TopPanel {
     })
 
     // all top panel attributes
-    ;[
-      'elem_id',
-      'elem_class',
-      'circle_cx',
-      'circle_cy',
-      'circle_r',
-      'ellipse_cx',
-      'ellipse_cy',
-      'ellipse_rx',
-      'ellipse_ry',
-      'selected_x',
-      'selected_y',
-      'rect_width',
-      'rect_height',
-      'line_x1',
-      'line_x2',
-      'line_y1',
-      'line_y2',
-      'image_width',
-      'image_height',
-      'path_node_x',
-      'path_node_y'
-    ].forEach(attrId =>
+    // Geometric numeric inputs get a live preview that commits as one undo entry on
+    // blur/Enter (#4). id/class and path-node inputs stay commit-only — live-previewing
+    // an id rename or a path-node move per keystroke would be wrong.
+    const liveAttrIds = [
+      'circle_cx', 'circle_cy', 'circle_r',
+      'ellipse_cx', 'ellipse_cy', 'ellipse_rx', 'ellipse_ry',
+      'selected_x', 'selected_y',
+      'rect_width', 'rect_height',
+      'line_x1', 'line_x2', 'line_y1', 'line_y2',
+      'image_width', 'image_height'
+    ]
+    const commitOnlyAttrIds = ['elem_id', 'elem_class', 'path_node_x', 'path_node_y']
+    ;[...liveAttrIds, ...commitOnlyAttrIds].forEach(attrId =>
       $id(attrId)?.addEventListener('change', this.attrChanger.bind(this))
     )
+    liveAttrIds.forEach(attrId => {
+      $id(attrId)?.addEventListener('input', this.attrChanger.bind(this))
+      // focusout closes the undoable change if the user tabs/clicks away without a commit.
+      $id(attrId)?.addEventListener('focusout', this._finishAttrEdit)
+    })
   }
 }
 

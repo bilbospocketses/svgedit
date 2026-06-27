@@ -121,6 +121,7 @@ export class SESpinInput extends LitElement {
           min=${ifDefined(this.min || undefined)}
           max=${ifDefined(this.max || undefined)}
           step=${ifDefined(this.step || undefined)}
+          @input=${this._onInput}
           @change=${this._onChange}
           @keyup=${this._onKeyup}
           @click=${this._onChange}
@@ -129,20 +130,33 @@ export class SESpinInput extends LitElement {
     `
   }
 
-  // Class-field arrow auto-binds `this` (avoids @typescript-eslint/unbound-method
+  // Class-field arrows auto-bind `this` (avoids @typescript-eslint/unbound-method
   // false-positive on Lit's `@event=${this._handler}` pattern, which Lit binds itself).
+
+  // Live preview as the user types: a non-committing `input` (#4). The native `input`
+  // is `composed`, so stop it and re-emit one host-level event. The NaN guard keeps
+  // transient invalid input (empty / lone '-') from pushing garbage into consumers.
+  private _onInput = (e: Event) => {
+    e.stopPropagation()
+    const val = (e.target as HTMLInputElement).value
+    this.value = val
+    if (val === '' || isNaN(Number(val))) return
+    this.dispatchEvent(new Event('input', { bubbles: true, composed: true }))
+  }
+
+  // Commit on blur (native change) and on spin-button click — one undoable `change`.
   private _onChange = (e: Event) => {
+    e.stopPropagation()
     this.value = (e.target as HTMLInputElement).value
     this.dispatchEvent(new Event('change', { bubbles: true, composed: true }))
   }
 
-  // keyup mirrors the original's NaN-guard so e.g. stray modifier-key presses
-  // don't push 'NaN' into consumers via the shared change-handler.
+  // Enter commits without waiting for blur (NaN-guarded like the preview).
   private _onKeyup = (e: KeyboardEvent) => {
+    if (e.key !== 'Enter') return
     const val = (e.target as HTMLInputElement).value
-    if (!isNaN(Number(val))) {
-      this.value = val
-      this.dispatchEvent(new Event('change', { bubbles: true, composed: true }))
-    }
+    if (val === '' || isNaN(Number(val))) return
+    this.value = val
+    this.dispatchEvent(new Event('change', { bubbles: true, composed: true }))
   }
 }
