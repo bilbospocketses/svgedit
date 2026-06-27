@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (audit #29 -- 2026-06-27)
+
+- When a freshly-drawn element is discarded (too small / cancelled), the mouse-up
+  handler now only adopts and selects the clicked element if it belongs to the
+  current editing context (the active group, else the current layer), instead of
+  selecting any walked-up ancestor. Prevents selecting across a layer boundary
+  when a discarded-shape click lands over an element in another layer (#76).
+
 ### Changed (audit #29 mouseUpEvent extraction -- 2026-06-27)
 
 - The 440-line `mouseUpEvent` handler is split into four named, documented
