@@ -784,8 +784,15 @@ const discardUnkeptElement = (element: Element, evt: MouseEvent): void => {
   // if we are not in the middle of creating a path, and we've clicked on some shape,
   // then go to Select mode.
   // WebKit returns <div> when the canvas is clicked, Firefox/Opera return <svg>
+  //
+  // Only adopt the click target if it belongs to the current editing context (the
+  // active group, else the current layer). Without this membership check a click
+  // that resolves to an element in another layer would select across the layer
+  // boundary -- mirrors getMouseTarget's layer bounding (#76).
+  const selectionContainer = svgCanvas.getCurrentGroup() ?? svgCanvas.getCurrentDrawing().getCurrentLayer()
   if ((svgCanvas.getCurrentMode() !== 'path' || !svgCanvas.getDrawnPath()) &&
     t &&
+    selectionContainer?.contains(t as Element) &&
     ((t as Element).parentNode as Element)?.id !== 'selectorParentGroup' &&
     (t as Element).id !== 'svgcanvas' && (t as Element).id !== 'svgroot'
   ) {
