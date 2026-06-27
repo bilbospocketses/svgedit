@@ -227,10 +227,16 @@ const mouseMoveEvent = (evt: MouseEvent): void => {
       if (!svgCanvas.hasDragStartTransform && selectedElements.length > 0) {
         // Store original transforms BEFORE adding the drag transform (for undo)
         svgCanvas.dragStartTransforms = new Map()
+        // Cache each element's local bbox at drag start: it is invariant under the
+        // translate applied while dragging, so the selector can be resized from it
+        // without a getBBox re-measure on every move (audit #29 perf #72).
+        svgCanvas.dragStartBBoxes = new Map()
         for (const selectedElement of selectedElements) {
           if (!selectedElement) { continue }
           // Capture the transform attribute before we modify it
           svgCanvas.dragStartTransforms.set(selectedElement, selectedElement.getAttribute('transform') || '')
+          const startBBox = getBBox(selectedElement)
+          if (startBBox) { svgCanvas.dragStartBBoxes.set(selectedElement, startBBox) }
           const slist = getTransformList(selectedElement)
           if (!slist) { continue }
           if (slist.numberOfItems) {
@@ -263,7 +269,7 @@ const mouseMoveEvent = (evt: MouseEvent): void => {
             if (el) {
               updateTransformList(svgRoot, el, dx as number, dy as number)
               // update our internal bbox that we're tracking while dragging
-              svgCanvas.selectorManager.requestSelector(el)!.resize()
+              svgCanvas.selectorManager.requestSelector(el)!.resize(svgCanvas.dragStartBBoxes?.get(el))
             }
           })
           svgCanvas.call('transition', selectedElements)
@@ -963,6 +969,7 @@ const mouseUpEvent = (evt: MouseEvent): void => {
   // Reset drag flag after any mouseUp
   svgCanvas.hasDragStartTransform = false
   delete svgCanvas.dragStartTransforms
+  delete svgCanvas.dragStartBBoxes
 
   /**
 * The main (left) mouse button is released (anywhere).

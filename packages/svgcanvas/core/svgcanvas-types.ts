@@ -191,6 +191,7 @@ export interface ISvgCanvas {
   mouseOutEvent: (evt: MouseEvent) => void
   DOMMouseScrollEvent: (e: WheelEvent) => void
   dragStartTransforms?: Map<Element, string>
+  dragStartBBoxes?: Map<Element, { x: number; y: number; width: number; height: number }>
   hasDragStartTransform?: boolean
   addedNew?: boolean
 
