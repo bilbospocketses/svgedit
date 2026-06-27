@@ -163,11 +163,19 @@ const getMouseTargetMethod = (evt: MouseEvent | null): Element | null => {
   }
 
   while (
-    !(mouseTarget as Element)?.parentNode?.isSameNode(
-      svgCanvas.getCurrentGroup() ?? currentLayer
-    )
+    mouseTarget &&
+    mouseTarget.parentNode &&
+    !mouseTarget.parentNode.isSameNode(svgCanvas.getCurrentGroup() ?? currentLayer)
   ) {
     mouseTarget = mouseTarget.parentNode as Element & { correspondingUseElement?: Element; namespaceURI?: string }
+  }
+
+  // If the walk ran off the top of the tree without reaching the current
+  // group/layer (a target in a non-current layer or a detached subtree),
+  // treat it as a canvas/background hit — consistent with the svgRoot
+  // fallbacks above — instead of dereferencing a null parentNode.
+  if (!mouseTarget?.parentNode) {
+    return svgCanvas.getSvgRoot()
   }
 
   return mouseTarget
