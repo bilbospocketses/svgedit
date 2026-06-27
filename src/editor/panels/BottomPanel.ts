@@ -10,6 +10,7 @@ import {
   type SePaletteElement
 } from '../typed-events.js'
 import BottomPanelHtml from './BottomPanel.html'
+import { LivePreviewSession } from './LivePreviewSession.js'
 
 const { $id } = SvgCanvas
 
@@ -18,6 +19,11 @@ const { $id } = SvgCanvas
  */
 class BottomPanel {
   editor: Editor
+
+  // Live-preview sessions (audit #29 #4): apply each keystroke live but record one
+  // undo entry per edit. The arrow defers `this.editor` access until first use.
+  private readonly strokeWidthPreview = new LivePreviewSession(() => this.editor.svgCanvas.undoMgr)
+  private readonly opacityPreview = new LivePreviewSession(() => this.editor.svgCanvas.undoMgr)
 
   /**
    * @param editor svgedit handler
@@ -43,7 +49,11 @@ class BottomPanel {
     ) {
       val = 1
     }
-    this.editor.svgCanvas.setStrokeWidth(val)
+    const svgCanvas = this.editor.svgCanvas
+    this.strokeWidthPreview.handle(
+      e.type, 'stroke-width', svgCanvas.getSelectedElements(),
+      (preventUndo) => svgCanvas.setStrokeWidth(val, preventUndo)
+    )
   }
 
   changeZoom (value: string): void {
@@ -143,7 +153,11 @@ class BottomPanel {
   handleOpacity (evt: Event): void {
     const target = evt.currentTarget as HTMLInputElement
     const val = Number.parseInt(target.value.split('%')[0] ?? '0')
-    this.editor.svgCanvas.setOpacity(String(val / 100))
+    const svgCanvas = this.editor.svgCanvas
+    this.opacityPreview.handle(
+      evt.type, 'opacity', svgCanvas.getSelectedElements(),
+      (preventUndo) => svgCanvas.setOpacity(String(val / 100), preventUndo)
+    )
   }
 
   handlePalette (e: Event): void {
@@ -202,6 +216,8 @@ class BottomPanel {
       'change',
       this.changeStrokeWidth.bind(this)
     )
+    $id('stroke_width')?.addEventListener('input', this.changeStrokeWidth.bind(this))
+    $id('stroke_width')?.addEventListener('focusout', () => this.strokeWidthPreview.finishIfOpen())
     $id('stroke_style')?.addEventListener('change', (evt: Event) =>
       this.handleStrokeAttr('stroke-dasharray', evt)
     )
@@ -212,6 +228,8 @@ class BottomPanel {
       this.handleStrokeAttr('stroke-linecap', evt)
     )
     $id('opacity')?.addEventListener('change', this.handleOpacity.bind(this))
+    $id('opacity')?.addEventListener('input', this.handleOpacity.bind(this))
+    $id('opacity')?.addEventListener('focusout', () => this.opacityPreview.finishIfOpen())
     ;($id('fill_color') as SePaintPickerElement | null)?.init(i18next)
     ;($id('stroke_color') as SePaintPickerElement | null)?.init(i18next)
   }
