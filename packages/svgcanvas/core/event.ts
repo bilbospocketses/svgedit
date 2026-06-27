@@ -1531,9 +1531,11 @@ const DOMMouseScrollEvent = (e: WheelEvent): void => {
   // mouse relative to content area in content pixels
   const pt = transformPoint(e.clientX, e.clientY, svgCanvas.getRootSctm()!)
 
-  // full work area width in screen pixels
-  const editorFullW = parseFloat(getComputedStyle(workarea!, null).width.replace('px', ''))
-  const editorFullH = parseFloat(getComputedStyle(workarea!, null).height.replace('px', ''))
+  // full work area dimensions in screen pixels — resolve the computed style once
+  // per wheel event instead of twice (audit #29 perf #73).
+  const workareaStyle = getComputedStyle(workarea!, null)
+  const editorFullW = parseFloat(workareaStyle.width.replace('px', ''))
+  const editorFullH = parseFloat(workareaStyle.height.replace('px', ''))
 
   // work area width minus scroll and ruler in screen pixels
   const editorW = editorFullW - scrbar - rulerwidth
