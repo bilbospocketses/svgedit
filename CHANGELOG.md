@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a single undo entry per edit spanning the pre-edit value to the final value. Each
   engine setter gained a `preventUndo` flag and the editor wraps the previews in one
   `beginUndoableChange`/`finishUndoableChange` (shared `LivePreviewSession`).
+- The rotation-angle and rect-corner-radius controls now live-preview the same way.
+  Rotation reuses the session; rect-radius snapshots the original `rx`/`ry` and
+  records one command on commit (the two change together).
 
 ### Fixed (audit #29 -- 2026-06-27)
 
