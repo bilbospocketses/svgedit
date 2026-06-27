@@ -439,6 +439,40 @@ export const replacePathSegMethod = (type: number, index: number, pts: number[],
 }
 
 /**
+* Apply several segment replacements in a single path-data round-trip. Mirrors
+* {@link replacePathSegMethod} per update, but reads + writes the path data once
+* for the whole batch instead of once per segment (audit #29 perf #57).
+*/
+export const replacePathSegBatchMethod = (
+  updates: Array<{ type: number, index: number, pts: number[] }>,
+  elem?: SVGPathElement | SVGElement | null
+): void => {
+  const path = svgCanvas.getPathObj() as Path | null
+  const pth = (elem as SVGPathElement | null | undefined) ?? path?.elem
+  if (!pth || updates.length === 0) { return }
+  const segData = svgCanvas.getSegData?.() as Record<number, string[]> | undefined
+  const data = getPathData(pth)
+  for (const update of updates) {
+    const { type, index } = update
+    let { pts } = update
+    const props = segData?.[type] ?? segData?.[type - 1]
+    if (props && pts.length < props.length) {
+      const currentSeg = data[index] ? toPathSeg(data[index]) : null
+      if (currentSeg) {
+        pts = props.map((prop, i) => (pts[i] !== undefined ? pts[i] : ((currentSeg[prop] as number) ?? 0)))
+      }
+    }
+    const safeProps = props ?? []
+    const seg: PathSeg = { pathSegType: type, pathSegTypeAsLetter: TYPE_TO_CMD[type] ?? '' }
+    safeProps.forEach((prop, i) => {
+      seg[prop] = pts[i]
+    })
+    data[index] = fromPathSeg(seg)
+  }
+  setPathData(pth, data)
+}
+
+/**
 * Return (creating if absent) the highlight path element for a segment, optionally updating its geometry.
 * @function module:path.getSegSelector
 */
@@ -583,11 +617,13 @@ export class Segment {
     if ('x2' in item && item.x2 !== undefined) { item.x2 += dx }
     if ('y2' in item && item.y2 !== undefined) { item.y2 += dy }
 
-    replacePathSegMethod(
-      this.type,
-      this.index,
-      ptObjToArrMethod(this.type, item)
-    )
+    // Collect every segment this node touches — itself, the next segment's
+    // control point, and a closed-subpath mate — and write them in a single
+    // path-data round-trip rather than one replacePathSeg call per segment
+    // (audit #29 perf #57).
+    const updates: Array<{ type: number, index: number, pts: number[] }> = [
+      { type: this.type, index: this.index, pts: ptObjToArrMethod(this.type, item) }
+    ]
 
     const next = this.next?.item
     // `x1/y1` are the control point attached to this node on the next segment (when present)
@@ -595,7 +631,7 @@ export class Segment {
       if (next.x1 !== undefined) next.x1 += dx
       if (next.y1 !== undefined) next.y1 += dy
       if (this.next) {
-        replacePathSegMethod(this.next.type, this.next.index, ptObjToArrMethod(this.next.type, next))
+        updates.push({ type: this.next.type, index: this.next.index, pts: ptObjToArrMethod(this.next.type, next) })
       }
     }
 
@@ -605,10 +641,11 @@ export class Segment {
       const { item: itm } = this.mate
       if (itm.x !== undefined) itm.x += dx
       if (itm.y !== undefined) itm.y += dy
-      const pts = [itm.x ?? 0, itm.y ?? 0]
-      replacePathSegMethod(this.mate.type, this.mate.index, pts)
+      updates.push({ type: this.mate.type, index: this.mate.index, pts: [itm.x ?? 0, itm.y ?? 0] })
       // Has no grip, so does not need 'updating'?
     }
+
+    replacePathSegBatchMethod(updates)
 
     this.update(true)
     if (this.next) { this.next.update(true) }
