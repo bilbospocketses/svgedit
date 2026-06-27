@@ -92,7 +92,8 @@ describe('mouseUpEvent (characterization for #89 extraction)', () => {
       setCurProperties: vi.fn(),
 
       undoMgr: { finishUndoableChange: vi.fn(() => ({ isEmpty: () => false })) },
-      getCurrentDrawing: vi.fn(() => ({ releaseId: vi.fn() })),
+      getCurrentGroup: () => null,
+      getCurrentDrawing: vi.fn(() => ({ releaseId: vi.fn(), getCurrentLayer: () => contentGroup })),
 
       getStyle: () => ({ opacity: 1 }),
       getOpacAni: () => ({}),
@@ -271,12 +272,12 @@ describe('mouseUpEvent (characterization for #89 extraction)', () => {
     expect(canvas.setMode).toHaveBeenCalledWith('select') // selectNew + rect in mode list
   })
 
-  it('a degenerate rect (sub-pixel) is discarded: id released, element removed, select target chosen', () => {
+  it('a degenerate rect (sub-pixel) is discarded and selects the clicked element when it is in the current layer (#76)', () => {
     const releaseId = vi.fn()
-    canvas.getCurrentDrawing = vi.fn(() => ({ releaseId }))
+    canvas.getCurrentDrawing = vi.fn(() => ({ releaseId, getCurrentLayer: () => contentGroup }))
     const el = placeCurrentElement('rect', { width: '0', height: '0' })
     const clickTarget = svgEl('rect')
-    contentGroup.appendChild(clickTarget)
+    contentGroup.appendChild(clickTarget) // in the current layer
     canvas._mode = 'rect'
 
     fireMouseUp({ target: clickTarget })
@@ -285,6 +286,27 @@ describe('mouseUpEvent (characterization for #89 extraction)', () => {
     expect(el.parentNode).toBeNull() // removed from the DOM
     expect(canvas.setMode).toHaveBeenCalledWith('select')
     expect(canvas.selectOnly).toHaveBeenCalledWith([clickTarget], true)
+  })
+
+  it('does not select the clicked element across a layer boundary when discarding (#76)', () => {
+    const releaseId = vi.fn()
+    canvas.getCurrentDrawing = vi.fn(() => ({ releaseId, getCurrentLayer: () => contentGroup }))
+    const el = placeCurrentElement('rect', { width: '0', height: '0' }) // discarded shape, in the current layer
+
+    // The click resolves to an element living in a DIFFERENT layer, not the current one.
+    const otherLayer = svgEl('g')
+    svgcontent.appendChild(otherLayer)
+    const clickTarget = svgEl('rect')
+    otherLayer.appendChild(clickTarget)
+    canvas._mode = 'rect'
+
+    fireMouseUp({ target: clickTarget })
+
+    expect(releaseId).toHaveBeenCalledWith('svg_1') // still cleans up the discarded shape
+    expect(el.parentNode).toBeNull()
+    // ...but must NOT reach across the layer boundary to select it
+    expect(canvas.selectOnly).not.toHaveBeenCalled()
+    expect(canvas.setMode).not.toHaveBeenCalledWith('select')
   })
 
   it('circle keeps only when the radius is non-zero', () => {
