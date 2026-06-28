@@ -7,6 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (audit #35 -- built-extension pipeline -- 2026-06-28)
+
+- ALL extensions were dead in the BUILT editor (`npm run serve` / packaged app);
+  only the dev server worked. Two build-only bugs. (1) The separately-built
+  extensions bundle got its own module-scoped `svgEditorInstance` copy, so every
+  extension `init()` threw "svgEditor not initialized" -- fixed by storing the
+  instance on `globalThis` keyed by `Symbol.for('@svgedit/editor-instance')`.
+  (2) Each locale-loading extension's variable dynamic
+  `import('./locale/<lang>.js')` could not resolve in the separate rollup extension
+  build (404) -- fixed by a static `import enLocale from './locale/en.js'` in the 8
+  locale extensions, with `loadExtensionTranslation` now taking the locale object
+  directly (the lang-fallback + `.default` deref dropped; the i18next shim ignores
+  the lang key). (#264)
+- `tests/e2e/extensions-load.spec.ts` strengthened: asserts no "Extension failed to
+  load" across all default extensions (whole-class built-editor guard), not just
+  grid's `#canvasGrid`.
+- `tests/e2e/embed-palette.spec.ts` + `tests/e2e/dialogs-extra.spec.ts` seed the
+  `svgeditstore` cookie so ext-storage's revived first-run consent modal (which
+  opens asynchronously after the editor reports ready) does not intercept clicks.
+  The dialogs-extra race only failed under CI's 1-worker / no-server-reuse config.
+
+### Changed (audit #29 perf #79/#81 -- 2026-06-28)
+
+- ext-grid `updateGrid` memoizes the grid-canvas redraw (getContext + draw +
+  `toDataURL`) by `(bigInt, gridColor)` and early-returns when unchanged. One zoom
+  fires `zoomChanged` through multiple paths, so the identical grid was re-encoded
+  each time; now once. Output-preserving. (#265)
+- ext-overview_window `updateViewBox` reads each element's computed style once per
+  scroll (one `getComputedStyle` for `#workarea`/`#svgcanvas`/`#overviewMiniView`)
+  instead of twice -- 6 reads to 3. (#265)
+- The e2e perf harness (`tests/e2e/perf/perf-instrument.ts`) gained canvas
+  `getContext`/`toDataURL` and `querySelectorAll` counters; new count-assertion
+  specs `grid-redraw.perf` and `overview-viewbox.perf`. (#265)
+
+### Changed (audit #29 perf #78/#82 -- 2026-06-28)
+
+- ext-connector scopes its connector queries (`findConnectors`, the before-group
+  selection strip, the mouseUp duplicate-check) to `svgCanvas.getSvgContent()`
+  instead of the whole `document` -- a smaller DOM scan on the connector-update path
+  (all connectors live in svgcontent). Chosen over caching, which would risk
+  mid-interaction staleness (`findConnectors` removes orphans while iterating). (#266)
+
 ### Changed (audit #29 #90 + perf harness -- 2026-06-28)
 
 - `updateCanvas` (UICoordinator) now reads each element's computed style once,
