@@ -52,7 +52,7 @@ export default {
     const prevBeforeGroup: BusHandler | undefined = svgCanvas.bind('before-group', (...args: unknown[]) => {
       if (prevBeforeGroup) prevBeforeGroup(...args)
       // Remove connectors from selection so they're not pulled into the group
-      svgCanvas.removeFromSelection(Array.from(document.querySelectorAll('[id^="conn_"]')))
+      svgCanvas.removeFromSelection(Array.from(svgCanvas.getSvgContent().querySelectorAll('[id^="conn_"]')))
     })
     const prevAfterMove: BusHandler | undefined = svgCanvas.bind('after-move', (...args: unknown[]) => {
       if (prevAfterMove) prevAfterMove(...args)
@@ -208,8 +208,10 @@ export default {
       // Fetch data storage object from svgCanvas
       const dataStorage = svgCanvas.getDataStorage()
 
-      // Query all connector elements (id starts with conn_)
-      const connectors = document.querySelectorAll('[id^="conn_"]')
+      // Query connector elements (id^=conn_) scoped to svgcontent rather than the
+      // whole document — a smaller DOM scan on the connector-update path; all
+      // connectors live in svgcontent (audit #29 #78/#82).
+      const connectors = svgCanvas.getSvgContent().querySelectorAll('[id^="conn_"]')
       // Reset connections array
       connections = []
 
@@ -540,7 +542,7 @@ export default {
 
         // Prevent duplicate connectors
         const dupe = Array.from(
-          document.querySelectorAll('[id^="conn_"]')
+          svgCanvas.getSvgContent().querySelectorAll('[id^="conn_"]')
         ).filter(
           conn =>
             conn.getAttributeNS(seNs, 'connector') === connStr ||
