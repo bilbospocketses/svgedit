@@ -30,6 +30,7 @@ import { setSvgEditor } from './svgEditorInstance.js'
 import { typedDetail } from './typed-events.js'
 import { setDialogVisibility } from './dialogs/setDialogVisibility.js'
 import { setPaletteWithErrors } from './components/palette-store.js'
+import { loadExtension } from './extensions/loadExtension.js'
 
 /**
  * Augment Window so the editor instance is reachable as the legacy `svgEditor`
@@ -427,11 +428,12 @@ class Editor {
             // Vite cannot statically analyze these dynamic extension imports.
             const imported = await import(/* @vite-ignore */ `${this.configObj.curConfig.extPath}/${encodeURIComponent(extname)}/${encodeURIComponent(extname)}.js`) as { default: { name?: string; init?: (...args: unknown[]) => unknown } }
             const { name = extname, init: initfn } = imported.default
-            return this.addExtension(name, (initfn && initfn.bind(this)), { langParam: 'en' }) /** @todo  change to current lng */
+            // await (not return) so a rejecting init() is isolated to this
+            // extension instead of escaping to Promise.all (#36 F3).
+            await loadExtension(this.addExtension.bind(this), name, (initfn && initfn.bind(this)), { langParam: 'en' }, extname) /** @todo change to current lng */
           } catch (err) {
-            // Todo: Add config to alert any errors
+            // Import/parse failure for this extension — log and continue.
             console.error('Extension failed to load: ' + extname + '; ', err)
-            return undefined
           }
         })
       )
@@ -441,11 +443,9 @@ class Editor {
           try {
             const imported = await import(/* @vite-ignore */ encodeURI(pathName)) as { default: { name: string; init?: (...args: unknown[]) => unknown } }
             const { name, init: initfn } = imported.default
-            return this.addExtension(name, (initfn && initfn.bind(this, config)), {})
+            await loadExtension(this.addExtension.bind(this), name, (initfn && initfn.bind(this, config)), {}, pathName)
           } catch (err) {
-            // Todo: Add config to alert any errors
             console.error('Extension failed to load: ' + pathName + '; ', err)
-            return undefined
           }
         })
       )
