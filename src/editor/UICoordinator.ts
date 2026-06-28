@@ -90,12 +90,13 @@ export class UICoordinator {
     const cnvs = $id('svgcanvas')
     if (!cnvs) return
 
-    let w = parseFloat(
-      getComputedStyle(workarea, null).width.replace('px', '')
-    )
-    let h = parseFloat(
-      getComputedStyle(workarea, null).height.replace('px', '')
-    )
+    // One CSSStyleDeclaration covers both dimensions (and the center-branch read
+    // below): the workarea is a layout-sized scroll container, so its computed
+    // width/height are stable across the overflow toggle. Re-reading getComputedStyle
+    // per dimension was redundant (#90).
+    const workareaStyle = getComputedStyle(workarea, null)
+    let w = parseFloat(workareaStyle.width.replace('px', ''))
+    let h = parseFloat(workareaStyle.height.replace('px', ''))
     const wOrig = w
     const hOrig = h
     const oldCtr = {
@@ -112,10 +113,10 @@ export class UICoordinator {
       workarea.style.overflow = 'scroll'
     }
 
-    const oldCanY =
-      parseFloat(getComputedStyle(cnvs, null).height.replace('px', '')) / 2
-    const oldCanX =
-      parseFloat(getComputedStyle(cnvs, null).width.replace('px', '')) / 2
+    // Both canvas dimensions from one declaration, read before its size is set below.
+    const cnvsStyle = getComputedStyle(cnvs, null)
+    const oldCanY = parseFloat(cnvsStyle.height.replace('px', '')) / 2
+    const oldCanX = parseFloat(cnvsStyle.width.replace('px', '')) / 2
 
     cnvs.style.width = w + 'px'
     cnvs.style.height = h + 'px'
@@ -148,7 +149,7 @@ export class UICoordinator {
       // Go to top-left for larger documents
       if (
         this.#host.svgCanvas.contentW >
-        parseFloat(getComputedStyle(workarea, null).width.replace('px', ''))
+        parseFloat(workareaStyle.width.replace('px', ''))
       ) {
         // Top-left
         workarea.scrollLeft = offset.x - 10
