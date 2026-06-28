@@ -16,7 +16,6 @@ const targets: Array<[string, string]> = [
   // Copy ONLY this file, not the whole styles/ dir (theme.ts is bundled into JS, not served raw).
   ['src/editor/styles/tokens.css', 'styles/tokens.css'],
   ['src/editor/images', 'images'],
-  ['src/editor/extensions', 'extensions'],
   // Test harness assets for Playwright (unit-style tests in browser)
   ['src/editor/tests', 'tests'],
   // Embed e2e fixture: served under /tests/e2e/fixtures/ by vite preview
@@ -28,6 +27,17 @@ const targets: Array<[string, string]> = [
 for (const [src, dest] of targets) {
   await cp(resolve(root, src), resolve(outDir, dest), { recursive: true })
 }
+
+// Extensions: build-extensions.ts emits the compiled .js bundles (entry + locale
+// + deps) that the editor actually loads. Copy the tree's runtime assets
+// (shape-library JSON, marker SVGs, etc.) but SKIP .ts/.d.ts so uncompiled
+// TypeScript sources are not shipped publicly in the served/packaged app
+// (#36 F4; same class as the #54 .js.map concern). A .d.ts also ends in '.ts',
+// so the single suffix check covers both.
+await cp(resolve(root, 'src/editor/extensions'), resolve(outDir, 'extensions'), {
+  recursive: true,
+  filter: (src: string) => !src.endsWith('.ts')
+})
 
 // Copy svgcanvas sources for Playwright unit-style tests in the browser.
 // TypeScript files are transpiled to .js (type annotations stripped, ESM preserved).
