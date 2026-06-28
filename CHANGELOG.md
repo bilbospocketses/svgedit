@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (audit #29 / #35 follow-ups -- #36 F1-F3 -- 2026-06-28)
+
+- Extension load failures are isolated per-extension: `extAndLocaleFunc` now
+  `await`s a `loadExtension` helper (try/catch) instead of returning the
+  `addExtension` promise, so one extension's rejecting `init()` no longer aborts
+  sibling extensions or the `extensions_added` wiring (the #35 failure class).
+  (#270, F3)
+- `@rollup/plugin-dynamic-import-vars` `include` globs widened
+  `extensions/*/*.js` to `*/*.{ts,js}` (sources are `.ts`) so a future variable
+  dynamic `import()` in an extension is no longer silently skipped; no-op today.
+  (#271, F1)
+- Removed two dead extension locale files (`ext-markers`/`ext-storage`
+  `locale/en.ts`, imported by nothing) and the redundant `markers` init-return
+  name that `addExtension` overwrites anyway. (#269, F2)
+
+### Security (audit #29 / #35 follow-up -- #36 F4 -- 2026-06-28)
+
+- Extension build no longer ships uncompiled `.ts` sources: `copy-static` skips
+  `.ts`/`.d.ts` when copying `dist/editor/extensions` (25 source files -- the
+  extension entries, `locale/en.ts`, and loader modules -- were publicly
+  fetchable in the served/packaged app; same class as the `.js.map` concern in
+  audit #54). (#272, F4)
+
 ### Fixed (audit #35 -- built-extension pipeline -- 2026-06-28)
 
 - ALL extensions were dead in the BUILT editor (`npm run serve` / packaged app);
