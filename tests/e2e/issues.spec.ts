@@ -210,41 +210,37 @@ test.describe('Regression issues', () => {
     expect(Math.abs(d2.h)).toBeLessThanOrEqual(1)
   })
 
-  // TODO(audit #16Nrf): This test cannot be tightened honestly — leaving it as
-  // the original weak shell (buried `if (pointGripVisible)`). Two blockers, both
-  // verified empirically against a fresh build (see rework investigation):
+  // TODO(audit #16Nrf): This test is still the original weak shell (buried
+  // `if (pointGripVisible)`) because of ONE remaining blocker. A second blocker
+  // (the grip-matrix product bug) was RESOLVED in #30 / PR #224 — see below.
   //
-  //  1. The user route into path-edit (double-click a path, or click an
-  //     already-selected path) CANNOT be driven headlessly. Driving real
+  //  1. (STILL BLOCKING) The user route into path-edit (double-click a path, or
+  //     click an already-selected path) CANNOT be driven headlessly. Driving real
   //     page.mouse clicks on the path leaves svgCanvas in 'select' mode through
   //     repeated clicks and NEVER creates any #pathpointgrip_* — the same
   //     extension/shortcut-registration gap documented in group-transforms.spec.ts.
   //     So `await expect(page.locator('#pathpointgrip_0')).toBeVisible()` after a
   //     real interaction times out.
   //
-  //  2. Forcing path-edit via the underlying API (svgCanvas.pathActions.toEditMode,
-  //     exactly what the click handler calls) DOES create grips — but it surfaces
-  //     a real product bug, so a faithful position assertion fails legitimately:
-  //     after ungrouping `<g transform="translate(100,100)">`, the child path keeps
-  //     a normalized `matrix(1 0 0 1 100 100)` transform (ungroup leaves it on the
+  //  2. (RESOLVED — #30, PR #224) Forcing path-edit via the underlying API
+  //     (svgCanvas.pathActions.toEditMode, exactly what the click handler calls)
+  //     DOES create grips. This previously surfaced a real product bug: after
+  //     ungrouping `<g transform="translate(100,100)">`, the child path keeps a
+  //     normalized `matrix(1 0 0 1 100 100)` transform (ungroup leaves it on the
   //     element by design — see group-transforms.spec.ts "ungroup preserves
-  //     element positions"). Path-edit point grips honor a path's transform matrix
-  //     ONLY when the element has a non-zero rotation: core/path-method.ts
-  //     Path.update() sets `this.matrix` solely under `if (getRotationAngle(elem))`,
-  //     else `this.matrix = null`, and getGripPtMethod skips the matrix when it is
-  //     null. Result: for a pure-translate matrix the grips render at the path's
-  //     LOCAL coords, offset from the rendered path by exactly the translate.
-  //     Measured: path top-left at screen (440,229); grip for point (0,0) at
-  //     (340,129) — off by (-100,-100). A no-transform path's grips align exactly,
-  //     isolating the fault to the un-applied translate. This is the very symptom
-  //     #391 is about ("path edit points were not at correct positions after
-  //     ungrouping"), so the #391 fix is incomplete for the non-rotation case.
+  //     element positions"), and Path.update() applied the grip matrix ONLY for a
+  //     non-zero rotation, so pure-translate grips rendered at the path's LOCAL
+  //     coords (measured off by exactly the translate). core/path-method.ts
+  //     Path.update() now derives the consolidated element matrix unconditionally
+  //     (getMatrix + isIdentity) and applies it whenever non-identity; the
+  //     translate case is covered by tests/unit/path.test.ts. A faithful
+  //     grip-position assertion via the API route would now pass.
   //
-  //  Honest failure > fake green: not weakening to a trivially-true bound, and not
-  //  asserting a position the product gets wrong. Unblock when (a) path-edit can be
-  //  entered deterministically in e2e, AND (b) the grip-matrix bug is fixed (apply
-  //  the element's full transform in Path.update(), not just rotation) OR ungroup
-  //  bakes a pure-translate into the child path's `d`.
+  //  Honest failure > fake green: still not weakening to a trivially-true bound.
+  //  Unblock by entering path-edit deterministically in e2e (blocker 1). With the
+  //  grip-matrix bug fixed, an alternative is to drive path-edit via the API route
+  //  (pathActions.toEditMode) and assert the now-correct grip position — a viable
+  //  tightening, left as a separate change.
   test('issue 391: selection box position after ungrouping and path edit', async ({ page }) => {
     // This tests the fix for issue #391 where selection boxes and path edit points
     // were not at correct positions after ungrouping and double-clicking to edit a path
