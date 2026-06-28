@@ -1,6 +1,16 @@
 import { test, expect } from './fixtures.js'
 
 test.describe('Dialog helpers', () => {
+  // ext-storage's first-run consent modal (revived now that extensions load in the
+  // built editor) opens asynchronously over the editor and intercepts pointer
+  // events for these dialog interactions. These tests goto /index.html directly
+  // (no visitAndApproveStorage), so seed the svgeditstore cookie to suppress the
+  // prompt at source — post-load dismissal is racy. CI (1 worker, no server reuse)
+  // loses that race deterministically. Same fix as embed-palette.spec.ts.
+  test.beforeEach(async ({ context, baseURL }) => {
+    await context.addCookies([{ name: 'svgeditstore', value: 'prefsAndContent', url: baseURL }])
+  })
+
   test('se-status-dialog toggles title and close', async ({ page }) => {
     await page.goto('/index.html')
     await page.waitForFunction(() => Boolean(customElements.get('se-status-dialog')))
