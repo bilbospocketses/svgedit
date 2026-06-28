@@ -8,6 +8,7 @@
 
 import { getSvgEditor } from '../../svgEditorInstance.js'
 import { loadExtensionTranslation } from '../loadExtensionTranslation.js'
+import enLocale from './locale/en.js'
 
 const name = 'layer_view'
 
@@ -17,7 +18,7 @@ export default {
     const svgEditor = getSvgEditor()
     const svgCanvas = svgEditor.svgCanvas
     const { $id, $click } = svgCanvas
-    await loadExtensionTranslation(name, (lang) => import(`./locale/${lang}.js`))
+    await loadExtensionTranslation(name, enLocale)
 
     // The toggle button is created in callback(); query + cast it in one place.
     const layerViewBtn = () => $id('tool_layerView') as HTMLElement & { pressed: boolean }

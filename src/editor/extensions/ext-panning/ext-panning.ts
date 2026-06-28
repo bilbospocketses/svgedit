@@ -11,6 +11,7 @@
 
 import { getSvgEditor } from '../../svgEditorInstance.js'
 import { loadExtensionTranslation } from '../loadExtensionTranslation.js'
+import enLocale from './locale/en.js'
 
 const name = 'panning'
 
@@ -18,7 +19,7 @@ export default {
   name,
   async init () {
     const svgEditor = getSvgEditor()
-    await loadExtensionTranslation(name, (lang) => import(`./locale/${lang}.js`))
+    await loadExtensionTranslation(name, enLocale)
     const svgCanvas = svgEditor.svgCanvas
     const { $id, $click } = svgCanvas
     const insertAfter = (referenceNode: Element, newNode: Node) => {

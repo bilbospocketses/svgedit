@@ -8,6 +8,7 @@
 
 import { getSvgEditor } from '../../svgEditorInstance.js'
 import { loadExtensionTranslation } from '../loadExtensionTranslation.js'
+import enLocale from './locale/en.js'
 
 const name = 'eyedropper'
 
@@ -16,7 +17,7 @@ export default {
   async init () {
     const svgEditor = getSvgEditor()
     const svgCanvas = svgEditor.svgCanvas
-    await loadExtensionTranslation(name, (lang) => import(`./locale/${lang}.js`))
+    await loadExtensionTranslation(name, enLocale)
     const { ChangeElementCommand } = svgCanvas.history
     const addToHistory = (cmd: InstanceType<typeof ChangeElementCommand>): void => { svgCanvas.undoMgr.addCommandToHistory(cmd) }
     const currentStyle: Record<string, string | number | null> = {}

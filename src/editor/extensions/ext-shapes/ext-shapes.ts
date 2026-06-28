@@ -8,6 +8,7 @@
 import { getSvgEditor } from '../../svgEditorInstance.js'
 import { isSafePathData, isSafeExtPath } from '@svgedit/svgcanvas/core/validators.js'
 import { loadExtensionTranslation } from '../loadExtensionTranslation.js'
+import enLocale from './locale/en.js'
 
 const name = 'shapes'
 
@@ -19,7 +20,7 @@ export default {
     const { $id, $click } = canv
     const svgroot = canv.getSvgRoot()
     let lastBBox: DOMRect | { x: number; y: number; width: number; height: number } = { x: 0, y: 0, width: 0, height: 0 }
-    await loadExtensionTranslation(name, (lang) => import(`./locale/${lang}.js`))
+    await loadExtensionTranslation(name, enLocale)
 
     const modeId = 'shapelib'
     const startClientPos: { x: number; y: number } = { x: 0, y: 0 }

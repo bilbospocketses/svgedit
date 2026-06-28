@@ -91,6 +91,13 @@ export async function clickCanvas (page, point) {
   await page.mouse.click(box.x + point.x, box.y + point.y)
 }
 
+export async function waitForExtensions (page) {
+  // Extensions load fire-and-forget after the editor reports ready; ext-grid's
+  // init() appends #canvasGrid, so its presence signals the extension batch ran
+  // (and that the shared svgEditorInstance singleton resolved).
+  await page.waitForSelector('#canvasGrid', { state: 'attached', timeout: 15000 })
+}
+
 export async function dragOnCanvas (page, start, end) {
   const canvas = page.locator('#svgroot')
   const box = await canvas.boundingBox()

@@ -9,6 +9,7 @@
 import { getSvgEditor } from '../../svgEditorInstance.js'
 import { buildStarPoints, buildRegularPolygonPoints } from './polystar-points.js'
 import { loadExtensionTranslation } from '../loadExtensionTranslation.js'
+import enLocale from './locale/en.js'
 
 const name = 'polystar'
 
@@ -23,7 +24,7 @@ export default {
     let selElems: (Element | null)[]
     let started = false
     let newFO: Element
-    await loadExtensionTranslation(name, (lang) => import(`./locale/${lang}.js`))
+    await loadExtensionTranslation(name, enLocale)
 
     /**
      * @param on true=display

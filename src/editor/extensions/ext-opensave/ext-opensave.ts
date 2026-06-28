@@ -12,6 +12,7 @@
 import { fileOpen, fileSave } from 'browser-fs-access'
 import { getSvgEditor } from '../../svgEditorInstance.js'
 import { loadExtensionTranslation } from '../loadExtensionTranslation.js'
+import enLocale from './locale/en.js'
 
 const name = 'opensave'
 let handle: FileSystemFileHandle | null = null
@@ -22,7 +23,7 @@ export default {
     const svgEditor = getSvgEditor()
     const svgCanvas = svgEditor.svgCanvas
     const { $id, $click } = svgCanvas
-    await loadExtensionTranslation(name, (lang) => import(`./locale/${lang}.js`), 'translation')
+    await loadExtensionTranslation(name, enLocale, 'translation')
     const importImage = (e: Event) => {
       // This handler runs for both file-input `change` events (e.target is HTMLInputElement)
       // and `drop` events on the drop zone (e is DragEvent with e.dataTransfer).
