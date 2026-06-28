@@ -84,3 +84,36 @@ Import svgcanvas internals via **subpaths** — `@svgedit/svgcanvas/core/<module
 resolve to the TypeScript **source**. The bare `@svgedit/svgcanvas` specifier resolves to the
 built `dist/` (gitignored), which is stale at dev time unless rebuilt; prefer subpaths for
 runtime values imported into editor/test code.
+
+## E2E testing gotchas
+
+The Playwright e2e suite runs against the BUILT editor via `vite preview`
+(`npm run start:e2e` on :9000), not the dev server — build first (`npm run build`);
+test-only changes need no rebuild. Self-scope without `cd`:
+`node_modules/.bin/playwright.cmd test <spec> --config playwright.config.mjs --project=chromium`
+with `PLAYWRIGHT_BROWSERS_PATH=node_modules/.cache/ms-playwright`.
+
+- **Re-verify e2e changes under `$env:CI='true'`.** CI forces `workers: 1` +
+  `reuseExistingServer: false` (one fresh server, sequential). Some failures are
+  races the local parallel run *wins* and only CI loses — e.g. the storage-dialog
+  intercept below first passed locally and failed only in CI.
+- **The storage-consent modal intercepts clicks.** `ext-storage`'s first-run
+  `se-storage-dialog` opens asynchronously over the editor (after it reports ready)
+  whenever there is no `svgeditstore` cookie. Any spec that `page.goto('/index.html')`
+  directly and then clicks will have the click swallowed. Either use
+  `visitAndApproveStorage` (dismisses it), or — for direct-goto specs — seed the
+  cookie BEFORE navigating so the prompt never opens:
+  `await page.context().addCookies([{ name: 'svgeditstore', value: 'prefsAndContent', url: baseURL }])`.
+  Post-load dismissal is racy (the modal is not in the DOM yet at `ready`); suppress
+  at source.
+- **Browser-only perf findings** (canvas, `getComputedStyle`, layout) cannot be
+  unit-tested — jsdom stubs them. Use the count-assertion harness in
+  `tests/e2e/perf/`: `installPerfCounters(page)` (before navigating) wraps
+  `getComputedStyle` / canvas `getContext`+`toDataURL` / `querySelectorAll` with
+  counters keyed by selector + element; `measure(page, action)` resets, runs the
+  action, and returns the counts. Assert a redundant call drops to `<= 1` after the
+  fix (chromium-only — deterministic counts). To exercise a DISABLED-by-default
+  extension (e.g. overview), load it in the spec via `page.evaluate` importing
+  `/extensions/ext-X/ext-X.js` and calling
+  `svgCanvas.addExtension(m.default.name, m.default.init.bind(svgEditor), { langParam: 'en' })`
+  — see `overview-viewbox.perf.spec.ts` for the exact call.
