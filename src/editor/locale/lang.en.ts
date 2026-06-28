@@ -184,6 +184,7 @@ export default {
     add_subpath: 'Add sub-path',
     openclose_path: 'Open/close sub-path',
     source_save: 'Apply Changes',
+    source_toggle_dynamic: 'Toggle dynamic size',
     cut: 'Cut',
     copy: 'Copy',
     paste: 'Paste',

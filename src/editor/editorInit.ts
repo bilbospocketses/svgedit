@@ -75,9 +75,10 @@ export async function initEditor (editor: Editor): Promise<void> {
     alertBox.setAttribute('id', 'se-alert-dialog')
     editor.$container.append(alertBox)
     // promptDialog added to DOM
-    const promptBox = document.createElement('se-status-dialog')
+    const promptBox = document.createElement('se-status-dialog') as unknown as InitableElement
     promptBox.setAttribute('id', 'se-status-dialog')
     editor.$container.append(promptBox)
+    promptBox.init(editor.i18next)
     // Export dialog added to DOM
     const exportDialog = document.createElement('se-export-dialog') as unknown as InitableElement
     exportDialog.setAttribute('id', 'se-export-dialog')
