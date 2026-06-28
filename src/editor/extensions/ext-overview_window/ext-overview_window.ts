@@ -39,14 +39,20 @@ export default {
     // Define dynamic animation of the view box.
     const updateViewBox = () => {
       const { workarea } = svgEditor
-      const portHeight = parseFloat(getComputedStyle(workarea, null).height.replace('px', ''))
-      const portWidth = parseFloat(getComputedStyle(workarea, null).width.replace('px', ''))
+      // #79: read each element's computed style ONCE (width + height from one
+      // CSSStyleDeclaration) rather than twice per element — this runs on every
+      // workarea scroll. The values are stable within the synchronous call.
+      const workareaStyle = getComputedStyle(workarea, null)
+      const portHeight = parseFloat(workareaStyle.height.replace('px', ''))
+      const portWidth = parseFloat(workareaStyle.width.replace('px', ''))
       const portX = workarea.scrollLeft
       const portY = workarea.scrollTop
-      const windowWidth = parseFloat(getComputedStyle($id('svgcanvas')!, null).width.replace('px', ''))
-      const windowHeight = parseFloat(getComputedStyle($id('svgcanvas')!, null).height.replace('px', ''))
-      const overviewWidth = parseFloat(getComputedStyle($id('overviewMiniView')!, null).width.replace('px', ''))
-      const overviewHeight = parseFloat(getComputedStyle($id('overviewMiniView')!, null).height.replace('px', ''))
+      const svgcanvasStyle = getComputedStyle($id('svgcanvas')!, null)
+      const windowWidth = parseFloat(svgcanvasStyle.width.replace('px', ''))
+      const windowHeight = parseFloat(svgcanvasStyle.height.replace('px', ''))
+      const overviewStyle = getComputedStyle($id('overviewMiniView')!, null)
+      const overviewWidth = parseFloat(overviewStyle.width.replace('px', ''))
+      const overviewHeight = parseFloat(overviewStyle.height.replace('px', ''))
 
       const viewBoxX = portX / windowWidth * overviewWidth
       const viewBoxY = portY / windowHeight * overviewHeight

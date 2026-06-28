@@ -78,6 +78,13 @@ export default {
     })
     $id('canvasGrid')!.appendChild(gridBox)
 
+    // #81: memoize the grid PNG by its inputs (bigInt + gridColor). One zoom fires
+    // zoomChanged via multiple paths (svgCanvas.setZoom's runExtensions + the
+    // 'zoomed' event -> UICoordinator), which would otherwise re-encode the
+    // identical grid each time.
+    let lastGridBigInt: number | null = null
+    let lastGridColor: string | null = null
+
     const updateGrid = (zoom: number) => {
       // TODO: Try this with <line> elements, then compare performance difference
       const unit = units[svgEditor.configObj.curConfig.baseUnit] ?? 1 // 1 = 1px
@@ -90,6 +97,15 @@ export default {
         return rawM <= num
       })
       const bigInt = multi * uMulti
+      const gridColor = svgEditor.configObj.curConfig.gridColor
+
+      // The grid image is a pure function of (bigInt, gridColor); if neither changed
+      // the previously-encoded PNG is still correct, so skip the redraw + toDataURL.
+      if (bigInt === lastGridBigInt && gridColor === lastGridColor) {
+        return
+      }
+      lastGridBigInt = bigInt
+      lastGridColor = gridColor
 
       // Set the canvas size to the width of the container
       hcanvas.width = bigInt
@@ -99,7 +115,7 @@ export default {
       const part = bigInt / 10
 
       ctx.globalAlpha = 0.2
-      ctx.strokeStyle = svgEditor.configObj.curConfig.gridColor
+      ctx.strokeStyle = gridColor
       for (let i = 1; i < 10; i++) {
         const subD = Math.round(part * i) + 0.5
         // const lineNum = (i % 2)?12:10;

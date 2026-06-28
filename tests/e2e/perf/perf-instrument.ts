@@ -34,6 +34,29 @@ function instrumentInit (): void {
     return realGetComputedStyle.call(window, el, pseudo ?? undefined)
   } as typeof window.getComputedStyle
 
+  // Canvas raster ops (jsdom: unimplemented). toDataURL (PNG encode) is the costly one.
+  const realGetContext = HTMLCanvasElement.prototype.getContext
+  HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, ...args: unknown[]) {
+    bump('getContext')
+    bump('getContext:' + elemKey(this))
+    return (realGetContext as (...a: unknown[]) => unknown).apply(this, args)
+  } as typeof HTMLCanvasElement.prototype.getContext
+
+  const realToDataURL = HTMLCanvasElement.prototype.toDataURL
+  HTMLCanvasElement.prototype.toDataURL = function (this: HTMLCanvasElement, ...args: unknown[]) {
+    bump('toDataURL')
+    bump('toDataURL:' + elemKey(this))
+    return (realToDataURL as (...a: unknown[]) => string).apply(this, args)
+  } as typeof HTMLCanvasElement.prototype.toDataURL
+
+  // DOM queries — keyed by selector so a spec can isolate one query (e.g. connectors).
+  const realQSA = Document.prototype.querySelectorAll
+  Document.prototype.querySelectorAll = function (this: Document, selector: string) {
+    bump('querySelectorAll')
+    bump('querySelectorAll:' + selector)
+    return realQSA.call(this, selector)
+  } as typeof Document.prototype.querySelectorAll
+
   ;(window as unknown as { __perf: unknown }).__perf = {
     counts,
     reset (): void { for (const k of Object.keys(counts)) delete counts[k] }
