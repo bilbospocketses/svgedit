@@ -45,16 +45,26 @@ ID — referenced through the returned `svgicons` path.
 
 The fork is English-only, but the per-extension locale mechanism remains. Each
 extension ships `ext-<name>/locale/en.js` (default-exporting a string
-dictionary) and registers it during `init`:
+dictionary). Import it **statically** and register it through
+`loadExtensionTranslation` during `init`:
 
 ```js
-const lang = svgEditor.configObj.pref('lang') // 'en'
-const strings = (await import(`./locale/${lang}.js`)).default
-svgEditor.i18next.addResourceBundle(lang, name, strings)
+import enLocale from './locale/en.js'
+import { loadExtensionTranslation } from '../loadExtensionTranslation.js'
+
+// inside init():
+await loadExtensionTranslation(name, enLocale)
 ```
 
-`svgEditor.i18next` is the English-only locale shim (`src/editor/locale.ts`).
-See [LocaleDocs](LocaleDocs.md).
+The import must be static — **not** a variable dynamic
+`import('./locale/${lang}.js')`. Extensions are built as a separate rollup bundle
+(`scripts/build-extensions.ts`, `preserveModules`) in which
+`@rollup/plugin-dynamic-import-vars` cannot resolve the glob against the `.ts`
+sources, so a variable locale import is never emitted and 404s in the BUILT editor
+(dev hides this — Vite serves one shared module graph). `loadExtensionTranslation`
+registers the dictionary via `svgEditor.i18next.addResourceBundle` — the
+English-only locale shim (`src/editor/locale.ts`), which ignores the language key
+and deep-merges by namespace. See [LocaleDocs](LocaleDocs.md).
 
 ## Helpers
 
