@@ -40,7 +40,13 @@ test.describe('embed: palette injection', () => {
     expect(colors[0]).toBe('none')
   })
 
-  test('an injected swatch is clickable without error', async ({ page }) => {
+  test('an injected swatch is clickable without error', async ({ page, baseURL }) => {
+    // Pre-approve storage so ext-storage's first-run consent modal never opens. Now
+    // that extensions load in the built editor, that modal is appended + opened
+    // asynchronously AFTER the embed 'ready' event, so dismissing it post-load is
+    // racy; seeding the svgeditstore cookie suppresses it at the source (ext-storage
+    // only prompts when the cookie is absent). Otherwise it intercepts the click.
+    await page.context().addCookies([{ name: 'svgeditstore', value: 'prefsAndContent', url: baseURL }])
     await openEmbedHost(page, { editorSrc: '/index.html?embed=1&palette=%23ff0000' })
     await page.frameLocator('#svge').locator('se-palette').first()
       .locator('#js-se-palette .square[data-rgb="#ff0000"]').click()
