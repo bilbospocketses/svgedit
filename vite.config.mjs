@@ -57,8 +57,12 @@ export default defineConfig({
     },
     htmlStringPlugin,
     {
+      // Extension sources are .ts, so the glob must include .ts or
+      // @rollup/plugin-dynamic-import-vars silently skips any variable import()
+      // inside an extension (the #35 locale dead-end). Extensions currently use
+      // static imports; this keeps the mechanism correct for future ones.
       ...dynamicImportVars({
-        include: ['src/editor/locale.js', 'src/editor/extensions/*/*.js']
+        include: ['src/editor/locale.js', 'src/editor/extensions/*/*.{ts,js}']
       }),
       apply: 'build'
     },

@@ -72,8 +72,11 @@ await build({
     },
     htmlStringPlugin,
     {
+      // Extension sources are .ts; include .ts so dynamic-import-vars can expand
+      // any future variable import() in an extension instead of silently skipping
+      // it (the #35 locale dead-end). Extensions currently use static imports.
       ...dynamicImportVars({
-        include: ['src/editor/extensions/*/*.js']
+        include: ['src/editor/extensions/*/*.{ts,js}']
       }),
       apply: 'build' as const
     } as Plugin
