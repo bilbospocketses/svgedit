@@ -96,6 +96,7 @@ export class SeSvgSourceEditorDialog extends LitElement {
   @state() accessor _cancelLabel = ''
   @state() accessor _noteLabel = ''
   @state() accessor _doneLabel = ''
+  @state() accessor _toggleDynamicLabel = ''
   @state() accessor _textareaValue = ''
   @state() accessor _applysecVisible = true
   @state() accessor _copysecVisible = true
@@ -108,6 +109,7 @@ export class SeSvgSourceEditorDialog extends LitElement {
     this._cancelLabel = i18next.t('common.cancel')
     this._noteLabel = i18next.t('notification.source_dialog_note')
     this._doneLabel = i18next.t('config.done')
+    this._toggleDynamicLabel = i18next.t('tools.source_toggle_dynamic')
   }
 
   // --- Property accessors (external API preserved) ---
@@ -227,7 +229,7 @@ export class SeSvgSourceEditorDialog extends LitElement {
           <label class="tool_label" for="tool_source_dynamic">
             <input type="checkbox" id="tool_source_dynamic"
                    ?checked=${dynamicChecked}
-                   @change=${this._onToggleDynamic}>Toggle dynamic size
+                   @change=${this._onToggleDynamic}>${this._toggleDynamicLabel}
           </label>
         </div>
       </dialog>

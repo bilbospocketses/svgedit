@@ -46,6 +46,14 @@ export class SeStatusDialog extends LitElement {
   }
 
   @state() accessor _statusText = ''
+  @state() accessor _cancelLabel = ''
+
+  /**
+   * Sets i18n labels and triggers Lit re-render.
+   */
+  init (i18next: { t: (key: string) => string }): void {
+    this._cancelLabel = i18next.t('common.cancel')
+  }
 
   // Override title getter/setter to redirect to attribute (not tooltip)
   get title (): string {
@@ -112,7 +120,7 @@ export class SeStatusDialog extends LitElement {
       <dialog>
         <div class="content">${this._statusText}</div>
         <div class="choice-button-container">
-          <button type="button" @click=${this._onCancelClick}>Cancel</button>
+          <button type="button" @click=${this._onCancelClick}>${this._cancelLabel}</button>
         </div>
       </dialog>
     `

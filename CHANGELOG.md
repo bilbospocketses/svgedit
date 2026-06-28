@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (audit #29 item #5 dialog i18n -- 2026-06-28)
+
+- The SVG-source dialog's "Toggle dynamic size" label and the status
+  dialog's "Cancel" button now resolve through the i18n locale system instead
+  of being hardcoded in the component templates. The status dialog gained an
+  `init(i18next)` lifecycle call (wired in `editorInit`, mirroring the sibling
+  dialogs); a new `tools.source_toggle_dynamic` locale key backs the toggle
+  label (the Cancel button reuses the existing `common.cancel`). English text
+  is unchanged.
+
 ### Changed (audit #29 item #4 live-preview -- 2026-06-27)
 
 - The opacity, stroke-width, and font-size toolbar controls now live-preview each
