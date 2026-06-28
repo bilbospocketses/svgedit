@@ -262,7 +262,6 @@ export default {
     }
 
     return {
-      name: svgEditor.i18next.t(`${name}:name`),
       // The callback should be used to load the DOM with the appropriate UI items
       callback () {
         // Add the context panel and its handler(s)
