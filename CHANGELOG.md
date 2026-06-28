@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (audit #29 #90 + perf harness -- 2026-06-28)
+
+- `updateCanvas` (UICoordinator) now reads each element's computed style once,
+  not twice per dimension: one cached `getComputedStyle` declaration for
+  `#workarea` and one for `#svgcanvas`, cutting 5 redundant reads to 2 on the
+  per-zoom/resize hot path. Behaviour-identical.
+- New browser-based perf count-assertion harness for the e2e suite
+  (`tests/e2e/perf/`): `perf-instrument.ts` wraps expensive host APIs with
+  counters (via `addInitScript`) so a spec can assert that a redundant call's
+  frequency drops when a fix lands. These findings only manifest in a real
+  browser (jsdom stubs `getComputedStyle` and canvas), so they were previously
+  untestable; #90 is the first verified this way.
+
 ### Changed (audit #29 item #5 dialog i18n -- 2026-06-28)
 
 - The SVG-source dialog's "Toggle dynamic size" label and the status
