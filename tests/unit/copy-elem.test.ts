@@ -37,11 +37,11 @@ describe('copyElem', () => {
 
     const cloned = copyElem(text, getNextId)
 
-    expect(cloned.childNodes[0].nodeType).toBe(Node.TEXT_NODE)
-    expect(cloned.childNodes[0].nodeValue).toBe('hello ')
-    expect(cloned.childNodes[1].nodeName.toLowerCase()).toBe('tspan')
-    expect(cloned.childNodes[2].nodeType).toBe(Node.TEXT_NODE)
-    expect(cloned.childNodes[2].nodeValue).toBe('!')
+    expect(cloned.childNodes[0]!.nodeType).toBe(Node.TEXT_NODE)
+    expect(cloned.childNodes[0]!.nodeValue).toBe('hello ')
+    expect(cloned.childNodes[1]!.nodeName.toLowerCase()).toBe('tspan')
+    expect(cloned.childNodes[2]!.nodeType).toBe(Node.TEXT_NODE)
+    expect(cloned.childNodes[2]!.nodeValue).toBe('!')
     expect(cloned.textContent).toBe('hello world!')
   })
 

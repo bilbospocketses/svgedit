@@ -32,12 +32,12 @@ describe('contextmenu helpers', () => {
     injectExtendedContextMenuItemsIntoDom()
 
     // Built via the DOM API (no insertAdjacentHTML) — assert the real nodes (#46).
-    const links = host.querySelectorAll('li.disabled > a')
+    const links = host!.querySelectorAll('li.disabled > a')
     expect(links).toHaveLength(2)
-    expect(links[0].getAttribute('href')).toBe('#alpha')
-    expect(links[0].textContent).toContain('Alpha')
-    expect(links[0].querySelector('.shortcut').textContent).toBe('Ctrl+A')
-    expect(links[1].getAttribute('href')).toBe('#beta')
-    expect(links[1].textContent).toContain('Beta')
+    expect(links[0]!.getAttribute('href')).toBe('#alpha')
+    expect(links[0]!.textContent).toContain('Alpha')
+    expect(links[0]!.querySelector('.shortcut')!.textContent).toBe('Ctrl+A')
+    expect(links[1]!.getAttribute('href')).toBe('#beta')
+    expect(links[1]!.textContent).toContain('Beta')
   })
 })

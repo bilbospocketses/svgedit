@@ -10,7 +10,7 @@ test.describe('SVG core drawing', () => {
     const result = await page.evaluate(() => {
       const { draw, namespaces } = window.svgHarness
       const svg = document.createElementNS(namespaces.NS.SVG, 'svg')
-      document.getElementById('root').append(svg)
+      document.getElementById('root')!.append(svg)
 
       const existingLayer = document.createElementNS(namespaces.NS.SVG, 'g')
       existingLayer.classList.add('layer')
@@ -56,7 +56,7 @@ test.describe('SVG core drawing', () => {
     const result = await page.evaluate(() => {
       const { draw, namespaces } = window.svgHarness
       const svg = document.createElementNS(namespaces.NS.SVG, 'svg')
-      document.getElementById('root').append(svg)
+      document.getElementById('root')!.append(svg)
       const drawing = new draw.Drawing(svg)
       drawing.identifyLayers() // creates first layer
       const originalName = drawing.getCurrentLayerName()
@@ -108,7 +108,7 @@ test.describe('SVG core drawing', () => {
     const result = await page.evaluate(() => {
       const { draw, namespaces } = window.svgHarness
       const svg = document.createElementNS(namespaces.NS.SVG, 'svg')
-      document.getElementById('root').append(svg)
+      document.getElementById('root')!.append(svg)
       const drawing = new draw.Drawing(svg)
       drawing.identifyLayers()
 

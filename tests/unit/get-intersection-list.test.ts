@@ -9,7 +9,7 @@ import { createSvgCanvasFixture } from './helpers/createSvgCanvasFixture'
 // rubber-band session (the cache is cleared on mouseUp). This pins that
 // build-once/reuse behaviour so it can't silently regress to a per-tick rebuild.
 describe('getIntersectionList', () => {
-  let svgCanvas
+  let svgCanvas: ReturnType<typeof createSvgCanvasFixture>
 
   beforeEach(() => {
     svgCanvas = createSvgCanvasFixture()

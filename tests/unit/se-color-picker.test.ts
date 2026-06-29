@@ -1,8 +1,10 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { packBarKey } from '../../src/editor/components/jgraduate/se-color-picker.ts'
+import { packBarKey, type SeColorPicker } from '../../src/editor/components/jgraduate/se-color-picker.ts'
 
-const flush = async (el) => {
+type ColorPickerEl = SeColorPicker & { shadowRoot: ShadowRoot }
+
+const flush = async (el: ColorPickerEl) => {
   await customElements.whenDefined('se-color-picker')
   await new Promise(resolve => queueMicrotask(resolve))
   if (el && typeof el.updateComplete?.then === 'function') {
@@ -30,11 +32,11 @@ describe('packBarKey', () => {
 })
 
 describe('se-color-picker', () => {
-  let el
+  let el: ColorPickerEl
 
   beforeEach(() => {
     document.body.textContent = ''
-    el = document.createElement('se-color-picker')
+    el = document.createElement('se-color-picker') as ColorPickerEl
     el.setAttribute('color', 'ff0000ff')
     document.body.appendChild(el)
   })
@@ -52,14 +54,14 @@ describe('se-color-picker', () => {
     await flush(el)
     const mapCanvas = el.shadowRoot.querySelector('#map-canvas')
     expect(mapCanvas).not.toBeNull()
-    expect(mapCanvas.width).toBe(256)
+    expect(mapCanvas!.width).toBe(256)
   })
 
   it('renders bar canvas with width 20', async () => {
     await flush(el)
     const barCanvas = el.shadowRoot.querySelector('#bar-canvas')
     expect(barCanvas).not.toBeNull()
-    expect(barCanvas.width).toBe(20)
+    expect(barCanvas!.width).toBe(20)
   })
 
   it('renders radio buttons for color modes (H S V R G B A)', async () => {
@@ -81,13 +83,13 @@ describe('se-color-picker', () => {
     await flush(el)
     const hexInput = el.shadowRoot.querySelector('#hex-input')
     expect(hexInput).not.toBeNull()
-    expect(hexInput.tagName.toLowerCase()).toBe('input')
+    expect(hexInput!.tagName.toLowerCase()).toBe('input')
   })
 
   it('#M11 labels the hex, channel value, and channel mode inputs for screen readers', async () => {
     await flush(el)
     const root = el.shadowRoot
-    expect(root.querySelector('#hex-input').getAttribute('aria-label')).toBe('Hex color value')
+    expect(root.querySelector('#hex-input')!.getAttribute('aria-label')).toBe('Hex color value')
 
     const channelInputs = [...root.querySelectorAll('input[data-channel]')]
     expect(channelInputs.length).toBe(7)
@@ -108,18 +110,18 @@ describe('se-color-picker', () => {
     await flush(el)
     let fired = false
     let detail = null
-    el.addEventListener('commit', (e) => {
+    el.addEventListener('commit', (e: Event) => {
       fired = true
-      detail = e.detail
+      detail = (e as CustomEvent).detail
     })
     const buttons = el.shadowRoot.querySelectorAll('.buttons button')
     // Ok button is the first button in .buttons
     const okBtn = buttons[0]
     expect(okBtn).not.toBeNull()
-    okBtn.click()
+    okBtn!.click()
     expect(fired).toBe(true)
     expect(detail).not.toBeNull()
-    expect(detail.color).not.toBeNull()
+    expect(detail!.color).not.toBeNull()
   })
 
   it('dispatches cancel event on Cancel click', async () => {
@@ -130,7 +132,7 @@ describe('se-color-picker', () => {
     // Cancel button is the second button in .buttons
     const cancelBtn = buttons[1]
     expect(cancelBtn).not.toBeNull()
-    cancelBtn.click()
+    cancelBtn!.click()
     expect(fired).toBe(true)
   })
 
@@ -144,7 +146,7 @@ describe('se-color-picker', () => {
     await flush(el)
     const channelGroup = el.shadowRoot.querySelector('.channel-group')
     expect(channelGroup).not.toBeNull()
-    const labels = channelGroup.querySelectorAll('label')
+    const labels = channelGroup!.querySelectorAll('label')
     // H S V R G B A = 7 labels
     expect(labels.length).toBe(7)
   })

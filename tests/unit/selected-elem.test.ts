@@ -2,7 +2,7 @@ import { NS } from '../../packages/svgcanvas/core/namespaces.js'
 import { createSvgCanvasFixture } from './helpers/createSvgCanvasFixture'
 
 describe('selected-elem', () => {
-  let svgCanvas
+  let svgCanvas: ReturnType<typeof createSvgCanvasFixture>
 
   beforeEach(() => {
     svgCanvas = createSvgCanvasFixture()
@@ -234,8 +234,8 @@ describe('selected-elem', () => {
     expect(container.querySelector('use')).toBeNull()
     const group = container.firstElementChild
     expect(group).toBeTruthy()
-    expect(group.tagName).toBe('g')
-    expect(group.querySelector('rect')).toBeTruthy()
+    expect(group!.tagName).toBe('g')
+    expect(group!.querySelector('rect')).toBeTruthy()
   })
 
   it('does not crash ungrouping a <use> without href', () => {
@@ -261,7 +261,7 @@ describe('selected-elem', () => {
   // cover the internal bus contract that ext-connector subscribes to.
 
   it('groupSelectedElements fires before-group then after-group on the bus', () => {
-    const fired = []
+    const fired: string[] = []
     svgCanvas.bind('before-group', () => { fired.push('before-group') })
     svgCanvas.bind('after-group', () => { fired.push('after-group') })
 
@@ -280,7 +280,7 @@ describe('selected-elem', () => {
   })
 
   it('moveSelectedElements fires before-move then after-move on the bus (with selection)', () => {
-    const fired = []
+    const fired: string[] = []
     svgCanvas.bind('before-move', () => { fired.push('before-move') })
     svgCanvas.bind('after-move', () => { fired.push('after-move') })
 
@@ -295,7 +295,7 @@ describe('selected-elem', () => {
   })
 
   it('moveSelectedElements fires after-move even with empty selection', () => {
-    const fired = []
+    const fired: string[] = []
     svgCanvas.bind('before-move', () => { fired.push('before-move') })
     svgCanvas.bind('after-move', () => { fired.push('after-move') })
 
@@ -355,7 +355,7 @@ describe('selected-elem', () => {
     expect(container.querySelector('use')).toBeNull()
     const group = container.firstElementChild
     expect(group).toBeTruthy()
-    expect(group.tagName).toBe('g')
-    expect(group.querySelector('rect')).toBeTruthy()
+    expect(group!.tagName).toBe('g')
+    expect(group!.querySelector('rect')).toBeTruthy()
   })
 })

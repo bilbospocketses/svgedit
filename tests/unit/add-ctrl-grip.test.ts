@@ -7,7 +7,7 @@ import { createSvgCanvasFixture } from './helpers/createSvgCanvasFixture'
 // pins that reuse so a future change can't silently reintroduce per-move
 // element creation.
 describe('addCtrlGrip', () => {
-  let svgCanvas
+  let svgCanvas: ReturnType<typeof createSvgCanvasFixture>
 
   beforeEach(() => {
     svgCanvas = createSvgCanvasFixture()

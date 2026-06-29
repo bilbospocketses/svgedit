@@ -71,7 +71,7 @@ describe('Layer', function () {
     assert.ok(group.contains(rect))
     assert.ok(group.contains(circle))
 
-    const hrCalls = []
+    const hrCalls: unknown[][] = []
     const hrService = {
       changeElement: (...args) => {
         hrCalls.push(args)
@@ -82,8 +82,8 @@ describe('Layer', function () {
     assert.equal(layer.getName(), 'Renamed')
     assert.equal(title.textContent, 'Renamed')
     assert.equal(hrCalls.length, 1)
-    assert.equal(hrCalls[0][0], title)
-    assert.deepEqual(hrCalls[0][1], { '#text': 'Layer 1' })
+    assert.equal(hrCalls[0]![0], title)
+    assert.deepEqual(hrCalls[0]![1], { '#text': 'Layer 1' })
 
     assert.equal(Layer.isLayer(group), true)
     assert.equal(Layer.isLayer(document.createElementNS(NS.SVG, 'rect')), false)

@@ -2,7 +2,7 @@ import { NS } from '../../packages/svgcanvas/core/namespaces.js'
 import { createSvgCanvasFixture } from './helpers/createSvgCanvasFixture'
 
 describe('paste-elem', () => {
-  let svgCanvas
+  let svgCanvas: ReturnType<typeof createSvgCanvasFixture>
 
   beforeEach(() => {
     svgCanvas = createSvgCanvasFixture()
@@ -33,7 +33,7 @@ describe('paste-elem', () => {
     svgCanvas.pasteElements('in_place')
 
     expect(svgCanvas.undoMgr.getUndoStackSize()).toBe(undoSize + 1)
-    const pasted = svgCanvas.getSelectedElements()[0]
+    const pasted = svgCanvas.getSelectedElements()[0]!
     expect(pasted).toBeTruthy()
     expect(pasted.tagName).toBe('rect')
     expect(pasted.id).not.toBe('rect-original')
@@ -70,9 +70,9 @@ describe('paste-elem', () => {
     svgCanvas.copySelectedElements()
     svgCanvas.pasteElements('in_place')
 
-    const pastedGroup = svgCanvas.getSelectedElements()[0]
-    const pastedGradient = pastedGroup.querySelector('linearGradient')
-    const pastedRect = pastedGroup.querySelector('rect')
+    const pastedGroup = svgCanvas.getSelectedElements()[0]!
+    const pastedGradient = pastedGroup.querySelector('linearGradient')!
+    const pastedRect = pastedGroup.querySelector('rect')!
 
     expect(pastedGradient).toBeTruthy()
     expect(pastedRect).toBeTruthy()

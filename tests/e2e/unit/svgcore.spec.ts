@@ -37,7 +37,7 @@ test.describe('SVG core modules in browser', () => {
         getHeight: () => 600,
         getWidth: () => 800,
         getRoundDigits: () => 4,
-        getElement: (id) => document.getElementById(id)
+        getElement: (id: string) => document.getElementById(id)
       })
       return {
         shortFloat: [
@@ -103,7 +103,7 @@ test.describe('SVG core modules in browser', () => {
       rect.setAttribute('height', '2')
       svg.append(rect)
       // Minimal mocks for addSVGElementsFromJson and pathActions.resetOrientation
-      const addSvg = (json) => {
+      const addSvg = (json: { element: string; attr: Record<string, string> }) => {
         const el = document.createElementNS('http://www.w3.org/2000/svg', json.element)
         Object.entries(json.attr).forEach(([k, v]) => el.setAttribute(k, v))
         svg.append(el)
@@ -133,8 +133,8 @@ test.describe('SVG core modules in browser', () => {
       pathModule.convertPath(path, true)
       return path.getAttribute('d')
     })
-    expect(dRel?.length > 0).toBe(true)
-    expect(dRel.toLowerCase()).toContain('z')
+    expect((dRel?.length ?? 0) > 0).toBe(true)
+    expect(dRel?.toLowerCase()).toContain('z')
   })
 
   test('path.convertPath normalizes relative and absolute commands', async ({ page }) => {

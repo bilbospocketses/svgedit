@@ -14,7 +14,7 @@ import {
 } from '../../packages/svgcanvas/core/utilities.js'
 
 describe('utilities extra coverage', () => {
-  let svg
+  let svg: SVGSVGElement
 
   beforeEach(() => {
     svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')

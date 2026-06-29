@@ -10,7 +10,7 @@ test.describe('SVG core utilities extra coverage', () => {
     const result = await page.evaluate(() => {
       try {
         const { utilities, namespaces } = window.svgHarness
-        const root = document.getElementById('root')
+        const root = document.getElementById('root')!
         root.innerHTML = `
         <svg id="svgroot" xmlns="${namespaces.NS.SVG}" width="10" height="10">
           <defs id="defs"></defs>
@@ -19,7 +19,7 @@ test.describe('SVG core utilities extra coverage', () => {
           </g>
         </svg>
       `
-        const svg = root.querySelector('svg')
+        const svg = root.querySelector('svg')!
         const rect = svg.querySelector('#rect')
 
         utilities.init({
@@ -34,8 +34,8 @@ test.describe('SVG core utilities extra coverage', () => {
           pathActions: { convertPath: () => {} }
         })
 
-        const errors = []
-        const safe = (fn, fallback = null) => {
+        const errors: string[] = []
+        const safe = <T>(fn: () => T, fallback = null) => {
           try { return fn() } catch (e) { errors.push(e.message); return fallback }
         }
 
@@ -53,7 +53,7 @@ test.describe('SVG core utilities extra coverage', () => {
           ({ element, attr }) => {
             const node = document.createElementNS(namespaces.NS.SVG, element)
             Object.entries(attr).forEach(([key, value]) => node.setAttribute(key, value))
-            svg.querySelector('#group').append(node)
+            svg.querySelector('#group')!.append(node)
             return node
           },
           { resetOrientation: () => {} }

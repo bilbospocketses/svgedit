@@ -25,7 +25,7 @@ test.describe('clear module', () => {
 
       return {
         childCount: svgContent.childNodes.length,
-        isComment: comment.nodeType,
+        isComment: comment!.nodeType,
         overflow: svgContent.getAttribute('overflow'),
         width: svgContent.getAttribute('width'),
         height: svgContent.getAttribute('height'),

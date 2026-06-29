@@ -7,7 +7,7 @@ test.describe('embed: init handshake', () => {
     await openEmbedHost(page)
     const log = await getLog(page)
     expect(log).toMatch(/READY/)
-    const readyLine = log.split('\n').find(l => l.startsWith('READY'))
+    const readyLine = log.split('\n').find((l: string) => l.startsWith('READY'))
     const payload = JSON.parse(readyLine.replace('READY ', ''))
     expect(payload.protocolVersion).toBe(1)
     expect(payload.version).toBeTruthy()

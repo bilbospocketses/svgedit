@@ -82,8 +82,8 @@ describe('foreign-html commands', () => {
     // Expect: <ul>a</ul> <h2>b</h2> <ul>c</ul>
     const lists = root.querySelectorAll('ul')
     expect(lists.length).toBe(2)
-    expect(lists[0].textContent).toBe('a')
-    expect(lists[1].textContent).toBe('c')
+    expect(lists[0]!.textContent).toBe('a')
+    expect(lists[1]!.textContent).toBe('c')
     expect(root.querySelector('h2')?.textContent).toBe('b')
     assertNoInvalidLists(root)
   })
@@ -150,8 +150,8 @@ describe('foreign-html commands', () => {
     cmd.setBlock(root, 'p')
     const ols = root.querySelectorAll('ol')
     expect(ols.length).toBe(2)
-    expect(ols[0].getAttribute('start')).toBeNull() // first list keeps default numbering
-    expect(ols[1].getAttribute('start')).toBe('3') // c continues at 3, not restart at 1
+    expect(ols[0]!.getAttribute('start')).toBeNull() // first list keeps default numbering
+    expect(ols[1]!.getAttribute('start')).toBe('3') // c continues at 3, not restart at 1
     expect(root.querySelector('p')?.textContent).toBe('b')
     assertNoInvalidLists(root)
   })

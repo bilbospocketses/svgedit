@@ -1,14 +1,37 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi, type Mock } from 'vitest'
 import { init as textActionsInit, textActionsMethod } from '../../packages/svgcanvas/core/text-actions.js'
 import { init as utilitiesInit } from '../../packages/svgcanvas/core/utilities.js'
 import { NS } from '../../packages/svgcanvas/core/namespaces.js'
 
+type MockSelectorManager = {
+  requestSelector: Mock
+}
+
+type MockSvgCanvas = {
+  getSvgRoot: () => SVGSVGElement
+  getSvgContent: () => SVGSVGElement
+  getZoom: () => number
+  setCurrentMode: Mock
+  notifyModeChange: Mock
+  clearSelection: Mock
+  addToSelection: Mock
+  deleteSelectedElements: Mock
+  call: Mock
+  getSelectedElements: () => SVGTextElement[]
+  getCurrentMode: () => string
+  selectorManager: MockSelectorManager
+  getRootSctm: () => DOMMatrix | { a: number, b: number, c: number, d: number, e: number, f: number }
+  $click: Mock
+  contentW: number
+  textActions: typeof textActionsMethod
+}
+
 describe('TextActions', () => {
-  let svgCanvas
-  let svgRoot
-  let textElement
-  let inputElement
-  let mockSelectorManager
+  let svgCanvas: MockSvgCanvas
+  let svgRoot: SVGSVGElement
+  let textElement: SVGTextElement
+  let inputElement: HTMLInputElement
+  let mockSelectorManager: MockSelectorManager
 
   beforeEach(() => {
     // Create mock SVG elements

@@ -17,7 +17,13 @@ test.describe('touch event adapter', () => {
       const target = document.createElement('div')
       document.body.append(target)
 
-      const received = []
+      const received: Array<{
+        type: string
+        clientX: number
+        clientY: number
+        screenX: number
+        screenY: number
+      }> = []
       target.addEventListener('mousedown', (ev) => {
         received.push({
           type: ev.type,
@@ -29,9 +35,9 @@ test.describe('touch event adapter', () => {
       })
 
       const svgroot = {
-        listeners: {},
-        addEventListener (type, handler) { this.listeners[type] = handler },
-        dispatchEvent (ev) { this.listeners[ev.type]?.(ev) }
+        listeners: {} as Record<string, (ev: TouchEvent) => void>,
+        addEventListener (type: string, handler: (ev: TouchEvent) => void) { this.listeners[type] = handler },
+        dispatchEvent (ev: TouchEvent) { this.listeners[ev.type]?.(ev) }
       }
 
       touch.init({ svgroot })
@@ -48,7 +54,7 @@ test.describe('touch event adapter', () => {
         ]
       })
       svgroot.dispatchEvent(ev)
-      return received[0]
+      return received[0]!
     })
 
     expect(result.type).toBe('mousedown')
@@ -67,9 +73,9 @@ test.describe('touch event adapter', () => {
       target.addEventListener('mousedown', () => { mouseEvents++ })
 
       const svgroot = {
-        listeners: {},
-        addEventListener (type, handler) { this.listeners[type] = handler },
-        dispatchEvent (ev) { this.listeners[ev.type]?.(ev) }
+        listeners: {} as Record<string, (ev: TouchEvent) => void>,
+        addEventListener (type: string, handler: (ev: TouchEvent) => void) { this.listeners[type] = handler },
+        dispatchEvent (ev: TouchEvent) { this.listeners[ev.type]?.(ev) }
       }
 
       touch.init({ svgroot })

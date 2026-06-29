@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import '../../src/editor/dialogs/SePromptDialog.ts'
+import type SePromptDialog from '../../src/editor/dialogs/SePromptDialog'
 
-const flushRender = async (el) => {
+const flushRender = async (el: SePromptDialog) => {
   await customElements.whenDefined('se-prompt-dialog')
   await new Promise((resolve) => queueMicrotask(resolve))
   if (el && typeof el.updateComplete?.then === 'function') {
@@ -11,20 +12,20 @@ const flushRender = async (el) => {
 }
 
 // Simulate the native <dialog> close without showModal (unavailable in jsdom).
-const closeWith = (el, returnValue, inputValue) => {
-  const dlg = el.shadowRoot.querySelector('dialog')
-  const input = el.shadowRoot.querySelector('input')
+const closeWith = (el: SePromptDialog, returnValue: string, inputValue: string) => {
+  const dlg = el.shadowRoot!.querySelector('dialog')!
+  const input = el.shadowRoot!.querySelector('input')!
   if (inputValue !== undefined) input.value = inputValue
   dlg.returnValue = returnValue
   dlg.dispatchEvent(new Event('close'))
 }
 
 describe('se-prompt-dialog close → resolve mapping', () => {
-  let el
+  let el: SePromptDialog
 
   beforeEach(() => {
     document.body.textContent = ''
-    el = document.createElement('se-prompt-dialog')
+    el = document.createElement('se-prompt-dialog') as SePromptDialog
     document.body.appendChild(el)
   })
 
@@ -58,7 +59,7 @@ describe('se-prompt-dialog close → resolve mapping', () => {
   it('seeds the input with the default value', async () => {
     el.value = 'default-text'
     await flushRender(el)
-    expect(el.shadowRoot.querySelector('input').value).toBe('default-text')
+    expect(el.shadowRoot!.querySelector('input')!.value).toBe('default-text')
   })
 
   it('removes itself from the DOM after the dialog closes', async () => {

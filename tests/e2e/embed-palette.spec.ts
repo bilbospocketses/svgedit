@@ -1,10 +1,10 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { openEmbedHost } from './embed-helpers.js'
 
 // Read the rendered swatch strip's data-rgb list from inside se-palette's shadow root.
-const stripColors = (page) =>
+const stripColors = (page: Page) =>
   page.frameLocator('#svge').locator('se-palette').first().evaluate(
-    el => Array.from(el.shadowRoot.querySelectorAll('#js-se-palette .square'))
+    el => Array.from(el.shadowRoot!.querySelectorAll('#js-se-palette .square'))
       .map(s => s.getAttribute('data-rgb'))
   )
 

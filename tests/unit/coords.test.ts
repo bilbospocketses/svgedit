@@ -4,7 +4,7 @@ import * as coords from '../../packages/svgcanvas/core/coords.js'
 
 describe('coords', function () {
   let elemId = 1
-  let svg
+  let svg: SVGSVGElement
   const root = document.createElement('div')
   root.id = 'root'
   root.style.visibility = 'hidden'
@@ -38,8 +38,8 @@ describe('coords', function () {
       getNextId () { return String(elemId++) }
     }
     const mockDataStorage = {
-      get (_elem, _key) { return null },
-      has (_elem, _key) { return false }
+      get (_elem: unknown, _key: string) { return null },
+      has (_elem: unknown, _key: string) { return false }
     }
     coords.init(
       /**
@@ -61,7 +61,7 @@ describe('coords', function () {
    */
   afterEach(function () {
     while (svg?.hasChildNodes()) {
-      svg.firstChild.remove()
+      svg.firstChild!.remove()
     }
   })
 
@@ -202,7 +202,7 @@ describe('coords', function () {
 
     coords.remapElement(rect, { x: 0, y: 0, width: 10, height: 10 }, m)
 
-    const newId = rect.getAttribute('fill').replace('url(#', '').replace(')', '')
+    const newId = rect.getAttribute('fill')!.replace('url(#', '').replace(')', '')
     const mirrored = defs.ownerDocument.getElementById(newId)
     assert.ok(mirrored)
     assert.equal(mirrored.getAttribute('cx'), '0.8')
@@ -619,7 +619,7 @@ describe('coords', function () {
     flip.a = -1
     flip.d = 1
 
-    const mirrorIdFor = (rectId) => {
+    const mirrorIdFor = (rectId: string) => {
       const rect = document.createElementNS(NS.SVG, 'rect')
       rect.id = rectId
       rect.setAttribute('x', '0')
@@ -629,7 +629,7 @@ describe('coords', function () {
       rect.setAttribute('fill', 'url(#shared-grad)')
       svg.append(rect)
       coords.remapElement(rect, { x: 0, y: 0, width: 10, height: 10 }, flip)
-      return rect.getAttribute('fill').replace('url(#', '').replace(')', '')
+      return rect.getAttribute('fill')!.replace('url(#', '').replace(')', '')
     }
 
     // Both mirror the same id'd gradient; the old fallback gives both
@@ -754,7 +754,7 @@ describe('coords', function () {
     const newGrads = svg.querySelectorAll('linearGradient')
     assert.ok(newGrads.length >= 1)
     // Verify rect still has gradient
-    assert.ok(rect.getAttribute('fill').includes('url'))
+    assert.ok(rect.getAttribute('fill')!.includes('url'))
   })
 
   it('Test remapElement with negative width/height', function () {
@@ -818,7 +818,7 @@ describe('coords', function () {
     // Should mirror the stroke gradient or keep original
     assert.ok(svg.querySelectorAll('linearGradient').length >= 1)
     // Verify stroke attribute is preserved
-    assert.ok(rect.getAttribute('stroke').includes('url'))
+    assert.ok(rect.getAttribute('stroke')!.includes('url'))
   })
 
   it('Test remapElement with invalid gradient reference', function () {

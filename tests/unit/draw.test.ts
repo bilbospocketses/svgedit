@@ -1,14 +1,14 @@
-import { vi } from 'vitest'
+import { vi, type Mock } from 'vitest'
 import { NS } from '../../packages/svgcanvas/core/namespaces.js'
 import * as draw from '../../packages/svgcanvas/core/draw.js'
 import * as units from '../../packages/svgcanvas/core/units.js'
 import { Layer } from '../../packages/svgcanvas/core/draw'
 
 describe('draw.Drawing', function () {
-  const addOwnSpies = (obj) => {
+  const addOwnSpies = (obj: Record<string, (...args: unknown[]) => unknown>) => {
     const methods = Object.keys(obj)
     methods.forEach((method) => {
-      const spy = vi.spyOn(obj, method)
+      const spy = vi.spyOn(obj, method) as Mock<(...args: unknown[]) => unknown> & { getCall: (idx?: number) => { args: unknown[] } }
       spy.getCall = (idx = 0) => ({ args: spy.mock.calls[idx] || [] })
       Object.defineProperty(spy, 'calledOnce', { get: () => spy.mock.calls.length === 1 })
       Object.defineProperty(spy, 'callCount', { get: () => spy.mock.calls.length })
@@ -61,7 +61,7 @@ describe('draw.Drawing', function () {
    * @param {module:utilities.SVGElementJSON} jsonMap
    * @returns {SVGElement}
    */
-  function createSVGElement (jsonMap) {
+  function createSVGElement (jsonMap: { element: string, attr: Record<string, string> }) {
     const elem = document.createElementNS(NS.SVG, jsonMap.element)
     Object.entries(jsonMap.attr).forEach(([attr, value]) => {
       elem.setAttribute(attr, value)
@@ -69,7 +69,7 @@ describe('draw.Drawing', function () {
     return elem
   }
 
-  const setupSVGWith3Layers = function (svgElem) {
+  const setupSVGWith3Layers = function (svgElem: SVGSVGElement): [SVGGElement, SVGGElement, SVGGElement] {
     const layer1 = document.createElementNS(NS.SVG, 'g')
     layer1.setAttribute('class', Layer.CLASS_NAME)
     const layer1Title = document.createElementNS(NS.SVG, 'title')
@@ -94,7 +94,7 @@ describe('draw.Drawing', function () {
     return [layer1, layer2, layer3]
   }
 
-  const createSomeElementsInGroup = function (group) {
+  const createSomeElementsInGroup = function (group: SVGGElement) {
     group.append(
       createSVGElement({
         element: 'path',
@@ -126,11 +126,11 @@ describe('draw.Drawing', function () {
     return 4
   }
 
-  const cleanupSVG = function (svgElem) {
+  const cleanupSVG = function (svgElem: SVGSVGElement) {
     while (svgElem.firstChild) { svgElem.firstChild.remove() }
   }
 
-  let sandbox; let currentDrawing_; let svg; let svgN
+  let sandbox: HTMLDivElement; let currentDrawing_: draw.Drawing; let svg: SVGSVGElement; let svgN: SVGSVGElement
   beforeEach(() => {
     sandbox = document.createElement('div')
     sandbox.id = 'sandbox'
@@ -354,13 +354,13 @@ describe('draw.Drawing', function () {
     drawing.identifyLayers()
 
     assert.equal(drawing.getNumLayers(), 3)
-    assert.equal(drawing.all_layers[0].getGroup(), svg.childNodes.item(0))
-    assert.equal(drawing.all_layers[1].getGroup(), svg.childNodes.item(1))
-    assert.equal(drawing.all_layers[2].getGroup(), svg.childNodes.item(2))
+    assert.equal(drawing.all_layers[0]!.getGroup(), svg.childNodes.item(0))
+    assert.equal(drawing.all_layers[1]!.getGroup(), svg.childNodes.item(1))
+    assert.equal(drawing.all_layers[2]!.getGroup(), svg.childNodes.item(2))
 
-    assert.equal(drawing.all_layers[0].getGroup().getAttribute('class'), LAYER_CLASS)
-    assert.equal(drawing.all_layers[1].getGroup().getAttribute('class'), LAYER_CLASS)
-    assert.equal(drawing.all_layers[2].getGroup().getAttribute('class'), LAYER_CLASS)
+    assert.equal(drawing.all_layers[0]!.getGroup().getAttribute('class'), LAYER_CLASS)
+    assert.equal(drawing.all_layers[1]!.getGroup().getAttribute('class'), LAYER_CLASS)
+    assert.equal(drawing.all_layers[2]!.getGroup().getAttribute('class'), LAYER_CLASS)
 
     cleanupSVG(svg)
   })
@@ -378,17 +378,17 @@ describe('draw.Drawing', function () {
     drawing.identifyLayers()
 
     assert.equal(drawing.getNumLayers(), 4)
-    assert.equal(drawing.all_layers[0].getGroup(), svg.childNodes.item(0))
-    assert.equal(drawing.all_layers[1].getGroup(), svg.childNodes.item(1))
-    assert.equal(drawing.all_layers[2].getGroup(), svg.childNodes.item(2))
-    assert.equal(drawing.all_layers[3].getGroup(), svg.childNodes.item(3))
+    assert.equal(drawing.all_layers[0]!.getGroup(), svg.childNodes.item(0))
+    assert.equal(drawing.all_layers[1]!.getGroup(), svg.childNodes.item(1))
+    assert.equal(drawing.all_layers[2]!.getGroup(), svg.childNodes.item(2))
+    assert.equal(drawing.all_layers[3]!.getGroup(), svg.childNodes.item(3))
 
-    assert.equal(drawing.all_layers[0].getGroup().getAttribute('class'), LAYER_CLASS)
-    assert.equal(drawing.all_layers[1].getGroup().getAttribute('class'), LAYER_CLASS)
-    assert.equal(drawing.all_layers[2].getGroup().getAttribute('class'), LAYER_CLASS)
-    assert.equal(drawing.all_layers[3].getGroup().getAttribute('class'), LAYER_CLASS)
+    assert.equal(drawing.all_layers[0]!.getGroup().getAttribute('class'), LAYER_CLASS)
+    assert.equal(drawing.all_layers[1]!.getGroup().getAttribute('class'), LAYER_CLASS)
+    assert.equal(drawing.all_layers[2]!.getGroup().getAttribute('class'), LAYER_CLASS)
+    assert.equal(drawing.all_layers[3]!.getGroup().getAttribute('class'), LAYER_CLASS)
 
-    const layer4 = drawing.all_layers[3].getGroup()
+    const layer4 = drawing.all_layers[3]!.getGroup()
     assert.equal(layer4.tagName, 'g')
     assert.equal(layer4.childNodes.length, 3)
     assert.equal(layer4.childNodes.item(1), orphan1)
@@ -426,9 +426,9 @@ describe('draw.Drawing', function () {
     // One named layer plus one synthesized layer holding exactly the two orphans.
     assert.equal(drawing.getNumLayers(), 2)
     assert.equal(drawing.getLayerName(0), LAYER1)
-    assert.equal(drawing.all_layers[0].getGroup(), layer1)
+    assert.equal(drawing.all_layers[0]!.getGroup(), layer1)
 
-    const orphanLayerGroup = drawing.all_layers[1].getGroup()
+    const orphanLayerGroup = drawing.all_layers[1]!.getGroup()
     const orphanLayerChildren = [...orphanLayerGroup.childNodes]
     assert.ok(orphanLayerChildren.includes(orphanGroup))
     assert.ok(orphanLayerChildren.includes(orphanRect))
@@ -463,7 +463,7 @@ describe('draw.Drawing', function () {
     assert.ok(drawing.getCurrentLayer)
     assert.equal(typeof drawing.getCurrentLayer, typeof function () { /* empty fn */ })
     assert.ok(drawing.getCurrentLayer())
-    assert.equal(drawing.getCurrentLayer(), drawing.all_layers[2].getGroup())
+    assert.equal(drawing.getCurrentLayer(), drawing.all_layers[2]!.getGroup())
 
     cleanupSVG(svg)
   })
@@ -478,11 +478,11 @@ describe('draw.Drawing', function () {
 
     drawing.setCurrentLayer(LAYER2)
     assert.equal(drawing.getCurrentLayerName(), LAYER2)
-    assert.equal(drawing.getCurrentLayer(), drawing.all_layers[1].getGroup())
+    assert.equal(drawing.getCurrentLayer(), drawing.all_layers[1]!.getGroup())
 
     drawing.setCurrentLayer(LAYER3)
     assert.equal(drawing.getCurrentLayerName(), LAYER3)
-    assert.equal(drawing.getCurrentLayer(), drawing.all_layers[2].getGroup())
+    assert.equal(drawing.getCurrentLayer(), drawing.all_layers[2]!.getGroup())
 
     cleanupSVG(svg)
   })
@@ -681,7 +681,7 @@ describe('draw.Drawing', function () {
     assert.ok(drawing.cloneLayer)
     assert.equal(typeof drawing.cloneLayer, typeof function () { /* empty fn */ })
 
-    const clone = drawing.cloneLayer('clone', mockHrService)
+    const clone = drawing.cloneLayer('clone', mockHrService)!
 
     assert.equal(drawing.getNumLayers(), 4)
     assert.equal(svg.childElementCount, 4)
@@ -697,7 +697,7 @@ describe('draw.Drawing', function () {
 
     // check that path is cloned properly
     assert.equal(clone.childNodes.length, elementCount)
-    const path = clone.childNodes[1]
+    const path = clone.childNodes[1]!
     assert.equal(path.id, 'svg_1')
     assert.equal(path.getAttribute('d'), PATH_ATTR.d)
     assert.equal(path.getAttribute('transform'), PATH_ATTR.transform)
@@ -706,7 +706,7 @@ describe('draw.Drawing', function () {
     assert.equal(path.getAttribute('stroke-width'), PATH_ATTR['stroke-width'])
 
     // check that g is cloned properly
-    const g = clone.childNodes[4]
+    const g = clone.childNodes[4]!
     assert.equal(g.childNodes.length, 1)
     assert.equal(g.id, 'svg_4')
 
@@ -811,23 +811,23 @@ describe('draw.Drawing', function () {
     drawing.setCurrentLayer(LAYER2)
 
     const curLayer = drawing.getCurrentLayer()
-    assert.equal(curLayer, drawing.all_layers[1].getGroup())
+    assert.equal(curLayer, drawing.all_layers[1]!.getGroup())
     const deletedLayer = drawing.deleteCurrentLayer()
 
     assert.equal(curLayer, deletedLayer)
     assert.equal(drawing.getNumLayers(), 2)
-    assert.equal(LAYER1, drawing.all_layers[0].getName())
-    assert.equal(LAYER3, drawing.all_layers[1].getName())
-    assert.equal(drawing.getCurrentLayer(), drawing.all_layers[1].getGroup())
+    assert.equal(LAYER1, drawing.all_layers[0]!.getName())
+    assert.equal(LAYER3, drawing.all_layers[1]!.getName())
+    assert.equal(drawing.getCurrentLayer(), drawing.all_layers[1]!.getGroup())
   })
 
   it('Test svgedit.draw.randomizeIds()', function () {
     // Confirm in LET_DOCUMENT_DECIDE mode that the document decides
     // if there is a nonce.
-    let drawing = new draw.Drawing(svgN.cloneNode(true))
+    let drawing = new draw.Drawing(svgN.cloneNode(true) as SVGSVGElement)
     assert.ok(drawing.getNonce())
 
-    drawing = new draw.Drawing(svg.cloneNode(true))
+    drawing = new draw.Drawing(svg.cloneNode(true) as SVGSVGElement)
     assert.ok(!drawing.getNonce())
 
     // Confirm that a nonce is set once we're in ALWAYS_RANDOMIZE mode.
@@ -835,7 +835,7 @@ describe('draw.Drawing', function () {
     assert.ok(drawing.getNonce())
 
     // Confirm new drawings in ALWAYS_RANDOMIZE mode have a nonce.
-    drawing = new draw.Drawing(svg.cloneNode(true))
+    drawing = new draw.Drawing(svg.cloneNode(true) as SVGSVGElement)
     assert.ok(drawing.getNonce())
 
     drawing.clearNonce()
@@ -847,10 +847,10 @@ describe('draw.Drawing', function () {
     assert.ok(!drawing.getNonce())
     assert.ok(drawing.getSvgElem().getAttributeNS(NS.SE, 'nonce'))
 
-    drawing = new draw.Drawing(svg.cloneNode(true))
+    drawing = new draw.Drawing(svg.cloneNode(true) as SVGSVGElement)
     assert.ok(!drawing.getNonce())
 
-    drawing = new draw.Drawing(svgN.cloneNode(true))
+    drawing = new draw.Drawing(svgN.cloneNode(true) as SVGSVGElement)
     assert.ok(!drawing.getNonce())
   })
 })

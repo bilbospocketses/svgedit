@@ -1,13 +1,13 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest'
 
 import MainMenu from '../../src/editor/MainMenu.js'
 
 vi.mock('@svgedit/svgcanvas', () => ({
   default: {
-    $id: (id) => document.getElementById(id),
-    $click: (el, fn) => el?.addEventListener('click', fn),
-    convertUnit: (val) => Number(val),
-    isValidUnit: (_attr, val) => val !== 'bad'
+    $id: (id: string) => document.getElementById(id),
+    $click: (el: HTMLElement | null, fn: EventListener) => el?.addEventListener('click', fn),
+    convertUnit: (val: number) => Number(val),
+    isValidUnit: (_attr: string, val: string) => val !== 'bad'
   }
 }))
 
@@ -15,10 +15,53 @@ vi.mock('@svgedit/svgcanvas/common/browser.js', () => ({
   isChrome: () => false
 }))
 
+/** Shape of the mocked svgCanvas methods exercised by MainMenu in these tests. */
+interface SvgCanvasMock {
+  setDocumentTitle: Mock
+  setResolution: Mock
+  getResolution: Mock
+  getDocumentTitle: Mock
+  setConfig: Mock
+  rasterExport: Mock
+  exportPDF: Mock
+}
+
+/** Shape of the mocked configObj exercised by MainMenu in these tests. */
+interface ConfigObjMock {
+  curConfig: {
+    baseUnit: string
+    exportWindowType: string
+    canvasName: string
+    gridSnapping: boolean
+    snappingStep: number
+    gridColor: string
+    showRulers: boolean
+  }
+  curPrefs: { bkgd_color: string }
+  preferences: boolean
+  pref: Mock
+}
+
+/** Minimal editor stand-in passed to MainMenu in these tests. */
+interface EditorMock {
+  configObj: ConfigObjMock
+  svgCanvas: SvgCanvasMock
+  i18next: { t: (key: string) => string }
+  $svgEditor: HTMLElement | null
+  docprops: boolean
+  rulers: { updateRulers: Mock }
+  setBackground: Mock
+  updateCanvas: Mock
+  customExportPDF: boolean
+  customExportImage: boolean
+  exportWindowName?: string | null
+  exportWindowCt?: number
+}
+
 describe('MainMenu', () => {
-  let editor
-  let menu
-  let prefStore
+  let editor: EditorMock
+  let menu: MainMenu
+  let prefStore: Record<string, string>
 
   beforeEach(() => {
     document.body.innerHTML = `
@@ -60,7 +103,7 @@ describe('MainMenu', () => {
     editor = {
       configObj,
       svgCanvas,
-      i18next: { t: (key) => key },
+      i18next: { t: (key: string) => key },
       $svgEditor: document.getElementById('app'),
       docprops: false,
       rulers: { updateRulers: vi.fn() },
@@ -70,7 +113,7 @@ describe('MainMenu', () => {
       customExportImage: false
     }
     globalThis.seAlert = vi.fn()
-    menu = new MainMenu(editor)
+    menu = new MainMenu(editor as unknown as ConstructorParameters<typeof MainMenu>[0])
   })
 
   it('rejects invalid doc properties and shows an alert', () => {
@@ -94,7 +137,7 @@ describe('MainMenu', () => {
     expect(editor.updateCanvas).toHaveBeenCalled()
     expect(prefStore.img_save).toBe('layer')
     expect(editor.docprops).toBe(false)
-    expect(document.getElementById('se-img-prop').getAttribute('dialog')).toBe('close')
+    expect(document.getElementById('se-img-prop')!.getAttribute('dialog')).toBe('close')
   })
 
   it('saves preferences, updates config and alerts when language changes', async () => {
@@ -130,7 +173,7 @@ describe('MainMenu', () => {
     editor.configObj.curConfig.baseUnit = 'cm'
     menu.showDocProperties()
 
-    const dialog = document.getElementById('se-img-prop')
+    const dialog = document.getElementById('se-img-prop')!
     expect(editor.docprops).toBe(true)
     expect(dialog.getAttribute('dialog')).toBe('open')
     expect(dialog.getAttribute('width')).toBe('120cm')
@@ -150,7 +193,7 @@ describe('MainMenu', () => {
     editor.configObj.pref = vi.fn((key) => key === 'bkgd_url' ? 'http://example.com' : prefStore[key])
 
     menu.showPreferences()
-    const prefs = document.getElementById('se-edit-prefs')
+    const prefs = document.getElementById('se-edit-prefs')!
     expect(editor.configObj.preferences).toBe(true)
     expect(prefs.getAttribute('dialog')).toBe('open')
     expect(prefs.getAttribute('gridsnappingon')).toBe('true')
@@ -180,13 +223,13 @@ describe('MainMenu', () => {
   it('creates menu entries and wires click handlers in init', () => {
     menu.init()
 
-    document.getElementById('tool_export').dispatchEvent(new Event('click', { bubbles: true }))
-    expect(document.getElementById('se-export-dialog').getAttribute('dialog')).toBe('open')
+    document.getElementById('tool_export')!.dispatchEvent(new Event('click', { bubbles: true }))
+    expect(document.getElementById('se-export-dialog')!.getAttribute('dialog')).toBe('open')
 
-    document.getElementById('tool_docprops').dispatchEvent(new Event('click', { bubbles: true }))
+    document.getElementById('tool_docprops')!.dispatchEvent(new Event('click', { bubbles: true }))
     expect(editor.docprops).toBe(true)
 
-    const prefsDialog = document.getElementById('se-edit-prefs')
+    const prefsDialog = document.getElementById('se-edit-prefs')!
     prefsDialog.dispatchEvent(new CustomEvent('change', { detail: { dialog: 'closed' } }))
     expect(prefsDialog.getAttribute('dialog')).toBe('close')
   })

@@ -1,12 +1,13 @@
 import { NS } from '../../packages/svgcanvas/core/namespaces.js'
 import * as utilities from '../../packages/svgcanvas/core/utilities.js'
+import type { SVGElementJSON } from '../../packages/svgcanvas/core/utilities.js'
 import * as math from '../../packages/svgcanvas/core/math.js'
 import * as units from '../../packages/svgcanvas/core/units.js'
 import { getPathData } from '../../packages/svgcanvas/core/path-data.js'
 import { toPathSeg } from '../../packages/svgcanvas/core/path-method.js'
 
 describe('utilities performance', function () {
-  let currentLayer; let groupWithMatrixTransform; let textWithMatrixTransform
+  let currentLayer: HTMLElement; let groupWithMatrixTransform: HTMLElement; let textWithMatrixTransform: HTMLElement
   units.init({ getRoundDigits: () => 2 }) // mock getRoundDigits
   beforeEach(() => {
     document.body.textContent = ''
@@ -69,9 +70,9 @@ describe('utilities performance', function () {
     const newNode = document.body.ownerDocument.importNode(editor.documentElement, true)
     document.body.append(newNode)
 
-    currentLayer = document.getElementById('layer1')
-    groupWithMatrixTransform = document.getElementById('svg_group_with_matrix_transform')
-    textWithMatrixTransform = document.getElementById('svg_text_with_matrix_transform')
+    currentLayer = document.getElementById('layer1')!
+    groupWithMatrixTransform = document.getElementById('svg_group_with_matrix_transform')!
+    textWithMatrixTransform = document.getElementById('svg_text_with_matrix_transform')!
   })
 
   /**
@@ -79,7 +80,7 @@ describe('utilities performance', function () {
    * @param {module:utilities.SVGElementJSON} jsonMap
    * @returns {SVGElement}
    */
-  function mockCreateSVGElement (jsonMap) {
+  function mockCreateSVGElement (jsonMap: SVGElementJSON) {
     const elem = document.createElementNS(NS.SVG, jsonMap.element)
     Object.entries(jsonMap.attr).forEach(([attr, value]) => {
       elem.setAttribute(attr, value)
@@ -92,7 +93,7 @@ describe('utilities performance', function () {
    * @param {module:utilities.SVGElementJSON} json
    * @returns {SVGElement}
    */
-  function mockaddSVGElementsFromJson (json) {
+  function mockaddSVGElementsFromJson (json: SVGElementJSON) {
     const elem = mockCreateSVGElement(json)
     currentLayer.append(elem)
     return elem
@@ -104,19 +105,19 @@ describe('utilities performance', function () {
    * @param {Integer} count
    * @returns {void}
    */
-  function fillDocumentByCloningElement (elem, count) {
+  function fillDocumentByCloningElement (elem: HTMLElement, count: number) {
     const elemId = elem.getAttribute('id') + '-'
     for (let index = 0; index < count; index++) {
       const clone = elem.cloneNode(true) // t: deep clone
       // Make sure you set a unique ID like a real document.
       clone.setAttribute('id', elemId + index)
       const { parentNode } = elem
-      parentNode.append(clone)
+      parentNode!.append(clone)
     }
   }
 
   const mockPathActions = {
-    resetOrientation (path) {
+    resetOrientation (path: SVGPathElement) {
       if (path?.nodeName !== 'path') { return false }
       const tlist = path.transform.baseVal
       const m = math.transformListToTransform(tlist).matrix
@@ -133,7 +134,7 @@ describe('utilities performance', function () {
         if (type === 1) {
           continue
         }
-        const pts = [];
+        const pts: number[] = [];
         ['', 1, 2].forEach(function (n) {
           const x = seg['x' + n]
           const y = seg['y' + n]

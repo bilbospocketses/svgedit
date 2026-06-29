@@ -23,17 +23,17 @@ test.describe('SVG core recalculate extra cases', () => {
 
       const dataStorage = {
         store: new WeakMap(),
-        put (el, key, value) {
+        put (el: Element, key: string, value: unknown) {
           if (!this.store.has(el)) this.store.set(el, new Map())
           this.store.get(el).set(key, value)
         },
-        get (el, key) {
+        get (el: Element, key: string) {
           return this.store.get(el)?.get(key)
         },
-        has (el, key) {
+        has (el: Element, key: string) {
           return this.store.has(el) && this.store.get(el).has(key)
         },
-        remove (el, key) {
+        remove (el: Element, key: string) {
           const bucket = this.store.get(el)
           if (!bucket) return false
           const deleted = bucket.delete(key)
@@ -102,7 +102,7 @@ test.describe('SVG core recalculate extra cases', () => {
     expect(Number(result.rect.width)).toBeGreaterThan(10)
     expect(Number(result.rect.height)).toBeGreaterThan(8)
     expect(result.rect.transformRemoved).toBe(false) // scaling keeps transform list
-    expect(result.flip.fill.startsWith('url(')).toBe(true)
+    expect(result.flip.fill!.startsWith('url(')).toBe(true)
   })
 
   test('recalculateDimensions reapplies rotations and updates clip paths', async ({ page }) => {
@@ -116,14 +116,14 @@ test.describe('SVG core recalculate extra cases', () => {
 
       const dataStorage = {
         store: new WeakMap(),
-        put (el, key, value) {
+        put (el: Element, key: string, value: unknown) {
           if (!this.store.has(el)) this.store.set(el, new Map())
           this.store.get(el).set(key, value)
         },
-        get (el, key) {
+        get (el: Element, key: string) {
           return this.store.get(el)?.get(key)
         },
-        has (el, key) {
+        has (el: Element, key: string) {
           return this.store.has(el) && this.store.get(el).has(key)
         }
       }
@@ -209,14 +209,14 @@ test.describe('SVG core recalculate extra cases', () => {
       document.body.append(svg)
       const dataStorage = {
         store: new WeakMap(),
-        put (el, key, value) {
+        put (el: Element, key: string, value: unknown) {
           if (!this.store.has(el)) this.store.set(el, new Map())
           this.store.get(el).set(key, value)
         },
-        get (el, key) {
+        get (el: Element, key: string) {
           return this.store.get(el)?.get(key)
         },
-        has (el, key) {
+        has (el: Element, key: string) {
           return this.store.has(el) && this.store.get(el).has(key)
         }
       }
@@ -298,7 +298,7 @@ test.describe('SVG core recalculate extra cases', () => {
     expect(result.poly.points).toContain('-5')
     expect(result.poly.hasCommand).toBe(true)
     // Normalize cross-browser path-d format (see note in svgcore-remap-extra.spec.js)
-    const normalizedPathD = result.path.d
+    const normalizedPathD = result.path.d!
       .replace(/([MmLlHhVvCcSsQqTtAaZz])\s+/g, '$1')
       .replace(/[,\s]+/g, ' ')
       .trim()

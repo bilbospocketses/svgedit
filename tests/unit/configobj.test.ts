@@ -4,8 +4,8 @@ describe('ConfigObj', () => {
   const stubEditor = () => ({
     storage: {
       map: new Map(),
-      getItem (k) { return this.map.get(k) },
-      setItem (k, v) { this.map.set(k, v) }
+      getItem (k: string) { return this.map.get(k) },
+      setItem (k: string, v: string) { this.map.set(k, v) }
     },
     loadFromDataURI: () => { stubEditor.loaded = 'data' },
     loadFromString: () => { stubEditor.loaded = 'string' },

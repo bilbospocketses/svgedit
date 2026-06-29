@@ -7,7 +7,7 @@ import { createSvgCanvasFixture } from './helpers/createSvgCanvasFixture'
 // non-current layer, or a detached subtree) walks off the top of the tree and
 // crashes on `null.parentNode`.
 describe('getMouseTarget', () => {
-  let svgCanvas
+  let svgCanvas: ReturnType<typeof createSvgCanvasFixture>
 
   beforeEach(() => {
     svgCanvas = createSvgCanvasFixture()
@@ -40,7 +40,7 @@ describe('getMouseTarget', () => {
   })
 
   it('returns the top-level ancestor under the current layer for a nested target', () => {
-    const layer = svgCanvas.getCurrentDrawing().getCurrentLayer()
+    const layer = svgCanvas.getCurrentDrawing().getCurrentLayer()!
     const g = document.createElementNS(NS.SVG, 'g')
     const inner = document.createElementNS(NS.SVG, 'rect')
     g.append(inner)

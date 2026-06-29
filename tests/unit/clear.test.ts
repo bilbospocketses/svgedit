@@ -28,7 +28,7 @@ describe('clearSvgContentElementInit', () => {
     clearSvgContentElementInit()
 
     expect(svgRoot.contains(svgContent)).toBe(true)
-    expect(svgContent.childNodes[0].nodeType).toBe(Node.COMMENT_NODE)
+    expect(svgContent.childNodes[0]!.nodeType).toBe(Node.COMMENT_NODE)
     expect(svgContent.getAttribute('id')).toBe('svgcontent')
     expect(svgContent.getAttribute('width')).toBe('300')
     expect(svgContent.getAttribute('height')).toBe('150')

@@ -10,9 +10,9 @@ const makeHost = (overrides = {}) => ({
     setSvgString: vi.fn(() => '<svg/>'),
     undoMgr: { getUndoStackSize: vi.fn(() => 0) }
   },
-  i18next: { t: (k) => k },
+  i18next: { t: (k: string) => k },
   updateCanvas: vi.fn(),
-  ready: (cb) => Promise.resolve(cb()),
+  ready: (cb: () => unknown) => Promise.resolve(cb()),
   ...overrides
 })
 

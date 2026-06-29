@@ -1,4 +1,5 @@
 import { test, expect } from './fixtures.js'
+import type { Page } from '@playwright/test'
 import { setRotationAngle, setSvgSource, visitAndApproveStorage } from './helpers.js'
 
 /**
@@ -11,7 +12,7 @@ import { setRotationAngle, setSvgSource, visitAndApproveStorage } from './helper
  * moveSelectedElements() directly tests the same transform logic
  * without coupling to the shortcut-registration lifecycle.
  */
-async function moveSelected (page, dx: number, dy: number) {
+async function moveSelected (page: Page, dx: number, dy: number) {
   await page.evaluate(([dx, dy]) => {
     window.svgEditor.svgCanvas.moveSelectedElements(dx, dy)
   }, [dx, dy])
@@ -24,7 +25,7 @@ async function moveSelected (page, dx: number, dy: number) {
  * only available through the toolbar button or the context menu, both
  * of which call svgCanvas.ungroupSelectedElement() under the hood.
  */
-async function ungroupSelected (page) {
+async function ungroupSelected (page: Page) {
   await page.evaluate(() => {
     window.svgEditor.svgCanvas.ungroupSelectedElement()
   })
@@ -206,9 +207,9 @@ test.describe('Group transform preservation', () => {
     </svg>`)
 
     // Get initial bounding boxes before ungrouping
-    const path1Box = await page.locator('#path1').boundingBox()
-    const path2Box = await page.locator('#path2').boundingBox()
-    const path3Box = await page.locator('#path3').boundingBox()
+    const path1Box = (await page.locator('#path1').boundingBox())!
+    const path2Box = (await page.locator('#path2').boundingBox())!
+    const path3Box = (await page.locator('#path3').boundingBox())!
 
     // Click to select the group
     await page.locator('#testGroup').click()
@@ -230,9 +231,9 @@ test.describe('Group transform preservation', () => {
     expect(path3Transform).toBeTruthy()
 
     // Critical: bounding boxes should not change (no visual jump)
-    const path1BoxAfter = await page.locator('#path1').boundingBox()
-    const path2BoxAfter = await page.locator('#path2').boundingBox()
-    const path3BoxAfter = await page.locator('#path3').boundingBox()
+    const path1BoxAfter = (await page.locator('#path1').boundingBox())!
+    const path2BoxAfter = (await page.locator('#path2').boundingBox())!
+    const path3BoxAfter = (await page.locator('#path3').boundingBox())!
 
     // Allow 1px tolerance for rounding
     expect(Math.abs(path1BoxAfter.x - path1Box.x)).toBeLessThan(2)
@@ -263,18 +264,18 @@ test.describe('Group transform preservation', () => {
 
     // All three rects are still selected after ungroup.
     // Get positions before moving.
-    const rect1Before = await page.locator('#rect1').boundingBox()
-    const rect2Before = await page.locator('#rect2').boundingBox()
-    const rect3Before = await page.locator('#rect3').boundingBox()
+    const rect1Before = (await page.locator('#rect1').boundingBox())!
+    const rect2Before = (await page.locator('#rect2').boundingBox())!
+    const rect3Before = (await page.locator('#rect3').boundingBox())!
 
     // Move all selected elements via API (50px right, 50px down)
     await moveSelected(page, 50, 0)
     await moveSelected(page, 0, 50)
 
     // Get positions after move
-    const rect1After = await page.locator('#rect1').boundingBox()
-    const rect2After = await page.locator('#rect2').boundingBox()
-    const rect3After = await page.locator('#rect3').boundingBox()
+    const rect1After = (await page.locator('#rect1').boundingBox())!
+    const rect2After = (await page.locator('#rect2').boundingBox())!
+    const rect3After = (await page.locator('#rect3').boundingBox())!
 
     // All elements should have moved by approximately the same amount
     const rect1Delta = { x: rect1After.x - rect1Before.x, y: rect1After.y - rect1Before.y }

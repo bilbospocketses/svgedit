@@ -4,22 +4,20 @@ import * as history from '../../packages/svgcanvas/core/history.js'
 import dataStorage from '../../packages/svgcanvas/core/dataStorage.js'
 import { init as initElemGetSet } from '../../packages/svgcanvas/core/elem-get-set.js'
 import * as undo from '../../packages/svgcanvas/core/undo.js'
+import type { ISvgCanvas } from '../../packages/svgcanvas/core/svgcanvas-types.js'
 
-const createSvgElement = (name) => {
+const createSvgElement = (name: string) => {
   return document.createElementNS(NS.SVG, name)
 }
 
 describe('elem-get-set', () => {
-  /** @type {any} */
-  let canvas
-  /** @type {any[]} */
-  let historyStack
-  /** @type {SVGSVGElement} */
-  let svgContent
+  let canvas: ISvgCanvas
+  let historyStack: history.Command[]
+  let svgContent: SVGSVGElement
 
   beforeEach(() => {
     historyStack = []
-    svgContent = /** @type {SVGSVGElement} */ (createSvgElement('svg'))
+    svgContent = createSvgElement('svg') as SVGSVGElement
     canvas = {
       history,
       zoom: 1,
@@ -43,7 +41,7 @@ describe('elem-get-set', () => {
       getSelectedElements () { return this.selectedElements || [] },
       getDataStorage () { return dataStorage },
       getZoom () { return this.zoom },
-      setZoom (value) { this.zoom = value },
+      setZoom (value: number) { this.zoom = value },
       getResolution () {
         return {
           w: Number(svgContent.getAttribute('width')) / this.zoom,
@@ -51,7 +49,7 @@ describe('elem-get-set', () => {
           zoom: this.zoom
         }
       },
-      addCommandToHistory (cmd) {
+      addCommandToHistory (cmd: history.Command) {
         historyStack.push(cmd)
       },
       setCurShape () {},
@@ -83,10 +81,10 @@ describe('elem-get-set', () => {
     expect(g.firstChild?.textContent).toBe('Hello')
     expect(historyStack).toHaveLength(1)
 
-    historyStack[0].unapply(null)
+    historyStack[0]!.unapply(null)
     expect(g.querySelector('title')).toBeNull()
 
-    historyStack[0].apply(null)
+    historyStack[0]!.apply(null)
     expect(g.querySelector('title')?.textContent).toBe('Hello')
   })
 
@@ -102,10 +100,10 @@ describe('elem-get-set', () => {
     expect(g.querySelector('title')?.textContent).toBe('New')
     expect(historyStack).toHaveLength(1)
 
-    historyStack[0].unapply(null)
+    historyStack[0]!.unapply(null)
     expect(g.querySelector('title')?.textContent).toBe('Old')
 
-    historyStack[0].apply(null)
+    historyStack[0]!.apply(null)
     expect(g.querySelector('title')?.textContent).toBe('New')
   })
 
@@ -121,10 +119,10 @@ describe('elem-get-set', () => {
     expect(g.querySelector('title')).toBeNull()
     expect(historyStack).toHaveLength(1)
 
-    historyStack[0].unapply(null)
+    historyStack[0]!.unapply(null)
     expect(g.querySelector('title')?.textContent).toBe('Label')
 
-    historyStack[0].apply(null)
+    historyStack[0]!.apply(null)
     expect(g.querySelector('title')).toBeNull()
   })
 
@@ -187,10 +185,10 @@ describe('elem-get-set', () => {
     expect(docTitle?.textContent).toBe('Doc')
     expect(historyStack).toHaveLength(1)
 
-    historyStack[0].unapply(null)
+    historyStack[0]!.unapply(null)
     expect(svgContent.querySelector(':scope > title')).toBeNull()
 
-    historyStack[0].apply(null)
+    historyStack[0]!.apply(null)
     expect(svgContent.querySelector(':scope > title')?.textContent).toBe('Doc')
   })
 
@@ -241,10 +239,10 @@ describe('elem-get-set', () => {
       expect(image.getAttribute('href')).toBe('bad.png')
       expect(historyStack).toHaveLength(1)
 
-      historyStack[0].unapply(null)
+      historyStack[0]!.unapply(null)
       expect(image.getAttribute('href')).toBe('old.png')
 
-      historyStack[0].apply(null)
+      historyStack[0]!.apply(null)
       expect(image.getAttribute('href')).toBe('bad.png')
     } finally {
       globalThis.Image = originalImage
@@ -261,7 +259,7 @@ describe('elem-get-set', () => {
     expect(rect.getAttribute('ry')).toBe('5')
     expect(historyStack).toHaveLength(1)
 
-    historyStack[0].unapply(null)
+    historyStack[0]!.unapply(null)
     expect(rect.hasAttribute('rx')).toBe(false)
     expect(rect.hasAttribute('ry')).toBe(false)
   })

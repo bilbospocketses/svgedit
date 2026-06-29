@@ -68,7 +68,7 @@ test.describe('SVG core smoke', () => {
       svg.append(rect)
       const res = utilities.getBBoxOfElementAsPath(
         rect,
-        (json) => {
+        (json: { element: string; attr: Record<string, string> }) => {
           const el = document.createElementNS('http://www.w3.org/2000/svg', json.element)
           Object.entries(json.attr).forEach(([k, v]) => el.setAttribute(k, v))
           svg.append(el)

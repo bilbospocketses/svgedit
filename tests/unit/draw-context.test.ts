@@ -5,22 +5,21 @@ import dataStorage from '../../packages/svgcanvas/core/dataStorage.js'
 const NS_SVG = 'http://www.w3.org/2000/svg'
 
 describe('draw context', () => {
-  let currentGroup = null
-  /** @type {{event: string, arg: any}[]} */
-  const calls = []
-  let svgContent
-  let editGroup
-  let sibling
+  let currentGroup: Element | null = null
+  const calls: { event: string; arg: Element | null }[] = []
+  let svgContent: SVGSVGElement
+  let editGroup: SVGGElement
+  let sibling: SVGRectElement
 
   const canvas = {
     getDataStorage: () => dataStorage,
     getSvgContent: () => svgContent,
     clearSelection: () => {},
-    call: (event, arg) => {
+    call: (event: string, arg: Element | null) => {
       calls.push({ event, arg })
     },
     getCurrentGroup: () => currentGroup,
-    setCurrentGroup: (group) => {
+    setCurrentGroup: (group: Element | null) => {
       currentGroup = group
     }
   }

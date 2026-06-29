@@ -11,7 +11,7 @@ test.describe('SVG core history and draw', () => {
       const { history } = window.svgHarness
       let lastCalled = ''
       class MockCommand extends history.Command {
-        constructor (text) {
+        constructor (text: string) {
           super()
           this.text = text
         }
@@ -82,7 +82,7 @@ test.describe('SVG core history and draw', () => {
         document.body.append(parent)
         return { parent, children }
       }
-      const order = (parent) => [...parent.children].map((el) => el.id)
+      const order = (parent: Element) => [...parent.children].map((el) => el.id)
 
       const { parent: parentMove, children: moveChildren } = makeParent()
       const move = new history.MoveElementCommand(
@@ -133,7 +133,7 @@ test.describe('SVG core history and draw', () => {
       const { history } = window.svgHarness
       let record = ''
       class TextCommand extends history.Command {
-        constructor (text) {
+        constructor (text: string) {
           super()
           this.text = text
         }

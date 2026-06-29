@@ -1,12 +1,12 @@
 // tests/e2e/embed-theme.spec.js
-import { expect, test } from '@playwright/test'
+import { expect, type Page, test } from '@playwright/test'
 import { openEmbedHost } from './embed-helpers.js'
 
 test.describe('embed: theme sync', () => {
   // M2: embed theming routes through M1's html[data-theme] token mechanism
   // (editor/styles/theme.ts), not the retired body.classList theme-* scheme.
-  const frameTheme = (page) =>
-    page.frameLocator('#svge').locator(':root').evaluate(el => el.getAttribute('data-theme'))
+  const frameTheme = (page: Page) =>
+    page.frameLocator('#svge').locator(':root').evaluate((el: HTMLElement) => el.getAttribute('data-theme'))
 
   test('URL param ?theme=dark applies html[data-theme="dark"]', async ({ page }) => {
     await openEmbedHost(page, { editorSrc: '/index.html?embed=1&theme=dark' })

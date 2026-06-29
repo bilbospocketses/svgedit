@@ -23,7 +23,7 @@ test.describe('embed: element handle round-trip', () => {
     const handle = await page.evaluate(() => window.__svgeditEmbed.editor.getElem('goner'))
     await page.evaluate(() => window.__svgeditEmbed.editor.loadFromString('<svg xmlns="http://www.w3.org/2000/svg"/>'))
     const err = await page.evaluate((h) =>
-      window.__svgeditEmbed.editor.getId(h).then(() => null, (e) => ({ code: e.code, message: e.message })),
+      window.__svgeditEmbed.editor.getId(h).then(() => null, (e: { code: string; message: string }) => ({ code: e.code, message: e.message })),
       handle
     )
     expect(err?.code).toBe('ELEMENT_NOT_FOUND')

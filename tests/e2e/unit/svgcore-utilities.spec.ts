@@ -53,7 +53,7 @@ test.describe('SVG core utilities', () => {
       rect.setAttribute('stroke', '#000')
       rect.setAttribute('stroke-width', '10')
       svg.append(rect)
-      const addSvg = (json) => {
+      const addSvg = (json: { element: string; attr: Record<string, string> }) => {
         const el = document.createElementNS('http://www.w3.org/2000/svg', json.element)
         Object.entries(json.attr).forEach(([k, v]) => el.setAttribute(k, v))
         svg.append(el)
@@ -121,12 +121,12 @@ test.describe('SVG core utilities', () => {
       const { utilities } = window.svgHarness
       const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
       document.body.append(svg)
-      const create = (tag, attrs) => {
+      const create = (tag: string, attrs: Record<string, string>) => {
         const el = document.createElementNS('http://www.w3.org/2000/svg', tag)
         Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v))
         return el
       }
-      const addSvg = (json) => {
+      const addSvg = (json: { element: string; attr: Record<string, string> }) => {
         const el = create(json.element, json.attr)
         svg.append(el)
         return el

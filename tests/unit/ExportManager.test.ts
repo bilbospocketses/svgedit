@@ -6,7 +6,7 @@ import { ExportManager } from '../../src/editor/ExportManager.js'
  * Stubs `window.open` and the ambient `seAlert` global.
  */
 const makeHost = () => ({
-  i18next: { t: (k) => k },
+  i18next: { t: (k: string) => k },
   configObj: { pref: vi.fn(() => 'all') } // 'all' => export notice already dismissed
 })
 

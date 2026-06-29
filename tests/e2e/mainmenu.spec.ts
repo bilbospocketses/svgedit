@@ -19,20 +19,20 @@ test.describe('Main menu logic', () => {
     const result = await page.evaluate(() => {
       const MainMenu = window.__svgEditor.mainMenu.constructor
       window.seAlert = () => {}
-      const prefsStore = {}
+      const prefsStore: Record<string, unknown> = {}
       const svgCanvas = {
-        setDocumentTitle: (title) => { window.__title = title },
-        setResolution: (w, h) => { window.__resolution = [w, h]; return true },
+        setDocumentTitle: (title: string) => { window.__title = title },
+        setResolution: (w: number, h: number) => { window.__resolution = [w, h]; return true },
         getResolution: () => ({ w: 640, h: 480 }),
         getDocumentTitle: () => 'Existing',
-        setConfig: (cfg) => { window.__setConfig = cfg },
+        setConfig: (cfg: Record<string, unknown>) => { window.__setConfig = cfg },
         exportPDF: () => { window.__pdf = true },
         rasterExport: () => { window.__raster = true }
       }
 
       const editor = {
         configObj: {
-          pref: (key, val) => {
+          pref: (key: string, val?: unknown) => {
             if (val !== undefined) prefsStore[key] = val
             return prefsStore[key]
           },
@@ -47,11 +47,11 @@ test.describe('Main menu logic', () => {
           curPrefs: { bkgd_color: '#fff' },
           preferences: false
         },
-        setBackground: (color, url) => { window.__bg = { color, url } },
+        setBackground: (color: string, url: string) => { window.__bg = { color, url } },
         rulers: { updateRulers: () => { window.__rulers = true } },
         svgCanvas,
         updateCanvas: () => { window.__updated = true },
-        i18next: { t: (key) => key },
+        i18next: { t: (key: string) => key },
         docprops: false,
         exportWindowCt: 0,
         customExportPDF: false,
@@ -95,11 +95,11 @@ test.describe('Main menu logic', () => {
       window.seSelect?.('pick', ['a', 'b'])
 
       return {
-        docDialogState: document.getElementById('se-img-prop').getAttribute('dialog'),
+        docDialogState: document.getElementById('se-img-prop')!.getAttribute('dialog'),
         docSavePref: prefsStore.img_save,
         resolution: window.__resolution,
         updated: window.__updated,
-        prefsDialogState: document.getElementById('se-edit-prefs').getAttribute('dialog'),
+        prefsDialogState: document.getElementById('se-edit-prefs')!.getAttribute('dialog'),
         gridColor: editor.configObj.curConfig.gridColor,
         rulersUpdated: window.__rulers === true,
         rasterCalled: window.__raster === true,

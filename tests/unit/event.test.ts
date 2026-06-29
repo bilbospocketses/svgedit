@@ -2,23 +2,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { NS } from '../../packages/svgcanvas/core/namespaces.js'
 import { init as initEvent } from '../../packages/svgcanvas/core/event.js'
 
-const createSvgElement = (name) => {
+const createSvgElement = (name: string) => {
   return document.createElementNS(NS.SVG, name)
 }
 
 describe('event', () => {
-  /** @type {HTMLDivElement} */
-  let root
-  /** @type {any} */
-  let canvas
-  /** @type {HTMLDivElement} */
-  let svgcanvas
-  /** @type {SVGSVGElement} */
-  let svgcontent
-  /** @type {SVGGElement} */
-  let contentGroup
-  /** @type {SVGRectElement} */
-  let rubberBox
+  let root: HTMLDivElement
+  let canvas: Record<string, any>
+  let svgcanvas: HTMLDivElement
+  let svgcontent: SVGSVGElement
+  let contentGroup: SVGGElement
+  let rubberBox: SVGRectElement
 
   beforeEach(() => {
     root = document.createElement('div')
@@ -29,11 +23,11 @@ describe('event', () => {
     svgcanvas.id = 'svgcanvas'
     root.append(svgcanvas)
 
-    svgcontent = /** @type {SVGSVGElement} */ (createSvgElement('svg'))
+    svgcontent = createSvgElement('svg') as SVGSVGElement
     svgcontent.id = 'svgcontent'
     root.append(svgcontent)
 
-    contentGroup = /** @type {SVGGElement} */ (createSvgElement('g'))
+    contentGroup = createSvgElement('g') as SVGGElement
     svgcontent.append(contentGroup)
 
     contentGroup.getScreenCTM = () => ({
@@ -52,7 +46,7 @@ describe('event', () => {
       configurable: true
     })
 
-    rubberBox = /** @type {SVGRectElement} */ (createSvgElement('rect'))
+    rubberBox = createSvgElement('rect') as SVGRectElement
 
     canvas = {
       spaceKey: false,
@@ -65,7 +59,7 @@ describe('event', () => {
           return rubberBox
         }
       },
-      $id (id) {
+      $id (id: string) {
         return document.getElementById(id)
       },
       getDataStorage () {
@@ -86,7 +80,7 @@ describe('event', () => {
       getCurConfig () {
         return { gridSnapping: false, showRulers: false }
       },
-      setRootSctm (m) {
+      setRootSctm (m: SVGMatrix) {
         this.rootSctm = m
       },
       getRootSctm () {
@@ -95,13 +89,13 @@ describe('event', () => {
       getStarted () {
         return this.started
       },
-      setStarted (started) {
+      setStarted (started: boolean) {
         this.started = started
       },
-      setStartX (x) {
+      setStartX (x: number) {
         this.startX = x
       },
-      setStartY (y) {
+      setStartY (y: number) {
         this.startY = y
       },
       getStartX () {
@@ -110,10 +104,10 @@ describe('event', () => {
       getStartY () {
         return this.startY
       },
-      setRStartX (x) {
+      setRStartX (x: number) {
         this.rStartX = x
       },
-      setRStartY (y) {
+      setRStartY (y: number) {
         this.rStartY = y
       },
       getMouseTarget () {
@@ -122,7 +116,7 @@ describe('event', () => {
       getCurrentMode () {
         return this.currentMode || 'zoom'
       },
-      setCurrentMode (mode) {
+      setCurrentMode (mode: string) {
         this.currentMode = mode
       },
       setMode () {},
@@ -134,7 +128,7 @@ describe('event', () => {
       pathActions: {
         clear () {}
       },
-      setRubberBox (box) {
+      setRubberBox (box: Element | null) {
         this.rubberBox = box
       },
       getRubberBox () {
@@ -213,7 +207,7 @@ describe('event', () => {
   // "full selection rebuild" every tick. It does not — it diffs the new
   // intersection list against the current selection and only adds/removes the
   // difference. These pin that incremental behaviour.
-  const driveMultiselectMove = (selected, intersection) => {
+  const driveMultiselectMove = (selected: Element[], intersection: Element[]) => {
     canvas.setRubberBox(createSvgElement('rect'))
     canvas.setStarted(true)
     canvas.setCurrentMode('multiselect')
@@ -274,6 +268,6 @@ describe('event', () => {
     // bbox cached at drag start, and resize() received that cached bbox (not undefined).
     expect(canvas.dragStartBBoxes?.get(elemA)).toBeDefined()
     expect(resizeSpy).toHaveBeenCalled()
-    expect(resizeSpy.mock.calls[0][0]).toBeDefined()
+    expect(resizeSpy.mock.calls[0]![0]).toBeDefined()
   })
 })

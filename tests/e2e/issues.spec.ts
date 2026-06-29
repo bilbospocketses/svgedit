@@ -1,5 +1,6 @@
 import { test, expect } from './fixtures.js'
 import { setRotationAngle, setSvgSource, visitAndApproveStorage } from './helpers.js'
+import type { Page } from '@playwright/test'
 
 /**
  * Move the currently selected element(s) via the svgCanvas API.
@@ -9,8 +10,8 @@ import { setRotationAngle, setSvgSource, visitAndApproveStorage } from './helper
  * Calling moveSelectedElements() directly exercises the same transform logic
  * deterministically, decoupled from the shortcut-registration lifecycle.
  */
-async function moveSelected (page, dx: number, dy: number) {
-  await page.evaluate(([dx, dy]) => {
+async function moveSelected (page: Page, dx: number, dy: number) {
+  await page.evaluate<void, [number, number]>(([dx, dy]) => {
     window.svgEditor.svgCanvas.moveSelectedElements(dx, dy)
   }, [dx, dy])
 }
@@ -59,7 +60,7 @@ test.describe('Regression issues', () => {
      </svg>`)
     await page.locator('#svg_1').click()
     await page.locator('#blur').evaluate(el => {
-      const input = el.shadowRoot.querySelector('input')
+      const input = el.shadowRoot!.querySelector('input')!
       input.value = '5'
       input.dispatchEvent(new Event('change', { bubbles: true }))
     })
@@ -133,9 +134,9 @@ test.describe('Regression issues', () => {
       </g>
     </svg>`)
     const result = await page.evaluate(() => {
-      const before = document.getElementById('svg_1').getAttribute('width')
+      const before = document.getElementById('svg_1')!.getAttribute('width')
       window.svgEditor.setConfig({ baseUnit: 'cm' })
-      const after = document.getElementById('svg_1').getAttribute('width')
+      const after = document.getElementById('svg_1')!.getAttribute('width')
       return { before, after }
     })
     // the stored geometry is unit-agnostic; switching the display unit must not rewrite it
@@ -385,7 +386,7 @@ test.describe('Regression issues', () => {
     // resize rather than a vacuous no-op.
     const committedTransform = await rect.getAttribute('transform')
     expect(committedTransform).toMatch(/matrix\(/)
-    const m = committedTransform!.match(/matrix\(([^)]+)\)/)![1].trim().split(/[\s,]+/).map(Number)
+    const m = committedTransform!.match(/matrix\(([^)]+)\)/)![1]!.trim().split(/[\s,]+/).map(Number)
     expect(m[0]).toBeGreaterThan(1) // x-scale grew
     expect(m[3]).toBeGreaterThan(1) // y-scale grew
 

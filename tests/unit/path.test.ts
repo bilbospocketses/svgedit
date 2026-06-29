@@ -34,7 +34,7 @@ describe('path', function () {
   * @param {SVGSVGElement} [svg]
   * @returns {EditorContexts}
   */
-  function getMockContexts (svg) {
+  function getMockContexts (svg: SVGElement) {
     svg = svg || document.createElementNS(NS.SVG, 'svg')
     const selectorParentGroup = document.createElementNS(NS.SVG, 'g')
     selectorParentGroup.setAttribute('id', 'selectorParentGroup')
@@ -61,7 +61,7 @@ describe('path', function () {
   it('Test svgedit.path.init exposes recalcRotatedPath', function () {
     const [mockPathContext] = getMockContexts()
     pathModule.init(mockPathContext)
-    assert.equal(typeof mockPathContext.recalcRotatedPath, 'function')
+    assert.equal(typeof mockPathContext!.recalcRotatedPath, 'function')
   })
 
   it('#94 selected_pts sorts point indexes numerically, not lexicographically', () => {
@@ -189,7 +189,7 @@ describe('path', function () {
     utilities.init(mockUtilitiesContext)
     const pathObj = new Path(path)
 
-    pathObj.segs[1].move(-3, 4)
+    pathObj.segs[1]!.move(-3, 4)
     const seg = getItem(path,1)
 
     assert.equal(seg.pathSegTypeAsLetter, 'Q')
@@ -208,7 +208,7 @@ describe('path', function () {
     utilities.init(mockUtilitiesContext)
     const pathObj = new Path(path)
 
-    pathObj.segs[1].move(5, -6)
+    pathObj.segs[1]!.move(5, -6)
     const seg = getItem(path,1)
 
     assert.equal(seg.pathSegTypeAsLetter, 'S')
@@ -227,7 +227,7 @@ describe('path', function () {
     utilities.init(mockUtilitiesContext)
     const pathObj = new Path(path)
 
-    pathObj.segs[0].move(5, 5)
+    pathObj.segs[0]!.move(5, 5)
     const seg = getItem(path,1)
 
     assert.equal(seg.pathSegTypeAsLetter, 'Q')

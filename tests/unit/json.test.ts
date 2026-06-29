@@ -7,26 +7,23 @@ import {
   getJsonFromSvgElements
 } from '../../packages/svgcanvas/core/json.js'
 
-const createSvgElement = (name) => document.createElementNS(NS.SVG, name)
+const createSvgElement = (name: string) => document.createElementNS(NS.SVG, name)
 
 describe('json', () => {
-  /** @type {HTMLDivElement} */
-  let root
-  /** @type {SVGSVGElement} */
-  let svgRoot
-  /** @type {SVGGElement} */
-  let layer
+  let root: HTMLDivElement
+  let svgRoot: SVGSVGElement
+  let layer: SVGGElement
 
   beforeEach(() => {
     root = document.createElement('div')
     root.id = 'root'
     document.body.append(root)
 
-    svgRoot = /** @type {SVGSVGElement} */ (createSvgElement('svg'))
+    svgRoot = createSvgElement('svg') as SVGSVGElement
     svgRoot.id = 'svgroot'
     root.append(svgRoot)
 
-    layer = /** @type {SVGGElement} */ (createSvgElement('g'))
+    layer = createSvgElement('g') as SVGGElement
     layer.id = 'layer1'
     svgRoot.append(layer)
 
@@ -64,7 +61,7 @@ describe('json', () => {
     rect.setAttribute('x', '1')
     g.append(comment, rect)
 
-    const json = getJsonFromSvgElements(g)
+    const json = getJsonFromSvgElements(g)!
     expect(json.element).toBe('g')
     expect(json.children).toHaveLength(1)
     expect(json.children[0].element).toBe('rect')

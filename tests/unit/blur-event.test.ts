@@ -1,7 +1,7 @@
 import { createSvgCanvasFixture } from './helpers/createSvgCanvasFixture'
 
 describe('blur-event', () => {
-  let svgCanvas
+  let svgCanvas: ReturnType<typeof createSvgCanvasFixture>
 
   beforeEach(() => {
     svgCanvas = createSvgCanvasFixture()
@@ -53,7 +53,7 @@ describe('blur-event', () => {
     expect(rect.getAttribute('filter')).toBe('url(#rect-blur-create_blur)')
     const filter = svgCanvas.getSvgContent().querySelector('#rect-blur-create_blur')
     expect(filter).toBeTruthy()
-    expect(filter.querySelector('feGaussianBlur').getAttribute('stdDeviation')).toBe('1.2')
+    expect(filter!.querySelector('feGaussianBlur')!.getAttribute('stdDeviation')).toBe('1.2')
     expect(svgCanvas.undoMgr.getUndoStackSize()).toBe(undoSize + 1)
   })
 
@@ -116,14 +116,14 @@ describe('blur-event', () => {
     svgCanvas.finishBlurPreview()
 
     expect(rect.getAttribute('filter')).toBe('url(#rect-blur-prev-new_blur)')
-    expect(svgCanvas.getSvgContent().querySelector('#rect-blur-prev-new_blur feGaussianBlur').getAttribute('stdDeviation')).toBe('2.5')
+    expect(svgCanvas.getSvgContent().querySelector('#rect-blur-prev-new_blur feGaussianBlur')!.getAttribute('stdDeviation')).toBe('2.5')
     expect(svgCanvas.undoMgr.getUndoStackSize()).toBe(undoSize + 1)
 
     svgCanvas.undoMgr.undo()
     expect(rect.hasAttribute('filter')).toBe(false)
     svgCanvas.undoMgr.redo()
     expect(rect.getAttribute('filter')).toBe('url(#rect-blur-prev-new_blur)')
-    expect(svgCanvas.getSvgContent().querySelector('#rect-blur-prev-new_blur feGaussianBlur').getAttribute('stdDeviation')).toBe('2.5')
+    expect(svgCanvas.getSvgContent().querySelector('#rect-blur-prev-new_blur feGaussianBlur')!.getAttribute('stdDeviation')).toBe('2.5')
   })
 
   it('live-preview adjusts an existing blur as one undo entry (#4)', () => {
@@ -139,13 +139,13 @@ describe('blur-event', () => {
     svgCanvas.setBlurNoUndo(6)
     svgCanvas.finishBlurPreview()
 
-    expect(svgCanvas.getSvgContent().querySelector(blurSel).getAttribute('stdDeviation')).toBe('6')
+    expect(svgCanvas.getSvgContent().querySelector(blurSel)!.getAttribute('stdDeviation')).toBe('6')
     expect(svgCanvas.undoMgr.getUndoStackSize()).toBe(undoSize + 1)
 
     svgCanvas.undoMgr.undo()
-    expect(svgCanvas.getSvgContent().querySelector(blurSel).getAttribute('stdDeviation')).toBe('2')
+    expect(svgCanvas.getSvgContent().querySelector(blurSel)!.getAttribute('stdDeviation')).toBe('2')
     svgCanvas.undoMgr.redo()
-    expect(svgCanvas.getSvgContent().querySelector(blurSel).getAttribute('stdDeviation')).toBe('6')
+    expect(svgCanvas.getSvgContent().querySelector(blurSel)!.getAttribute('stdDeviation')).toBe('6')
   })
 
   it('live-preview removing a blur (to 0) is one undo entry (#4)', () => {

@@ -34,19 +34,19 @@ describe('recalculate', function () {
 
   const dataStorage = {
     _storage: new WeakMap(),
-    put: function (element, key, obj) {
+    put: function (element: object, key: string, obj: unknown) {
       if (!this._storage.has(element)) {
         this._storage.set(element, new Map())
       }
       this._storage.get(element).set(key, obj)
     },
-    get: function (element, key) {
+    get: function (element: object, key: string) {
       return this._storage.get(element).get(key)
     },
-    has: function (element, key) {
+    has: function (element: object, key: string) {
       return this._storage.has(element) && this._storage.get(element).has(key)
     },
-    remove: function (element, key) {
+    remove: function (element: object, key: string) {
       const ret = this._storage.get(element).delete(key)
       if (this._storage.get(element).size === 0) {
         this._storage.delete(element)
@@ -100,7 +100,7 @@ describe('recalculate', function () {
     )
   }
 
-  let elem
+  let elem: SVGElement
 
   /**
    * Initialize for tests and set up `rect` element.
@@ -161,7 +161,7 @@ describe('recalculate', function () {
    */
   afterEach(() => {
     while (svg.hasChildNodes()) {
-      svg.firstChild.remove()
+      svg.firstChild!.remove()
     }
   })
 
@@ -201,7 +201,7 @@ describe('recalculate', function () {
     assert.equal(elem.getAttribute('x'), '300')
     assert.equal(elem.getAttribute('y'), '200')
 
-    const tspan = elem.firstElementChild
+    const tspan = elem.firstElementChild!
     assert.equal(tspan.getAttribute('x'), '300')
     assert.equal(tspan.getAttribute('y'), '200')
   })
@@ -550,7 +550,7 @@ describe('recalculate', function () {
     const cmd = recalculate.recalculateDimensions(image)
 
     // Rotation should be preserved
-    assert.ok(image.getAttribute('transform').includes('rotate'))
+    assert.ok(image.getAttribute('transform')!.includes('rotate'))
     assert.equal(cmd, null)
   })
 
@@ -586,7 +586,7 @@ describe('recalculate', function () {
     const cmd = recalculate.recalculateDimensions(text)
 
     // Rotation should be preserved
-    assert.ok(text.getAttribute('transform').includes('rotate'))
+    assert.ok(text.getAttribute('transform')!.includes('rotate'))
     assert.equal(cmd, null)
   })
 

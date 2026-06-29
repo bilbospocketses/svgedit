@@ -3,11 +3,11 @@ import { init as selectInit, getSelectorManager, Selector, SelectorManager } fro
 import { NS } from '../../packages/svgcanvas/core/namespaces.js'
 
 describe('Select Module', () => {
-  let svgRoot
-  let svgContent
+  let svgRoot: SVGElement
+  let svgContent: SVGElement
   let svgCanvas
-  let rectElement
-  let circleElement
+  let rectElement: SVGElement
+  let circleElement: SVGElement
 
   beforeEach(() => {
     // Create mock SVG elements
@@ -38,16 +38,16 @@ describe('Select Module', () => {
     // Mock data storage
     const mockDataStorage = {
       _storage: new Map(),
-      put: function (element, key, value) {
+      put: function (element: unknown, key: string, value: unknown) {
         if (!this._storage.has(element)) {
           this._storage.set(element, new Map())
         }
         this._storage.get(element).set(key, value)
       },
-      get: function (element, key) {
+      get: function (element: unknown, key: string) {
         return this._storage.has(element) ? this._storage.get(element).get(key) : undefined
       },
-      has: function (element, key) {
+      has: function (element: unknown, key: string) {
         return this._storage.has(element) && this._storage.get(element).has(key)
       }
     }
@@ -102,7 +102,7 @@ describe('Select Module', () => {
   })
 
   describe('SelectorManager class', () => {
-    let manager
+    let manager: SelectorManager
 
     beforeEach(() => {
       manager = getSelectorManager()
@@ -123,7 +123,7 @@ describe('Select Module', () => {
       const directions = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w']
       directions.forEach(dir => {
         expect(manager.selectorGrips[dir]).toBeDefined()
-        expect(manager.selectorGrips[dir].tagName).toBe('circle')
+        expect(manager.selectorGrips[dir]!.tagName).toBe('circle')
       })
     })
 
@@ -135,7 +135,7 @@ describe('Select Module', () => {
 
     describe('requestSelector', () => {
       it('should create a new selector for an element', () => {
-        const selector = manager.requestSelector(rectElement)
+        const selector = manager.requestSelector(rectElement)!
         expect(selector).toBeInstanceOf(Selector)
         expect(selector.selectedElement).toBe(rectElement)
         expect(selector.locked).toBe(true)
@@ -150,7 +150,7 @@ describe('Select Module', () => {
       it('should reuse unlocked selectors', () => {
         const selector1 = manager.requestSelector(rectElement)
         manager.releaseSelector(rectElement)
-        const selector2 = manager.requestSelector(circleElement)
+        const selector2 = manager.requestSelector(circleElement)!
         expect(selector1).toBe(selector2)
         expect(selector2.selectedElement).toBe(circleElement)
       })
@@ -175,7 +175,7 @@ describe('Select Module', () => {
 
     describe('releaseSelector', () => {
       it('should unlock selector', () => {
-        const selector = manager.requestSelector(rectElement)
+        const selector = manager.requestSelector(rectElement)!
         expect(selector.locked).toBe(true)
         manager.releaseSelector(rectElement)
         expect(selector.locked).toBe(false)
@@ -189,13 +189,13 @@ describe('Select Module', () => {
       })
 
       it('should clear selectedElement', () => {
-        const selector = manager.requestSelector(rectElement)
+        const selector = manager.requestSelector(rectElement)!
         manager.releaseSelector(rectElement)
         expect(selector.selectedElement).toBeNull()
       })
 
       it('should hide selector group', () => {
-        const selector = manager.requestSelector(rectElement)
+        const selector = manager.requestSelector(rectElement)!
         manager.releaseSelector(rectElement)
         expect(selector.selectorGroup.getAttribute('display')).toBe('none')
       })
@@ -207,7 +207,7 @@ describe('Select Module', () => {
 
     describe('getRubberBandBox', () => {
       it('should create rubber band box on first call', () => {
-        const rubberBand = manager.getRubberBandBox()
+        const rubberBand = manager.getRubberBandBox()!
         expect(rubberBand).toBeDefined()
         expect(rubberBand.tagName).toBe('rect')
         expect(rubberBand.id).toBe('selectorRubberBand')
@@ -220,7 +220,7 @@ describe('Select Module', () => {
       })
 
       it('should have correct initial display state', () => {
-        const rubberBand = manager.getRubberBandBox()
+        const rubberBand = manager.getRubberBandBox()!
         expect(rubberBand.getAttribute('display')).toBe('none')
       })
     })
@@ -236,7 +236,7 @@ describe('Select Module', () => {
       it('should recreate selectorParentGroup', () => {
         const oldGroup = manager.selectorParentGroup
         manager.initGroup()
-        const newGroup = manager.selectorParentGroup
+        const newGroup = manager.selectorParentGroup!
         expect(newGroup).not.toBe(oldGroup)
         expect(newGroup.id).toBe('selectorParentGroup')
       })
@@ -249,18 +249,18 @@ describe('Select Module', () => {
         manager.initGroup()
         const background = document.getElementById('canvasBackground')
         expect(background).toBeDefined()
-        expect(background.tagName).toBe('svg')
+        expect(background!.tagName).toBe('svg')
       })
     })
   })
 
   describe('Selector class', () => {
-    let manager
-    let selector
+    let manager: SelectorManager
+    let selector: Selector
 
     beforeEach(() => {
       manager = getSelectorManager()
-      selector = manager.requestSelector(rectElement)
+      selector = manager.requestSelector(rectElement)!
     })
 
     it('should have correct initial properties', () => {
@@ -309,7 +309,7 @@ describe('Select Module', () => {
         selector.resize()
         expect(selector.gripCoords.nw).toBeDefined()
         expect(Array.isArray(selector.gripCoords.nw)).toBe(true)
-        expect(selector.gripCoords.nw.length).toBe(2)
+        expect(selector.gripCoords.nw!.length).toBe(2)
       })
 
       it('should use provided bbox when given', () => {
@@ -343,7 +343,7 @@ describe('Select Module', () => {
     describe('updateGripCursors (static)', () => {
       it('should update cursor styles for rotated elements', () => {
         Selector.updateGripCursors(45)
-        const updatedCursor = manager.selectorGrips.nw.getAttribute('style')
+        const updatedCursor = manager.selectorGrips.nw!.getAttribute('style')
         // After 45-degree rotation, cursors should shift
         expect(updatedCursor).toBeTruthy()
         expect(updatedCursor).toMatch(/cursor:/)
@@ -355,26 +355,26 @@ describe('Select Module', () => {
 
       it('should handle zero angle', () => {
         Selector.updateGripCursors(0)
-        expect(manager.selectorGrips.nw.getAttribute('style')).toMatch(/nw-resize/)
+        expect(manager.selectorGrips.nw!.getAttribute('style')).toMatch(/nw-resize/)
       })
 
       it('should handle 360-degree rotation', () => {
         Selector.updateGripCursors(360)
-        expect(manager.selectorGrips.nw.getAttribute('style')).toMatch(/nw-resize/)
+        expect(manager.selectorGrips.nw!.getAttribute('style')).toMatch(/nw-resize/)
       })
     })
   })
 
   describe('Integration scenarios', () => {
-    let manager
+    let manager: SelectorManager
 
     beforeEach(() => {
       manager = getSelectorManager()
     })
 
     it('should handle multiple element selection workflow', () => {
-      const selector1 = manager.requestSelector(rectElement)
-      const selector2 = manager.requestSelector(circleElement)
+      const selector1 = manager.requestSelector(rectElement)!
+      const selector2 = manager.requestSelector(circleElement)!
 
       expect(selector1.selectedElement).toBe(rectElement)
       expect(selector2.selectedElement).toBe(circleElement)
@@ -405,7 +405,7 @@ describe('Select Module', () => {
 
     it('should handle element with transforms', () => {
       rectElement.setAttribute('transform', 'rotate(45 60 35)')
-      const selector = manager.requestSelector(rectElement)
+      const selector = manager.requestSelector(rectElement)!
 
       expect(() => selector.resize()).not.toThrow()
       expect(selector.selectorRect.getAttribute('d')).toBeTruthy()
@@ -417,12 +417,12 @@ describe('Select Module', () => {
       group.append(rectElement.cloneNode())
       svgContent.append(group)
 
-      const selector = manager.requestSelector(group)
+      const selector = manager.requestSelector(group)!
       expect(() => selector.resize()).not.toThrow()
     })
 
     it('should handle rubber band box for multi-select', () => {
-      const rubberBand = manager.getRubberBandBox()
+      const rubberBand = manager.getRubberBandBox()!
 
       rubberBand.setAttribute('x', '10')
       rubberBand.setAttribute('y', '10')
@@ -435,7 +435,7 @@ describe('Select Module', () => {
   })
 
   describe('Edge cases', () => {
-    let manager
+    let manager: SelectorManager
 
     beforeEach(() => {
       manager = getSelectorManager()
@@ -448,7 +448,7 @@ describe('Select Module', () => {
       zeroRect.setAttribute('height', '0')
       svgContent.append(zeroRect)
 
-      const selector = manager.requestSelector(zeroRect)
+      const selector = manager.requestSelector(zeroRect)!
       expect(() => selector.resize()).not.toThrow()
     })
 
@@ -461,7 +461,7 @@ describe('Select Module', () => {
     })
 
     it('should handle requesting same element twice without release', () => {
-      const selector1 = manager.requestSelector(rectElement)
+      const selector1 = manager.requestSelector(rectElement)!
       const selector2 = manager.requestSelector(rectElement)
 
       expect(selector1).toBe(selector2)

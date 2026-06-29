@@ -14,13 +14,13 @@ test.describe('SVG core draw extras', () => {
       document.body.append(svg)
       const drawing = new draw.Drawing(svg, 'id_')
       drawing.identifyLayers()
-      const hrLog = []
+      const hrLog: string[] = []
       const hrService = {
-        startBatchCommand: (name) => hrLog.push('start:' + name),
+        startBatchCommand: (name: string) => hrLog.push('start:' + name),
         endBatchCommand: () => hrLog.push('end'),
-        removeElement: (el) => hrLog.push('remove:' + el.tagName),
-        moveElement: (el) => hrLog.push('move:' + el.tagName),
-        insertElement: (el) => hrLog.push('insert:' + el.tagName)
+        removeElement: (el: Element) => hrLog.push('remove:' + el.tagName),
+        moveElement: (el: Element) => hrLog.push('move:' + el.tagName),
+        insertElement: (el: Element) => hrLog.push('insert:' + el.tagName)
       }
 
       const baseLayer = drawing.getCurrentLayer()
@@ -57,9 +57,9 @@ test.describe('SVG core draw extras', () => {
       document.body.append(svg)
       const drawing = new draw.Drawing(svg, 'id_')
       drawing.identifyLayers()
-      const hrLog = []
+      const hrLog: string[] = []
       const hrService = {
-        startBatchCommand: (name) => hrLog.push('start:' + name),
+        startBatchCommand: (name: string) => hrLog.push('start:' + name),
         endBatchCommand: () => hrLog.push('end'),
         removeElement: () => {},
         moveElement: () => {},

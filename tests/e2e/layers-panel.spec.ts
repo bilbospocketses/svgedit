@@ -1,12 +1,13 @@
 import { test, expect } from './fixtures.js'
+import type { Page } from '@playwright/test'
 import { visitAndApproveStorage } from './helpers.js'
 
-const layerNames = async (page) => {
+const layerNames = async (page: Page) => {
   const texts = await page.locator('#layerlist tbody tr.layer td.layername').allTextContents()
-  return texts.map((t) => t.trim())
+  return texts.map((t: string) => t.trim())
 }
 
-const toggleVisibilityFor = async (page, name) => {
+const toggleVisibilityFor = async (page: Page, name: string) => {
   const row = page.locator('#layerlist tbody tr.layer', {
     has: page.locator('td.layername', { hasText: name })
   })

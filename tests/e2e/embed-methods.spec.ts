@@ -26,7 +26,7 @@ test.describe('embed: methods round-trip', () => {
   test('METHOD_NOT_FOUND error code on unknown method', async ({ page }) => {
     await openEmbedHost(page)
     const err = await page.evaluate(() =>
-      window.__svgeditEmbed.editor.thisIsNotAMethod().then(() => null, (e) => ({ message: e.message, code: e.code }))
+      window.__svgeditEmbed.editor.thisIsNotAMethod().then(() => null, (e: Error & { code?: string }) => ({ message: e.message, code: e.code }))
     )
     expect(err).not.toBeNull()
     expect(err.code).toBe('METHOD_NOT_FOUND')

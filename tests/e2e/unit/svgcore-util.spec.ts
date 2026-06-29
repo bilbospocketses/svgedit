@@ -37,7 +37,7 @@ test.describe('SVG common util helpers', () => {
   test('finds closest ancestors by selector', async ({ page }) => {
     const result = await page.evaluate(() => {
       const { util } = window.svgHarness
-      const root = document.getElementById('root')
+      const root = document.getElementById('root')!
       root.innerHTML = ''
 
       const wrapper = document.createElement('div')
@@ -68,7 +68,7 @@ test.describe('SVG common util helpers', () => {
   test('gathers parents with and without limits', async ({ page }) => {
     const result = await page.evaluate(() => {
       const { util } = window.svgHarness
-      const root = document.getElementById('root')
+      const root = document.getElementById('root')!
       root.innerHTML = ''
 
       const outer = document.createElement('div')
@@ -83,10 +83,10 @@ test.describe('SVG common util helpers', () => {
       root.append(outer)
 
       return {
-        all: util.getParents(inner)?.map((el) => el.tagName.toLowerCase()),
-        byClass: util.getParents(inner, '.outer')?.map((el) => el.className),
-        untilMid: util.getParentsUntil(inner, '#mid')?.map((el) => el.tagName.toLowerCase()),
-        untilMidFiltered: util.getParentsUntil(inner, '#mid', '.inner')?.map((el) => el.tagName.toLowerCase())
+        all: util.getParents(inner)?.map((el: Element) => el.tagName.toLowerCase()),
+        byClass: util.getParents(inner, '.outer')?.map((el: Element) => el.className),
+        untilMid: util.getParentsUntil(inner, '#mid')?.map((el: Element) => el.tagName.toLowerCase()),
+        untilMidFiltered: util.getParentsUntil(inner, '#mid', '.inner')?.map((el: Element) => el.tagName.toLowerCase())
       }
     })
 

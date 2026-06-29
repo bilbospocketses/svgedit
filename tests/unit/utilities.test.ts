@@ -1,5 +1,6 @@
 import * as utilities from '../../packages/svgcanvas/core/utilities.js'
 import { NS } from '../../packages/svgcanvas/core/namespaces.js'
+import type { SVGElementJSON } from '../../packages/svgcanvas/core/utilities.js'
 
 describe('utilities', function () {
   /**
@@ -7,12 +8,12 @@ describe('utilities', function () {
    * @param {module:utilities.SVGElementJSON} jsonMap
    * @returns {SVGElement}
    */
-  function mockCreateSVGElement (jsonMap) {
+  function mockCreateSVGElement (jsonMap: { element: string, attr: Record<string, string> }) {
     const elem = document.createElementNS(NS.SVG, jsonMap.element)
     Object.entries(jsonMap.attr).forEach(([attr, value]) => {
       elem.setAttribute(attr, value)
     })
-    const numFromAttr = (attr, fallback = 0) => Number(jsonMap.attr[attr] ?? fallback)
+    const numFromAttr = (attr: string, fallback = 0) => Number(jsonMap.attr[attr] ?? fallback)
     const calcBBox = () => {
       const tag = (jsonMap.element || '').toLowerCase()
       switch (tag) {
@@ -20,8 +21,8 @@ describe('utilities', function () {
           const d = jsonMap.attr.d || ''
           const nums = (d.match(/-?\\d*\\.?\\d+/g) || []).map(Number)
           if (nums.length >= 4) {
-            const xs = nums.filter((_, i) => i % 2 === 0)
-            const ys = nums.filter((_, i) => i % 2 === 1)
+            const xs = nums.filter((_: number, i: number) => i % 2 === 0)
+            const ys = nums.filter((_: number, i: number) => i % 2 === 1)
             return {
               x: Math.min(...xs),
               y: Math.min(...ys),
@@ -52,7 +53,7 @@ describe('utilities', function () {
    * @param {module:utilities.SVGElementJSON} json
    * @returns {SVGElement}
    */
-  function mockaddSVGElementsFromJson (json) {
+  function mockaddSVGElementsFromJson (json: SVGElementJSON) {
     const elem = mockCreateSVGElement(json)
     svgroot.append(elem)
     return elem
@@ -61,20 +62,20 @@ describe('utilities', function () {
   let mockHistorySubCommands = []
   const mockHistory = {
     BatchCommand: class {
-      addSubCommand (cmd) {
+      addSubCommand (cmd: unknown) {
         mockHistorySubCommands.push(cmd)
       }
     },
     RemoveElementCommand: class {
       // Longhand needed since used as a constructor
-      constructor (elem, nextSibling, parent) {
+      constructor (elem: Element, nextSibling: Node | null, parent: Node | null) {
         this.elem = elem
         this.nextSibling = nextSibling
         this.parent = parent
       }
     },
     InsertElementCommand: class {
-      constructor (path) { // Longhand needed since used as a constructor
+      constructor (path: Element) { // Longhand needed since used as a constructor
         this.path = path
       }
     }
@@ -116,7 +117,7 @@ describe('utilities', function () {
     addCommandToHistory: mockAddCommandToHistory
   }
 
-  let svg; let svgroot
+  let svg: SVGSVGElement; let svgroot: SVGElement
   beforeEach(() => {
     document.body.textContent = ''
 
@@ -287,7 +288,7 @@ describe('utilities', function () {
      * Wrap `utilities.getBBoxOfElementAsPath` to convert bbox to object for testing.
      * @type {module:utilities.getBBoxOfElementAsPath}
      */
-    function getBBoxOfElementAsPath (elem, addSVGElementsFromJson, pathActions) {
+    function getBBoxOfElementAsPath (elem: Parameters<typeof utilities.getBBoxOfElementAsPath>[0], addSVGElementsFromJson: Parameters<typeof utilities.getBBoxOfElementAsPath>[1], pathActions: Parameters<typeof utilities.getBBoxOfElementAsPath>[2]) {
       const bbox = utilities.getBBoxOfElementAsPath(elem, addSVGElementsFromJson, pathActions)
       return utilities.bboxToObj(bbox) // need this for assert.equal() to work.
     }
@@ -337,16 +338,16 @@ describe('utilities', function () {
     })
     svgroot.append(elem)
     const path = convertToPath(elem, attrs, mockSvgCanvas)
-    assert.equal(path.getAttribute('d'), 'M0,1 L5,1 L5,11 L0,11 L0,1 Z')
-    assert.equal(path.getAttribute('visibility'), null)
-    assert.equal(path.id, 'rect')
-    assert.equal(path.parentNode, svgroot)
+    assert.equal(path!.getAttribute('d'), 'M0,1 L5,1 L5,11 L0,11 L0,1 Z')
+    assert.equal(path!.getAttribute('visibility'), null)
+    assert.equal(path!.id, 'rect')
+    assert.equal(path!.parentNode, svgroot)
     assert.equal(elem.parentNode, null)
     assert.equal(mockHistorySubCommands.length, 2)
     assert.equal(mockCount.clearSelection, 1)
     assert.equal(mockCount.addToSelection, 1)
     assert.equal(mockCount.addCommandToHistory, 1)
-    path.remove()
+    path!.remove()
   })
 
   it('Test convertToPath unknown element', function () {

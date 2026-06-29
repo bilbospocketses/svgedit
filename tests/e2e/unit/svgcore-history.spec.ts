@@ -10,7 +10,7 @@ test.describe('SVG core history/draw smoke', () => {
     const stacks = await page.evaluate(() => {
       const { history } = window.svgHarness
       class DummyCommand extends history.Command {
-        constructor (text) {
+        constructor (text: string) {
           super()
           this.text = text
         }

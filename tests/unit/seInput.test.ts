@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import '../../src/editor/components/seInput.ts'
+import type { SeInput } from '../../src/editor/components/seInput.ts'
 
-const flushUpgradeAndRender = async (el) => {
+const flushUpgradeAndRender = async (el: SeInput) => {
   // Works for both the current HTMLElement-based seInput and the LitElement
   // version: Lit components expose `updateComplete`; HTMLElement-based don't.
   // We wait for both customElements upgrade AND any microtask-queued render.
@@ -14,11 +15,11 @@ const flushUpgradeAndRender = async (el) => {
 }
 
 describe('se-input form-control contract (PR-1 reference component B)', () => {
-  let el
+  let el: SeInput
 
   beforeEach(() => {
     document.body.textContent = ''
-    el = document.createElement('se-input')
+    el = document.createElement('se-input') as SeInput
     document.body.appendChild(el)
   })
 
@@ -35,10 +36,10 @@ describe('se-input form-control contract (PR-1 reference component B)', () => {
   it('renders label text inside shadow DOM #label element', async () => {
     el.setAttribute('label', 'TestLabel')
     await flushUpgradeAndRender(el)
-    const label = el.shadowRoot.querySelector('#label')
+    const label = el.shadowRoot!.querySelector('#label')
     expect(label).not.toBeNull()
     // t() returns the key unchanged when no dict entry — 'TestLabel' is not a locale key
-    expect(label.textContent.trim()).toBe('TestLabel')
+    expect(label!.textContent!.trim()).toBe('TestLabel')
   })
 
   it('value property setter updates el.value', async () => {
@@ -50,7 +51,7 @@ describe('se-input form-control contract (PR-1 reference component B)', () => {
   // #4: typing emits a host `input` (live preview, no undo); commit emits `change`.
   it('#4 emits a host input event on typing, not change', async () => {
     await flushUpgradeAndRender(el)
-    const input = el.shadowRoot.querySelector('input')
+    const input = el.shadowRoot!.querySelector('input')!
     let inputs = 0; let changes = 0
     el.addEventListener('input', () => inputs++)
     el.addEventListener('change', () => changes++)
@@ -63,7 +64,7 @@ describe('se-input form-control contract (PR-1 reference component B)', () => {
 
   it('#4 emits a host change event on native change (commit on blur)', async () => {
     await flushUpgradeAndRender(el)
-    const input = el.shadowRoot.querySelector('input')
+    const input = el.shadowRoot!.querySelector('input')!
     let changes = 0
     el.addEventListener('change', () => changes++)
     input.value = 'done'
@@ -74,7 +75,7 @@ describe('se-input form-control contract (PR-1 reference component B)', () => {
 
   it('#4 commits on Enter, but a non-Enter keyup does not', async () => {
     await flushUpgradeAndRender(el)
-    const input = el.shadowRoot.querySelector('input')
+    const input = el.shadowRoot!.querySelector('input')!
     let changes = 0
     el.addEventListener('change', () => changes++)
     input.value = '5'

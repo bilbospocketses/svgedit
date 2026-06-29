@@ -5,26 +5,26 @@ describe('select', function () {
   const sandbox = document.createElement('div')
   sandbox.id = 'sandbox'
 
-  let svgroot
-  let svgContent
+  let svgroot: SVGElement
+  let svgContent: SVGElement
   const mockConfig = {
     dimensions: [640, 480]
   }
   const dataStorage = {
     _storage: new WeakMap(),
-    put: function (element, key, obj) {
+    put: function (element: object, key: string, obj: unknown) {
       if (!this._storage.has(element)) {
         this._storage.set(element, new Map())
       }
       this._storage.get(element).set(key, obj)
     },
-    get: function (element, key) {
+    get: function (element: object, key: string) {
       return this._storage.get(element).get(key)
     },
-    has: function (element, key) {
+    has: function (element: object, key: string) {
       return this._storage.has(element) && this._storage.get(element).has(key)
     },
-    remove: function (element, key) {
+    remove: function (element: object, key: string) {
       const ret = this._storage.get(element).delete(key)
       if (this._storage.get(element).size === 0) {
         this._storage.delete(element)
@@ -38,7 +38,7 @@ describe('select', function () {
   */
   const mockSvgCanvas = {
     curConfig: mockConfig,
-    createSVGElement (jsonMap) {
+    createSVGElement (jsonMap: { element: string, attr: Record<string, string> }) {
       const elem = document.createElementNS(NS.SVG, jsonMap.element)
       Object.entries(jsonMap.attr).forEach(([attr, value]) => {
         elem.setAttribute(attr, value)
@@ -92,7 +92,7 @@ describe('select', function () {
    */
   afterEach(() => {
     while (sandbox.hasChildNodes()) {
-      sandbox.firstChild.remove()
+      sandbox.firstChild!.remove()
     }
   })
 

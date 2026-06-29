@@ -14,7 +14,7 @@ describe('foreignObject XHTML namespace round-trip', () => {
     expect(doc1.querySelector('parsererror')).toBeNull()
     const strong1 = doc1.getElementsByTagName('strong')[0]
     expect(strong1).toBeTruthy()
-    expect(strong1.namespaceURI).toBe(NS.HTML)
+    expect(strong1!.namespaceURI).toBe(NS.HTML)
 
     // Round-trip: serialize whole SVG (save) → reparse (load).
     const serialized = new XMLSerializer().serializeToString(doc1.documentElement)
@@ -22,6 +22,6 @@ describe('foreignObject XHTML namespace round-trip', () => {
     expect(doc2.querySelector('parsererror')).toBeNull()
     const strong2 = doc2.getElementsByTagName('strong')[0]
     expect(strong2).toBeTruthy()
-    expect(strong2.namespaceURI).toBe(NS.HTML)
+    expect(strong2!.namespaceURI).toBe(NS.HTML)
   })
 })

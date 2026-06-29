@@ -13,17 +13,17 @@ test.describe('SVG core recalculate', () => {
       document.body.append(svg)
       const dataStorage = {
         store: new WeakMap(),
-        put (el, key, value) {
+        put (el: Element, key: string, value: unknown) {
           if (!this.store.has(el)) this.store.set(el, new Map())
           this.store.get(el).set(key, value)
         },
-        get (el, key) {
+        get (el: Element, key: string) {
           return this.store.get(el)?.get(key)
         },
-        has (el, key) {
+        has (el: Element, key: string) {
           return this.store.has(el) && this.store.get(el).has(key)
         },
-        remove (el, key) {
+        remove (el: Element, key: string) {
           const bucket = this.store.get(el)
           if (!bucket) return false
           const deleted = bucket.delete(key)

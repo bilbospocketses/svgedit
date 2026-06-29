@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import Paint from '../../packages/svgcanvas/core/paint.js'
 
-const createLinear = (id) => {
+const createLinear = (id: string) => {
   const grad = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient')
   if (id) grad.id = id
   return grad
 }
 
-const createRadial = (id) => {
+const createRadial = (id: string) => {
   const grad = document.createElementNS('http://www.w3.org/2000/svg', 'radialGradient')
   if (id) grad.id = id
   grad.setAttribute('cx', '0.5')

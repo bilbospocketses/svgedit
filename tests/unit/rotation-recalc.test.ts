@@ -38,8 +38,8 @@ describe('Rotation recalculation on attribute change', function () {
   /**
    * Helper: read back the transform list entries as simple objects for assertions.
    */
-  function readTransforms (elem) {
-    const tlist = getTransformList(elem)
+  function readTransforms (elem: Element) {
+    const tlist = getTransformList(elem)!
     const result = []
     for (let i = 0; i < tlist.numberOfItems; i++) {
       const t = tlist.getItem(i)
@@ -87,7 +87,7 @@ describe('Rotation recalculation on attribute change', function () {
       const transformsAfterApply = readTransforms(rect)
       assert.equal(transformsAfterApply.length, transformsBefore.length,
         'apply: transform list length unchanged')
-      assert.equal(transformsAfterApply[0].type, 4,
+      assert.equal(transformsAfterApply[0]!.type, 4,
         'apply: rotation transform preserved')
 
       // Unapply (undo) — should NOT touch the transform
@@ -95,7 +95,7 @@ describe('Rotation recalculation on attribute change', function () {
       const transformsAfterUnapply = readTransforms(rect)
       assert.equal(transformsAfterUnapply.length, transformsBefore.length,
         'unapply: transform list length unchanged')
-      assert.equal(transformsAfterUnapply[0].type, 4,
+      assert.equal(transformsAfterUnapply[0]!.type, 4,
         'unapply: rotation transform preserved')
     })
 
@@ -115,7 +115,7 @@ describe('Rotation recalculation on attribute change', function () {
         getRotationAngle () { return 30 }
       })
 
-      const tlistBefore = getTransformList(rect)
+      const tlistBefore = getTransformList(rect)!
       assert.equal(tlistBefore.numberOfItems, 2,
         'setup: two transforms (translate + rotate)')
       assert.equal(tlistBefore.getItem(0).type, 2,
@@ -132,7 +132,7 @@ describe('Rotation recalculation on attribute change', function () {
 
       // Apply (redo) — must preserve both translate and rotate
       change.apply()
-      const tlistAfter = getTransformList(rect)
+      const tlistAfter = getTransformList(rect)!
       assert.equal(tlistAfter.numberOfItems, 2,
         'apply: still two transforms')
       assert.equal(tlistAfter.getItem(0).type, 2,
@@ -176,7 +176,7 @@ describe('Rotation recalculation on attribute change', function () {
 
       // Apply should update the rotation center to (70, 50)
       change.apply()
-      const tlist = getTransformList(rect)
+      const tlist = getTransformList(rect)!
       assert.equal(tlist.numberOfItems, 1, 'still one transform')
       assert.equal(tlist.getItem(0).type, 4, 'still a rotation')
       // The rotation center should reflect the new bbox center
@@ -204,7 +204,7 @@ describe('Rotation recalculation on attribute change', function () {
         getRotationAngle () { return 30 }
       })
 
-      const tlistBefore = getTransformList(rect)
+      const tlistBefore = getTransformList(rect)!
       assert.equal(tlistBefore.numberOfItems, 2, 'setup: two transforms')
 
       // Change x from 0 to 20
@@ -212,7 +212,7 @@ describe('Rotation recalculation on attribute change', function () {
       const change = new history.ChangeElementCommand(rect, { x: '0' })
 
       change.apply()
-      const tlist = getTransformList(rect)
+      const tlist = getTransformList(rect)!
 
       // Should still have 2 transforms: translate + rotate
       assert.equal(tlist.numberOfItems, 2,
@@ -252,7 +252,7 @@ describe('Rotation recalculation on attribute change', function () {
         getRotationAngle () { return 45 }
       })
 
-      const tlistBefore = getTransformList(rect)
+      const tlistBefore = getTransformList(rect)!
       const cxBefore = tlistBefore.getItem(0).cx
       const cyBefore = tlistBefore.getItem(0).cy
 
@@ -260,7 +260,7 @@ describe('Rotation recalculation on attribute change', function () {
       const change = new history.ChangeElementCommand(rect, { fill: 'red' })
 
       change.apply()
-      const tlistAfter = getTransformList(rect)
+      const tlistAfter = getTransformList(rect)!
       assert.equal(tlistAfter.getItem(0).cx, cxBefore,
         'rotation cx unchanged after fill change')
       assert.equal(tlistAfter.getItem(0).cy, cyBefore,
@@ -283,14 +283,14 @@ describe('Rotation recalculation on attribute change', function () {
         getRotationAngle () { return 60 }
       })
 
-      const tlistBefore = getTransformList(rect)
+      const tlistBefore = getTransformList(rect)!
       assert.equal(tlistBefore.numberOfItems, 2, 'setup: two transforms')
 
       rect.setAttribute('opacity', '0.5')
       const change = new history.ChangeElementCommand(rect, { opacity: '1' })
 
       change.apply()
-      const tlist = getTransformList(rect)
+      const tlist = getTransformList(rect)!
       assert.equal(tlist.numberOfItems, 2,
         'opacity change preserves compound transform count')
       assert.equal(tlist.getItem(0).type, 2, 'translate preserved')

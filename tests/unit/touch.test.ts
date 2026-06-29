@@ -1,12 +1,28 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { init as initTouch } from '../../packages/svgcanvas/core/touch.js'
 
+interface SyntheticTouchPoint {
+  target: EventTarget
+  clientX: number
+  clientY: number
+  screenX: number
+  screenY: number
+}
+
+interface SyntheticTouchEvent {
+  type: string
+  changedTouches: SyntheticTouchPoint[]
+  preventDefault: () => void
+}
+
+type TouchEventHandler = (event: SyntheticTouchEvent) => void
+
 const createSvgRoot = () => {
   const listeners = {}
   return {
     listeners,
-    addEventListener (type, handler) { listeners[type] = handler },
-    dispatch (type, event) { listeners[type]?.(event) }
+    addEventListener (type: string, handler: TouchEventHandler) { listeners[type] = handler },
+    dispatch (type: string, event: SyntheticTouchEvent) { listeners[type]?.(event) }
   }
 }
 
@@ -15,7 +31,7 @@ const OriginalMouseEvent = global.MouseEvent
 beforeAll(() => {
   // JSDOM's MouseEvent requires a real Window; a lightweight stub keeps the adapter logic testable.
   global.MouseEvent = class extends Event {
-    constructor (type, init = {}) {
+    constructor (type: string, init = {}) {
       super(type, init)
       this.clientX = init.clientX
       this.clientY = init.clientY
@@ -38,7 +54,7 @@ describe('touch adapter', () => {
     initTouch(svgCanvas)
 
     const target = document.createElement('div')
-    const received = []
+    const received: Array<{ type: string; clientX: number; clientY: number; screenX: number; screenY: number }> = []
     target.addEventListener('mousedown', (ev) => {
       received.push({
         type: ev.type,
@@ -120,7 +136,7 @@ describe('touch adapter', () => {
     const svgroot = createSvgRoot()
     initTouch({ svgroot })
     const target = document.createElement('div')
-    const received = []
+    const received: string[] = []
     target.addEventListener('mouseup', (ev) => { received.push(ev.type) })
 
     const preventDefault = vi.fn()
