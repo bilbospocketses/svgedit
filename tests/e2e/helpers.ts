@@ -1,6 +1,6 @@
-import { expect } from '@playwright/test'
+import { expect, type Page } from '@playwright/test'
 
-export async function visitAndApproveStorage (page) {
+export async function visitAndApproveStorage (page: Page) {
   await page.goto('about:blank')
   await page.context().clearCookies()
   await page.goto('/index.html')
@@ -15,7 +15,7 @@ export async function visitAndApproveStorage (page) {
   await dismissStorageDialog(page)
 }
 
-export async function selectEnglishAndSnap (page) {
+export async function selectEnglishAndSnap (page: Page) {
   await page.waitForFunction(() => window.svgEditor && window.svgEditor.setConfig, null, { timeout: 20000 })
   await page.evaluate(() => {
     window.svgEditor.setConfig({
@@ -25,11 +25,11 @@ export async function selectEnglishAndSnap (page) {
   })
 }
 
-export async function openMainMenu (page) {
+export async function openMainMenu (page: Page) {
   await page.locator('#main_button').click()
 }
 
-export async function setSvgSource (page, svgMarkup) {
+export async function setSvgSource (page: Page, svgMarkup: string) {
   await dismissStorageDialog(page)
   await page.locator('#tool_source').click()
   const textarea = page.locator('#svg_source_textarea')
@@ -38,7 +38,7 @@ export async function setSvgSource (page, svgMarkup) {
   await page.locator('#tool_source_save').click()
 }
 
-export async function dismissStorageDialog (page) {
+export async function dismissStorageDialog (page: Page) {
   const storageDialog = page.locator('se-storage-dialog')
   if (!(await storageDialog.count())) {
     try {
@@ -74,15 +74,15 @@ export async function dismissStorageDialog (page) {
   ).catch(() => {})
 }
 
-export async function setRotationAngle (page, degrees) {
-  await page.locator('#angle').evaluate((el, value) => {
-    const input = el.shadowRoot.querySelector('input')
+export async function setRotationAngle (page: Page, degrees: number) {
+  await page.locator('#angle').evaluate((el: HTMLElement, value: string) => {
+    const input = el.shadowRoot!.querySelector('input')!
     input.value = value
     input.dispatchEvent(new Event('change', { bubbles: true }))
   }, String(degrees))
 }
 
-export async function clickCanvas (page, point) {
+export async function clickCanvas (page: Page, point: { x: number; y: number }) {
   const canvas = page.locator('#svgroot')
   const box = await canvas.boundingBox()
   if (!box) {
@@ -91,14 +91,14 @@ export async function clickCanvas (page, point) {
   await page.mouse.click(box.x + point.x, box.y + point.y)
 }
 
-export async function waitForExtensions (page) {
+export async function waitForExtensions (page: Page) {
   // Extensions load fire-and-forget after the editor reports ready; ext-grid's
   // init() appends #canvasGrid, so its presence signals the extension batch ran
   // (and that the shared svgEditorInstance singleton resolved).
   await page.waitForSelector('#canvasGrid', { state: 'attached', timeout: 15000 })
 }
 
-export async function dragOnCanvas (page, start, end) {
+export async function dragOnCanvas (page: Page, start: { x: number; y: number }, end: { x: number; y: number }) {
   const canvas = page.locator('#svgroot')
   const box = await canvas.boundingBox()
   if (!box) {
