@@ -1,10 +1,10 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { openEmbedHost } from './embed-helpers.js'
 
 // Read the rendered swatch strip's data-rgb list from inside se-palette's shadow root.
-const stripColors = (page) =>
+const stripColors = (page: Page) =>
   page.frameLocator('#svge').locator('se-palette').first().evaluate(
-    el => Array.from(el.shadowRoot.querySelectorAll('#js-se-palette .square'))
+    el => Array.from(el.shadowRoot!.querySelectorAll('#js-se-palette .square'))
       .map(s => s.getAttribute('data-rgb'))
   )
 
@@ -46,7 +46,7 @@ test.describe('embed: palette injection', () => {
     // asynchronously AFTER the embed 'ready' event, so dismissing it post-load is
     // racy; seeding the svgeditstore cookie suppresses it at the source (ext-storage
     // only prompts when the cookie is absent). Otherwise it intercepts the click.
-    await page.context().addCookies([{ name: 'svgeditstore', value: 'prefsAndContent', url: baseURL }])
+    await page.context().addCookies([{ name: 'svgeditstore', value: 'prefsAndContent', url: baseURL! }])
     await openEmbedHost(page, { editorSrc: '/index.html?embed=1&palette=%23ff0000' })
     await page.frameLocator('#svge').locator('se-palette').first()
       .locator('#js-se-palette .square[data-rgb="#ff0000"]').click()

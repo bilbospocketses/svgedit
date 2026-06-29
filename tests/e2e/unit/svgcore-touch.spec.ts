@@ -1,4 +1,5 @@
 import { test, expect } from '../fixtures.js'
+import type { ISvgCanvas } from '@svgedit/svgcanvas/core/svgcanvas-types.js'
 
 test.describe('touch event adapter', () => {
   // Firefox desktop does not expose TouchEvent unless the browser context has
@@ -17,7 +18,13 @@ test.describe('touch event adapter', () => {
       const target = document.createElement('div')
       document.body.append(target)
 
-      const received = []
+      const received: Array<{
+        type: string
+        clientX: number
+        clientY: number
+        screenX: number
+        screenY: number
+      }> = []
       target.addEventListener('mousedown', (ev) => {
         received.push({
           type: ev.type,
@@ -29,12 +36,12 @@ test.describe('touch event adapter', () => {
       })
 
       const svgroot = {
-        listeners: {},
-        addEventListener (type, handler) { this.listeners[type] = handler },
-        dispatchEvent (ev) { this.listeners[ev.type]?.(ev) }
+        listeners: {} as Record<string, (ev: TouchEvent) => void>,
+        addEventListener (type: string, handler: (ev: TouchEvent) => void) { this.listeners[type] = handler },
+        dispatchEvent (ev: TouchEvent) { this.listeners[ev.type]?.(ev) }
       }
 
-      touch.init({ svgroot })
+      touch.init({ svgroot } as unknown as ISvgCanvas)
       const ev = new TouchEvent('touchstart', {
         changedTouches: [
           new Touch({
@@ -48,7 +55,7 @@ test.describe('touch event adapter', () => {
         ]
       })
       svgroot.dispatchEvent(ev)
-      return received[0]
+      return received[0]!
     })
 
     expect(result.type).toBe('mousedown')
@@ -67,12 +74,12 @@ test.describe('touch event adapter', () => {
       target.addEventListener('mousedown', () => { mouseEvents++ })
 
       const svgroot = {
-        listeners: {},
-        addEventListener (type, handler) { this.listeners[type] = handler },
-        dispatchEvent (ev) { this.listeners[ev.type]?.(ev) }
+        listeners: {} as Record<string, (ev: TouchEvent) => void>,
+        addEventListener (type: string, handler: (ev: TouchEvent) => void) { this.listeners[type] = handler },
+        dispatchEvent (ev: TouchEvent) { this.listeners[ev.type]?.(ev) }
       }
 
-      touch.init({ svgroot })
+      touch.init({ svgroot } as unknown as ISvgCanvas)
       const ev = new TouchEvent('touchstart', {
         changedTouches: [
           new Touch({ identifier: 1, target, clientX: 1, clientY: 2, screenX: 3, screenY: 4 }),

@@ -7,7 +7,7 @@ import { createSvgCanvasFixture } from './helpers/createSvgCanvasFixture'
 // non-current layer, or a detached subtree) walks off the top of the tree and
 // crashes on `null.parentNode`.
 describe('getMouseTarget', () => {
-  let svgCanvas
+  let svgCanvas: ReturnType<typeof createSvgCanvasFixture>
 
   beforeEach(() => {
     svgCanvas = createSvgCanvasFixture()
@@ -26,8 +26,8 @@ describe('getMouseTarget', () => {
     const orphan = document.createElementNS(NS.SVG, 'rect')
     detachedParent.append(orphan)
 
-    expect(() => svgCanvas.getMouseTarget({ target: orphan })).not.toThrow()
-    expect(svgCanvas.getMouseTarget({ target: orphan })).toBe(svgCanvas.getSvgRoot())
+    expect(() => svgCanvas.getMouseTarget({ target: orphan } as unknown as MouseEvent)).not.toThrow()
+    expect(svgCanvas.getMouseTarget({ target: orphan } as unknown as MouseEvent)).toBe(svgCanvas.getSvgRoot())
   })
 
   it('returns the element itself when it is a direct child of the current layer', () => {
@@ -36,16 +36,16 @@ describe('getMouseTarget', () => {
       attr: { id: 'direct', x: 0, y: 0, width: 10, height: 10 }
     })
 
-    expect(svgCanvas.getMouseTarget({ target: rect })).toBe(rect)
+    expect(svgCanvas.getMouseTarget({ target: rect } as unknown as MouseEvent)).toBe(rect)
   })
 
   it('returns the top-level ancestor under the current layer for a nested target', () => {
-    const layer = svgCanvas.getCurrentDrawing().getCurrentLayer()
+    const layer = svgCanvas.getCurrentDrawing().getCurrentLayer()!
     const g = document.createElementNS(NS.SVG, 'g')
     const inner = document.createElementNS(NS.SVG, 'rect')
     g.append(inner)
     layer.append(g)
 
-    expect(svgCanvas.getMouseTarget({ target: inner })).toBe(g)
+    expect(svgCanvas.getMouseTarget({ target: inner } as unknown as MouseEvent)).toBe(g)
   })
 })

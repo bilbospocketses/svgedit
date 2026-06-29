@@ -1,4 +1,4 @@
-import { strict as assert } from 'node:assert'
+import { strict as nodeAssert } from 'node:assert'
 
 import { NS } from '../../packages/svgcanvas/core/namespaces.js'
 import * as utilities from '../../packages/svgcanvas/core/utilities.js'
@@ -7,6 +7,16 @@ import * as path from '../../packages/svgcanvas/core/path.js'
 import * as units from '../../packages/svgcanvas/core/units.js'
 import { getPathData } from '../../packages/svgcanvas/core/path-data.js'
 import { toPathSeg } from '../../packages/svgcanvas/core/path-method.js'
+import type { SVGElementJSON, BBoxObject } from '../../packages/svgcanvas/core/utilities.js'
+import type { XYObject } from '../../packages/svgcanvas/core/math.js'
+import type { ISvgCanvas } from '../../packages/svgcanvas/core/svgcanvas-types.js'
+import type { ElementContainer } from '../../packages/svgcanvas/core/units.js'
+
+/** QUnit-style approximate-equality assertion attached to `assert` at runtime by the test harness. */
+type AssertWithClose = typeof nodeAssert & {
+  close (actual: number, expected: number, maxDifference: number, message?: string): void
+}
+const assert: AssertWithClose = nodeAssert as AssertWithClose
 
 describe('utilities bbox', function () {
   /**
@@ -14,21 +24,21 @@ describe('utilities bbox', function () {
    * @param {module:utilities.SVGElementJSON} jsonMap
    * @returns {SVGElement}
    */
-  function mockCreateSVGElement (jsonMap) {
-    const elem = document.createElementNS(NS.SVG, jsonMap.element)
+  function mockCreateSVGElement (jsonMap: SVGElementJSON) {
+    const elem = document.createElementNS(NS.SVG, jsonMap.element) as SVGGraphicsElement
     Object.entries(jsonMap.attr).forEach(([attr, value]) => {
-      elem.setAttribute(attr, value)
+      elem.setAttribute(attr, value as string)
     })
-    const numFromAttr = (attr, fallback = 0) => Number(jsonMap.attr[attr] ?? fallback)
+    const numFromAttr = (attr: string, fallback = 0) => Number(jsonMap.attr[attr] ?? fallback)
     const calcBBox = () => {
       const tag = (jsonMap.element || '').toLowerCase()
       switch (tag) {
         case 'path': {
-          const d = jsonMap.attr.d || ''
+          const d = (jsonMap.attr.d || '') as string
           const nums = (d.match(/-?\\d*\\.?\\d+/g) || []).map(Number)
           if (nums.length >= 4) {
-            const xs = nums.filter((_, i) => i % 2 === 0)
-            const ys = nums.filter((_, i) => i % 2 === 1)
+            const xs = nums.filter((_: number, i: number) => i % 2 === 0)
+            const ys = nums.filter((_: number, i: number) => i % 2 === 1)
             return {
               x: Math.min(...xs),
               y: Math.min(...ys),
@@ -50,7 +60,7 @@ describe('utilities bbox', function () {
     }
     const bbox = calcBBox()
     elem.getBBox = () => {
-      return { ...bbox }
+      return { ...bbox } as DOMRect
     }
     return elem
   }
@@ -61,14 +71,14 @@ describe('utilities bbox', function () {
    * @param {module:utilities.SVGElementJSON} json
    * @returns {SVGElement}
    */
-  function mockaddSVGElementsFromJson (json) {
+  function mockaddSVGElementsFromJson (json: SVGElementJSON) {
     const elem = mockCreateSVGElement(json)
     svgroot.append(elem)
     mockaddSVGElementsFromJsonCallCount++
     return elem
   }
   const mockPathActions = {
-    resetOrientation (pth) {
+    resetOrientation (pth: SVGPathElement) {
       if (pth?.nodeName !== 'path') { return false }
       const tlist = pth.transform.baseVal
       const m = math.transformListToTransform(tlist).matrix
@@ -80,14 +90,14 @@ describe('utilities bbox', function () {
       // let lastX, lastY;
 
       for (let i = 0; i < len; ++i) {
-        const seg = toPathSeg(segData[i])
+        const seg = toPathSeg(segData[i]!)
         const type = seg.pathSegType
         if (type === 1) { continue }
-        const pts = [];
+        const pts: number[] = [];
         ['', 1, 2].forEach(function (n) {
           const x = seg['x' + n]; const y = seg['y' + n]
           if (x !== undefined && y !== undefined) {
-            const pt = math.transformPoint(x, y, m)
+            const pt = math.transformPoint(x as number, y as number, m)
             pts.splice(pts.length, 0, pt.x, pt.y)
           }
         })
@@ -99,7 +109,7 @@ describe('utilities bbox', function () {
 
   const EPSILON = 0.001
 
-  let svgroot
+  let svgroot: Element
   beforeEach(() => {
     document.body.textContent = ''
 
@@ -115,18 +125,18 @@ describe('utilities bbox', function () {
     sandbox.append(svgroot)
 
     const mockSvgCanvas = {
-      createSVGElement (jsonMap) {
+      createSVGElement (jsonMap: SVGElementJSON) {
         const elem = document.createElementNS(NS.SVG, jsonMap.element)
         Object.entries(jsonMap.attr).forEach(([attr, value]) => {
-          elem.setAttribute(attr, value)
+          elem.setAttribute(attr, value as string)
         })
         return elem
       },
       getSvgRoot () { return svgroot }
     }
 
-    path.init(mockSvgCanvas)
-    units.init({ getRoundDigits: () => 2 }) // mock getRoundDigits
+    path.init(mockSvgCanvas as unknown as ISvgCanvas)
+    units.init({ getRoundDigits: () => 2 } as unknown as ElementContainer) // mock getRoundDigits
     mockaddSVGElementsFromJsonCallCount = 0
   })
 
@@ -146,7 +156,7 @@ describe('utilities bbox', function () {
       attr: { id: 'path', d: 'M0,1 L2,3' }
     })
     svgroot.append(elem)
-    let bbox = getBBoxWithTransform(elem, mockaddSVGElementsFromJson, mockPathActions)
+    let bbox = getBBoxWithTransform(elem, mockaddSVGElementsFromJson, mockPathActions)!
     assert.deepEqual(bbox, { x: 0, y: 1, width: 2, height: 2 })
     assert.equal(mockaddSVGElementsFromJsonCallCount, 0)
     elem.remove()
@@ -156,7 +166,7 @@ describe('utilities bbox', function () {
       attr: { id: 'rect', x: '0', y: '1', width: '5', height: '10' }
     })
     svgroot.append(elem)
-    bbox = getBBoxWithTransform(elem, mockaddSVGElementsFromJson, mockPathActions)
+    bbox = getBBoxWithTransform(elem, mockaddSVGElementsFromJson, mockPathActions)!
     assert.deepEqual(bbox, { x: 0, y: 1, width: 5, height: 10 })
     assert.equal(mockaddSVGElementsFromJsonCallCount, 0)
     elem.remove()
@@ -166,7 +176,7 @@ describe('utilities bbox', function () {
       attr: { id: 'line', x1: '0', y1: '1', x2: '5', y2: '6' }
     })
     svgroot.append(elem)
-    bbox = getBBoxWithTransform(elem, mockaddSVGElementsFromJson, mockPathActions)
+    bbox = getBBoxWithTransform(elem, mockaddSVGElementsFromJson, mockPathActions)!
     assert.deepEqual(bbox, { x: 0, y: 1, width: 5, height: 5 })
     assert.equal(mockaddSVGElementsFromJsonCallCount, 0)
     elem.remove()
@@ -181,7 +191,7 @@ describe('utilities bbox', function () {
     })
     g.append(elem)
     svgroot.append(g)
-    bbox = getBBoxWithTransform(elem, mockaddSVGElementsFromJson, mockPathActions)
+    bbox = getBBoxWithTransform(elem, mockaddSVGElementsFromJson, mockPathActions)!
     assert.deepEqual(bbox, { x: 0, y: 1, width: 5, height: 10 })
     assert.equal(mockaddSVGElementsFromJsonCallCount, 0)
     g.remove()
@@ -195,7 +205,7 @@ describe('utilities bbox', function () {
       attr: { id: 'path', d: 'M10,10 L20,20', transform: 'rotate(45 10,10)' }
     })
     svgroot.append(elem)
-    let bbox = getBBoxWithTransform(elem, mockaddSVGElementsFromJson, mockPathActions)
+    let bbox = getBBoxWithTransform(elem, mockaddSVGElementsFromJson, mockPathActions)!
     assert.close(bbox.x, 10, EPSILON)
     assert.close(bbox.y, 10, EPSILON)
     assert.close(bbox.width, 0, EPSILON)
@@ -207,7 +217,7 @@ describe('utilities bbox', function () {
       attr: { id: 'rect', x: '10', y: '10', width: '10', height: '20', transform: 'rotate(90 15,20)' }
     })
     svgroot.append(elem)
-    bbox = getBBoxWithTransform(elem, mockaddSVGElementsFromJson, mockPathActions)
+    bbox = getBBoxWithTransform(elem, mockaddSVGElementsFromJson, mockPathActions)!
     assert.close(bbox.x, 5, EPSILON)
     assert.close(bbox.y, 15, EPSILON)
     assert.close(bbox.width, 20, EPSILON)
@@ -224,7 +234,7 @@ describe('utilities bbox', function () {
     })
     svgroot.append(elem)
     mockaddSVGElementsFromJsonCallCount = 0
-    bbox = getBBoxWithTransform(elem, mockaddSVGElementsFromJson, mockPathActions)
+    bbox = getBBoxWithTransform(elem, mockaddSVGElementsFromJson, mockPathActions)!
     const r2 = rotateRect(rect, angle, origin)
     assert.close(bbox.x, r2.x, EPSILON, 'rect2 x is ' + r2.x)
     assert.close(bbox.y, r2.y, EPSILON, 'rect2 y is ' + r2.y)
@@ -245,7 +255,7 @@ describe('utilities bbox', function () {
     g.append(elem)
     svgroot.append(g)
     mockaddSVGElementsFromJsonCallCount = 0
-    bbox = getBBoxWithTransform(g, mockaddSVGElementsFromJson, mockPathActions)
+    bbox = getBBoxWithTransform(g, mockaddSVGElementsFromJson, mockPathActions)!
     assert.close(bbox.x, r2.x, EPSILON, 'rect2 x is ' + r2.x)
     assert.close(bbox.y, r2.y, EPSILON, 'rect2 y is ' + r2.y)
     assert.close(bbox.width, r2.width, EPSILON, 'rect2 width is' + r2.width)
@@ -259,7 +269,7 @@ describe('utilities bbox', function () {
     })
     svgroot.append(elem)
     mockaddSVGElementsFromJsonCallCount = 0
-    bbox = getBBoxWithTransform(elem, mockaddSVGElementsFromJson, mockPathActions)
+    bbox = getBBoxWithTransform(elem, mockaddSVGElementsFromJson, mockPathActions)!
     /** @todo: Review these test the BBox algorithm is using the bezier control points to calculate the bounding box. Should be 50, 50, 100, 100. */
     // assert.ok(bbox.x > 45 && bbox.x <= 50);
     assert.ok(bbox.y > 45 && bbox.y <= 50)
@@ -282,7 +292,7 @@ describe('utilities bbox', function () {
       attr: { id: 'path', d: 'M10,10 L20,20', transform: 'rotate(45 10,10) ' + matrix }
     })
     svgroot.append(elem)
-    let bbox = getBBoxWithTransform(elem, mockaddSVGElementsFromJson, mockPathActions)
+    let bbox = getBBoxWithTransform(elem, mockaddSVGElementsFromJson, mockPathActions)!
     assert.close(bbox.x, 10 + tx, EPSILON)
     assert.close(bbox.y, 10 + ty, EPSILON)
     assert.close(bbox.width, 0, EPSILON)
@@ -297,7 +307,7 @@ describe('utilities bbox', function () {
       attr: { id: 'rect', x: '10', y: '10', width: '10', height: '20', transform: 'rotate(90 15,20) ' + matrix }
     })
     svgroot.append(elem)
-    bbox = getBBoxWithTransform(elem, mockaddSVGElementsFromJson, mockPathActions)
+    bbox = getBBoxWithTransform(elem, mockaddSVGElementsFromJson, mockPathActions)!
     assert.close(bbox.x, 5 + tx, EPSILON)
     assert.close(bbox.y, 15 + ty, EPSILON)
     assert.close(bbox.width, 20, EPSILON)
@@ -317,7 +327,7 @@ describe('utilities bbox', function () {
       attr: { id: 'rect2', x: rect.x, y: rect.y, width: rect.width, height: rect.height, transform: 'rotate(' + angle + ' ' + origin.x + ',' + origin.y + ') ' + matrix }
     })
     svgroot.append(elem)
-    bbox = getBBoxWithTransform(elem, mockaddSVGElementsFromJson, mockPathActions)
+    bbox = getBBoxWithTransform(elem, mockaddSVGElementsFromJson, mockPathActions)!
     const r2 = rotateRect(rect, angle, origin)
     assert.close(bbox.x, r2.x + tx, EPSILON, 'rect2 x is ' + r2.x)
     assert.close(bbox.y, r2.y + ty, EPSILON, 'rect2 y is ' + r2.y)
@@ -336,7 +346,7 @@ describe('utilities bbox', function () {
     })
     g.append(elem)
     svgroot.append(g)
-    bbox = getBBoxWithTransform(g, mockaddSVGElementsFromJson, mockPathActions)
+    bbox = getBBoxWithTransform(g, mockaddSVGElementsFromJson, mockPathActions)!
     assert.close(bbox.x, r2.x + tx, EPSILON, 'rect2 x is ' + r2.x)
     assert.close(bbox.y, r2.y + ty, EPSILON, 'rect2 y is ' + r2.y)
     assert.close(bbox.width, r2.width, EPSILON, 'rect2 width is' + r2.width)
@@ -348,7 +358,7 @@ describe('utilities bbox', function () {
       attr: { id: 'ellipse1', cx: '100', cy: '100', rx: '50', ry: '50', transform: 'rotate(45 100,100) ' + matrix }
     })
     svgroot.append(elem)
-    bbox = getBBoxWithTransform(elem, mockaddSVGElementsFromJson, mockPathActions)
+    bbox = getBBoxWithTransform(elem, mockaddSVGElementsFromJson, mockPathActions)!
     /** @todo: the BBox algorithm is using the bezier control points to calculate the bounding box. Should be 50, 50, 100, 100. */
     // assert.ok(bbox.x > 45 + tx && bbox.x <= 50 + tx);
     assert.ok(bbox.y > 45 + ty && bbox.y <= 50 + ty)
@@ -498,7 +508,7 @@ describe('utilities bbox', function () {
    * @param {Float} degrees
    * @returns {Float}
    */
-  function radians (degrees) {
+  function radians (degrees: number) {
     return degrees * Math.PI / 180
   }
 
@@ -509,7 +519,7 @@ describe('utilities bbox', function () {
    * @param {module:math.XYObject} origin
    * @returns {module:math.XYObject}
    */
-  function rotatePoint (point, angle, origin = { x: 0, y: 0 }) {
+  function rotatePoint (point: XYObject, angle: number, origin = { x: 0, y: 0 }) {
     const x = point.x - origin.x
     const y = point.y - origin.y
     const theta = radians(angle)
@@ -525,7 +535,7 @@ describe('utilities bbox', function () {
    * @param {module:math.XYObject} origin
    * @returns {module:utilities.BBoxObject}
    */
-  function rotateRect (rect, angle, origin) {
+  function rotateRect (rect: BBoxObject, angle: number, origin: XYObject) {
     const tl = rotatePoint({ x: rect.x, y: rect.y }, angle, origin)
     const tr = rotatePoint({ x: rect.x + rect.width, y: rect.y }, angle, origin)
     const br = rotatePoint({ x: rect.x + rect.width, y: rect.y + rect.height }, angle, origin)

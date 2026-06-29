@@ -1,4 +1,6 @@
 import { test, expect } from '../fixtures.js'
+import type { BBoxObject } from '@svgedit/svgcanvas/core/utilities.js'
+import type { ElementContainer } from '@svgedit/svgcanvas/core/units.js'
 
 test.describe('SVG core smoke', () => {
   test.beforeEach(async ({ page }) => {
@@ -44,7 +46,7 @@ test.describe('SVG core smoke', () => {
       units.init({
         getRoundDigits: () => 2,
         getBaseUnit: () => 'px'
-      })
+      } as unknown as ElementContainer)
       const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
       path.setAttribute('d', 'M0 0 L10 0 L10 10 Z')
@@ -68,14 +70,14 @@ test.describe('SVG core smoke', () => {
       svg.append(rect)
       const res = utilities.getBBoxOfElementAsPath(
         rect,
-        (json) => {
+        ((json: { element: string; attr: Record<string, string> }) => {
           const el = document.createElementNS('http://www.w3.org/2000/svg', json.element)
           Object.entries(json.attr).forEach(([k, v]) => el.setAttribute(k, v))
           svg.append(el)
           return el
-        },
+        }) as unknown as Parameters<typeof utilities.getBBoxOfElementAsPath>[1],
         { resetOrientation: () => {} }
-      )
+      ) as BBoxObject
       return { x: res.x, y: res.y, width: res.width, height: res.height }
     })
     expect(Number.isFinite(bbox.x)).toBe(true)

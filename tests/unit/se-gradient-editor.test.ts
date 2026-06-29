@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest'
-import '../../src/editor/components/jgraduate/se-gradient-editor.ts'
+import '../../src/editor/components/jgraduate/se-gradient-editor.js'
 
 // Regression guards for two audit findings (#122, #128) that turned out to be
 // over-claims: a radial gradient's radius and gradientTransform survive a
@@ -17,7 +17,7 @@ function makeRadialGradient (
   g.setAttribute('cy', opts.cy ?? '0.5')
   g.setAttribute('r', opts.r ?? '0.5')
   if (opts.gradientTransform) g.setAttribute('gradientTransform', opts.gradientTransform)
-  for (const [offset, color] of [['0', '#000000'], ['1', '#ffffff']]) {
+  for (const [offset, color] of [['0', '#000000'], ['1', '#ffffff']] as const) {
     const stop = document.createElementNS(SVG_NS, 'stop')
     stop.setAttribute('offset', offset)
     stop.setAttribute('stop-color', color)

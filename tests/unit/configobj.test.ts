@@ -1,15 +1,18 @@
 import ConfigObj, { regexEscape } from '../../src/editor/ConfigObj.js'
 
+type EditorInstance = ConstructorParameters<typeof ConfigObj>[0]
+type Prefs = ConfigObj['defaultPrefs']
+
 describe('ConfigObj', () => {
   const stubEditor = () => ({
     storage: {
       map: new Map(),
-      getItem (k) { return this.map.get(k) },
-      setItem (k, v) { this.map.set(k, v) }
+      getItem (k: string) { return this.map.get(k) },
+      setItem (k: string, v: string) { this.map.set(k, v) }
     },
-    loadFromDataURI: () => { stubEditor.loaded = 'data' },
-    loadFromString: () => { stubEditor.loaded = 'string' },
-    loadFromURL: () => { stubEditor.loaded = 'url' }
+    loadFromDataURI: () => { (stubEditor as unknown as { loaded: string }).loaded = 'data' },
+    loadFromString: () => { (stubEditor as unknown as { loaded: string }).loaded = 'string' },
+    loadFromURL: () => { (stubEditor as unknown as { loaded: string }).loaded = 'url' }
   })
 
   it('escapes regex characters', () => {
@@ -18,9 +21,9 @@ describe('ConfigObj', () => {
 
   it('loadContentAndPrefs cookie path keeps the default when no cookie is present (#18)', () => {
     const editor = { ...stubEditor(), storage: null }
-    const cfg = new ConfigObj(editor)
+    const cfg = new ConfigObj(editor as unknown as EditorInstance)
     cfg.curConfig.forceStorage = true
-    cfg.defaultPrefs = { _m8bTestPref: 'origdefault' }
+    cfg.defaultPrefs = { _m8bTestPref: 'origdefault' } as unknown as Prefs
     cfg.loadContentAndPrefs()
     // No `svg-edit-_m8bTestPref` cookie exists; the cookie path must preserve the
     // default (it used to clobber it with ''), matching the storage path's `if (val)`.
@@ -29,13 +32,13 @@ describe('ConfigObj', () => {
 
   it('merges defaults and respects allowInitialUserOverride', () => {
     const editor = stubEditor()
-    const cfg = new ConfigObj(editor)
+    const cfg = new ConfigObj(editor as unknown as EditorInstance)
     cfg.setConfig({ gridSnapping: true, userExtensions: ['custom'] })
     cfg.setupCurConfig()
 
     expect(cfg.curConfig.gridSnapping).toBe(true)
     expect(cfg.curConfig.extensions).toContain('ext-grid')
-    expect(cfg.curConfig.extensions.includes('custom') || cfg.curConfig.userExtensions.includes('custom')).toBe(true)
+    expect(cfg.curConfig.extensions.includes('custom') || (cfg.curConfig.userExtensions as unknown as string[]).includes('custom')).toBe(true)
 
     cfg.setConfig({ lang: 'fr' }, { allowInitialUserOverride: true })
     expect(cfg.defaultPrefs.lang).toBe('fr')
@@ -43,7 +46,7 @@ describe('ConfigObj', () => {
 
   it('prefers existing values when overwrite is false', () => {
     const editor = stubEditor()
-    const cfg = new ConfigObj(editor)
+    const cfg = new ConfigObj(editor as unknown as EditorInstance)
     cfg.curConfig.preventAllURLConfig = true
     cfg.curPrefs.lang = 'es'
 
@@ -54,7 +57,7 @@ describe('ConfigObj', () => {
   })
 
   it('honors per-branch skip conditions with overwrite:false (no preventAllURLConfig)', () => {
-    const cfg = new ConfigObj(stubEditor())
+    const cfg = new ConfigObj(stubEditor() as unknown as EditorInstance)
     // Pre-set values that each branch's guard should refuse to overwrite.
     cfg.curPrefs.lang = 'es' // pref already set -> pref branch skips
     cfg.curConfig.gridColor = '#abc' // config own-prop set -> config branch skips
@@ -76,9 +79,9 @@ describe('ConfigObj', () => {
   it('#31 coerces a stored boolean pref string back to a boolean', () => {
     const editor = stubEditor()
     editor.storage.setItem('svg-edit-myBool', 'true')
-    const cfg = new ConfigObj(editor)
+    const cfg = new ConfigObj(editor as unknown as EditorInstance)
     cfg.curConfig.forceStorage = true
-    cfg.defaultPrefs = { myBool: false }
+    cfg.defaultPrefs = { myBool: false } as unknown as Prefs
     cfg.loadContentAndPrefs()
     // Was a truthy 'true' string before #31; now a real boolean.
     expect(cfg.defaultPrefs.myBool).toBe(true)
@@ -88,9 +91,9 @@ describe('ConfigObj', () => {
     const editor = stubEditor()
     editor.storage.setItem('svg-edit-myNum', '42')
     editor.storage.setItem('svg-edit-myStr', 'hello')
-    const cfg = new ConfigObj(editor)
+    const cfg = new ConfigObj(editor as unknown as EditorInstance)
     cfg.curConfig.forceStorage = true
-    cfg.defaultPrefs = { myNum: 0, myStr: 'def' }
+    cfg.defaultPrefs = { myNum: 0, myStr: 'def' } as unknown as Prefs
     cfg.loadContentAndPrefs()
     expect(cfg.defaultPrefs.myNum).toBe(42)
     expect(cfg.defaultPrefs.myStr).toBe('hello')

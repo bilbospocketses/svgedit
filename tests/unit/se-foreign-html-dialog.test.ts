@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import '../../src/editor/dialogs/SeForeignHtmlDialog.ts'
-import { parseToEditorFragment } from '../../src/editor/dialogs/foreign-html-serialize.ts'
+import '../../src/editor/dialogs/SeForeignHtmlDialog.js'
+import { parseToEditorFragment } from '../../src/editor/dialogs/foreign-html-serialize.js'
 
 const flush = async (el: any) => {
   await customElements.whenDefined('se-foreign-html-dialog')

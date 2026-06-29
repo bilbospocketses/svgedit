@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isValidEnvelope, PROTOCOL_VERSION } from '../../src/embed/protocol.ts'
+import { isValidEnvelope, PROTOCOL_VERSION } from '../../src/embed/protocol.js'
 
 describe('embed protocol', () => {
   it('PROTOCOL_VERSION is 1', () => {

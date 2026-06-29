@@ -47,6 +47,7 @@ npm run lint:md    # markdownlint only
 npm run typecheck  # tsc --build — packages/svgcanvas ONLY (see below)
 npm run typecheck:editor  # svgcanvas decls + editor (src/editor + src/server) typecheck — self-contained
 npm run typecheck:server  # server (src/server) typecheck via tsconfig.server.json
+npm run typecheck:tests   # tests/** strict (tsc -p tests/tsconfig.json); gated in CI build-and-unit
 ```
 
 ## Launcher (0b)

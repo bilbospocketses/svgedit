@@ -39,7 +39,7 @@ describe('locale shim (English-only)', () => {
   })
 
   test('t passes non-string keys through (defensive)', () => {
-    expect(t(42)).toBe(42)
-    expect(t(null)).toBe(null)
+    expect(t(42 as unknown as string)).toBe(42)
+    expect(t(null as unknown as string)).toBe(null)
   })
 })

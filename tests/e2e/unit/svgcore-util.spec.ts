@@ -19,7 +19,7 @@ test.describe('SVG common util helpers', () => {
       )
 
       return {
-        pos: util.findPos(child),
+        pos: util.findPos(child as unknown as HTMLElement),
         isObject: util.isObject({ hello: 'world' }),
         merged
       }
@@ -37,7 +37,7 @@ test.describe('SVG common util helpers', () => {
   test('finds closest ancestors by selector', async ({ page }) => {
     const result = await page.evaluate(() => {
       const { util } = window.svgHarness
-      const root = document.getElementById('root')
+      const root = document.getElementById('root')!
       root.innerHTML = ''
 
       const wrapper = document.createElement('div')
@@ -54,7 +54,7 @@ test.describe('SVG common util helpers', () => {
       return {
         byClass: util.getClosest(child, '.wrapper')?.className,
         byId: util.getClosest(child, '#section')?.id,
-        byData: util.getClosest(child, '[data-role=target]')?.dataset.role,
+        byData: (util.getClosest(child, '[data-role=target]') as HTMLElement | null)?.dataset.role,
         byTag: util.getClosest(child, 'div')?.tagName.toLowerCase()
       }
     })
@@ -68,7 +68,7 @@ test.describe('SVG common util helpers', () => {
   test('gathers parents with and without limits', async ({ page }) => {
     const result = await page.evaluate(() => {
       const { util } = window.svgHarness
-      const root = document.getElementById('root')
+      const root = document.getElementById('root')!
       root.innerHTML = ''
 
       const outer = document.createElement('div')
@@ -83,10 +83,10 @@ test.describe('SVG common util helpers', () => {
       root.append(outer)
 
       return {
-        all: util.getParents(inner)?.map((el) => el.tagName.toLowerCase()),
-        byClass: util.getParents(inner, '.outer')?.map((el) => el.className),
-        untilMid: util.getParentsUntil(inner, '#mid')?.map((el) => el.tagName.toLowerCase()),
-        untilMidFiltered: util.getParentsUntil(inner, '#mid', '.inner')?.map((el) => el.tagName.toLowerCase())
+        all: (util.getParents(inner) as Element[] | null)?.map((el: Element) => el.tagName.toLowerCase()),
+        byClass: (util.getParents(inner, '.outer') as Element[] | null)?.map((el: Element) => el.className),
+        untilMid: (util.getParentsUntil(inner, '#mid') as Element[] | null)?.map((el: Element) => el.tagName.toLowerCase()),
+        untilMidFiltered: (util.getParentsUntil(inner, '#mid', '.inner') as Element[] | null)?.map((el: Element) => el.tagName.toLowerCase())
       }
     })
 

@@ -12,26 +12,26 @@ describe('history', function () {
   })
 
   // const svg = document.createElementNS(NS.SVG, 'svg');
-  let undoMgr = null
-  let divparent
-  let div1
-  let div2
-  let div3
-  let div4
-  let div5
-  let div
+  let undoMgr: history.UndoManager | null = null
+  let divparent: HTMLDivElement
+  let div1: HTMLDivElement
+  let div2: HTMLDivElement
+  let div3: HTMLDivElement
+  let div4: HTMLDivElement
+  let div5: HTMLDivElement
+  let div: HTMLDivElement
 
   class MockCommand extends history.Command {
-    constructor (optText) {
+    constructor (optText?: string) {
       super()
-      this.text = optText
+      this.text = optText as string
     }
 
-    apply (handler) {
+    apply (handler: history.HistoryEventHandler | null) {
       super.apply(handler, () => { /* empty fn */ })
     }
 
-    unapply (handler) {
+    unapply (handler: history.HistoryEventHandler | null) {
       super.unapply(handler, () => { /* empty fn */ })
     }
 
@@ -49,7 +49,7 @@ describe('history', function () {
    * @returns {void}
    */
   beforeEach(function () {
-    undoMgr = new history.UndoManager()
+    undoMgr = new history.UndoManager(null)
 
     document.body.textContent = ''
     divparent = document.createElement('div')
@@ -96,143 +96,143 @@ describe('history', function () {
 
   it('Test UndoManager methods', function () {
     assert.ok(undoMgr)
-    assert.ok(undoMgr.addCommandToHistory)
-    assert.ok(undoMgr.getUndoStackSize)
-    assert.ok(undoMgr.getRedoStackSize)
-    assert.ok(undoMgr.resetUndoStack)
-    assert.ok(undoMgr.getNextUndoCommandText)
-    assert.ok(undoMgr.getNextRedoCommandText)
+    assert.ok(undoMgr!.addCommandToHistory)
+    assert.ok(undoMgr!.getUndoStackSize)
+    assert.ok(undoMgr!.getRedoStackSize)
+    assert.ok(undoMgr!.resetUndoStack)
+    assert.ok(undoMgr!.getNextUndoCommandText)
+    assert.ok(undoMgr!.getNextRedoCommandText)
 
     assert.equal(typeof undoMgr, typeof {})
-    assert.equal(typeof undoMgr.addCommandToHistory, typeof function () { /* empty fn */ })
-    assert.equal(typeof undoMgr.getUndoStackSize, typeof function () { /* empty fn */ })
-    assert.equal(typeof undoMgr.getRedoStackSize, typeof function () { /* empty fn */ })
-    assert.equal(typeof undoMgr.resetUndoStack, typeof function () { /* empty fn */ })
-    assert.equal(typeof undoMgr.getNextUndoCommandText, typeof function () { /* empty fn */ })
-    assert.equal(typeof undoMgr.getNextRedoCommandText, typeof function () { /* empty fn */ })
+    assert.equal(typeof undoMgr!.addCommandToHistory, typeof function () { /* empty fn */ })
+    assert.equal(typeof undoMgr!.getUndoStackSize, typeof function () { /* empty fn */ })
+    assert.equal(typeof undoMgr!.getRedoStackSize, typeof function () { /* empty fn */ })
+    assert.equal(typeof undoMgr!.resetUndoStack, typeof function () { /* empty fn */ })
+    assert.equal(typeof undoMgr!.getNextUndoCommandText, typeof function () { /* empty fn */ })
+    assert.equal(typeof undoMgr!.getNextRedoCommandText, typeof function () { /* empty fn */ })
   })
 
   it('Test UndoManager.addCommandToHistory() function', function () {
-    assert.equal(undoMgr.getUndoStackSize(), 0)
-    undoMgr.addCommandToHistory(new MockCommand())
-    assert.equal(undoMgr.getUndoStackSize(), 1)
-    undoMgr.addCommandToHistory(new MockCommand())
-    assert.equal(undoMgr.getUndoStackSize(), 2)
+    assert.equal(undoMgr!.getUndoStackSize(), 0)
+    undoMgr!.addCommandToHistory(new MockCommand())
+    assert.equal(undoMgr!.getUndoStackSize(), 1)
+    undoMgr!.addCommandToHistory(new MockCommand())
+    assert.equal(undoMgr!.getUndoStackSize(), 2)
   })
 
   it('Test UndoManager.getUndoStackSize() and getRedoStackSize() functions', function () {
-    undoMgr.addCommandToHistory(new MockCommand())
-    undoMgr.addCommandToHistory(new MockCommand())
-    undoMgr.addCommandToHistory(new MockCommand())
+    undoMgr!.addCommandToHistory(new MockCommand())
+    undoMgr!.addCommandToHistory(new MockCommand())
+    undoMgr!.addCommandToHistory(new MockCommand())
 
-    assert.equal(undoMgr.getUndoStackSize(), 3)
-    assert.equal(undoMgr.getRedoStackSize(), 0)
+    assert.equal(undoMgr!.getUndoStackSize(), 3)
+    assert.equal(undoMgr!.getRedoStackSize(), 0)
 
-    undoMgr.undo()
-    assert.equal(undoMgr.getUndoStackSize(), 2)
-    assert.equal(undoMgr.getRedoStackSize(), 1)
+    undoMgr!.undo()
+    assert.equal(undoMgr!.getUndoStackSize(), 2)
+    assert.equal(undoMgr!.getRedoStackSize(), 1)
 
-    undoMgr.undo()
-    assert.equal(undoMgr.getUndoStackSize(), 1)
-    assert.equal(undoMgr.getRedoStackSize(), 2)
+    undoMgr!.undo()
+    assert.equal(undoMgr!.getUndoStackSize(), 1)
+    assert.equal(undoMgr!.getRedoStackSize(), 2)
 
-    undoMgr.undo()
-    assert.equal(undoMgr.getUndoStackSize(), 0)
-    assert.equal(undoMgr.getRedoStackSize(), 3)
+    undoMgr!.undo()
+    assert.equal(undoMgr!.getUndoStackSize(), 0)
+    assert.equal(undoMgr!.getRedoStackSize(), 3)
 
-    undoMgr.undo()
-    assert.equal(undoMgr.getUndoStackSize(), 0)
-    assert.equal(undoMgr.getRedoStackSize(), 3)
+    undoMgr!.undo()
+    assert.equal(undoMgr!.getUndoStackSize(), 0)
+    assert.equal(undoMgr!.getRedoStackSize(), 3)
 
-    undoMgr.redo()
-    assert.equal(undoMgr.getUndoStackSize(), 1)
-    assert.equal(undoMgr.getRedoStackSize(), 2)
+    undoMgr!.redo()
+    assert.equal(undoMgr!.getUndoStackSize(), 1)
+    assert.equal(undoMgr!.getRedoStackSize(), 2)
 
-    undoMgr.redo()
-    assert.equal(undoMgr.getUndoStackSize(), 2)
-    assert.equal(undoMgr.getRedoStackSize(), 1)
+    undoMgr!.redo()
+    assert.equal(undoMgr!.getUndoStackSize(), 2)
+    assert.equal(undoMgr!.getRedoStackSize(), 1)
 
-    undoMgr.redo()
-    assert.equal(undoMgr.getUndoStackSize(), 3)
-    assert.equal(undoMgr.getRedoStackSize(), 0)
+    undoMgr!.redo()
+    assert.equal(undoMgr!.getUndoStackSize(), 3)
+    assert.equal(undoMgr!.getRedoStackSize(), 0)
 
-    undoMgr.redo()
-    assert.equal(undoMgr.getUndoStackSize(), 3)
-    assert.equal(undoMgr.getRedoStackSize(), 0)
+    undoMgr!.redo()
+    assert.equal(undoMgr!.getUndoStackSize(), 3)
+    assert.equal(undoMgr!.getRedoStackSize(), 0)
   })
 
   it('Test UndoManager.resetUndoStackSize() function', function () {
-    undoMgr.addCommandToHistory(new MockCommand())
-    undoMgr.addCommandToHistory(new MockCommand())
-    undoMgr.addCommandToHistory(new MockCommand())
-    undoMgr.undo()
+    undoMgr!.addCommandToHistory(new MockCommand())
+    undoMgr!.addCommandToHistory(new MockCommand())
+    undoMgr!.addCommandToHistory(new MockCommand())
+    undoMgr!.undo()
 
-    assert.equal(undoMgr.getUndoStackSize(), 2)
-    assert.equal(undoMgr.getRedoStackSize(), 1)
+    assert.equal(undoMgr!.getUndoStackSize(), 2)
+    assert.equal(undoMgr!.getRedoStackSize(), 1)
 
-    undoMgr.resetUndoStack()
+    undoMgr!.resetUndoStack()
 
-    assert.equal(undoMgr.getUndoStackSize(), 0)
-    assert.equal(undoMgr.getRedoStackSize(), 0)
+    assert.equal(undoMgr!.getUndoStackSize(), 0)
+    assert.equal(undoMgr!.getRedoStackSize(), 0)
   })
 
   it('Test UndoManager.getNextUndoCommandText() function', function () {
-    assert.equal(undoMgr.getNextUndoCommandText(), '')
+    assert.equal(undoMgr!.getNextUndoCommandText(), '')
 
-    undoMgr.addCommandToHistory(new MockCommand('First'))
-    undoMgr.addCommandToHistory(new MockCommand('Second'))
-    undoMgr.addCommandToHistory(new MockCommand('Third'))
+    undoMgr!.addCommandToHistory(new MockCommand('First'))
+    undoMgr!.addCommandToHistory(new MockCommand('Second'))
+    undoMgr!.addCommandToHistory(new MockCommand('Third'))
 
-    assert.equal(undoMgr.getNextUndoCommandText(), 'Third')
+    assert.equal(undoMgr!.getNextUndoCommandText(), 'Third')
 
-    undoMgr.undo()
-    assert.equal(undoMgr.getNextUndoCommandText(), 'Second')
+    undoMgr!.undo()
+    assert.equal(undoMgr!.getNextUndoCommandText(), 'Second')
 
-    undoMgr.undo()
-    assert.equal(undoMgr.getNextUndoCommandText(), 'First')
+    undoMgr!.undo()
+    assert.equal(undoMgr!.getNextUndoCommandText(), 'First')
 
-    undoMgr.undo()
-    assert.equal(undoMgr.getNextUndoCommandText(), '')
+    undoMgr!.undo()
+    assert.equal(undoMgr!.getNextUndoCommandText(), '')
 
-    undoMgr.redo()
-    assert.equal(undoMgr.getNextUndoCommandText(), 'First')
+    undoMgr!.redo()
+    assert.equal(undoMgr!.getNextUndoCommandText(), 'First')
 
-    undoMgr.redo()
-    assert.equal(undoMgr.getNextUndoCommandText(), 'Second')
+    undoMgr!.redo()
+    assert.equal(undoMgr!.getNextUndoCommandText(), 'Second')
 
-    undoMgr.redo()
-    assert.equal(undoMgr.getNextUndoCommandText(), 'Third')
+    undoMgr!.redo()
+    assert.equal(undoMgr!.getNextUndoCommandText(), 'Third')
 
-    undoMgr.redo()
-    assert.equal(undoMgr.getNextUndoCommandText(), 'Third')
+    undoMgr!.redo()
+    assert.equal(undoMgr!.getNextUndoCommandText(), 'Third')
   })
 
   it('Test UndoManager.getNextRedoCommandText() function', function () {
-    assert.equal(undoMgr.getNextRedoCommandText(), '')
+    assert.equal(undoMgr!.getNextRedoCommandText(), '')
 
-    undoMgr.addCommandToHistory(new MockCommand('First'))
-    undoMgr.addCommandToHistory(new MockCommand('Second'))
-    undoMgr.addCommandToHistory(new MockCommand('Third'))
+    undoMgr!.addCommandToHistory(new MockCommand('First'))
+    undoMgr!.addCommandToHistory(new MockCommand('Second'))
+    undoMgr!.addCommandToHistory(new MockCommand('Third'))
 
-    assert.equal(undoMgr.getNextRedoCommandText(), '')
+    assert.equal(undoMgr!.getNextRedoCommandText(), '')
 
-    undoMgr.undo()
-    assert.equal(undoMgr.getNextRedoCommandText(), 'Third')
+    undoMgr!.undo()
+    assert.equal(undoMgr!.getNextRedoCommandText(), 'Third')
 
-    undoMgr.undo()
-    assert.equal(undoMgr.getNextRedoCommandText(), 'Second')
+    undoMgr!.undo()
+    assert.equal(undoMgr!.getNextRedoCommandText(), 'Second')
 
-    undoMgr.undo()
-    assert.equal(undoMgr.getNextRedoCommandText(), 'First')
+    undoMgr!.undo()
+    assert.equal(undoMgr!.getNextRedoCommandText(), 'First')
 
-    undoMgr.redo()
-    assert.equal(undoMgr.getNextRedoCommandText(), 'Second')
+    undoMgr!.redo()
+    assert.equal(undoMgr!.getNextRedoCommandText(), 'Second')
 
-    undoMgr.redo()
-    assert.equal(undoMgr.getNextRedoCommandText(), 'Third')
+    undoMgr!.redo()
+    assert.equal(undoMgr!.getNextRedoCommandText(), 'Third')
 
-    undoMgr.redo()
-    assert.equal(undoMgr.getNextRedoCommandText(), '')
+    undoMgr!.redo()
+    assert.equal(undoMgr!.getNextRedoCommandText(), '')
   })
 
   it('Test UndoManager.undo() and redo() functions', function () {
@@ -247,40 +247,40 @@ describe('history', function () {
     cmd2.unapply = function () { lastCalled = 'cmd2.unapply' }
     cmd3.unapply = function () { lastCalled = 'cmd3.unapply' }
 
-    undoMgr.addCommandToHistory(cmd1)
-    undoMgr.addCommandToHistory(cmd2)
-    undoMgr.addCommandToHistory(cmd3)
+    undoMgr!.addCommandToHistory(cmd1)
+    undoMgr!.addCommandToHistory(cmd2)
+    undoMgr!.addCommandToHistory(cmd3)
 
     assert.ok(!lastCalled)
 
-    undoMgr.undo()
+    undoMgr!.undo()
     assert.equal(lastCalled, 'cmd3.unapply')
 
-    undoMgr.redo()
+    undoMgr!.redo()
     assert.equal(lastCalled, 'cmd3.apply')
 
-    undoMgr.undo()
-    undoMgr.undo()
+    undoMgr!.undo()
+    undoMgr!.undo()
     assert.equal(lastCalled, 'cmd2.unapply')
 
-    undoMgr.undo()
+    undoMgr!.undo()
     assert.equal(lastCalled, 'cmd1.unapply')
     lastCalled = null
 
-    undoMgr.undo()
+    undoMgr!.undo()
     assert.ok(!lastCalled)
 
-    undoMgr.redo()
+    undoMgr!.redo()
     assert.equal(lastCalled, 'cmd1.apply')
 
-    undoMgr.redo()
+    undoMgr!.redo()
     assert.equal(lastCalled, 'cmd2.apply')
 
-    undoMgr.redo()
+    undoMgr!.redo()
     assert.equal(lastCalled, 'cmd3.apply')
     lastCalled = null
 
-    undoMgr.redo()
+    undoMgr!.redo()
     assert.ok(!lastCalled)
   })
 
@@ -291,40 +291,40 @@ describe('history', function () {
     assert.equal(typeof move.unapply, typeof function () { /* empty fn */ })
     assert.equal(typeof move.apply, typeof function () { /* empty fn */ })
 
-    move.unapply()
+    move.unapply(null)
     assert.equal(divparent.firstElementChild, div3)
-    assert.equal(divparent.firstElementChild.nextElementSibling, div1)
+    assert.equal(divparent.firstElementChild!.nextElementSibling, div1)
     assert.equal(divparent.lastElementChild, div2)
 
-    move.apply()
+    move.apply(null)
     assert.equal(divparent.firstElementChild, div1)
-    assert.equal(divparent.firstElementChild.nextElementSibling, div2)
+    assert.equal(divparent.firstElementChild!.nextElementSibling, div2)
     assert.equal(divparent.lastElementChild, div3)
 
     move = new history.MoveElementCommand(div1, null, divparent)
 
-    move.unapply()
+    move.unapply(null)
     assert.equal(divparent.firstElementChild, div2)
-    assert.equal(divparent.firstElementChild.nextElementSibling, div3)
+    assert.equal(divparent.firstElementChild!.nextElementSibling, div3)
     assert.equal(divparent.lastElementChild, div1)
 
-    move.apply()
+    move.apply(null)
     assert.equal(divparent.firstElementChild, div1)
-    assert.equal(divparent.firstElementChild.nextElementSibling, div2)
+    assert.equal(divparent.firstElementChild!.nextElementSibling, div2)
     assert.equal(divparent.lastElementChild, div3)
 
     move = new history.MoveElementCommand(div2, div5, div4)
 
-    move.unapply()
+    move.unapply(null)
     assert.equal(divparent.firstElementChild, div1)
-    assert.equal(divparent.firstElementChild.nextElementSibling, div3)
+    assert.equal(divparent.firstElementChild!.nextElementSibling, div3)
     assert.equal(divparent.lastElementChild, div3)
     assert.equal(div4.firstElementChild, div2)
-    assert.equal(div4.firstElementChild.nextElementSibling, div5)
+    assert.equal(div4.firstElementChild!.nextElementSibling, div5)
 
-    move.apply()
+    move.apply(null)
     assert.equal(divparent.firstElementChild, div1)
-    assert.equal(divparent.firstElementChild.nextElementSibling, div2)
+    assert.equal(divparent.firstElementChild!.nextElementSibling, div2)
     assert.equal(divparent.lastElementChild, div3)
     assert.equal(div4.firstElementChild, div5)
     assert.equal(div4.lastElementChild, div5)
@@ -337,13 +337,13 @@ describe('history', function () {
     assert.equal(typeof insert.unapply, typeof function () { /* empty fn */ })
     assert.equal(typeof insert.apply, typeof function () { /* empty fn */ })
 
-    insert.unapply()
+    insert.unapply(null)
     assert.equal(divparent.childElementCount, 2)
     assert.equal(divparent.firstElementChild, div1)
     assert.equal(div1.nextElementSibling, div2)
     assert.equal(divparent.lastElementChild, div2)
 
-    insert.apply()
+    insert.apply(null)
     assert.equal(divparent.childElementCount, 3)
     assert.equal(divparent.firstElementChild, div1)
     assert.equal(div1.nextElementSibling, div2)
@@ -351,13 +351,13 @@ describe('history', function () {
 
     insert = new history.InsertElementCommand(div2)
 
-    insert.unapply()
+    insert.unapply(null)
     assert.equal(divparent.childElementCount, 2)
     assert.equal(divparent.firstElementChild, div1)
     assert.equal(div1.nextElementSibling, div3)
     assert.equal(divparent.lastElementChild, div3)
 
-    insert.apply()
+    insert.apply(null)
     assert.equal(divparent.childElementCount, 3)
     assert.equal(divparent.firstElementChild, div1)
     assert.equal(div1.nextElementSibling, div2)
@@ -374,14 +374,14 @@ describe('history', function () {
     assert.equal(typeof remove.unapply, typeof function () { /* empty fn */ })
     assert.equal(typeof remove.apply, typeof function () { /* empty fn */ })
 
-    remove.unapply()
+    remove.unapply(null)
     assert.equal(divparent.childElementCount, 4)
     assert.equal(divparent.firstElementChild, div1)
     assert.equal(div1.nextElementSibling, div2)
     assert.equal(div2.nextElementSibling, div3)
     assert.equal(div3.nextElementSibling, div6)
 
-    remove.apply()
+    remove.apply(null)
     assert.equal(divparent.childElementCount, 3)
     assert.equal(divparent.firstElementChild, div1)
     assert.equal(div1.nextElementSibling, div2)
@@ -389,14 +389,14 @@ describe('history', function () {
 
     remove = new history.RemoveElementCommand(div6, div2, divparent)
 
-    remove.unapply()
+    remove.unapply(null)
     assert.equal(divparent.childElementCount, 4)
     assert.equal(divparent.firstElementChild, div1)
     assert.equal(div1.nextElementSibling, div6)
     assert.equal(div6.nextElementSibling, div2)
     assert.equal(div2.nextElementSibling, div3)
 
-    remove.apply()
+    remove.apply(null)
     assert.equal(divparent.childElementCount, 3)
     assert.equal(divparent.firstElementChild, div1)
     assert.equal(div1.nextElementSibling, div2)
@@ -412,11 +412,11 @@ describe('history', function () {
     assert.equal(typeof change.unapply, typeof function () { /* empty fn */ })
     assert.equal(typeof change.apply, typeof function () { /* empty fn */ })
 
-    change.unapply()
+    change.unapply(null)
     assert.equal(div1.getAttribute('title'), 'old title')
     assert.equal(div1.getAttribute('class'), 'foo')
 
-    change.apply()
+    change.apply(null)
     assert.equal(div1.getAttribute('title'), 'new title')
     assert.ok(!div1.getAttribute('class'))
 
@@ -424,27 +424,27 @@ describe('history', function () {
     change = new history.ChangeElementCommand(div1,
       { '#text': null })
 
-    change.unapply()
+    change.unapply(null)
     assert.ok(!div1.textContent)
 
-    change.apply()
+    change.apply(null)
     assert.equal(div1.textContent, 'inner text')
 
     div1.textContent = ''
     change = new history.ChangeElementCommand(div1,
       { '#text': 'old text' })
 
-    change.unapply()
+    change.unapply(null)
     assert.equal(div1.textContent, 'old text')
 
-    change.apply()
+    change.apply(null)
     assert.ok(!div1.textContent)
 
     // TODO(codedread): Refactor this #href stuff in history.js and svgcanvas.js
     const rect = document.createElementNS(NS.SVG, 'rect')
     let justCalled = null
-    let gethrefvalue = null
-    let sethrefvalue = null
+    let gethrefvalue: string | null = null
+    let sethrefvalue: string | null = null
     utilities.mock({
       getHref (elem) {
         assert.equal(elem, rect)
@@ -466,27 +466,27 @@ describe('history', function () {
 
     justCalled = null
     sethrefvalue = '#oldhref'
-    change.unapply()
+    change.unapply(null)
     assert.equal(justCalled, 'setHref')
 
     justCalled = null
     sethrefvalue = '#newhref'
-    change.apply()
+    change.apply(null)
     assert.equal(justCalled, 'setHref')
 
     // Ensure numeric zero values are not treated like "remove attribute".
     const rectZero = document.createElementNS(NS.SVG, 'rect')
     rectZero.setAttribute('x', '5')
-    change = new history.ChangeElementCommand(rectZero, { x: 0 })
-    change.unapply()
+    change = new history.ChangeElementCommand(rectZero, { x: 0 } as unknown as history.CommandAttributes)
+    change.unapply(null)
     assert.equal(rectZero.getAttribute('x'), '0')
-    change.apply()
+    change.apply(null)
     assert.equal(rectZero.getAttribute('x'), '5')
 
     // Ensure "#href" can be removed when the previous value was null.
     const rectHref = document.createElementNS(NS.SVG, 'rect')
     rectHref.setAttribute('href', '#newhref')
-    let calls = []
+    let calls: string[] = []
     utilities.mock({
       getHref (elem) {
         assert.equal(elem, rectHref)
@@ -506,12 +506,12 @@ describe('history', function () {
     assert.deepEqual(calls, ['getHref'])
 
     calls = []
-    change.unapply()
+    change.unapply(null)
     assert.equal(rectHref.hasAttribute('href'), false)
     assert.deepEqual(calls, [])
 
     calls = []
-    change.apply()
+    change.apply(null)
     assert.equal(rectHref.getAttribute('href'), '#newhref')
     assert.deepEqual(calls, ['setHref'])
 
@@ -524,10 +524,10 @@ describe('history', function () {
     assert.equal(typeof change.unapply, typeof function () { /* empty fn */ })
     assert.equal(typeof change.apply, typeof function () { /* empty fn */ })
 
-    change.unapply()
+    change.unapply(null)
     assert.equal(line.getAttribute('class'), 'oldClass')
 
-    change.apply()
+    change.apply(null)
     assert.equal(line.getAttribute('class'), 'newClass')
   })
 
@@ -553,14 +553,14 @@ describe('history', function () {
     batch.addSubCommand(new MockCommand('c'))
 
     assert.ok(!concatResult)
-    batch.apply()
+    batch.apply(null)
     assert.equal(concatResult, 'abc')
 
     MockCommand.prototype.apply = function () { /* empty fn */ }
     MockCommand.prototype.unapply = function () { concatResult += this.text }
     concatResult = ''
     assert.ok(!concatResult)
-    batch.unapply()
+    batch.unapply(null)
     assert.equal(concatResult, 'cba')
 
     MockCommand.prototype.unapply = function () { /* empty fn */ }
@@ -571,7 +571,8 @@ describe('history', function () {
 
     // Create some mock commands that reference elements
     class MockElementCommand {
-      constructor (elem) { this.elem = elem }
+      declare elem: Element
+      constructor (elem: Element) { this.elem = elem }
       elements () { return [this.elem] }
       apply () { /* empty fn */ }
       unapply () { /* empty fn */ }
@@ -580,7 +581,7 @@ describe('history', function () {
 
     const elem1 = document.createElementNS(NS.SVG, 'rect')
     const cmd1 = new MockElementCommand(elem1)
-    batch.addSubCommand(cmd1)
+    batch.addSubCommand(cmd1 as unknown as history.Command)
 
     const elems = batch.elements()
     assert.ok(Array.isArray(elems))
@@ -602,25 +603,25 @@ describe('history', function () {
     textEl.textContent = 'a'
     const cmd1 = new history.BatchCommand('Change #text')
     cmd1.addSubCommand(new history.ChangeElementCommand(textEl, { '#text': '' }))
-    undoMgr.addCommandToHistory(cmd1)
+    undoMgr!.addCommandToHistory(cmd1)
 
     textEl.textContent = 'ab'
     const cmd2 = new history.BatchCommand('Change #text')
     cmd2.addSubCommand(new history.ChangeElementCommand(textEl, { '#text': 'a' }))
-    undoMgr.addCommandToHistory(cmd2)
+    undoMgr!.addCommandToHistory(cmd2)
 
     textEl.textContent = 'abc'
     const cmd3 = new history.BatchCommand('Change #text')
     cmd3.addSubCommand(new history.ChangeElementCommand(textEl, { '#text': 'ab' }))
-    undoMgr.addCommandToHistory(cmd3)
+    undoMgr!.addCommandToHistory(cmd3)
 
-    assert.equal(undoMgr.getUndoStackSize(), 1)
+    assert.equal(undoMgr!.getUndoStackSize(), 1)
 
-    undoMgr.undo()
+    undoMgr!.undo()
     assert.equal(textEl.textContent, '')
-    assert.equal(undoMgr.getUndoStackSize(), 0)
+    assert.equal(undoMgr!.getUndoStackSize(), 0)
 
-    undoMgr.redo()
+    undoMgr!.redo()
     assert.equal(textEl.textContent, 'abc')
 
     svg.remove()
@@ -636,21 +637,21 @@ describe('history', function () {
     textEl1.textContent = 'a'
     const cmd1 = new history.BatchCommand('Change #text')
     cmd1.addSubCommand(new history.ChangeElementCommand(textEl1, { '#text': '' }))
-    undoMgr.addCommandToHistory(cmd1)
+    undoMgr!.addCommandToHistory(cmd1)
 
     textEl2.textContent = 'x'
     const cmd2 = new history.BatchCommand('Change #text')
     cmd2.addSubCommand(new history.ChangeElementCommand(textEl2, { '#text': '' }))
-    undoMgr.addCommandToHistory(cmd2)
+    undoMgr!.addCommandToHistory(cmd2)
 
-    assert.equal(undoMgr.getUndoStackSize(), 2)
+    assert.equal(undoMgr!.getUndoStackSize(), 2)
 
     // The two commands target different elements, so undo unwinds each
     // independently rather than as one compressed change.
-    undoMgr.undo()
+    undoMgr!.undo()
     assert.equal(textEl2.textContent, '')
     assert.equal(textEl1.textContent, 'a')
-    undoMgr.undo()
+    undoMgr!.undo()
     assert.equal(textEl1.textContent, '')
 
     svg.remove()
@@ -665,16 +666,16 @@ describe('history', function () {
     textEl.textContent = 'a'
     const cmd1 = new history.BatchCommand('Change #text')
     cmd1.addSubCommand(new history.ChangeElementCommand(textEl, { '#text': '' }))
-    undoMgr.addCommandToHistory(cmd1)
+    undoMgr!.addCommandToHistory(cmd1)
 
-    undoMgr.addCommandToHistory(new MockCommand('move'))
+    undoMgr!.addCommandToHistory(new MockCommand('move'))
 
     textEl.textContent = 'ab'
     const cmd3 = new history.BatchCommand('Change #text')
     cmd3.addSubCommand(new history.ChangeElementCommand(textEl, { '#text': 'a' }))
-    undoMgr.addCommandToHistory(cmd3)
+    undoMgr!.addCommandToHistory(cmd3)
 
-    assert.equal(undoMgr.getUndoStackSize(), 3)
+    assert.equal(undoMgr!.getUndoStackSize(), 3)
 
     svg.remove()
   })

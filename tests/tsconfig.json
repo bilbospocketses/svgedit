@@ -1,0 +1,7 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "types": ["vite/client", "vitest/globals", "node"]
+  },
+  "include": ["**/*.ts", "../src/editor/global-dialogs.d.ts", "../src/editor/vite-shims.d.ts"]
+}

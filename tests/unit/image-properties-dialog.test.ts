@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import '../../src/editor/dialogs/imagePropertiesDialog.ts'
+import '../../src/editor/dialogs/imagePropertiesDialog.js'
 
 const mount = async (): Promise<any> => {
   const el = document.createElement('se-img-prop-dialog') as any

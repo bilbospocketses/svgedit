@@ -1,12 +1,13 @@
 import { test, expect } from './fixtures.js'
+import type { Page } from '@playwright/test'
 import { visitAndApproveStorage } from './helpers.js'
 
-const layerNames = async (page) => {
+const layerNames = async (page: Page) => {
   const texts = await page.locator('#layerlist tbody tr.layer td.layername').allTextContents()
-  return texts.map((t) => t.trim())
+  return texts.map((t: string) => t.trim())
 }
 
-const toggleVisibilityFor = async (page, name) => {
+const toggleVisibilityFor = async (page: Page, name: string) => {
   const row = page.locator('#layerlist tbody tr.layer', {
     has: page.locator('td.layername', { hasText: name })
   })
@@ -32,7 +33,7 @@ test.describe('Layers panel', () => {
     )
     await page.locator('se-prompt-dialog input').fill('Layer 2')
     await page.locator('se-prompt-dialog input').press('Enter')
-    await expect.poll(() => layerNames(page)).resolves.toContain('Layer 2')
+    await (expect.poll(() => layerNames(page)) as unknown as ReturnType<typeof expect<string[]>>).resolves.toContain('Layer 2')
 
     await page.locator('#layerlist td.layername', { hasText: 'Layer 2' }).click()
     await page.click('#layer_rename')
@@ -41,7 +42,7 @@ test.describe('Layers panel', () => {
     )
     await page.locator('se-prompt-dialog input').fill('Renamed Layer')
     await page.locator('se-prompt-dialog input').press('Enter')
-    await expect.poll(() => layerNames(page)).resolves.toContain('Renamed Layer')
+    await (expect.poll(() => layerNames(page)) as unknown as ReturnType<typeof expect<string[]>>).resolves.toContain('Renamed Layer')
 
     await toggleVisibilityFor(page, 'Renamed Layer')
     const renamedRow = page.locator('#layerlist tbody tr.layer', {
@@ -55,7 +56,7 @@ test.describe('Layers panel', () => {
 
     await page.locator('#layerlist td.layername', { hasText: 'Renamed Layer' }).click()
     await page.click('#layer_delete')
-    await expect.poll(() => layerNames(page)).resolves.not.toContain('Renamed Layer')
+    await (expect.poll(() => layerNames(page)) as unknown as ReturnType<typeof expect<string[]>>).resolves.not.toContain('Renamed Layer')
   })
 
   test('cancelling the new-layer prompt creates no layer', async ({ page }) => {
@@ -65,7 +66,7 @@ test.describe('Layers panel', () => {
       () => document.querySelector('se-prompt-dialog')?.shadowRoot?.querySelector('dialog')?.open === true
     )
     await page.locator('se-prompt-dialog input').press('Escape')
-    await expect.poll(() => layerNames(page)).resolves.toEqual(before)
+    await (expect.poll(() => layerNames(page)) as unknown as ReturnType<typeof expect<string[]>>).resolves.toEqual(before)
   })
 
   // C3 (audit #29 / #140): the layer rows are operable cells (role=button + tabindex)

@@ -5,7 +5,8 @@ test.describe('embed: versioning', () => {
     await page.goto('/tests/e2e/fixtures/embed-host.html')
     const err = await page.evaluate(async () => {
       try {
-        const { SvgEditEmbed } = await import('/dist/embed/index.js')
+        const embedModuleUrl = '/dist/embed/index.js'
+        const { SvgEditEmbed } = await import(embedModuleUrl) as typeof import('../../src/embed/index.js')
         const iframe = document.createElement('iframe')
         document.body.appendChild(iframe)
         Object.defineProperty(iframe, 'contentWindow', { value: window, configurable: true })
@@ -20,7 +21,7 @@ test.describe('embed: versioning', () => {
         await c.ready
         return null
       } catch (e) {
-        return { message: e.message }
+        return { message: (e as Error).message }
       }
     })
     expect(err?.message).toMatch(/protocolVersion mismatch/)

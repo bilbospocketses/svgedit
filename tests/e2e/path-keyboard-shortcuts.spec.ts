@@ -17,9 +17,9 @@ test.describe('Path tool keyboard shortcuts: Enter completes, Escape cancels', (
       svgCanvas.setMode('path')
       // Synthesize a 3-point in-progress drawing by directly driving pathActions.
       // Each mousedown in path mode adds a point.
-      const dispatchMouseDown = (x, y) => {
+      const dispatchMouseDown = (x: number, y: number) => {
         const evt = new MouseEvent('mousedown', { bubbles: true, clientX: x, clientY: y, button: 0 })
-        document.getElementById('svgroot').dispatchEvent(evt)
+        document.getElementById('svgroot')!.dispatchEvent(evt)
       }
       dispatchMouseDown(200, 200)
       dispatchMouseDown(250, 200)
@@ -47,7 +47,7 @@ test.describe('Path tool keyboard shortcuts: Enter completes, Escape cancels', (
       const { svgCanvas } = window.svgEditor
       svgCanvas.setMode('path')
       const evt = new MouseEvent('mousedown', { bubbles: true, clientX: 200, clientY: 200, button: 0 })
-      document.getElementById('svgroot').dispatchEvent(evt)
+      document.getElementById('svgroot')!.dispatchEvent(evt)
       const drawnBefore = Boolean(svgCanvas.getDrawnPath())
       const enter = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })
       document.dispatchEvent(enter)
@@ -67,9 +67,9 @@ test.describe('Path tool keyboard shortcuts: Enter completes, Escape cancels', (
     const result = await page.evaluate(() => {
       const { svgCanvas } = window.svgEditor
       svgCanvas.setMode('path')
-      const dispatchMouseDown = (x, y) => {
+      const dispatchMouseDown = (x: number, y: number) => {
         const evt = new MouseEvent('mousedown', { bubbles: true, clientX: x, clientY: y, button: 0 })
-        document.getElementById('svgroot').dispatchEvent(evt)
+        document.getElementById('svgroot')!.dispatchEvent(evt)
       }
       dispatchMouseDown(200, 200)
       dispatchMouseDown(250, 200)
@@ -95,9 +95,9 @@ test.describe('Path tool keyboard shortcuts: Enter completes, Escape cancels', (
       const { svgCanvas } = window.svgEditor
       svgCanvas.setMode('path')
       // Place 2 points so finishPath would complete if intercepted.
-      const dispatchMouseDown = (x, y) => {
+      const dispatchMouseDown = (x: number, y: number) => {
         const evt = new MouseEvent('mousedown', { bubbles: true, clientX: x, clientY: y, button: 0 })
-        document.getElementById('svgroot').dispatchEvent(evt)
+        document.getElementById('svgroot')!.dispatchEvent(evt)
       }
       dispatchMouseDown(200, 200)
       dispatchMouseDown(250, 200)

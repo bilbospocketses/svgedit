@@ -5,6 +5,9 @@ import * as pathModule from '../../packages/svgcanvas/core/path.js'
 import { Path, Segment, toPathSeg, SEG_TYPE, TYPE_TO_CMD, init as initPathMethod } from '../../packages/svgcanvas/core/path-method.js'
 import { getPathData } from '../../packages/svgcanvas/core/path-data.js'
 import type { PathSeg } from '../../packages/svgcanvas/core/path-method.js'
+import type { ISvgCanvas } from '../../packages/svgcanvas/core/svgcanvas-types.js'
+import type { ElementContainer } from '../../packages/svgcanvas/core/units.js'
+import type { BBoxObject } from '../../packages/svgcanvas/core/utilities.js'
 import { init as unitsInit } from '../../packages/svgcanvas/core/units.js'
 
 /** Helper: get a PathSeg from a path element at the given index. */
@@ -34,7 +37,7 @@ describe('path', function () {
   * @param {SVGSVGElement} [svg]
   * @returns {EditorContexts}
   */
-  function getMockContexts (svg) {
+  function getMockContexts (svg?: SVGElement): [ISvgCanvas, ISvgCanvas] {
     svg = svg || document.createElementNS(NS.SVG, 'svg')
     const selectorParentGroup = document.createElementNS(NS.SVG, 'g')
     selectorParentGroup.setAttribute('id', 'selectorParentGroup')
@@ -46,7 +49,7 @@ describe('path', function () {
       {
         getSvgRoot () { return svg },
         getZoom () { return 1 }
-      },
+      } as unknown as ISvgCanvas,
       /**
       * @implements {module:utilities.EditorContext}
       */
@@ -54,14 +57,14 @@ describe('path', function () {
         getDOMDocument () { return svg },
         getDOMContainer () { return svg },
         getSvgRoot () { return svg }
-      }
+      } as unknown as ISvgCanvas
     ]
   }
 
   it('Test svgedit.path.init exposes recalcRotatedPath', function () {
     const [mockPathContext] = getMockContexts()
     pathModule.init(mockPathContext)
-    assert.equal(typeof mockPathContext.recalcRotatedPath, 'function')
+    assert.equal(typeof mockPathContext!.recalcRotatedPath, 'function')
   })
 
   it('#94 selected_pts sorts point indexes numerically, not lexicographically', () => {
@@ -71,11 +74,11 @@ describe('path', function () {
     initPathMethod({
       setPathObj () {},
       addPtsToSelection () {}
-    })
+    } as unknown as ISvgCanvas)
 
-    const fakeThis = { segs: [], selected_pts: [], subpathIsClosed: () => false }
+    const fakeThis = { segs: [] as Segment[], selected_pts: [], subpathIsClosed: () => false }
     for (const i of [1, 2, 10]) {
-      fakeThis.segs[i] = { ptgrip: {}, select () {} }
+      fakeThis.segs[i] = { ptgrip: {}, select () {} } as unknown as Segment
     }
 
     Path.prototype.addPtsToSelection.call(fakeThis, [10, 2, 1])
@@ -189,7 +192,7 @@ describe('path', function () {
     utilities.init(mockUtilitiesContext)
     const pathObj = new Path(path)
 
-    pathObj.segs[1].move(-3, 4)
+    pathObj.segs[1]!.move(-3, 4)
     const seg = getItem(path,1)
 
     assert.equal(seg.pathSegTypeAsLetter, 'Q')
@@ -208,7 +211,7 @@ describe('path', function () {
     utilities.init(mockUtilitiesContext)
     const pathObj = new Path(path)
 
-    pathObj.segs[1].move(5, -6)
+    pathObj.segs[1]!.move(5, -6)
     const seg = getItem(path,1)
 
     assert.equal(seg.pathSegTypeAsLetter, 'S')
@@ -227,7 +230,7 @@ describe('path', function () {
     utilities.init(mockUtilitiesContext)
     const pathObj = new Path(path)
 
-    pathObj.segs[0].move(5, 5)
+    pathObj.segs[0]!.move(5, 5)
     const seg = getItem(path,1)
 
     assert.equal(seg.pathSegTypeAsLetter, 'Q')
@@ -268,12 +271,12 @@ describe('path', function () {
   it('Test svgedit.path.convertPath', function () {
     unitsInit({
       getRoundDigits () { return 5 }
-    })
+    } as unknown as ElementContainer)
 
     const path = document.createElementNS(NS.SVG, 'path')
     path.setAttribute('d', 'M40,55h20v20')
 
-    const abs = pathModule.convertPath(path)
+    const abs = pathModule.convertPath(path, false)
     assert.equal(abs, 'M40,55L60,55L60,75')
 
     const rel = pathModule.convertPath(path, true)
@@ -283,7 +286,7 @@ describe('path', function () {
   it('Test convertPath resets after closepath when relative', function () {
     unitsInit({
       getRoundDigits () { return 5 }
-    })
+    } as unknown as ElementContainer)
 
     const path = document.createElementNS(NS.SVG, 'path')
     path.setAttribute('d', 'M10,10 L20,10 Z L15,10')
@@ -304,29 +307,29 @@ describe('path', function () {
     pathModule.init(mockPathContext)
     utilities.init(mockUtilitiesContext)
     const pathObj = new Path(path)
-    pathObj.oldbbox = utilities.getBBox(path)
+    pathObj.oldbbox = utilities.getBBox(path) as BBoxObject
 
     pathModule.recalcRotatedPath()
 
     const seg = getItem(path,1)
     assert.equal(seg.pathSegTypeAsLetter, 'C')
-    assert.closeTo(seg.x1, 0, 1e-6)
-    assert.closeTo(seg.y1, 10, 1e-6)
-    assert.closeTo(seg.x2, 0, 1e-6)
-    assert.closeTo(seg.y2, 20, 1e-6)
-    assert.closeTo(seg.x, 30, 1e-6)
-    assert.closeTo(seg.y, 30, 1e-6)
+    assert.closeTo(seg.x1!, 0, 1e-6)
+    assert.closeTo(seg.y1!, 10, 1e-6)
+    assert.closeTo(seg.x2!, 0, 1e-6)
+    assert.closeTo(seg.y2!, 20, 1e-6)
+    assert.closeTo(seg.x!, 30, 1e-6)
+    assert.closeTo(seg.y!, 30, 1e-6)
   })
 
   it('Test convertPath handles relative arcs', function () {
     unitsInit({
       getRoundDigits () { return 5 }
-    })
+    } as unknown as ElementContainer)
 
     const path = document.createElementNS(NS.SVG, 'path')
     path.setAttribute('d', 'M0,0 a10,20 30 0 1 40,50')
 
-    const abs = pathModule.convertPath(path)
+    const abs = pathModule.convertPath(path, false)
     assert.ok(abs.includes('A10,20 30 0 1 40,50'))
 
     const rel = pathModule.convertPath(path, true)
@@ -336,7 +339,7 @@ describe('path', function () {
   it('Test convertPath preserves absolute arc parameters', function () {
     unitsInit({
       getRoundDigits () { return 5 }
-    })
+    } as unknown as ElementContainer)
 
     const path = document.createElementNS(NS.SVG, 'path')
     path.setAttribute('d', 'M0,0 A30,50 20 0 1 100,100')
@@ -346,7 +349,7 @@ describe('path', function () {
     const rel = pathModule.convertPath(path, true)
     assert.ok(rel.includes('30,50 20 0 1'), `relative-conversion arc dropped params: ${rel}`)
 
-    const abs = pathModule.convertPath(path)
+    const abs = pathModule.convertPath(path, false)
     assert.ok(abs.includes('30,50 20 0 1'), `absolute-conversion arc dropped params: ${abs}`)
   })
 
@@ -368,7 +371,7 @@ describe('path', function () {
     pathModule.init(mockPathContext)
     utilities.init(mockUtilitiesContext)
     const pathObj = new Path(path)
-    pathObj.oldbbox = utilities.getBBox(path)
+    pathObj.oldbbox = utilities.getBBox(path) as BBoxObject
 
     pathModule.recalcRotatedPath()
     // Should not throw, and path should remain unchanged
@@ -385,7 +388,7 @@ describe('path', function () {
     const [mockPathContext] = getMockContexts(svg)
     pathModule.init(mockPathContext)
     const pathObj = new Path(path)
-    pathObj.oldbbox = null
+    pathObj.oldbbox = null as unknown as BBoxObject
 
     pathModule.recalcRotatedPath()
     // Should not throw
@@ -458,8 +461,8 @@ describe('path', function () {
 
     // Local (0,0) and (10,0) must map through translate(100,100) to canvas coords;
     // without the transform applied, the grips sit at (0,0) and (10,0).
-    assert.deepEqual(pathModule.getGripPt(pathObj.segs[0]), { x: 100, y: 100 })
-    assert.deepEqual(pathModule.getGripPt(pathObj.segs[1]), { x: 110, y: 100 })
+    assert.deepEqual(pathModule.getGripPt(pathObj.segs[0]!), { x: 100, y: 100 })
+    assert.deepEqual(pathModule.getGripPt(pathObj.segs[1]!), { x: 110, y: 100 })
   })
 
   it('#15 SEG_TYPE constants map to their SVGPathSeg command letters', () => {
@@ -494,7 +497,7 @@ describe('path', function () {
     const path = document.createElementNS(NS.SVG, 'path')
     path.setAttribute('d', 'M0,0 H10 V10 h5 v5')
 
-    const result = pathModule.convertPath(path)
+    const result = pathModule.convertPath(path, false)
     assert.ok(result.length > 0)
   })
 
@@ -510,7 +513,7 @@ describe('path', function () {
     const path = document.createElementNS(NS.SVG, 'path')
     path.setAttribute('d', 'M0,0 Q10,10 20,0')
 
-    const result = pathModule.convertPath(path)
+    const result = pathModule.convertPath(path, false)
     assert.ok(result.length > 0)
   })
 
@@ -518,7 +521,7 @@ describe('path', function () {
     const path = document.createElementNS(NS.SVG, 'path')
     path.setAttribute('d', 'M0,0 Q10,10 20,0 T30,0')
 
-    const result = pathModule.convertPath(path)
+    const result = pathModule.convertPath(path, false)
     assert.ok(result.length > 0)
   })
 
@@ -526,7 +529,7 @@ describe('path', function () {
     const path = document.createElementNS(NS.SVG, 'path')
     path.setAttribute('d', 'M0,0 A10,10 0 1 0 20,20')
 
-    const result = pathModule.convertPath(path)
+    const result = pathModule.convertPath(path, false)
     assert.ok(result.length > 0)
   })
 
@@ -534,7 +537,7 @@ describe('path', function () {
     const path = document.createElementNS(NS.SVG, 'path')
     path.setAttribute('d', 'M10,10 a5,5 0 0 1 10,10')
 
-    const result = pathModule.convertPath(path)
+    const result = pathModule.convertPath(path, false)
     assert.ok(result.length > 0)
   })
 
@@ -542,7 +545,7 @@ describe('path', function () {
     const path = document.createElementNS(NS.SVG, 'path')
     path.setAttribute('d', 'M0,0 L10,0 L10,10 Z')
 
-    const result = pathModule.convertPath(path)
+    const result = pathModule.convertPath(path, false)
     assert.ok(result.includes('Z') || result.includes('z'))
   })
 
@@ -550,7 +553,7 @@ describe('path', function () {
     const path = document.createElementNS(NS.SVG, 'path')
     path.setAttribute('d', 'M0,0 L10,10 l5,5 C20,20 25,25 30,20')
 
-    const result = pathModule.convertPath(path)
+    const result = pathModule.convertPath(path, false)
     assert.ok(result.length > 0)
   })
 
@@ -566,7 +569,7 @@ describe('path', function () {
     const path = document.createElementNS(NS.SVG, 'path')
     path.setAttribute('d', 'M0,0 C10,10 20,10 30,0 s10,10 20,0')
 
-    const result = pathModule.convertPath(path)
+    const result = pathModule.convertPath(path, false)
     assert.ok(result.length > 0)
   })
 
@@ -574,7 +577,7 @@ describe('path', function () {
     const path = document.createElementNS(NS.SVG, 'path')
     path.setAttribute('d', 'M-10,-10 L-20,-20 L-30,-15')
 
-    const result = pathModule.convertPath(path)
+    const result = pathModule.convertPath(path, false)
     assert.ok(result.length > 0)
   })
 
@@ -582,7 +585,7 @@ describe('path', function () {
     const path = document.createElementNS(NS.SVG, 'path')
     path.setAttribute('d', 'M0.5,0.5 L10.25,10.75')
 
-    const result = pathModule.convertPath(path)
+    const result = pathModule.convertPath(path, false)
     assert.ok(result.length > 0)
   })
 

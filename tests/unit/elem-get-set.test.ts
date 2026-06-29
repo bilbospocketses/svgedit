@@ -1,25 +1,23 @@
-import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, afterEach, describe, expect, it, vi, type Mock } from 'vitest'
 import { NS } from '../../packages/svgcanvas/core/namespaces.js'
 import * as history from '../../packages/svgcanvas/core/history.js'
 import dataStorage from '../../packages/svgcanvas/core/dataStorage.js'
 import { init as initElemGetSet } from '../../packages/svgcanvas/core/elem-get-set.js'
 import * as undo from '../../packages/svgcanvas/core/undo.js'
+import type { ISvgCanvas } from '../../packages/svgcanvas/core/svgcanvas-types.js'
 
-const createSvgElement = (name) => {
+const createSvgElement = (name: string) => {
   return document.createElementNS(NS.SVG, name)
 }
 
 describe('elem-get-set', () => {
-  /** @type {any} */
-  let canvas
-  /** @type {any[]} */
-  let historyStack
-  /** @type {SVGSVGElement} */
-  let svgContent
+  let canvas: ISvgCanvas
+  let historyStack: history.Command[]
+  let svgContent: SVGSVGElement
 
   beforeEach(() => {
     historyStack = []
-    svgContent = /** @type {SVGSVGElement} */ (createSvgElement('svg'))
+    svgContent = createSvgElement('svg') as SVGSVGElement
     canvas = {
       history,
       zoom: 1,
@@ -40,18 +38,18 @@ describe('elem-get-set', () => {
       changeSelectedAttributeNoUndo: vi.fn(),
       getDOMDocument () { return document },
       getSvgContent () { return svgContent },
-      getSelectedElements () { return this.selectedElements || [] },
+      getSelectedElements (this: ISvgCanvas) { return this.selectedElements || [] },
       getDataStorage () { return dataStorage },
-      getZoom () { return this.zoom },
-      setZoom (value) { this.zoom = value },
-      getResolution () {
+      getZoom (this: ISvgCanvas) { return this.zoom },
+      setZoom (this: ISvgCanvas, value: number) { this.zoom = value },
+      getResolution (this: ISvgCanvas) {
         return {
           w: Number(svgContent.getAttribute('width')) / this.zoom,
           h: Number(svgContent.getAttribute('height')) / this.zoom,
           zoom: this.zoom
         }
       },
-      addCommandToHistory (cmd) {
+      addCommandToHistory (cmd: history.Command) {
         historyStack.push(cmd)
       },
       setCurShape () {},
@@ -61,7 +59,7 @@ describe('elem-get-set', () => {
       textActions: {
         setCursor () {}
       }
-    }
+    } as unknown as ISvgCanvas
     svgContent.setAttribute('width', '100')
     svgContent.setAttribute('height', '100')
     initElemGetSet(canvas)
@@ -83,10 +81,10 @@ describe('elem-get-set', () => {
     expect(g.firstChild?.textContent).toBe('Hello')
     expect(historyStack).toHaveLength(1)
 
-    historyStack[0].unapply(null)
+    historyStack[0]!.unapply(null)
     expect(g.querySelector('title')).toBeNull()
 
-    historyStack[0].apply(null)
+    historyStack[0]!.apply(null)
     expect(g.querySelector('title')?.textContent).toBe('Hello')
   })
 
@@ -102,10 +100,10 @@ describe('elem-get-set', () => {
     expect(g.querySelector('title')?.textContent).toBe('New')
     expect(historyStack).toHaveLength(1)
 
-    historyStack[0].unapply(null)
+    historyStack[0]!.unapply(null)
     expect(g.querySelector('title')?.textContent).toBe('Old')
 
-    historyStack[0].apply(null)
+    historyStack[0]!.apply(null)
     expect(g.querySelector('title')?.textContent).toBe('New')
   })
 
@@ -121,10 +119,10 @@ describe('elem-get-set', () => {
     expect(g.querySelector('title')).toBeNull()
     expect(historyStack).toHaveLength(1)
 
-    historyStack[0].unapply(null)
+    historyStack[0]!.unapply(null)
     expect(g.querySelector('title')?.textContent).toBe('Label')
 
-    historyStack[0].apply(null)
+    historyStack[0]!.apply(null)
     expect(g.querySelector('title')).toBeNull()
   })
 
@@ -187,10 +185,10 @@ describe('elem-get-set', () => {
     expect(docTitle?.textContent).toBe('Doc')
     expect(historyStack).toHaveLength(1)
 
-    historyStack[0].unapply(null)
+    historyStack[0]!.unapply(null)
     expect(svgContent.querySelector(':scope > title')).toBeNull()
 
-    historyStack[0].apply(null)
+    historyStack[0]!.apply(null)
     expect(svgContent.querySelector(':scope > title')?.textContent).toBe('Doc')
   })
 
@@ -215,6 +213,12 @@ describe('elem-get-set', () => {
     const originalImage = globalThis.Image
     try {
       globalThis.Image = class FakeImage {
+        declare width: number
+        declare height: number
+        declare onload: (() => void) | null
+        declare onerror: ((err?: unknown) => void) | null
+        declare _src: string
+
         constructor () {
           this.width = 10
           this.height = 10
@@ -230,7 +234,7 @@ describe('elem-get-set', () => {
           this._src = value
           this.onerror?.(new Error('load failed'))
         }
-      }
+      } as unknown as typeof Image
 
       const image = createSvgElement('image')
       image.setAttribute('href', 'old.png')
@@ -241,10 +245,10 @@ describe('elem-get-set', () => {
       expect(image.getAttribute('href')).toBe('bad.png')
       expect(historyStack).toHaveLength(1)
 
-      historyStack[0].unapply(null)
+      historyStack[0]!.unapply(null)
       expect(image.getAttribute('href')).toBe('old.png')
 
-      historyStack[0].apply(null)
+      historyStack[0]!.apply(null)
       expect(image.getAttribute('href')).toBe('bad.png')
     } finally {
       globalThis.Image = originalImage
@@ -261,7 +265,7 @@ describe('elem-get-set', () => {
     expect(rect.getAttribute('ry')).toBe('5')
     expect(historyStack).toHaveLength(1)
 
-    historyStack[0].unapply(null)
+    historyStack[0]!.unapply(null)
     expect(rect.hasAttribute('rx')).toBe(false)
     expect(rect.hasAttribute('ry')).toBe(false)
   })
@@ -276,14 +280,14 @@ describe('elem-get-set', () => {
       clearSelection () {},
       pathActions: { clear () {} },
       call () {}
-    }
+    } as unknown as ISvgCanvas
     undo.init(localCanvas)
 
     svg.setAttribute('width', '200')
     svg.setAttribute('height', '150')
     localCanvas.contentW = 200
     localCanvas.contentH = 150
-    const cmd = new history.ChangeElementCommand(svg, { width: 100, height: 100 })
+    const cmd = new history.ChangeElementCommand(svg, { width: 100, height: 100 } as unknown as history.CommandAttributes)
     localCanvas.undoMgr.addCommandToHistory(cmd)
 
     localCanvas.undoMgr.undo()
@@ -345,7 +349,7 @@ describe('elem-get-set', () => {
 
     canvas.setStrokeWidth(3)
 
-    const [attr, val, els] = canvas.changeSelectedAttribute.mock.calls[0]
+    const [attr, val, els] = (canvas.changeSelectedAttribute as unknown as Mock).mock.calls[0]!
     expect(attr).toBe('stroke-width')
     expect(val).toBe(3)
     expect(new Set(els)).toEqual(new Set([r1, r2]))
@@ -361,7 +365,7 @@ describe('elem-get-set', () => {
 
     canvas.setStrokeAttr('stroke-dasharray', '5,5')
 
-    const [attr, val, els] = canvas.changeSelectedAttribute.mock.calls[0]
+    const [attr, val, els] = (canvas.changeSelectedAttribute as unknown as Mock).mock.calls[0]!
     expect(attr).toBe('stroke-dasharray')
     expect(val).toBe('5,5')
     expect(new Set(els)).toEqual(new Set([r1, c1]))
@@ -378,7 +382,7 @@ describe('elem-get-set', () => {
 
     canvas.setColor('fill', '#0f0')
 
-    const [attr, val, els] = canvas.changeSelectedAttribute.mock.calls[0]
+    const [attr, val, els] = (canvas.changeSelectedAttribute as unknown as Mock).mock.calls[0]!
     expect(attr).toBe('fill')
     expect(val).toBe('#0f0')
     // Top-level line excluded for fill; top-level rect kept; the line nested in

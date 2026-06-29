@@ -1,4 +1,6 @@
 import { test, expect } from '../fixtures.js'
+import type { ISvgCanvas } from '@svgedit/svgcanvas/core/svgcanvas-types.js'
+import type { ElementContainer } from '@svgedit/svgcanvas/core/units.js'
 
 test.describe('SVG core remap extras', () => {
   test.beforeEach(async ({ page }) => {
@@ -24,14 +26,14 @@ test.describe('SVG core remap extras', () => {
 
       const dataStorage = {
         store: new WeakMap(),
-        put (el, key, value) {
+        put (el: Element, key: string, value: unknown) {
           if (!this.store.has(el)) this.store.set(el, new Map())
           this.store.get(el).set(key, value)
         },
-        get (el, key) {
+        get (el: Element, key: string) {
           return this.store.get(el)?.get(key)
         },
-        has (el, key) {
+        has (el: Element, key: string) {
           return this.store.has(el) && this.store.get(el).has(key)
         }
       }
@@ -52,9 +54,9 @@ test.describe('SVG core remap extras', () => {
         getDataStorage: () => dataStorage
       }
 
-      utilities.init(canvas)
-      units.init(canvas)
-      coords.init(canvas)
+      utilities.init(canvas as unknown as ISvgCanvas)
+      units.init(canvas as unknown as ElementContainer)
+      coords.init(canvas as unknown as ISvgCanvas)
 
       const group = document.createElementNS(NS, 'g')
       svg.append(group)
@@ -138,7 +140,7 @@ test.describe('SVG core remap extras', () => {
     // Chromium keeps the comma/concise format we wrote ("M3,-1 L8,-1 ..."). Both
     // are valid SVG path data syntax. Normalize to a canonical form (letter glued
     // to first number, single-space separators) before asserting key segments.
-    const normalized = result.path
+    const normalized = result.path!
       .replace(/([MmLlHhVvCcSsQqTtAaZz])\s+/g, '$1')
       .replace(/[,\s]+/g, ' ')
       .trim()

@@ -14,7 +14,7 @@ describe('common util helpers', () => {
     const parent = { offsetLeft: 10, offsetTop: 11, offsetParent: grand }
     const child = { offsetLeft: 7, offsetTop: 8, offsetParent: parent }
 
-    expect(findPos(child)).toEqual({ left: 22, top: 25 })
+    expect(findPos(child as unknown as HTMLElement)).toEqual({ left: 22, top: 25 })
     expect(isObject({ foo: 'bar' })).toBe(true)
 
     const merged = mergeDeep(
@@ -40,7 +40,7 @@ describe('common util helpers', () => {
 
     expect(getClosest(child, '.wrapper')?.className).toBe('wrapper')
     expect(getClosest(child, '#section')?.id).toBe('section')
-    expect(getClosest(child, '[data-role=target]')?.dataset.role).toBe('target')
+    expect((getClosest(child, '[data-role=target]') as HTMLElement | null)?.dataset.role).toBe('target')
     expect(getClosest(child, 'div')?.tagName.toLowerCase()).toBe('div')
   })
 
@@ -56,12 +56,12 @@ describe('common util helpers', () => {
     outer.append(mid)
     document.body.append(outer)
 
-    const parents = getParents(inner)?.map(el => el.tagName.toLowerCase())
+    const parents = getParents(inner)?.map(el => (el as Element).tagName.toLowerCase())
     expect(parents).toContain('body')
 
-    expect(getParents(inner, '.outer')?.map(el => el.className)).toEqual(['outer'])
+    expect(getParents(inner, '.outer')?.map(el => (el as Element).className)).toEqual(['outer'])
 
-    const untilMid = getParentsUntil(inner, '#mid', '.inner')?.map(el => el.tagName.toLowerCase())
+    const untilMid = getParentsUntil(inner, '#mid', '.inner')?.map(el => (el as Element).tagName.toLowerCase())
     expect(untilMid).toEqual(['span'])
 
     // [attr=value] must match by value, not by an attribute literally named

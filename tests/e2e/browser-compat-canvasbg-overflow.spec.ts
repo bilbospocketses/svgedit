@@ -21,8 +21,8 @@ test.describe('browser-compat: canvasBackground overflow on zoom-out (select.js:
 
     // Capture observable canvas state
     const state = await page.evaluate(() => {
-      const bg = document.getElementById('canvasBackground')
-      const svgRoot = document.getElementById('svgroot')
+      const bg = document.getElementById('canvasBackground')!
+      const svgRoot = document.getElementById('svgroot')!
       const bgBox = bg.getBoundingClientRect()
       const rootBox = svgRoot.getBoundingClientRect()
       return {
@@ -51,7 +51,7 @@ test.describe('browser-compat: canvasBackground overflow on zoom-out (select.js:
     // (workaround ran) and that the element's declared width/height match the document
     // dimensions -- if they differ, the Chrome 7 bug caused a mismatch.
     const state = await page.evaluate(() => {
-      const bg = document.getElementById('canvasBackground')
+      const bg = document.getElementById('canvasBackground')!
       const svgContent = window.svgEditor.svgCanvas.getSvgContent()
       return {
         // The overflow attribute must be present (workaround set it)

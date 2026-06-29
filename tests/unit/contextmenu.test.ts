@@ -1,5 +1,10 @@
 import * as contextmenu from '../../src/editor/contextmenu.js'
 
+// The real MenuItem parameter type of `add` (defined but not exported in the
+// editor source); derived structurally so the invalid-input cases below can be
+// cast to the genuine type without modifying the source.
+type MenuItem = Parameters<typeof contextmenu.add>[0]
+
 describe('contextmenu', function () {
   /**
    * Tear down tests, resetting custom menus.
@@ -18,19 +23,19 @@ describe('contextmenu', function () {
 
   it('Test svgedit.contextmenu does not add invalid menu item', function () {
     assert.throws(
-      () => contextmenu.add({ id: 'justanid' }),
+      () => contextmenu.add({ id: 'justanid' } as unknown as MenuItem),
       null, null,
       'menu item with just an id is invalid'
     )
 
     assert.throws(
-      () => contextmenu.add({ id: 'idandlabel', label: 'anicelabel' }),
+      () => contextmenu.add({ id: 'idandlabel', label: 'anicelabel' } as unknown as MenuItem),
       null, null,
       'menu item with just an id and label is invalid'
     )
 
     assert.throws(
-      () => contextmenu.add({ id: 'idandlabel', label: 'anicelabel', action: 'notafunction' }),
+      () => contextmenu.add({ id: 'idandlabel', label: 'anicelabel', action: 'notafunction' } as unknown as MenuItem),
       null, null,
       'menu item with action that is not a function is invalid'
     )

@@ -7,8 +7,8 @@ test.describe('embed: init handshake', () => {
     await openEmbedHost(page)
     const log = await getLog(page)
     expect(log).toMatch(/READY/)
-    const readyLine = log.split('\n').find(l => l.startsWith('READY'))
-    const payload = JSON.parse(readyLine.replace('READY ', ''))
+    const readyLine = log.split('\n').find((l: string) => l.startsWith('READY'))
+    const payload = JSON.parse(readyLine!.replace('READY ', ''))
     expect(payload.protocolVersion).toBe(1)
     expect(payload.version).toBeTruthy()
     expect(payload.capabilities).toEqual(expect.arrayContaining(['chrome', 'theme', 'dialog-hooks']))
@@ -25,7 +25,7 @@ test.describe('embed: init handshake', () => {
 
   test('queued calls before ready flush after ready resolves', async ({ page }) => {
     await openEmbedHost(page)
-    const zoom = await page.evaluate(() => window.__svgeditEmbed.editor.getZoom())
+    const zoom = await page.evaluate(() => window.__svgeditEmbed.editor.getZoom!())
     expect(typeof zoom).toBe('number')
     expect(zoom).toBeGreaterThan(0)
   })

@@ -6,7 +6,7 @@ import { ExportManager } from '../../src/editor/ExportManager.js'
  * Stubs `window.open` and the ambient `seAlert` global.
  */
 const makeHost = () => ({
-  i18next: { t: (k) => k },
+  i18next: { t: (k: string) => k },
   configObj: { pref: vi.fn(() => 'all') } // 'all' => export notice already dismissed
 })
 
@@ -20,7 +20,7 @@ describe('ExportManager', () => {
 
   it('handleExported opens the named window and streams the blob URL to it', () => {
     const fakeWin = { closed: false, location: { href: '' } }
-    vi.spyOn(window, 'open').mockReturnValue(fakeWin)
+    vi.spyOn(window, 'open').mockReturnValue(fakeWin as unknown as Window)
     const em = new ExportManager(makeHost())
 
     em.handleExported(null, { issues: [], exportWindowName: 'w1', bloburl: 'blob:abc', type: 'png' })
@@ -51,7 +51,7 @@ describe('ExportManager', () => {
 
   it('handleExportedPDF streams the PDF output to the export window', () => {
     const fakeWin = { closed: false, location: { href: '' } }
-    vi.spyOn(window, 'open').mockReturnValue(fakeWin)
+    vi.spyOn(window, 'open').mockReturnValue(fakeWin as unknown as Window)
     const em = new ExportManager(makeHost())
     em.exportWindowName = 'pdf1'
 

@@ -1,14 +1,38 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi, type Mock } from 'vitest'
 import { init as textActionsInit, textActionsMethod } from '../../packages/svgcanvas/core/text-actions.js'
 import { init as utilitiesInit } from '../../packages/svgcanvas/core/utilities.js'
 import { NS } from '../../packages/svgcanvas/core/namespaces.js'
+import type { ISvgCanvas } from '../../packages/svgcanvas/core/svgcanvas-types.js'
+
+type MockSelectorManager = {
+  requestSelector: Mock
+}
+
+type MockSvgCanvas = {
+  getSvgRoot: () => SVGSVGElement
+  getSvgContent: () => SVGSVGElement
+  getZoom: () => number
+  setCurrentMode: Mock
+  notifyModeChange: Mock
+  clearSelection: Mock
+  addToSelection: Mock
+  deleteSelectedElements: Mock
+  call: Mock
+  getSelectedElements: () => SVGTextElement[]
+  getCurrentMode: () => string
+  selectorManager: MockSelectorManager
+  getRootSctm: () => DOMMatrix | { a: number, b: number, c: number, d: number, e: number, f: number }
+  $click: Mock
+  contentW: number
+  textActions: typeof textActionsMethod
+}
 
 describe('TextActions', () => {
-  let svgCanvas
-  let svgRoot
-  let textElement
-  let inputElement
-  let mockSelectorManager
+  let svgCanvas: MockSvgCanvas
+  let svgRoot: SVGSVGElement
+  let textElement: SVGTextElement
+  let inputElement: HTMLInputElement
+  let mockSelectorManager: MockSelectorManager
 
   beforeEach(() => {
     // Create mock SVG elements
@@ -30,15 +54,15 @@ describe('TextActions', () => {
     svgContent.append(textElement)
 
     // Mock text measurement methods
-    textElement.getStartPositionOfChar = vi.fn((i) => ({ x: 100 + i * 10, y: 100 }))
-    textElement.getEndPositionOfChar = vi.fn((i) => ({ x: 100 + (i + 1) * 10, y: 100 }))
+    textElement.getStartPositionOfChar = vi.fn((i) => ({ x: 100 + i * 10, y: 100 } as unknown as DOMPoint))
+    textElement.getEndPositionOfChar = vi.fn((i) => ({ x: 100 + (i + 1) * 10, y: 100 } as unknown as DOMPoint))
     textElement.getCharNumAtPosition = vi.fn(() => 0)
     textElement.getBBox = vi.fn(() => ({
       x: 100,
       y: 90,
       width: 40,
       height: 20
-    }))
+    } as unknown as DOMRect))
 
     inputElement = document.createElement('input')
     inputElement.type = 'text'
@@ -77,8 +101,8 @@ describe('TextActions', () => {
     }
 
     // Initialize utilities and text-actions modules
-    utilitiesInit(svgCanvas)
-    textActionsInit(svgCanvas)
+    utilitiesInit(svgCanvas as unknown as ISvgCanvas)
+    textActionsInit(svgCanvas as unknown as ISvgCanvas)
     textActionsMethod.setInputElem(inputElement)
   })
 
@@ -109,7 +133,7 @@ describe('TextActions', () => {
       ]
 
       publicMethods.forEach(method => {
-        expect(typeof textActionsMethod[method]).toBe('function')
+        expect(typeof (textActionsMethod as unknown as Record<string, unknown>)[method]).toBe('function')
       })
     })
   })
@@ -150,9 +174,9 @@ describe('TextActions', () => {
     it('should handle empty text content', () => {
       const emptyText = document.createElementNS(NS.SVG, 'text')
       emptyText.textContent = ''
-      emptyText.getStartPositionOfChar = vi.fn(() => ({ x: 100, y: 100 }))
-      emptyText.getEndPositionOfChar = vi.fn(() => ({ x: 100, y: 100 }))
-      emptyText.getBBox = vi.fn(() => ({ x: 100, y: 90, width: 0, height: 20 }))
+      emptyText.getStartPositionOfChar = vi.fn(() => ({ x: 100, y: 100 } as unknown as DOMPoint))
+      emptyText.getEndPositionOfChar = vi.fn(() => ({ x: 100, y: 100 } as unknown as DOMPoint))
+      emptyText.getBBox = vi.fn(() => ({ x: 100, y: 90, width: 0, height: 20 } as unknown as DOMRect))
       emptyText.removeEventListener = vi.fn()
       emptyText.addEventListener = vi.fn()
       svgRoot.append(emptyText)
@@ -207,10 +231,10 @@ describe('TextActions', () => {
     it('should delete empty text elements', () => {
       const emptyText = document.createElementNS(NS.SVG, 'text')
       emptyText.textContent = ''
-      emptyText.getBBox = vi.fn(() => ({ x: 100, y: 90, width: 0, height: 20 }))
+      emptyText.getBBox = vi.fn(() => ({ x: 100, y: 90, width: 0, height: 20 } as unknown as DOMRect))
       emptyText.removeEventListener = vi.fn()
       emptyText.addEventListener = vi.fn()
-      emptyText.style = {}
+      ;(emptyText as unknown as { style: unknown }).style = {}
       svgRoot.append(emptyText)
 
       textActionsMethod.start(emptyText)
@@ -248,7 +272,7 @@ describe('TextActions', () => {
 
   describe('mouseDown', () => {
     it('should handle mouse down event', () => {
-      const mockEvent = { pageX: 100, pageY: 100 }
+      const mockEvent = { pageX: 100, pageY: 100 } as unknown as MouseEvent
       // Should set focus (via private method)
       expect(() => {
         textActionsMethod.start(textElement)
@@ -269,7 +293,7 @@ describe('TextActions', () => {
 
   describe('mouseUp', () => {
     it('should handle mouse up event', () => {
-      const mockEvent = { target: textElement, pageX: 100, pageY: 100 }
+      const mockEvent = { target: textElement, pageX: 100, pageY: 100 } as unknown as MouseEvent
       // Method should execute without error
       expect(() => {
         textActionsMethod.start(textElement)
@@ -281,7 +305,7 @@ describe('TextActions', () => {
       textActionsMethod.start(textElement)
 
       const otherElement = document.createElementNS(NS.SVG, 'rect')
-      const mockEvent = { target: otherElement, pageX: 200, pageY: 200 }
+      const mockEvent = { target: otherElement, pageX: 200, pageY: 200 } as unknown as MouseEvent
 
       textActionsMethod.mouseDown(mockEvent, textElement, 200, 200)
       textActionsMethod.mouseUp(mockEvent, 200, 200)
@@ -326,7 +350,7 @@ describe('TextActions', () => {
       ]
 
       privateMethodNames.forEach(method => {
-        expect(textActionsMethod[method]).toBeUndefined()
+        expect((textActionsMethod as unknown as Record<string, unknown>)[method]).toBeUndefined()
       })
     })
 
@@ -346,7 +370,7 @@ describe('TextActions', () => {
       ]
 
       privateFieldNames.forEach(field => {
-        expect(textActionsMethod[field]).toBeUndefined()
+        expect((textActionsMethod as unknown as Record<string, unknown>)[field]).toBeUndefined()
       })
     })
   })
@@ -361,9 +385,9 @@ describe('TextActions', () => {
       textActionsMethod.init()
 
       // Simulate mouse interaction
-      textActionsMethod.mouseDown({ pageX: 100, pageY: 100 }, textElement, 100, 100)
+      textActionsMethod.mouseDown({ pageX: 100, pageY: 100 } as unknown as MouseEvent, textElement, 100, 100)
       textActionsMethod.mouseMove(110, 100)
-      textActionsMethod.mouseUp({ target: textElement, pageX: 110, pageY: 100 }, 110, 100)
+      textActionsMethod.mouseUp({ target: textElement, pageX: 110, pageY: 100 } as unknown as MouseEvent, 110, 100)
 
       // Exit edit mode
       textActionsMethod.toSelectMode(true)
@@ -391,9 +415,9 @@ describe('TextActions', () => {
     it('should handle text element without parent', () => {
       const orphanText = document.createElementNS(NS.SVG, 'text')
       orphanText.textContent = 'Orphan'
-      orphanText.getStartPositionOfChar = vi.fn((i) => ({ x: 100 + i * 10, y: 100 }))
-      orphanText.getEndPositionOfChar = vi.fn((i) => ({ x: 100 + (i + 1) * 10, y: 100 }))
-      orphanText.getBBox = vi.fn(() => ({ x: 100, y: 90, width: 60, height: 20 }))
+      orphanText.getStartPositionOfChar = vi.fn((i) => ({ x: 100 + i * 10, y: 100 } as unknown as DOMPoint))
+      orphanText.getEndPositionOfChar = vi.fn((i) => ({ x: 100 + (i + 1) * 10, y: 100 } as unknown as DOMPoint))
+      orphanText.getBBox = vi.fn(() => ({ x: 100, y: 90, width: 60, height: 20 } as unknown as DOMRect))
 
       expect(() => {
         textActionsMethod.start(orphanText)
@@ -431,7 +455,7 @@ describe('TextActions', () => {
       expect(() => {
         textActionsMethod.start(textElement)
         textActionsMethod.init()
-        textActionsMethod.mouseDown({ pageX: 100, pageY: 100 }, textElement, 100, 100)
+        textActionsMethod.mouseDown({ pageX: 100, pageY: 100 } as unknown as MouseEvent, textElement, 100, 100)
       }).not.toThrow()
     })
 
@@ -440,7 +464,7 @@ describe('TextActions', () => {
       expect(() => {
         textActionsMethod.start(textElement)
         textActionsMethod.init()
-        textActionsMethod.mouseDown({ pageX: 50, pageY: 100 }, textElement, 50, 100)
+        textActionsMethod.mouseDown({ pageX: 50, pageY: 100 } as unknown as MouseEvent, textElement, 50, 100)
       }).not.toThrow()
     })
 
@@ -449,7 +473,7 @@ describe('TextActions', () => {
       expect(() => {
         textActionsMethod.start(textElement)
         textActionsMethod.init()
-        textActionsMethod.mouseDown({ pageX: 200, pageY: 100 }, textElement, 200, 100)
+        textActionsMethod.mouseDown({ pageX: 200, pageY: 100 } as unknown as MouseEvent, textElement, 200, 100)
       }).not.toThrow()
     })
 
@@ -457,8 +481,8 @@ describe('TextActions', () => {
       const outsideElement = document.createElementNS(NS.SVG, 'rect')
       textActionsMethod.start(textElement)
       textActionsMethod.init()
-      textActionsMethod.mouseDown({ pageX: 100, pageY: 100 }, textElement, 100, 100)
-      textActionsMethod.mouseUp({ target: outsideElement, pageX: 101, pageY: 101 }, 101, 101)
+      textActionsMethod.mouseDown({ pageX: 100, pageY: 100 } as unknown as MouseEvent, textElement, 100, 100)
+      textActionsMethod.mouseUp({ target: outsideElement, pageX: 101, pageY: 101 } as unknown as MouseEvent, 101, 101)
       expect(svgCanvas.setCurrentMode).toHaveBeenCalledWith('select')
     })
 
@@ -493,7 +517,7 @@ describe('TextActions', () => {
       expect(() => {
         textActionsMethod.start(textElement)
         textActionsMethod.init()
-        textActionsMethod.mouseDown({ pageX: 100, pageY: 100 }, textElement, 100, 100)
+        textActionsMethod.mouseDown({ pageX: 100, pageY: 100 } as unknown as MouseEvent, textElement, 100, 100)
         textActionsMethod.mouseMove(120, 100)
         textActionsMethod.mouseMove(130, 100)
       }).not.toThrow()
@@ -502,14 +526,14 @@ describe('TextActions', () => {
     it('should handle mouseMove without shift key', () => {
       const evt = { shiftKey: false, clientX: 100, clientY: 100 }
       expect(() => {
-        textActionsMethod.mouseMove(10, 20, evt)
+        (textActionsMethod.mouseMove as unknown as (mouseX: number, mouseY: number, evt?: unknown) => void)(10, 20, evt)
       }).not.toThrow()
     })
 
     it('should handle mouseDown with different mouse button', () => {
-      const evt = { button: 2 }
+      const evt = { button: 2 } as unknown as MouseEvent
       expect(() => {
-        textActionsMethod.mouseDown(evt, null, 10, 20)
+        textActionsMethod.mouseDown(evt, null as unknown as Element, 10, 20)
       }).not.toThrow()
     })
 
@@ -518,7 +542,7 @@ describe('TextActions', () => {
       elem.textContent = 'test'
       const evt = { target: elem }
       expect(() => {
-        textActionsMethod.mouseUp(evt, elem, 10, 20)
+        (textActionsMethod.mouseUp as unknown as (evt: unknown, mouseTarget: unknown, mouseX: number, mouseY: number) => void)(evt, elem, 10, 20)
       }).not.toThrow()
     })
 

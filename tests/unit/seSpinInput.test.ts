@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import '../../src/editor/components/seSpinInput.ts'
+import '../../src/editor/components/seSpinInput.js'
+import type { SESpinInput } from '../../src/editor/components/seSpinInput'
 
-const flush = async (el) => {
+const flush = async (el: SESpinInput) => {
   await customElements.whenDefined('se-spin-input')
-  await new Promise(resolve => queueMicrotask(resolve))
+  await new Promise<void>(resolve => queueMicrotask(resolve))
   if (el && typeof el.updateComplete?.then === 'function') {
     await el.updateComplete
   }
@@ -14,11 +15,11 @@ const flush = async (el) => {
 // keystroke and `change` (commit) on blur/Enter, with the NaN guard suppressing
 // transient invalid input.
 describe('se-spin-input #4 live-preview / commit', () => {
-  let el
+  let el: SESpinInput
 
   beforeEach(() => {
     document.body.textContent = ''
-    el = document.createElement('se-spin-input')
+    el = document.createElement('se-spin-input') as SESpinInput
     document.body.appendChild(el)
   })
 
@@ -26,7 +27,7 @@ describe('se-spin-input #4 live-preview / commit', () => {
 
   it('emits a host input event on a valid numeric keystroke, not change', async () => {
     await flush(el)
-    const input = el.shadowRoot.querySelector('input')
+    const input = el.shadowRoot!.querySelector('input')!
     let inputs = 0; let changes = 0
     el.addEventListener('input', () => inputs++)
     el.addEventListener('change', () => changes++)
@@ -38,7 +39,7 @@ describe('se-spin-input #4 live-preview / commit', () => {
 
   it('suppresses the preview for transient invalid input (empty value)', async () => {
     await flush(el)
-    const input = el.shadowRoot.querySelector('input')
+    const input = el.shadowRoot!.querySelector('input')!
     let inputs = 0
     el.addEventListener('input', () => inputs++)
     input.value = ''
@@ -49,7 +50,7 @@ describe('se-spin-input #4 live-preview / commit', () => {
 
   it('commits on native change (blur)', async () => {
     await flush(el)
-    const input = el.shadowRoot.querySelector('input')
+    const input = el.shadowRoot!.querySelector('input')!
     let changes = 0
     el.addEventListener('change', () => changes++)
     input.value = '7'

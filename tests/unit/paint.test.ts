@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import Paint from '../../packages/svgcanvas/core/paint.js'
 
-const createLinear = (id) => {
+const createLinear = (id: string) => {
   const grad = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient')
   if (id) grad.id = id
   return grad
 }
 
-const createRadial = (id) => {
+const createRadial = (id: string) => {
   const grad = document.createElementNS('http://www.w3.org/2000/svg', 'radialGradient')
   if (id) grad.id = id
   grad.setAttribute('cx', '0.5')
@@ -120,7 +120,7 @@ describe('Paint', () => {
   })
 
   it('should handle paint with undefined radialGradient', () => {
-    const paint = new Paint({ radialGradient: undefined })
+    const paint = new Paint({ radialGradient: undefined } as unknown as ConstructorParameters<typeof Paint>[0])
     expect(paint.type).toBe('none')
   })
 
@@ -417,7 +417,7 @@ describe('Paint', () => {
 
   it('should handle copy with missing clone method', () => {
     const original = new Paint({ linearGradient: createLinear('copyGrad') })
-    original.linearGradient = { id: 'fake', cloneNode: null }
+    original.linearGradient = { id: 'fake', cloneNode: null } as unknown as SVGLinearGradientElement
     const copy = new Paint({ copy: original })
     expect(copy.linearGradient).toBe(null)
   })

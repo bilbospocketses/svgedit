@@ -92,8 +92,8 @@ describe('sanitizeForeignHtml — links', () => {
     root.innerHTML = '<a href="#sec">x</a><a href="/page">y</a>'
     sanitize.sanitizeSvg(root)
     const as = root.querySelectorAll('a')
-    expect(as[0].getAttribute('href')).toBe('#sec')
-    expect(as[1].getAttribute('href')).toBe('/page')
+    expect(as[0]!.getAttribute('href')).toBe('#sec')
+    expect(as[1]!.getAttribute('href')).toBe('/page')
   })
 
   it('strips javascript:/data:/mailto: hrefs (keeps the link text)', () => {

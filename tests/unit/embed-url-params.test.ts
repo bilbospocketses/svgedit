@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseEmbedURLParams } from '../../src/embed/url-params.ts'
+import { parseEmbedURLParams } from '../../src/embed/url-params.js'
 
 describe('embed URL param parser', () => {
   it('returns defaults for empty URL', () => {

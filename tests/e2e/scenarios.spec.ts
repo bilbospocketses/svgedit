@@ -27,7 +27,7 @@ test.describe('Tool scenarios', () => {
     await expect(rect).toHaveAttribute('width', /.+/)
     await page.evaluate(() => {
       const el = document.getElementById('svg_1')
-      el.setAttribute('transform', 'rotate(20 190 190)')
+      el!.setAttribute('transform', 'rotate(20 190 190)')
     })
     const transform = await rect.getAttribute('transform')
     expect(transform || '').toContain('rotate')
@@ -51,7 +51,7 @@ test.describe('Tool scenarios', () => {
     const line = page.locator('#svg_1')
     await expect(line).toHaveAttribute('x2', /.+/)
     await page.evaluate(() => {
-      document.getElementById('svg_1').setAttribute('stroke-width', '3')
+      document.getElementById('svg_1')!.setAttribute('stroke-width', '3')
     })
     await expect(line).toHaveAttribute('stroke-width', '3')
   })
@@ -84,7 +84,7 @@ test.describe('Tool scenarios', () => {
       img.setAttribute('y', '80')
       img.setAttribute('width', '60')
       img.setAttribute('height', '60')
-      document.querySelector('svg g').append(img)
+      document.querySelector('svg g')!.append(img)
     })
     await expect(page.locator('image[href="./images/logo.svg"]')).toBeVisible()
   })

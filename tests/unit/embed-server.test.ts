@@ -1,13 +1,30 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { EmbedServer } from '../../src/embed/server.ts'
+import { EmbedServer } from '../../src/embed/server.js'
+import type { ReadyPayload } from '../../src/embed/protocol.js'
+
+// Shape of the envelopes these tests capture from window.parent.postMessage.
+// Each captured value is one member of the EmbedEnvelope union (call / result /
+// error / event / dialog-request), so every field is optional and a given
+// assertion reads whichever fields the envelope under test carries.
+type CapturedEnvelope = {
+  ns?: string
+  v?: number
+  kind?: string
+  id?: number
+  result?: unknown
+  code?: string
+  name?: string
+  payload?: ReadyPayload
+  dialog?: string
+}
 
 const makeFakeEditor = () => ({
   svgCanvas: { getZoom: () => 1.5, clearSelection: vi.fn() }
 })
 
 describe('EmbedServer — constructor + listener setup', () => {
-  let activeServer = null
+  let activeServer: EmbedServer | null = null
   beforeEach(() => {
     document.body.className = ''
     document.documentElement.removeAttribute('data-theme')
@@ -68,7 +85,7 @@ describe('EmbedServer — call dispatch', () => {
   it('dispatches call to svgCanvas method and replies with result', async () => {
     const editor = { svgCanvas: { getZoom: () => 1.5 } }
     const server = new EmbedServer(editor)
-    const replies = []
+    const replies: CapturedEnvelope[] = []
     vi.spyOn(window.parent, 'postMessage').mockImplementation((env) => replies.push(env))
 
     window.dispatchEvent(new MessageEvent('message', {
@@ -85,7 +102,7 @@ describe('EmbedServer — call dispatch', () => {
   it('replies with METHOD_NOT_FOUND error for unknown method', async () => {
     const editor = { svgCanvas: {} }
     const server = new EmbedServer(editor)
-    const replies = []
+    const replies: CapturedEnvelope[] = []
     vi.spyOn(window.parent, 'postMessage').mockImplementation((env) => replies.push(env))
 
     window.dispatchEvent(new MessageEvent('message', {
@@ -102,7 +119,7 @@ describe('EmbedServer — call dispatch', () => {
   it('drops messages from unauthorized origin (no reply)', async () => {
     const editor = { svgCanvas: { getZoom: () => 1.5 } }
     const server = new EmbedServer(editor)
-    const replies = []
+    const replies: CapturedEnvelope[] = []
     vi.spyOn(window.parent, 'postMessage').mockImplementation((env) => replies.push(env))
 
     window.dispatchEvent(new MessageEvent('message', {
@@ -120,9 +137,9 @@ describe('EmbedServer — call dispatch', () => {
     const el = document.createElement('div')
     el.id = 'test-element'
     document.body.appendChild(el)
-    const editor = { svgCanvas: { getElem: (id) => document.getElementById(id) } }
+    const editor = { svgCanvas: { getElem: (id: string) => document.getElementById(id) } }
     const server = new EmbedServer(editor)
-    const replies = []
+    const replies: CapturedEnvelope[] = []
     vi.spyOn(window.parent, 'postMessage').mockImplementation((env) => replies.push(env))
 
     window.dispatchEvent(new MessageEvent('message', {
@@ -134,7 +151,7 @@ describe('EmbedServer — call dispatch', () => {
 
     const result = replies.find(r => r.kind === 'result' && r.id === 4)
     expect(result).toBeDefined()
-    expect(result.result).toMatchObject({ __svgeditHandle: expect.any(String) })
+    expect(result!.result).toMatchObject({ __svgeditHandle: expect.any(String) })
     server.dispose()
   })
 
@@ -145,12 +162,12 @@ describe('EmbedServer — call dispatch', () => {
     let captured = null
     const editor = {
       svgCanvas: {
-        takesElement: (arg) => { captured = arg; return 'ok' },
-        getElem: (id) => document.getElementById(id)
+        takesElement: (arg: Element) => { captured = arg; return 'ok' },
+        getElem: (id: string) => document.getElementById(id)
       }
     }
     const server = new EmbedServer(editor)
-    const replies = []
+    const replies: CapturedEnvelope[] = []
     vi.spyOn(window.parent, 'postMessage').mockImplementation((env) => replies.push(env))
 
     window.dispatchEvent(new MessageEvent('message', {
@@ -159,7 +176,7 @@ describe('EmbedServer — call dispatch', () => {
       source: window
     }))
     await new Promise(r => setTimeout(r, 0))
-    const handle = replies.find(r => r.id === 5).result
+    const handle = replies.find(r => r.id === 5)!.result
 
     window.dispatchEvent(new MessageEvent('message', {
       data: { ns: 'svgedit', v: 1, kind: 'call', id: 6, method: 'takesElement', args: [handle] },
@@ -182,7 +199,7 @@ describe('EmbedServer — event emission', () => {
   it('emit() posts envelope to window.parent', () => {
     const editor = { svgCanvas: {} }
     const server = new EmbedServer(editor)
-    const sent = []
+    const sent: CapturedEnvelope[] = []
     vi.spyOn(window.parent, 'postMessage').mockImplementation((env) => sent.push(env))
     server.emit('ready', { version: '7.4.1', protocolVersion: 1, capabilities: ['chrome'] })
     expect(sent).toContainEqual({
@@ -195,13 +212,13 @@ describe('EmbedServer — event emission', () => {
   it('ready() helper emits ready event with declared capabilities', () => {
     const editor = { svgCanvas: {} }
     const server = new EmbedServer(editor, { version: '7.4.1' })
-    const sent = []
+    const sent: CapturedEnvelope[] = []
     vi.spyOn(window.parent, 'postMessage').mockImplementation((env) => sent.push(env))
     server.ready()
     const readyEvent = sent.find(s => s.kind === 'event' && s.name === 'ready')
     expect(readyEvent).toBeDefined()
-    expect(readyEvent.payload.protocolVersion).toBe(1)
-    expect(readyEvent.payload.capabilities).toEqual(expect.arrayContaining(['chrome', 'theme', 'dialog-hooks', 'palette']))
+    expect(readyEvent!.payload!.protocolVersion).toBe(1)
+    expect(readyEvent!.payload!.capabilities).toEqual(expect.arrayContaining(['chrome', 'theme', 'dialog-hooks', 'palette']))
     server.dispose()
   })
 })
@@ -239,7 +256,7 @@ describe('EmbedServer — dialog hook', () => {
     })
     server.markHostHandlerRegistered('prompt')
 
-    const sent = []
+    const sent: CapturedEnvelope[] = []
     vi.spyOn(window.parent, 'postMessage').mockImplementation((env) => sent.push(env))
 
     const p = server.requestDialog('prompt', ['enter name', ''])
@@ -248,7 +265,7 @@ describe('EmbedServer — dialog hook', () => {
     expect(reqEnv).toBeDefined()
 
     window.dispatchEvent(new MessageEvent('message', {
-      data: { ns: 'svgedit', v: 1, kind: 'dialog-response', id: reqEnv.id, response: 'jamie' },
+      data: { ns: 'svgedit', v: 1, kind: 'dialog-response', id: reqEnv!.id, response: 'jamie' },
       origin: 'https://host.test',
       source: window
     }))
@@ -365,7 +382,7 @@ describe('EmbedServer — control messages', () => {
     const setCustomPalette = vi.fn()
     const editor = { svgCanvas: {}, setCustomPalette }
     const server = new EmbedServer(editor)
-    const replies = []
+    const replies: CapturedEnvelope[] = []
     vi.spyOn(window.parent, 'postMessage').mockImplementation((env) => replies.push(env))
 
     window.dispatchEvent(new MessageEvent('message', {

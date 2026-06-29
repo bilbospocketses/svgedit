@@ -1,6 +1,7 @@
 import { strict as assert } from 'node:assert'
 import { NS } from '../../packages/svgcanvas/core/namespaces.js'
 import Layer from '../../packages/svgcanvas/core/layer.js'
+import type HistoryRecordingService from '../../packages/svgcanvas/core/historyrecording.js'
 
 describe('Layer', function () {
   it('preserves inline styles while applying pointer-events', function () {
@@ -71,19 +72,19 @@ describe('Layer', function () {
     assert.ok(group.contains(rect))
     assert.ok(group.contains(circle))
 
-    const hrCalls = []
+    const hrCalls: unknown[][] = []
     const hrService = {
-      changeElement: (...args) => {
+      changeElement: (...args: unknown[]) => {
         hrCalls.push(args)
       }
     }
-    const renamed = layer.setName('Renamed', hrService)
+    const renamed = layer.setName('Renamed', hrService as unknown as HistoryRecordingService)
     assert.equal(renamed, 'Renamed')
     assert.equal(layer.getName(), 'Renamed')
     assert.equal(title.textContent, 'Renamed')
     assert.equal(hrCalls.length, 1)
-    assert.equal(hrCalls[0][0], title)
-    assert.deepEqual(hrCalls[0][1], { '#text': 'Layer 1' })
+    assert.equal(hrCalls[0]![0], title)
+    assert.deepEqual(hrCalls[0]![1], { '#text': 'Layer 1' })
 
     assert.equal(Layer.isLayer(group), true)
     assert.equal(Layer.isLayer(document.createElementNS(NS.SVG, 'rect')), false)

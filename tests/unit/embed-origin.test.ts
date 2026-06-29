@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isOriginAllowed, parseAllowedOrigins } from '../../src/embed/origin.ts'
+import { isOriginAllowed, parseAllowedOrigins } from '../../src/embed/origin.js'
 
 describe('embed origin validator', () => {
   it('allows exact-match origin', () => {

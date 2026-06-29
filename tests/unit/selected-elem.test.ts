@@ -2,7 +2,7 @@ import { NS } from '../../packages/svgcanvas/core/namespaces.js'
 import { createSvgCanvasFixture } from './helpers/createSvgCanvasFixture'
 
 describe('selected-elem', () => {
-  let svgCanvas
+  let svgCanvas: ReturnType<typeof createSvgCanvasFixture>
 
   beforeEach(() => {
     svgCanvas = createSvgCanvasFixture()
@@ -32,7 +32,7 @@ describe('selected-elem', () => {
 
     const raw = sessionStorage.getItem(svgCanvas.getClipboardID())
     expect(raw).toBeTruthy()
-    const parsed = JSON.parse(raw)
+    const parsed = JSON.parse(raw!)
     expect(parsed).toHaveLength(1)
     expect(parsed[0].element).toBe('rect')
     expect(parsed[0].attr.id).toBe('rect-copy')
@@ -160,7 +160,7 @@ describe('selected-elem', () => {
     expect(svgCanvas.undoMgr.getUndoStackSize()).toBe(undoSize + 1)
 
     const order = Array.from(parent.childNodes)
-      .filter((n) => n.nodeType === 1)
+      .filter((n): n is Element => n.nodeType === 1)
       .map((n) => (n.tagName === 'title' || n.tagName === 'defs') ? n.tagName : n.id)
 
     expect(order).toEqual(['title', 'defs', 'rect-bottom-2', 'rect-bottom-1'])
@@ -188,7 +188,7 @@ describe('selected-elem', () => {
     svgCanvas.moveToBottomSelectedElement()
 
     const order = Array.from(parent.childNodes)
-      .filter((n) => n.nodeType === 1)
+      .filter((n): n is Element => n.nodeType === 1)
       .map((n) => (n.tagName === 'title' || n.tagName === 'defs') ? n.tagName : n.id)
     // rect2 must land after BOTH defs and title, not wedged between them
     expect(order).toEqual(['defs', 'title', 'order-2', 'order-1'])
@@ -234,8 +234,8 @@ describe('selected-elem', () => {
     expect(container.querySelector('use')).toBeNull()
     const group = container.firstElementChild
     expect(group).toBeTruthy()
-    expect(group.tagName).toBe('g')
-    expect(group.querySelector('rect')).toBeTruthy()
+    expect(group!.tagName).toBe('g')
+    expect(group!.querySelector('rect')).toBeTruthy()
   })
 
   it('does not crash ungrouping a <use> without href', () => {
@@ -261,7 +261,7 @@ describe('selected-elem', () => {
   // cover the internal bus contract that ext-connector subscribes to.
 
   it('groupSelectedElements fires before-group then after-group on the bus', () => {
-    const fired = []
+    const fired: string[] = []
     svgCanvas.bind('before-group', () => { fired.push('before-group') })
     svgCanvas.bind('after-group', () => { fired.push('after-group') })
 
@@ -280,7 +280,7 @@ describe('selected-elem', () => {
   })
 
   it('moveSelectedElements fires before-move then after-move on the bus (with selection)', () => {
-    const fired = []
+    const fired: string[] = []
     svgCanvas.bind('before-move', () => { fired.push('before-move') })
     svgCanvas.bind('after-move', () => { fired.push('after-move') })
 
@@ -295,7 +295,7 @@ describe('selected-elem', () => {
   })
 
   it('moveSelectedElements fires after-move even with empty selection', () => {
-    const fired = []
+    const fired: string[] = []
     svgCanvas.bind('before-move', () => { fired.push('before-move') })
     svgCanvas.bind('after-move', () => { fired.push('after-move') })
 
@@ -355,7 +355,7 @@ describe('selected-elem', () => {
     expect(container.querySelector('use')).toBeNull()
     const group = container.firstElementChild
     expect(group).toBeTruthy()
-    expect(group.tagName).toBe('g')
-    expect(group.querySelector('rect')).toBeTruthy()
+    expect(group!.tagName).toBe('g')
+    expect(group!.querySelector('rect')).toBeTruthy()
   })
 })

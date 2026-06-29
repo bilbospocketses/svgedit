@@ -1,4 +1,5 @@
 import { test, expect } from '../fixtures.js'
+import type { ISvgCanvas } from '@svgedit/svgcanvas/core/svgcanvas-types.js'
 
 test.describe('SVG core math and coords', () => {
   test.beforeEach(async ({ page }) => {
@@ -16,7 +17,7 @@ test.describe('SVG core math and coords', () => {
       translatedMatrix.e = 300
       translatedMatrix.f = 400
       const translated = math.transformPoint(5, 5, translatedMatrix)
-      const tlist = math.getTransformList(svg)
+      const tlist = math.getTransformList(svg)!
       const hasMatrixBefore = math.hasMatrixTransform(tlist)
       const tf = svg.createSVGTransformFromMatrix(translatedMatrix)
       tlist.appendItem(tf)
@@ -70,11 +71,11 @@ test.describe('SVG core math and coords', () => {
         getSvgRoot: () => svg,
         getDOMDocument: () => document,
         getDOMContainer: () => svg
-      })
+      } as unknown as ISvgCanvas)
       coords.init({
         getGridSnapping: () => false,
         getDrawing: () => ({ getNextId: () => '1' })
-      })
+      } as unknown as ISvgCanvas)
       const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
       rect.setAttribute('x', '200')
       rect.setAttribute('y', '150')
@@ -86,7 +87,7 @@ test.describe('SVG core math and coords', () => {
       translateMatrix.f = -50
       coords.remapElement(
         rect,
-        { x: '200', y: '150', width: '125', height: '75' },
+        { x: '200', y: '150', width: '125', height: '75' } as unknown as Parameters<typeof coords.remapElement>[1],
         translateMatrix
       )
       const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
@@ -99,7 +100,7 @@ test.describe('SVG core math and coords', () => {
       scaleMatrix.d = 0.5
       coords.remapElement(
         circle,
-        { cx: '200', cy: '150', r: '250' },
+        { cx: '200', cy: '150', r: '250' } as unknown as Parameters<typeof coords.remapElement>[1],
         scaleMatrix
       )
       return {

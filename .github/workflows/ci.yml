@@ -54,6 +54,9 @@ jobs:
       - name: Type check
         run: npx tsc --build
 
+      - name: Type check (tests)
+        run: npm run typecheck:tests
+
       - name: Build
         run: npm run build
 

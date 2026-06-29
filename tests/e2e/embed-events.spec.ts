@@ -11,7 +11,7 @@ test.describe('embed: events', () => {
   test('change event fires after content modification', async ({ page }) => {
     await openEmbedHost(page)
     await page.evaluate(() =>
-      window.__svgeditEmbed.editor.loadFromString('<svg xmlns="http://www.w3.org/2000/svg"><rect/></svg>')
+      window.__svgeditEmbed.editor.loadFromString!('<svg xmlns="http://www.w3.org/2000/svg"><rect/></svg>')
     )
     await page.waitForFunction(() => window.__getLog().includes('CHANGE'), { timeout: 5000 })
   })
@@ -19,10 +19,10 @@ test.describe('embed: events', () => {
   test('selection-changed fires when something is selected', async ({ page }) => {
     await openEmbedHost(page)
     await page.evaluate(async () => {
-      await window.__svgeditEmbed.editor.loadFromString('<svg xmlns="http://www.w3.org/2000/svg"><rect id="r" x="0" y="0" width="10" height="10"/></svg>')
+      await window.__svgeditEmbed.editor.loadFromString!('<svg xmlns="http://www.w3.org/2000/svg"><rect id="r" x="0" y="0" width="10" height="10"/></svg>')
       await new Promise(r => setTimeout(r, 100))
     })
-    await page.evaluate(() => window.__svgeditEmbed.editor.selectAllInCurrentLayer())
+    await page.evaluate(() => window.__svgeditEmbed.editor.selectAllInCurrentLayer!())
     await page.waitForFunction(() => window.__getLog().includes('SELECTION'), { timeout: 5000 })
   })
 
@@ -31,9 +31,9 @@ test.describe('embed: events', () => {
     const count = await page.evaluate(async () => {
       let n = 0
       window.__svgeditEmbed.once('change', () => { n += 1 })
-      await window.__svgeditEmbed.editor.loadFromString('<svg xmlns="http://www.w3.org/2000/svg"><rect/></svg>')
+      await window.__svgeditEmbed.editor.loadFromString!('<svg xmlns="http://www.w3.org/2000/svg"><rect/></svg>')
       await new Promise(r => setTimeout(r, 300))
-      await window.__svgeditEmbed.editor.loadFromString('<svg xmlns="http://www.w3.org/2000/svg"><circle r="5"/></svg>')
+      await window.__svgeditEmbed.editor.loadFromString!('<svg xmlns="http://www.w3.org/2000/svg"><circle r="5"/></svg>')
       await new Promise(r => setTimeout(r, 300))
       return n
     })
@@ -47,7 +47,7 @@ test.describe('embed: events', () => {
       const handler = () => { n += 1 }
       window.__svgeditEmbed.on('change', handler)
       window.__svgeditEmbed.off('change', handler)
-      await window.__svgeditEmbed.editor.loadFromString('<svg xmlns="http://www.w3.org/2000/svg"><rect/></svg>')
+      await window.__svgeditEmbed.editor.loadFromString!('<svg xmlns="http://www.w3.org/2000/svg"><rect/></svg>')
       await new Promise(r => setTimeout(r, 300))
       return n
     })
@@ -60,13 +60,13 @@ test.describe('embed: events', () => {
   test('before-group + after-group fire around groupSelectedElements', async ({ page }) => {
     await openEmbedHost(page)
     await page.evaluate(async () => {
-      await window.__svgeditEmbed.editor.loadFromString(
+      await window.__svgeditEmbed.editor.loadFromString!(
         '<svg xmlns="http://www.w3.org/2000/svg"><rect id="r1" x="0" y="0" width="10" height="10"/><rect id="r2" x="20" y="0" width="10" height="10"/></svg>'
       )
       await new Promise(r => setTimeout(r, 200))
-      await window.__svgeditEmbed.editor.selectAllInCurrentLayer()
+      await window.__svgeditEmbed.editor.selectAllInCurrentLayer!()
       window.__clearLog()
-      await window.__svgeditEmbed.editor.groupSelectedElements()
+      await window.__svgeditEmbed.editor.groupSelectedElements!()
       await new Promise(r => setTimeout(r, 200))
     })
     const log = await page.evaluate(() => window.__getLog())
@@ -78,11 +78,11 @@ test.describe('embed: events', () => {
   test('before-move + after-move fire around moveSelectedElements', async ({ page }) => {
     await openEmbedHost(page)
     await page.evaluate(async () => {
-      await window.__svgeditEmbed.editor.loadFromString(
+      await window.__svgeditEmbed.editor.loadFromString!(
         '<svg xmlns="http://www.w3.org/2000/svg"><rect id="r1" x="0" y="0" width="10" height="10"/></svg>'
       )
       await new Promise(r => setTimeout(r, 200))
-      await window.__svgeditEmbed.editor.selectAllInCurrentLayer()
+      await window.__svgeditEmbed.editor.selectAllInCurrentLayer!()
       window.__clearLog()
       // moveSelectedElements with a non-empty selection returns a BatchCommand whose
       // subcommands hold Element refs (SVGRectElement etc.). The embed serializer leaves
@@ -91,7 +91,7 @@ test.describe('embed: events', () => {
       // is constructed), so the test asserts the log, not the return-value Promise.
       // BatchCommand serialization across the embed boundary is a real but separate gap;
       // flagged as a post-v1.2 follow-up.
-      window.__svgeditEmbed.editor.moveSelectedElements(5, 5, false).catch(() => {})
+      window.__svgeditEmbed.editor.moveSelectedElements!(5, 5, false).catch(() => {})
       await new Promise(r => setTimeout(r, 300))
     })
     const log = await page.evaluate(() => window.__getLog())
@@ -103,10 +103,10 @@ test.describe('embed: events', () => {
   test('after-move fires even when no command is produced (empty selection)', async ({ page }) => {
     await openEmbedHost(page)
     await page.evaluate(async () => {
-      await window.__svgeditEmbed.editor.clearSelection()
+      await window.__svgeditEmbed.editor.clearSelection!()
       window.__clearLog()
       // Empty selection → moveSelectedElements returns undefined (serializable). No catch needed.
-      await window.__svgeditEmbed.editor.moveSelectedElements(1, 1, false)
+      await window.__svgeditEmbed.editor.moveSelectedElements!(1, 1, false)
       await new Promise(r => setTimeout(r, 200))
     })
     const log = await page.evaluate(() => window.__getLog())

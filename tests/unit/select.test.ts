@@ -1,30 +1,31 @@
 import * as select from '../../packages/svgcanvas/core/select.js'
 import { NS } from '../../packages/svgcanvas/core/namespaces.js'
+import type { ISvgCanvas } from '../../packages/svgcanvas/core/svgcanvas-types.js'
 
 describe('select', function () {
   const sandbox = document.createElement('div')
   sandbox.id = 'sandbox'
 
-  let svgroot
-  let svgContent
+  let svgroot: SVGElement
+  let svgContent: SVGElement
   const mockConfig = {
     dimensions: [640, 480]
   }
   const dataStorage = {
     _storage: new WeakMap(),
-    put: function (element, key, obj) {
+    put: function (element: object, key: string, obj: unknown) {
       if (!this._storage.has(element)) {
         this._storage.set(element, new Map())
       }
       this._storage.get(element).set(key, obj)
     },
-    get: function (element, key) {
+    get: function (element: object, key: string) {
       return this._storage.get(element).get(key)
     },
-    has: function (element, key) {
+    has: function (element: object, key: string) {
       return this._storage.has(element) && this._storage.get(element).has(key)
     },
-    remove: function (element, key) {
+    remove: function (element: object, key: string) {
       const ret = this._storage.get(element).delete(key)
       if (this._storage.get(element).size === 0) {
         this._storage.delete(element)
@@ -38,7 +39,7 @@ describe('select', function () {
   */
   const mockSvgCanvas = {
     curConfig: mockConfig,
-    createSVGElement (jsonMap) {
+    createSVGElement (jsonMap: { element: string, attr: Record<string, string> }) {
       const elem = document.createElementNS(NS.SVG, jsonMap.element)
       Object.entries(jsonMap.attr).forEach(([attr, value]) => {
         elem.setAttribute(attr, value)
@@ -92,7 +93,7 @@ describe('select', function () {
    */
   afterEach(() => {
     while (sandbox.hasChildNodes()) {
-      sandbox.firstChild.remove()
+      sandbox.firstChild!.remove()
     }
   })
 
@@ -118,12 +119,12 @@ describe('select', function () {
     assert.equal(svgroot.childNodes.item(0), svgContent)
     assert.ok(!svgroot.querySelector('#selectorParentGroup'))
 
-    select.init(mockSvgCanvas)
+    select.init(mockSvgCanvas as unknown as ISvgCanvas)
 
     assert.equal(svgroot.childNodes.length, 3)
 
     // Verify existence of canvas background.
-    const cb = svgroot.childNodes.item(0)
+    const cb = svgroot.childNodes.item(0) as Element
     assert.ok(cb)
     assert.equal(cb.id, 'canvasBackground')
 
@@ -131,7 +132,7 @@ describe('select', function () {
     assert.equal(svgroot.childNodes.item(1), svgContent)
 
     // Verify existence of selectorParentGroup.
-    const spg = svgroot.childNodes.item(2)
+    const spg = svgroot.childNodes.item(2) as Element
     assert.ok(spg)
     assert.equal(svgroot.querySelector('#selectorParentGroup'), spg)
     assert.equal(spg.id, 'selectorParentGroup')

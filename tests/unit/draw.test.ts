@@ -1,14 +1,36 @@
-import { vi } from 'vitest'
+import { vi, type Mock } from 'vitest'
 import { NS } from '../../packages/svgcanvas/core/namespaces.js'
 import * as draw from '../../packages/svgcanvas/core/draw.js'
 import * as units from '../../packages/svgcanvas/core/units.js'
 import { Layer } from '../../packages/svgcanvas/core/draw'
+import type { ISvgCanvas } from '../../packages/svgcanvas/core/svgcanvas-types.js'
+import type HistoryRecordingService from '../../packages/svgcanvas/core/historyrecording.js'
+
+interface OwnSpy {
+  (...args: unknown[]): unknown
+  getCall (idx?: number): { args: unknown[] }
+  readonly calledOnce: boolean
+  readonly callCount: number
+}
+
+// Spy-augmented surface of HistoryRecordingService the tests assert against.
+// A `type` alias (not interface) keeps the implicit index signature so it stays
+// assignable to addOwnSpies' `Record<string, ...>` parameter, while the explicit
+// keys avoid `noUncheckedIndexedAccess` widening each access to `OwnSpy | undefined`.
+type HrServiceSpy = {
+  changeElement: OwnSpy
+  startBatchCommand: OwnSpy
+  endBatchCommand: OwnSpy
+  insertElement: OwnSpy
+  moveElement: OwnSpy
+  removeElement: OwnSpy
+}
 
 describe('draw.Drawing', function () {
-  const addOwnSpies = (obj) => {
+  const addOwnSpies = (obj: Record<string, (...args: unknown[]) => unknown>) => {
     const methods = Object.keys(obj)
     methods.forEach((method) => {
-      const spy = vi.spyOn(obj, method)
+      const spy = vi.spyOn(obj, method) as Mock<(...args: unknown[]) => unknown> & { getCall: (idx?: number) => { args: unknown[] } }
       spy.getCall = (idx = 0) => ({ args: spy.mock.calls[idx] || [] })
       Object.defineProperty(spy, 'calledOnce', { get: () => spy.mock.calls.length === 1 })
       Object.defineProperty(spy, 'callCount', { get: () => spy.mock.calls.length })
@@ -37,7 +59,7 @@ describe('draw.Drawing', function () {
     {
       // used by units.shortFloat - call path: cloneLayer -> copyElem -> convertPath -> pathDSegment -> shortFloat
       getRoundDigits () { return 3 }
-    }
+    } as unknown as units.ElementContainer
   )
 
   // Simplifying from svgcanvas.js usage
@@ -54,14 +76,14 @@ describe('draw.Drawing', function () {
     {
       getCurrentDrawing,
       setCurrentGroup
-    }
+    } as unknown as ISvgCanvas
   )
 
   /**
    * @param {module:utilities.SVGElementJSON} jsonMap
    * @returns {SVGElement}
    */
-  function createSVGElement (jsonMap) {
+  function createSVGElement (jsonMap: { element: string, attr: Record<string, string> }) {
     const elem = document.createElementNS(NS.SVG, jsonMap.element)
     Object.entries(jsonMap.attr).forEach(([attr, value]) => {
       elem.setAttribute(attr, value)
@@ -69,7 +91,7 @@ describe('draw.Drawing', function () {
     return elem
   }
 
-  const setupSVGWith3Layers = function (svgElem) {
+  const setupSVGWith3Layers = function (svgElem: SVGSVGElement): [SVGGElement, SVGGElement, SVGGElement] {
     const layer1 = document.createElementNS(NS.SVG, 'g')
     layer1.setAttribute('class', Layer.CLASS_NAME)
     const layer1Title = document.createElementNS(NS.SVG, 'title')
@@ -94,7 +116,7 @@ describe('draw.Drawing', function () {
     return [layer1, layer2, layer3]
   }
 
-  const createSomeElementsInGroup = function (group) {
+  const createSomeElementsInGroup = function (group: SVGGElement) {
     group.append(
       createSVGElement({
         element: 'path',
@@ -126,11 +148,11 @@ describe('draw.Drawing', function () {
     return 4
   }
 
-  const cleanupSVG = function (svgElem) {
+  const cleanupSVG = function (svgElem: SVGSVGElement) {
     while (svgElem.firstChild) { svgElem.firstChild.remove() }
   }
 
-  let sandbox; let currentDrawing_; let svg; let svgN
+  let sandbox: HTMLDivElement; let currentDrawing_: draw.Drawing; let svg: SVGSVGElement; let svgN: SVGSVGElement
   beforeEach(() => {
     sandbox = document.createElement('div')
     sandbox.id = 'sandbox'
@@ -160,7 +182,7 @@ describe('draw.Drawing', function () {
   it('Test document creation', function () {
     let doc
     try {
-      doc = new draw.Drawing()
+      doc = new draw.Drawing(undefined as unknown as SVGSVGElement)
       assert.ok(false, 'Created drawing without a valid <svg> element')
     } catch {
       assert.ok(true)
@@ -340,7 +362,7 @@ describe('draw.Drawing', function () {
     assert.ok(layerGroup.hasChildNodes())
     assert.equal(layerGroup.childNodes.length, 1)
     const firstChild = layerGroup.childNodes.item(0)
-    assert.equal(firstChild.tagName, 'title')
+    assert.equal((firstChild as Element).tagName, 'title')
 
     cleanupSVG(svg)
   })
@@ -354,13 +376,13 @@ describe('draw.Drawing', function () {
     drawing.identifyLayers()
 
     assert.equal(drawing.getNumLayers(), 3)
-    assert.equal(drawing.all_layers[0].getGroup(), svg.childNodes.item(0))
-    assert.equal(drawing.all_layers[1].getGroup(), svg.childNodes.item(1))
-    assert.equal(drawing.all_layers[2].getGroup(), svg.childNodes.item(2))
+    assert.equal(drawing.all_layers[0]!.getGroup(), svg.childNodes.item(0))
+    assert.equal(drawing.all_layers[1]!.getGroup(), svg.childNodes.item(1))
+    assert.equal(drawing.all_layers[2]!.getGroup(), svg.childNodes.item(2))
 
-    assert.equal(drawing.all_layers[0].getGroup().getAttribute('class'), LAYER_CLASS)
-    assert.equal(drawing.all_layers[1].getGroup().getAttribute('class'), LAYER_CLASS)
-    assert.equal(drawing.all_layers[2].getGroup().getAttribute('class'), LAYER_CLASS)
+    assert.equal(drawing.all_layers[0]!.getGroup().getAttribute('class'), LAYER_CLASS)
+    assert.equal(drawing.all_layers[1]!.getGroup().getAttribute('class'), LAYER_CLASS)
+    assert.equal(drawing.all_layers[2]!.getGroup().getAttribute('class'), LAYER_CLASS)
 
     cleanupSVG(svg)
   })
@@ -378,17 +400,17 @@ describe('draw.Drawing', function () {
     drawing.identifyLayers()
 
     assert.equal(drawing.getNumLayers(), 4)
-    assert.equal(drawing.all_layers[0].getGroup(), svg.childNodes.item(0))
-    assert.equal(drawing.all_layers[1].getGroup(), svg.childNodes.item(1))
-    assert.equal(drawing.all_layers[2].getGroup(), svg.childNodes.item(2))
-    assert.equal(drawing.all_layers[3].getGroup(), svg.childNodes.item(3))
+    assert.equal(drawing.all_layers[0]!.getGroup(), svg.childNodes.item(0))
+    assert.equal(drawing.all_layers[1]!.getGroup(), svg.childNodes.item(1))
+    assert.equal(drawing.all_layers[2]!.getGroup(), svg.childNodes.item(2))
+    assert.equal(drawing.all_layers[3]!.getGroup(), svg.childNodes.item(3))
 
-    assert.equal(drawing.all_layers[0].getGroup().getAttribute('class'), LAYER_CLASS)
-    assert.equal(drawing.all_layers[1].getGroup().getAttribute('class'), LAYER_CLASS)
-    assert.equal(drawing.all_layers[2].getGroup().getAttribute('class'), LAYER_CLASS)
-    assert.equal(drawing.all_layers[3].getGroup().getAttribute('class'), LAYER_CLASS)
+    assert.equal(drawing.all_layers[0]!.getGroup().getAttribute('class'), LAYER_CLASS)
+    assert.equal(drawing.all_layers[1]!.getGroup().getAttribute('class'), LAYER_CLASS)
+    assert.equal(drawing.all_layers[2]!.getGroup().getAttribute('class'), LAYER_CLASS)
+    assert.equal(drawing.all_layers[3]!.getGroup().getAttribute('class'), LAYER_CLASS)
 
-    const layer4 = drawing.all_layers[3].getGroup()
+    const layer4 = drawing.all_layers[3]!.getGroup()
     assert.equal(layer4.tagName, 'g')
     assert.equal(layer4.childNodes.length, 3)
     assert.equal(layer4.childNodes.item(1), orphan1)
@@ -426,9 +448,9 @@ describe('draw.Drawing', function () {
     // One named layer plus one synthesized layer holding exactly the two orphans.
     assert.equal(drawing.getNumLayers(), 2)
     assert.equal(drawing.getLayerName(0), LAYER1)
-    assert.equal(drawing.all_layers[0].getGroup(), layer1)
+    assert.equal(drawing.all_layers[0]!.getGroup(), layer1)
 
-    const orphanLayerGroup = drawing.all_layers[1].getGroup()
+    const orphanLayerGroup = drawing.all_layers[1]!.getGroup()
     const orphanLayerChildren = [...orphanLayerGroup.childNodes]
     assert.ok(orphanLayerChildren.includes(orphanGroup))
     assert.ok(orphanLayerChildren.includes(orphanRect))
@@ -463,7 +485,7 @@ describe('draw.Drawing', function () {
     assert.ok(drawing.getCurrentLayer)
     assert.equal(typeof drawing.getCurrentLayer, typeof function () { /* empty fn */ })
     assert.ok(drawing.getCurrentLayer())
-    assert.equal(drawing.getCurrentLayer(), drawing.all_layers[2].getGroup())
+    assert.equal(drawing.getCurrentLayer(), drawing.all_layers[2]!.getGroup())
 
     cleanupSVG(svg)
   })
@@ -478,11 +500,11 @@ describe('draw.Drawing', function () {
 
     drawing.setCurrentLayer(LAYER2)
     assert.equal(drawing.getCurrentLayerName(), LAYER2)
-    assert.equal(drawing.getCurrentLayer(), drawing.all_layers[1].getGroup())
+    assert.equal(drawing.getCurrentLayer(), drawing.all_layers[1]!.getGroup())
 
     drawing.setCurrentLayer(LAYER3)
     assert.equal(drawing.getCurrentLayerName(), LAYER3)
-    assert.equal(drawing.getCurrentLayer(), drawing.all_layers[2].getGroup())
+    assert.equal(drawing.getCurrentLayer(), drawing.all_layers[2]!.getGroup())
 
     cleanupSVG(svg)
   })
@@ -492,7 +514,7 @@ describe('draw.Drawing', function () {
       changeElement () {
         // empty
       }
-    }
+    } as unknown as HrServiceSpy
     addOwnSpies(mockHrService)
 
     const drawing = new draw.Drawing(svg)
@@ -506,7 +528,7 @@ describe('draw.Drawing', function () {
     const newName = 'New Name'
     assert.ok(drawing.layer_map[oldName])
     assert.equal(drawing.layer_map[newName], undefined) // newName shouldn't exist.
-    const result = drawing.setCurrentLayerName(newName, mockHrService)
+    const result = drawing.setCurrentLayerName(newName, mockHrService as unknown as HistoryRecordingService)
     assert.equal(result, newName)
     assert.equal(drawing.getCurrentLayerName(), newName)
     // Was the map updated?
@@ -514,8 +536,8 @@ describe('draw.Drawing', function () {
     assert.equal(drawing.layer_map[newName], drawing.current_layer)
     // Was mockHrService called?
     assert.ok(mockHrService.changeElement.calledOnce)
-    assert.equal(oldName, mockHrService.changeElement.getCall(0).args[1]['#text'])
-    assert.equal(newName, mockHrService.changeElement.getCall(0).args[0].textContent)
+    assert.equal(oldName, (mockHrService.changeElement.getCall(0).args[1] as Record<string, unknown>)['#text'])
+    assert.equal(newName, (mockHrService.changeElement.getCall(0).args[0] as Element).textContent)
 
     cleanupSVG(svg)
   })
@@ -525,7 +547,7 @@ describe('draw.Drawing', function () {
       startBatchCommand () { /* empty fn */ },
       endBatchCommand () { /* empty fn */ },
       insertElement () { /* empty fn */ }
-    }
+    } as unknown as HrServiceSpy
     addOwnSpies(mockHrService)
 
     const drawing = new draw.Drawing(svg)
@@ -536,7 +558,7 @@ describe('draw.Drawing', function () {
     assert.equal(typeof drawing.createLayer, typeof function () { /* empty fn */ })
 
     const NEW_LAYER_NAME = 'Layer A'
-    const layerG = drawing.createLayer(NEW_LAYER_NAME, mockHrService)
+    const layerG = drawing.createLayer(NEW_LAYER_NAME, mockHrService as unknown as HistoryRecordingService)
     assert.equal(drawing.getNumLayers(), 4)
     assert.equal(layerG, drawing.getCurrentLayer())
     assert.equal(layerG.getAttribute('class'), LAYER_CLASS)
@@ -556,7 +578,7 @@ describe('draw.Drawing', function () {
       endBatchCommand () { /* empty fn */ },
       moveElement () { /* empty fn */ },
       removeElement () { /* empty fn */ }
-    }
+    } as unknown as HrServiceSpy
     addOwnSpies(mockHrService)
 
     const drawing = new draw.Drawing(svg)
@@ -570,7 +592,7 @@ describe('draw.Drawing', function () {
     assert.ok(drawing.mergeLayer)
     assert.equal(typeof drawing.mergeLayer, typeof function () { /* empty fn */ })
 
-    drawing.mergeLayer(mockHrService)
+    drawing.mergeLayer(mockHrService as unknown as HistoryRecordingService)
 
     assert.equal(drawing.getNumLayers(), 2)
     assert.equal(svg.childElementCount, 2)
@@ -593,7 +615,7 @@ describe('draw.Drawing', function () {
       endBatchCommand () { /* empty fn */ },
       moveElement () { /* empty fn */ },
       removeElement () { /* empty fn */ }
-    }
+    } as unknown as HrServiceSpy
     addOwnSpies(mockHrService)
 
     const drawing = new draw.Drawing(svg)
@@ -602,7 +624,7 @@ describe('draw.Drawing', function () {
     drawing.setCurrentLayer(LAYER1)
     assert.equal(drawing.getCurrentLayer(), layers[0])
 
-    drawing.mergeLayer(mockHrService)
+    drawing.mergeLayer(mockHrService as unknown as HistoryRecordingService)
 
     assert.equal(drawing.getNumLayers(), 3)
     assert.equal(svg.childElementCount, 3)
@@ -626,7 +648,7 @@ describe('draw.Drawing', function () {
       endBatchCommand () { /* empty fn */ },
       moveElement () { /* empty fn */ },
       removeElement () { /* empty fn */ }
-    }
+    } as unknown as HrServiceSpy
     addOwnSpies(mockHrService)
 
     const drawing = new draw.Drawing(svg)
@@ -642,7 +664,7 @@ describe('draw.Drawing', function () {
     assert.ok(drawing.mergeAllLayers)
     assert.equal(typeof drawing.mergeAllLayers, typeof function () { /* empty fn */ })
 
-    drawing.mergeAllLayers(mockHrService)
+    drawing.mergeAllLayers(mockHrService as unknown as HistoryRecordingService)
 
     assert.equal(drawing.getNumLayers(), 1)
     assert.equal(svg.childElementCount, 1)
@@ -668,7 +690,7 @@ describe('draw.Drawing', function () {
       startBatchCommand () { /* empty fn */ },
       endBatchCommand () { /* empty fn */ },
       insertElement () { /* empty fn */ }
-    }
+    } as unknown as HrServiceSpy
     addOwnSpies(mockHrService)
 
     const drawing = new draw.Drawing(svg)
@@ -681,7 +703,7 @@ describe('draw.Drawing', function () {
     assert.ok(drawing.cloneLayer)
     assert.equal(typeof drawing.cloneLayer, typeof function () { /* empty fn */ })
 
-    const clone = drawing.cloneLayer('clone', mockHrService)
+    const clone = drawing.cloneLayer('clone', mockHrService as unknown as HistoryRecordingService)!
 
     assert.equal(drawing.getNumLayers(), 4)
     assert.equal(svg.childElementCount, 4)
@@ -697,7 +719,7 @@ describe('draw.Drawing', function () {
 
     // check that path is cloned properly
     assert.equal(clone.childNodes.length, elementCount)
-    const path = clone.childNodes[1]
+    const path = clone.childNodes[1] as Element
     assert.equal(path.id, 'svg_1')
     assert.equal(path.getAttribute('d'), PATH_ATTR.d)
     assert.equal(path.getAttribute('transform'), PATH_ATTR.transform)
@@ -706,7 +728,7 @@ describe('draw.Drawing', function () {
     assert.equal(path.getAttribute('stroke-width'), PATH_ATTR['stroke-width'])
 
     // check that g is cloned properly
-    const g = clone.childNodes[4]
+    const g = clone.childNodes[4] as Element
     assert.equal(g.childNodes.length, 1)
     assert.equal(g.id, 'svg_4')
 
@@ -718,7 +740,7 @@ describe('draw.Drawing', function () {
     const layers = setupSVGWith3Layers(svg)
     const layer3 = layers[2]
     createSomeElementsInGroup(layer3)
-    layer3.insertBefore(document.createTextNode('\n  '), layer3.childNodes[1])
+    layer3.insertBefore(document.createTextNode('\n  '), layer3.childNodes[1] ?? null)
     layer3.append(document.createComment('test-comment'))
     drawing.identifyLayers()
 
@@ -761,7 +783,7 @@ describe('draw.Drawing', function () {
     assert.ok(drawing.getLayerVisibility(LAYER2))
     assert.ok(!drawing.getLayerVisibility(LAYER3))
 
-    drawing.setLayerVisibility(LAYER3, 'test-string')
+    drawing.setLayerVisibility(LAYER3, 'test-string' as unknown as boolean)
     assert.ok(!drawing.getLayerVisibility(LAYER3))
 
     cleanupSVG(svg)
@@ -790,7 +812,7 @@ describe('draw.Drawing', function () {
     assert.equal(typeof drawing.setLayerOpacity, typeof function () { /* empty fn */ })
 
     drawing.setLayerOpacity(LAYER1, 0.4)
-    drawing.setLayerOpacity(LAYER2, 'invalid-string')
+    drawing.setLayerOpacity(LAYER2, 'invalid-string' as unknown as number)
     drawing.setLayerOpacity(LAYER3, -1.4)
 
     assert.strictEqual(drawing.getLayerOpacity(LAYER1), 0.4)
@@ -811,23 +833,23 @@ describe('draw.Drawing', function () {
     drawing.setCurrentLayer(LAYER2)
 
     const curLayer = drawing.getCurrentLayer()
-    assert.equal(curLayer, drawing.all_layers[1].getGroup())
+    assert.equal(curLayer, drawing.all_layers[1]!.getGroup())
     const deletedLayer = drawing.deleteCurrentLayer()
 
     assert.equal(curLayer, deletedLayer)
     assert.equal(drawing.getNumLayers(), 2)
-    assert.equal(LAYER1, drawing.all_layers[0].getName())
-    assert.equal(LAYER3, drawing.all_layers[1].getName())
-    assert.equal(drawing.getCurrentLayer(), drawing.all_layers[1].getGroup())
+    assert.equal(LAYER1, drawing.all_layers[0]!.getName())
+    assert.equal(LAYER3, drawing.all_layers[1]!.getName())
+    assert.equal(drawing.getCurrentLayer(), drawing.all_layers[1]!.getGroup())
   })
 
   it('Test svgedit.draw.randomizeIds()', function () {
     // Confirm in LET_DOCUMENT_DECIDE mode that the document decides
     // if there is a nonce.
-    let drawing = new draw.Drawing(svgN.cloneNode(true))
+    let drawing = new draw.Drawing(svgN.cloneNode(true) as SVGSVGElement)
     assert.ok(drawing.getNonce())
 
-    drawing = new draw.Drawing(svg.cloneNode(true))
+    drawing = new draw.Drawing(svg.cloneNode(true) as SVGSVGElement)
     assert.ok(!drawing.getNonce())
 
     // Confirm that a nonce is set once we're in ALWAYS_RANDOMIZE mode.
@@ -835,7 +857,7 @@ describe('draw.Drawing', function () {
     assert.ok(drawing.getNonce())
 
     // Confirm new drawings in ALWAYS_RANDOMIZE mode have a nonce.
-    drawing = new draw.Drawing(svg.cloneNode(true))
+    drawing = new draw.Drawing(svg.cloneNode(true) as SVGSVGElement)
     assert.ok(drawing.getNonce())
 
     drawing.clearNonce()
@@ -847,10 +869,10 @@ describe('draw.Drawing', function () {
     assert.ok(!drawing.getNonce())
     assert.ok(drawing.getSvgElem().getAttributeNS(NS.SE, 'nonce'))
 
-    drawing = new draw.Drawing(svg.cloneNode(true))
+    drawing = new draw.Drawing(svg.cloneNode(true) as SVGSVGElement)
     assert.ok(!drawing.getNonce())
 
-    drawing = new draw.Drawing(svgN.cloneNode(true))
+    drawing = new draw.Drawing(svgN.cloneNode(true) as SVGSVGElement)
     assert.ok(!drawing.getNonce())
   })
 })

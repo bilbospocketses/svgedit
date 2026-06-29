@@ -1,7 +1,7 @@
 import { createSvgCanvasFixture } from './helpers/createSvgCanvasFixture'
 
 describe('flipSelectedElements', () => {
-  let svgCanvas
+  let svgCanvas: ReturnType<typeof createSvgCanvasFixture>
 
   beforeEach(() => {
     svgCanvas = createSvgCanvasFixture()

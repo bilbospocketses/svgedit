@@ -1,10 +1,25 @@
-import { AssertionError, strict as assert } from 'node:assert'
+import { AssertionError, strict as nodeAssert } from 'node:assert'
 
-// Provide a global assert (some legacy tests expect it).
-globalThis.assert = assert
+type ExtendedAssert = typeof nodeAssert & {
+  closeTo: (actual: number, expected: number, delta: number, message?: string) => void
+  close: (actual: number, expected: number, delta: number, message?: string) => void
+  notOk: (val: unknown, message?: string) => void
+  isBelow: (val: number, limit: number, message?: string) => void
+}
+
+declare global {
+  var before: typeof beforeAll
+  var after: typeof afterAll
+}
+
+// Provide a global assert (some legacy tests expect it). The module-local const
+// shadows vitest's ambient `assert`; the cast sets it on globalThis (which
+// lib.dom does not type) so the bare global resolves to our node assert + helpers.
+const assert = nodeAssert as ExtendedAssert
+;(globalThis as unknown as { assert: ExtendedAssert }).assert = assert
 
 // Add a lightweight closeTo helper to mimic chai.assert.closeTo.
-assert.closeTo = function (actual, expected, delta, message) {
+assert.closeTo = function (actual: number, expected: number, delta: number, message?: string): void {
   const ok = Math.abs(actual - expected) <= delta
   if (!ok) {
     throw new AssertionError({
@@ -16,19 +31,20 @@ assert.closeTo = function (actual, expected, delta, message) {
 }
 
 // Mocha-style aliases expected by legacy tests.
-globalThis.before = globalThis.beforeAll
-globalThis.after = globalThis.afterAll
+globalThis.before = beforeAll
+globalThis.after = afterAll
 
 // JSDOM lacks many SVG APIs; provide minimal stubs used in tests.
-const win = globalThis.window || globalThis
+const win = (globalThis.window || globalThis) as unknown as Record<string, unknown>
 
 // Simple SVG matrix/transform/point polyfills good enough for unit tests.
 class SVGMatrixPolyfill {
+  a: number; b: number; c: number; d: number; e: number; f: number
   constructor (a = 1, b = 0, c = 0, d = 1, e = 0, f = 0) {
     this.a = a; this.b = b; this.c = c; this.d = d; this.e = e; this.f = f
   }
 
-  multiply (m) {
+  multiply (m: SVGMatrixPolyfill): SVGMatrixPolyfill {
     return new SVGMatrixPolyfill(
       this.a * m.a + this.c * m.b,
       this.b * m.a + this.d * m.b,
@@ -39,10 +55,10 @@ class SVGMatrixPolyfill {
     )
   }
 
-  translate (x, y) { return this.multiply(new SVGMatrixPolyfill(1, 0, 0, 1, x, y)) }
-  scale (s) { return this.multiply(new SVGMatrixPolyfill(s, 0, 0, s, 0, 0)) }
-  scaleNonUniform (sx, sy) { return this.multiply(new SVGMatrixPolyfill(sx, 0, 0, sy, 0, 0)) }
-  rotate (deg) {
+  translate (x: number, y: number): SVGMatrixPolyfill { return this.multiply(new SVGMatrixPolyfill(1, 0, 0, 1, x, y)) }
+  scale (s: number, _sy?: number): SVGMatrixPolyfill { return this.multiply(new SVGMatrixPolyfill(s, 0, 0, s, 0, 0)) }
+  scaleNonUniform (sx: number, sy: number): SVGMatrixPolyfill { return this.multiply(new SVGMatrixPolyfill(sx, 0, 0, sy, 0, 0)) }
+  rotate (deg: number): SVGMatrixPolyfill {
     const rad = deg * Math.PI / 180
     const cos = Math.cos(rad)
     const sin = Math.sin(rad)
@@ -51,12 +67,12 @@ class SVGMatrixPolyfill {
 
   flipX () { return this.scale(-1, 1) }
   flipY () { return this.scale(1, -1) }
-  skewX (deg) {
+  skewX (deg: number): SVGMatrixPolyfill {
     const rad = deg * Math.PI / 180
     return this.multiply(new SVGMatrixPolyfill(1, 0, Math.tan(rad), 1, 0, 0))
   }
 
-  skewY (deg) {
+  skewY (deg: number): SVGMatrixPolyfill {
     const rad = deg * Math.PI / 180
     return this.multiply(new SVGMatrixPolyfill(1, Math.tan(rad), 0, 1, 0, 0))
   }
@@ -76,27 +92,39 @@ class SVGMatrixPolyfill {
 }
 
 class SVGTransformPolyfill {
+  static readonly SVG_TRANSFORM_UNKNOWN = 0
+  static readonly SVG_TRANSFORM_MATRIX = 1
+  static readonly SVG_TRANSFORM_TRANSLATE = 2
+  static readonly SVG_TRANSFORM_SCALE = 3
+  static readonly SVG_TRANSFORM_ROTATE = 4
+  static readonly SVG_TRANSFORM_SKEWX = 5
+  static readonly SVG_TRANSFORM_SKEWY = 6
+  type: number
+  matrix: SVGMatrixPolyfill
+  angle?: number
+  cx?: number
+  cy?: number
   constructor (type = SVGTransformPolyfill.SVG_TRANSFORM_MATRIX, matrix = new SVGMatrixPolyfill()) {
     this.type = type
     this.matrix = matrix
   }
 
-  setMatrix (matrix) {
+  setMatrix (matrix: SVGMatrixPolyfill): void {
     this.type = SVGTransformPolyfill.SVG_TRANSFORM_MATRIX
     this.matrix = matrix
   }
 
-  setTranslate (x, y) {
+  setTranslate (x: number, y: number): void {
     this.type = SVGTransformPolyfill.SVG_TRANSFORM_TRANSLATE
     this.matrix = new SVGMatrixPolyfill(1, 0, 0, 1, x, y)
   }
 
-  setScale (sx, sy = sx) {
+  setScale (sx: number, sy = sx): void {
     this.type = SVGTransformPolyfill.SVG_TRANSFORM_SCALE
     this.matrix = new SVGMatrixPolyfill(sx, 0, 0, sy, 0, 0)
   }
 
-  setRotate (angle, cx = 0, cy = 0) {
+  setRotate (angle: number, cx = 0, cy = 0): void {
     // Translate to center, rotate, then translate back.
     const ang = Number(angle) || 0
     const cxNum = Number(cx) || 0
@@ -109,40 +137,34 @@ class SVGTransformPolyfill {
     this.matrix = rotate
   }
 }
-SVGTransformPolyfill.SVG_TRANSFORM_UNKNOWN = 0
-SVGTransformPolyfill.SVG_TRANSFORM_MATRIX = 1
-SVGTransformPolyfill.SVG_TRANSFORM_TRANSLATE = 2
-SVGTransformPolyfill.SVG_TRANSFORM_SCALE = 3
-SVGTransformPolyfill.SVG_TRANSFORM_ROTATE = 4
-SVGTransformPolyfill.SVG_TRANSFORM_SKEWX = 5
-SVGTransformPolyfill.SVG_TRANSFORM_SKEWY = 6
 
 class SVGTransformListPolyfill {
+  _items: SVGTransformPolyfill[]
   constructor () {
     this._items = []
   }
 
-  get numberOfItems () { return this._items.length }
-  getItem (i) { return this._items[i] }
-  appendItem (item) { this._items.push(item); return item }
-  insertItemBefore (item, index) {
+  get numberOfItems (): number { return this._items.length }
+  getItem (i: number): SVGTransformPolyfill { return this._items[i]! }
+  appendItem (item: SVGTransformPolyfill): SVGTransformPolyfill { this._items.push(item); return item }
+  insertItemBefore (item: SVGTransformPolyfill, index: number): SVGTransformPolyfill {
     const idx = Math.max(0, Math.min(index, this._items.length))
     this._items.splice(idx, 0, item)
     return item
   }
 
-  removeItem (index) {
+  removeItem (index: number): SVGTransformPolyfill | undefined {
     if (index < 0 || index >= this._items.length) return undefined
     const [removed] = this._items.splice(index, 1)
     return removed
   }
 
-  clear () { this._items = [] }
-  initialize (item) { this._items = [item]; return item }
-  consolidate () {
+  clear (): void { this._items = [] }
+  initialize (item: SVGTransformPolyfill): SVGTransformPolyfill { this._items = [item]; return item }
+  consolidate (): SVGTransformPolyfill | null {
     if (!this._items.length) return null
     const matrix = this._items.reduce(
-      (acc, t) => acc.multiply(t.matrix),
+      (acc: SVGMatrixPolyfill, t: SVGTransformPolyfill) => acc.multiply(t.matrix),
       new SVGMatrixPolyfill()
     )
     const consolidated = new SVGTransformPolyfill()
@@ -152,18 +174,18 @@ class SVGTransformListPolyfill {
   }
 }
 
-const parseTransformAttr = (attr) => {
+const parseTransformAttr = (attr: string | null): SVGTransformListPolyfill => {
   const list = new SVGTransformListPolyfill()
   if (!attr) return list
   const matcher = /([a-zA-Z]+)\(([^)]+)\)/g
-  let match
+  let match: RegExpExecArray | null
   while ((match = matcher.exec(attr))) {
-    const [, type, raw] = match
+    const [, type, raw = ''] = match
     const nums = raw.split(/[,\s]+/).filter(Boolean).map(Number)
     const t = new SVGTransformPolyfill()
     switch (type) {
       case 'matrix':
-        t.setMatrix(new SVGMatrixPolyfill(...nums))
+        t.setMatrix(new SVGMatrixPolyfill(nums[0], nums[1], nums[2], nums[3], nums[4], nums[5]))
         break
       case 'translate':
         t.setTranslate(nums[0] ?? 0, nums[1] ?? 0)
@@ -183,18 +205,18 @@ const parseTransformAttr = (attr) => {
   return list
 }
 
-const ensureTransformList = (elem) => {
+const ensureTransformList = (elem: Element & { __transformList?: SVGTransformListPolyfill }): SVGTransformListPolyfill => {
   if (!elem.__transformList) {
-    const parsed = parseTransformAttr(elem.getAttribute?.('transform'))
+    const parsed = parseTransformAttr(elem.getAttribute?.('transform') ?? null)
     elem.__transformList = parsed
   }
-  return elem.__transformList
+  return elem.__transformList!
 }
 
 if (!win.SVGElement) {
   win.SVGElement = win.Element
 }
-const svgElementProto = win.SVGElement?.prototype
+const svgElementProto = (win.SVGElement as { prototype?: Record<string, unknown> } | undefined)?.prototype
 
 // Basic constructors for missing SVG types.
 if (!win.SVGSVGElement) win.SVGSVGElement = win.SVGElement
@@ -217,7 +239,7 @@ if (svgElementProto) {
     svgElementProto.createSVGTransform = () => new SVGTransformPolyfill()
   }
   if (!svgElementProto.createSVGTransformFromMatrix) {
-    svgElementProto.createSVGTransformFromMatrix = (matrix) => {
+    svgElementProto.createSVGTransformFromMatrix = (matrix: SVGMatrixPolyfill) => {
       const t = new SVGTransformPolyfill()
       t.setMatrix(matrix)
       return t
@@ -227,7 +249,7 @@ if (svgElementProto) {
     svgElementProto.createSVGPoint = () => ({
       x: 0,
       y: 0,
-      matrixTransform (m) {
+      matrixTransform (m: SVGMatrixPolyfill) {
         return {
           x: m.a * this.x + m.c * this.y + m.e,
           y: m.b * this.x + m.d * this.y + m.f
@@ -235,9 +257,9 @@ if (svgElementProto) {
       }
     })
   }
-  svgElementProto.getBBox = function () {
+  svgElementProto.getBBox = function (this: Element) {
     const tag = (this.tagName || '').toLowerCase()
-    const parseLength = (attr, fallback = 0) => {
+    const parseLength = (attr: string, fallback = 0): number => {
       const raw = this.getAttribute?.(attr)
       if (raw == null) return fallback
       const str = String(raw)
@@ -267,7 +289,7 @@ if (svgElementProto) {
         let minx = Infinity; let miny = Infinity
         let maxx = -Infinity; let maxy = -Infinity
         for (let i = 0; i < nums.length; i += 2) {
-          const x = nums[i]; const y = nums[i + 1]
+          const x = nums[i]!; const y = nums[i + 1]!
           if (x < minx) minx = x
           if (x > maxx) maxx = x
           if (y < miny) miny = y
@@ -311,8 +333,8 @@ if (svgElementProto) {
     if (tag === 'polyline' || tag === 'polygon') {
       const pts = parsePoints()
       if (!pts.length) return { x: 0, y: 0, width: 0, height: 0 }
-      const xs = pts.map(([x]) => x)
-      const ys = pts.map(([, y]) => y)
+      const xs = pts.map(([x]) => x!)
+      const ys = pts.map(([, y]) => y!)
       const minx = Math.min(...xs); const maxx = Math.max(...xs)
       const miny = Math.min(...ys); const maxy = Math.max(...ys)
       return { x: minx, y: miny, width: maxx - minx, height: maxy - miny }
@@ -322,7 +344,7 @@ if (svgElementProto) {
   }
   if (!Object.getOwnPropertyDescriptor(svgElementProto, 'transform')) {
     Object.defineProperty(svgElementProto, 'transform', {
-      get () {
+      get (this: Element & { __transformList?: SVGTransformListPolyfill }) {
         const baseVal = ensureTransformList(this)
         return { baseVal }
       }

@@ -10,7 +10,7 @@ test.describe('SVG core history/draw smoke', () => {
     const stacks = await page.evaluate(() => {
       const { history } = window.svgHarness
       class DummyCommand extends history.Command {
-        constructor (text) {
+        constructor (text: string) {
           super()
           this.text = text
         }
@@ -18,7 +18,7 @@ test.describe('SVG core history/draw smoke', () => {
         apply () {}
         unapply () {}
       }
-      const um = new history.UndoManager()
+      const um = new history.UndoManager(null)
       um.addCommandToHistory(new DummyCommand('one'))
       um.addCommandToHistory(new DummyCommand('two'))
       const beforeUndo = { undo: um.getUndoStackSize(), redo: um.getRedoStackSize() }
@@ -39,7 +39,7 @@ test.describe('SVG core history/draw smoke', () => {
   test('draw module exports expected functions', async ({ page }) => {
     const exports = await page.evaluate(() => {
       const { draw } = window.svgHarness
-      return ['init', 'randomizeIds', 'createLayer'].map(fn => typeof draw[fn] === 'function')
+      return ['init', 'randomizeIds', 'createLayer'].map(fn => typeof draw[fn as keyof typeof draw] === 'function')
     })
     exports.forEach(v => expect(v).toBe(true))
   })

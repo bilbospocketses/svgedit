@@ -6,7 +6,7 @@ describe('path-data caching', function () {
    * Create a detached <path> with the given `d`. Path-data parsing only reads the
    * `d` attribute, so the element does not need to be attached to the document.
    */
-  const makePath = (d) => {
+  const makePath = (d: string) => {
     const path = document.createElementNS(NS.SVG, 'path')
     path.setAttribute('d', d)
     return path
@@ -47,8 +47,8 @@ describe('path-data caching', function () {
     setPathData(path, [{ type: 'M', values: [5, 5] }])
     const after = getPathDataReadonly(path)
     assert.equal(after.length, 1)
-    assert.equal(after[0].type, 'M')
-    assert.deepEqual(after[0].values, [5, 5])
+    assert.equal(after[0]!.type, 'M')
+    assert.deepEqual(after[0]!.values, [5, 5])
   })
 
   it('getPathDataReadonly() shares its cache with getPathData()', function () {

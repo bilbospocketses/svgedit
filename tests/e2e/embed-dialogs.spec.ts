@@ -9,14 +9,14 @@ test.describe('embed: dialog hooks', () => {
     // Register the dialog handler on the host side
     await page.evaluate(async () => {
       window.__capturedDialog = null
-      window.__svgeditEmbed.setDialogHandler('alert', async (msg) => {
+      window.__svgeditEmbed.setDialogHandler('alert', async (msg: string) => {
         window.__capturedDialog = msg
       })
     })
 
     // Wait until the __registerDialogHandler call has reached the server (the server
     // marks the host handler registered), rather than guessing with a fixed delay.
-    const frame = page.frames().find(f => f.url().includes('/index.html'))
+    const frame = page.frames().find(f => f.url().includes('/index.html'))!
     await expect
       .poll(() => frame.evaluate(() => window.svgEditor._embedServer._isHostHandlerRegistered('alert')))
       .toBe(true)
@@ -35,7 +35,7 @@ test.describe('embed: dialog hooks', () => {
     // Register then immediately unregister
     await page.evaluate(async () => {
       window.__capturedDialog2 = null
-      const off = window.__svgeditEmbed.setDialogHandler('alert', async (msg) => {
+      const off = window.__svgeditEmbed.setDialogHandler('alert', async (msg: string) => {
         window.__capturedDialog2 = msg
       })
       off()
@@ -43,7 +43,7 @@ test.describe('embed: dialog hooks', () => {
 
     // Wait until the __unregisterDialogHandler call has reached the server (the server
     // clears the host-handler mark) instead of guessing with a fixed delay.
-    const frame = page.frames().find(f => f.url().includes('/index.html'))
+    const frame = page.frames().find(f => f.url().includes('/index.html'))!
     await expect
       .poll(() => frame.evaluate(() => window.svgEditor._embedServer._isHostHandlerRegistered('alert')))
       .toBe(false)

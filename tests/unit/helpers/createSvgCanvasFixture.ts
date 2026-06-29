@@ -24,7 +24,7 @@ export const createSvgCanvasFixture = () => {
   svgEditor.append(workarea, toolsLeft)
   document.body.append(svgEditor)
 
-  return new SvgCanvas(document.getElementById('svgcanvas'), {
+  return new SvgCanvas(document.getElementById('svgcanvas')!, {
     canvas_expansion: 3,
     dimensions: [640, 480],
     initFill: {

@@ -1,4 +1,6 @@
 import { test, expect } from '../fixtures.js'
+import type { ElementContainer } from '@svgedit/svgcanvas/core/units.js'
+import type { BBoxObject, SVGElementJSON } from '@svgedit/svgcanvas/core/utilities.js'
 
 test.describe('SVG core modules in browser', () => {
   test.beforeEach(async ({ page }) => {
@@ -12,7 +14,7 @@ test.describe('SVG core modules in browser', () => {
       units.init({
         getRoundDigits: () => 2,
         getBaseUnit: () => 'px'
-      })
+      } as unknown as ElementContainer)
       return {
         defaultConv: units.convertUnit(42),
         pxConv: units.convertUnit(42, 'px')
@@ -37,7 +39,7 @@ test.describe('SVG core modules in browser', () => {
         getHeight: () => 600,
         getWidth: () => 800,
         getRoundDigits: () => 4,
-        getElement: (id) => document.getElementById(id)
+        getElement: (id: string) => document.getElementById(id)
       })
       return {
         shortFloat: [
@@ -60,7 +62,7 @@ test.describe('SVG core modules in browser', () => {
           '-0.4em',
           '-0.ex',
           '40.123%'
-        ].map((val) => units.isValidUnit(val)),
+        ].map((val) => (units.isValidUnit as (attr: string) => boolean)(val)),
         idChecks: {
           okExisting: units.isValidUnit('id', 'uniqueId', unique),
           okNew: units.isValidUnit('id', 'newId', unique),
@@ -103,14 +105,14 @@ test.describe('SVG core modules in browser', () => {
       rect.setAttribute('height', '2')
       svg.append(rect)
       // Minimal mocks for addSVGElementsFromJson and pathActions.resetOrientation
-      const addSvg = (json) => {
+      const addSvg = (json: { element: string; attr: Record<string, string> }) => {
         const el = document.createElementNS('http://www.w3.org/2000/svg', json.element)
         Object.entries(json.attr).forEach(([k, v]) => el.setAttribute(k, v))
         svg.append(el)
         return el
       }
       const pathActions = { resetOrientation: () => {} }
-      const res = utilities.getBBoxOfElementAsPath(rect, addSvg, pathActions)
+      const res = utilities.getBBoxOfElementAsPath(rect, addSvg as unknown as (data: SVGElementJSON) => Element, pathActions) as BBoxObject
       return { x: res.x, y: res.y, width: res.width, height: res.height }
     })
     expect(Number.isFinite(bbox.x)).toBe(true)
@@ -125,7 +127,7 @@ test.describe('SVG core modules in browser', () => {
       units.init({
         getRoundDigits: () => 2,
         getBaseUnit: () => 'px'
-      })
+      } as unknown as ElementContainer)
       const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
       path.setAttribute('d', 'M0 0 L10 0 L10 10 Z')
@@ -133,8 +135,8 @@ test.describe('SVG core modules in browser', () => {
       pathModule.convertPath(path, true)
       return path.getAttribute('d')
     })
-    expect(dRel?.length > 0).toBe(true)
-    expect(dRel.toLowerCase()).toContain('z')
+    expect((dRel?.length ?? 0) > 0).toBe(true)
+    expect(dRel?.toLowerCase()).toContain('z')
   })
 
   test('path.convertPath normalizes relative and absolute commands', async ({ page }) => {
@@ -143,12 +145,12 @@ test.describe('SVG core modules in browser', () => {
       units.init({
         getRoundDigits: () => 5,
         getBaseUnit: () => 'px'
-      })
+      } as unknown as ElementContainer)
       const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
       path.setAttribute('d', 'm40,55h20v20')
       svg.append(path)
-      const abs = pathModule.convertPath(path)
+      const abs = (pathModule.convertPath as (pth: SVGPathElement, toRel?: boolean) => string)(path)
       const rel = pathModule.convertPath(path, true)
       return { abs, rel }
     })

@@ -8,7 +8,7 @@ import { createSvgCanvasFixture } from './helpers/createSvgCanvasFixture'
  * the behaviour shared (and deduped) with history.ts's relocateRotationCenter.
  */
 describe('changeSelectedAttributeNoUndo() rotation-center relocation', () => {
-  let svgCanvas
+  let svgCanvas: ReturnType<typeof createSvgCanvasFixture>
 
   beforeEach(() => {
     svgCanvas = createSvgCanvasFixture()
@@ -18,7 +18,7 @@ describe('changeSelectedAttributeNoUndo() rotation-center relocation', () => {
     document.body.textContent = ''
   })
 
-  const findRotate = (el) => {
+  const findRotate = (el: SVGGraphicsElement) => {
     const tlist = el.transform.baseVal
     for (let i = 0; i < tlist.numberOfItems; i++) {
       if (tlist.getItem(i).type === 4) { return tlist.getItem(i) } // SVG_TRANSFORM_ROTATE
@@ -45,9 +45,9 @@ describe('changeSelectedAttributeNoUndo() rotation-center relocation', () => {
     const expected = svgCanvas.getSvgRoot().createSVGTransform()
     expected.setRotate(45, 50, 50)
     expect(rotate).not.toBeNull()
-    expect(rotate.angle).toBe(45)
-    expect(rotate.matrix.e).toBeCloseTo(expected.matrix.e, 4)
-    expect(rotate.matrix.f).toBeCloseTo(expected.matrix.f, 4)
+    expect(rotate!.angle).toBe(45)
+    expect(rotate!.matrix.e).toBeCloseTo(expected.matrix.e, 4)
+    expect(rotate!.matrix.f).toBeCloseTo(expected.matrix.f, 4)
   })
 
   it('leaves the rotation transform untouched for a non-bbox-affecting attr', () => {
@@ -65,9 +65,9 @@ describe('changeSelectedAttributeNoUndo() rotation-center relocation', () => {
     const rotate = findRotate(rect)
     const expected = svgCanvas.getSvgRoot().createSVGTransform()
     expected.setRotate(45, 30, 30)
-    expect(rotate.angle).toBe(45)
-    expect(rotate.matrix.e).toBeCloseTo(expected.matrix.e, 4)
-    expect(rotate.matrix.f).toBeCloseTo(expected.matrix.f, 4)
+    expect(rotate!.angle).toBe(45)
+    expect(rotate!.matrix.e).toBeCloseTo(expected.matrix.e, 4)
+    expect(rotate!.matrix.f).toBeCloseTo(expected.matrix.f, 4)
     expect(rect.getAttribute('fill')).toBe('#0f0')
   })
 })

@@ -1,27 +1,26 @@
 import { NS } from '../../packages/svgcanvas/core/namespaces.js'
 import * as sanitize from '../../packages/svgcanvas/core/sanitize.js'
 import * as utilities from '../../packages/svgcanvas/core/utilities.js'
+import type { ISvgCanvas } from '../../packages/svgcanvas/core/svgcanvas-types.js'
 
 describe('sanitize', function () {
-  /** @type {HTMLDivElement} */
-  let container
-  /** @type {SVGSVGElement} */
-  let svg
-  let originalWarn
+  let container: HTMLDivElement
+  let svg: SVGSVGElement
+  let originalWarn: typeof console.warn
 
-  const createSvgElement = (name) => document.createElementNS(NS.SVG, name)
+  const createSvgElement = (name: string) => document.createElementNS(NS.SVG, name)
 
   beforeEach(() => {
     originalWarn = console.warn
     console.warn = () => {}
     container = document.createElement('div')
-    svg = /** @type {SVGSVGElement} */ (createSvgElement('svg'))
+    svg = createSvgElement('svg') as SVGSVGElement
     container.append(svg)
     document.body.append(container)
 
     utilities.init({
       getSvgRoot: () => svg
-    })
+    } as unknown as ISvgCanvas)
   })
 
   afterEach(() => {
@@ -156,8 +155,8 @@ describe('sanitize', function () {
     sanitize.sanitizeSvg(g)
     // sanitize no-ops non-element nodes, so the comment survives untouched
     assert.equal(g.childNodes.length, 1)
-    assert.equal(g.firstChild.nodeType, 8) // COMMENT_NODE
-    assert.equal(g.firstChild.nodeValue, 'This is a comment')
+    assert.equal(g.firstChild!.nodeType, 8) // COMMENT_NODE
+    assert.equal(g.firstChild!.nodeValue, 'This is a comment')
   })
 
   it('sanitizeSvg() handles nested groups', function () {
