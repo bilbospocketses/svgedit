@@ -8,9 +8,7 @@ type ExtendedAssert = typeof nodeAssert & {
 }
 
 declare global {
-  // eslint-disable-next-line no-var
   var before: typeof beforeAll
-  // eslint-disable-next-line no-var
   var after: typeof afterAll
 }
 
