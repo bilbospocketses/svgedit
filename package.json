@@ -24,6 +24,7 @@
     "test": "vitest run --coverage && tsx scripts/run-e2e.ts",
     "typecheck": "tsc --build packages/svgcanvas",
     "typecheck:editor": "tsc --build packages/svgcanvas && tsc --noEmit -p tsconfig.json",
+    "typecheck:tests": "tsc --noEmit -p tests/tsconfig.json",
     "build:embed": "tsc --project tsconfig.embed.json",
     "build:server": "tsc -p tsconfig.server.json",
     "typecheck:server": "tsc --noEmit -p tsconfig.server.json",
