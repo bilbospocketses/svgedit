@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (tests -- strict-typed suite, typecheck:tests CI gate -- 2026-06-29)
+
+- The entire test suite is now strict-TypeScript-typed and gated. A new
+  `tests/tsconfig.json` (extends the root strict config; `vitest`->`vitest/globals`),
+  plus `tests/svg-editor-global.d.ts` (`window.svgEditor: Editor`) and
+  `tests/test-globals.d.ts` (the ad-hoc `window` test globals), bring
+  `tsc -p tests/tsconfig.json` from 3,118 pre-existing strict errors to **0**, and
+  `npm run typecheck:tests` is now a step in the CI `build-and-unit` job. Types-only --
+  no test behaviour changed (vitest 1094 still green). Partial test mocks use
+  `as unknown as <RealType>`; `strict` stays ON. (#274)
+
 ### Changed (audit #29 / #35 follow-ups -- #36 F1-F3 -- 2026-06-28)
 
 - Extension load failures are isolated per-extension: `extAndLocaleFunc` now
