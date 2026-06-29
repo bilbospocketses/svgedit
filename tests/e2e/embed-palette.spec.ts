@@ -46,7 +46,7 @@ test.describe('embed: palette injection', () => {
     // asynchronously AFTER the embed 'ready' event, so dismissing it post-load is
     // racy; seeding the svgeditstore cookie suppresses it at the source (ext-storage
     // only prompts when the cookie is absent). Otherwise it intercepts the click.
-    await page.context().addCookies([{ name: 'svgeditstore', value: 'prefsAndContent', url: baseURL }])
+    await page.context().addCookies([{ name: 'svgeditstore', value: 'prefsAndContent', url: baseURL! }])
     await openEmbedHost(page, { editorSrc: '/index.html?embed=1&palette=%23ff0000' })
     await page.frameLocator('#svge').locator('se-palette').first()
       .locator('#js-se-palette .square[data-rgb="#ff0000"]').click()

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { UICoordinator } from '../../src/editor/UICoordinator.js'
+import { UICoordinator, type UICoordinatorHost } from '../../src/editor/UICoordinator.js'
 
 /**
  * Characterizes UICoordinator (canvas lifecycle / layout / zoom / cursor /
@@ -36,7 +36,7 @@ const makeHost = (overrides = {}) => {
     storagePromptState: 'ignore',
     curContext: null,
     ...overrides
-  }
+  } as unknown as UICoordinatorHost
 }
 
 describe('UICoordinator', () => {

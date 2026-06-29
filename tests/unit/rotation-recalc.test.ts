@@ -20,11 +20,21 @@ import * as utilities from '../../packages/svgcanvas/core/utilities.js'
 import * as history from '../../packages/svgcanvas/core/history.js'
 import { getTransformList } from '../../packages/svgcanvas/core/math.js'
 
+/**
+ * The jsdom unit-test SVG polyfill (tests/unit/setup-vitest.ts) exposes a
+ * rotate transform's center as `cx`/`cy`. The standard lib.dom `SVGTransform`
+ * type omits them, so read the center through this shape.
+ */
+interface RotateTransform extends SVGTransform {
+  cx: number
+  cy: number
+}
+
 describe('Rotation recalculation on attribute change', function () {
   /**
    * Helper: create an SVG <rect> with the given attributes inside an <svg>.
    */
-  function createSvgRect (attrs = {}) {
+  function createSvgRect (attrs: Record<string, string> = {}) {
     const svg = document.createElementNS(NS.SVG, 'svg')
     document.body.appendChild(svg)
     const rect = document.createElementNS(NS.SVG, 'rect')
@@ -83,7 +93,7 @@ describe('Rotation recalculation on attribute change', function () {
       const change = new history.ChangeElementCommand(rect, { 'stroke-width': '1' })
 
       // Apply (redo) — should NOT touch the transform
-      change.apply()
+      change.apply(null)
       const transformsAfterApply = readTransforms(rect)
       assert.equal(transformsAfterApply.length, transformsBefore.length,
         'apply: transform list length unchanged')
@@ -91,7 +101,7 @@ describe('Rotation recalculation on attribute change', function () {
         'apply: rotation transform preserved')
 
       // Unapply (undo) — should NOT touch the transform
-      change.unapply()
+      change.unapply(null)
       const transformsAfterUnapply = readTransforms(rect)
       assert.equal(transformsAfterUnapply.length, transformsBefore.length,
         'unapply: transform list length unchanged')
@@ -131,7 +141,7 @@ describe('Rotation recalculation on attribute change', function () {
       const change = new history.ChangeElementCommand(rect, { 'stroke-width': '2' })
 
       // Apply (redo) — must preserve both translate and rotate
-      change.apply()
+      change.apply(null)
       const tlistAfter = getTransformList(rect)!
       assert.equal(tlistAfter.numberOfItems, 2,
         'apply: still two transforms')
@@ -145,7 +155,7 @@ describe('Rotation recalculation on attribute change', function () {
         'apply: translate ty preserved')
 
       // Unapply (undo) — must also preserve both transforms
-      change.unapply()
+      change.unapply(null)
       assert.equal(tlistAfter.numberOfItems, 2,
         'unapply: still two transforms')
       assert.equal(tlistAfter.getItem(0).type, 2,
@@ -175,14 +185,14 @@ describe('Rotation recalculation on attribute change', function () {
       const change = new history.ChangeElementCommand(rect, { x: '0' })
 
       // Apply should update the rotation center to (70, 50)
-      change.apply()
+      change.apply(null)
       const tlist = getTransformList(rect)!
       assert.equal(tlist.numberOfItems, 1, 'still one transform')
       assert.equal(tlist.getItem(0).type, 4, 'still a rotation')
       // The rotation center should reflect the new bbox center
-      assert.closeTo(tlist.getItem(0).cx, 70, 0.01,
+      assert.closeTo((tlist.getItem(0) as unknown as RotateTransform).cx, 70, 0.01,
         'rotation cx updated to new bbox center')
-      assert.closeTo(tlist.getItem(0).cy, 50, 0.01,
+      assert.closeTo((tlist.getItem(0) as unknown as RotateTransform).cy, 50, 0.01,
         'rotation cy unchanged')
     })
 
@@ -211,7 +221,7 @@ describe('Rotation recalculation on attribute change', function () {
       rect.setAttribute('x', '20')
       const change = new history.ChangeElementCommand(rect, { x: '0' })
 
-      change.apply()
+      change.apply(null)
       const tlist = getTransformList(rect)!
 
       // Should still have 2 transforms: translate + rotate
@@ -230,9 +240,9 @@ describe('Rotation recalculation on attribute change', function () {
 
       // The rotation center should be (70, 50) — the new bbox center —
       // NOT (170, 100) which is what you'd get if the translate leaked in.
-      assert.closeTo(tlist.getItem(1).cx, 70, 0.01,
+      assert.closeTo((tlist.getItem(1) as unknown as RotateTransform).cx, 70, 0.01,
         'rotation cx = new bbox center, not offset by translate')
-      assert.closeTo(tlist.getItem(1).cy, 50, 0.01,
+      assert.closeTo((tlist.getItem(1) as unknown as RotateTransform).cy, 50, 0.01,
         'rotation cy = new bbox center, not offset by translate')
     })
 
@@ -253,17 +263,17 @@ describe('Rotation recalculation on attribute change', function () {
       })
 
       const tlistBefore = getTransformList(rect)!
-      const cxBefore = tlistBefore.getItem(0).cx
-      const cyBefore = tlistBefore.getItem(0).cy
+      const cxBefore = (tlistBefore.getItem(0) as unknown as RotateTransform).cx
+      const cyBefore = (tlistBefore.getItem(0) as unknown as RotateTransform).cy
 
       rect.setAttribute('fill', 'blue')
       const change = new history.ChangeElementCommand(rect, { fill: 'red' })
 
-      change.apply()
+      change.apply(null)
       const tlistAfter = getTransformList(rect)!
-      assert.equal(tlistAfter.getItem(0).cx, cxBefore,
+      assert.equal((tlistAfter.getItem(0) as unknown as RotateTransform).cx, cxBefore,
         'rotation cx unchanged after fill change')
-      assert.equal(tlistAfter.getItem(0).cy, cyBefore,
+      assert.equal((tlistAfter.getItem(0) as unknown as RotateTransform).cy, cyBefore,
         'rotation cy unchanged after fill change')
     })
 
@@ -289,7 +299,7 @@ describe('Rotation recalculation on attribute change', function () {
       rect.setAttribute('opacity', '0.5')
       const change = new history.ChangeElementCommand(rect, { opacity: '1' })
 
-      change.apply()
+      change.apply(null)
       const tlist = getTransformList(rect)!
       assert.equal(tlist.numberOfItems, 2,
         'opacity change preserves compound transform count')

@@ -37,7 +37,7 @@ describe('SvgCanvas destroy()', () => {
 
   it('detaches the global storage listener and the container listeners on destroy()', () => {
     const canvas = makeCanvas()
-    const container = document.getElementById('svgcanvas')
+    const container = document.getElementById('svgcanvas')!
     const containerRemove = vi.spyOn(container, 'removeEventListener')
     const windowRemove = vi.spyOn(window, 'removeEventListener')
 
@@ -48,7 +48,7 @@ describe('SvgCanvas destroy()', () => {
     assert.ok(windowRemove.mock.calls.some((c) => c[0] === 'storage'))
 
     // Every container listener wired by the constructor is detached too.
-    const removed = containerRemove.mock.calls.map((c) => c[0])
+    const removed = (containerRemove.mock.calls as unknown as Array<Parameters<HTMLElement['removeEventListener']>>).map((c) => c[0])
     for (const type of ['mousedown', 'mousemove', 'click', 'touchend', 'dblclick', 'mouseup', 'mouseleave', 'mousewheel', 'DOMMouseScroll']) {
       assert.ok(removed.includes(type), `expected the ${type} listener to be removed`)
     }

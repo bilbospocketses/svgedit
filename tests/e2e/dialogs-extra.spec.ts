@@ -1,4 +1,5 @@
 import { test, expect } from './fixtures.js'
+import type { SeStatusDialog } from '../../src/editor/dialogs/seStatusDialog.js'
 
 test.describe('Dialog helpers', () => {
   // ext-storage's first-run consent modal (revived now that extensions load in the
@@ -8,7 +9,7 @@ test.describe('Dialog helpers', () => {
   // prompt at source — post-load dismissal is racy. CI (1 worker, no server reuse)
   // loses that race deterministically. Same fix as embed-palette.spec.ts.
   test.beforeEach(async ({ context, baseURL }) => {
-    await context.addCookies([{ name: 'svgeditstore', value: 'prefsAndContent', url: baseURL }])
+    await context.addCookies([{ name: 'svgeditstore', value: 'prefsAndContent', url: baseURL! }])
   })
 
   test('se-status-dialog toggles title and close', async ({ page }) => {
@@ -16,7 +17,7 @@ test.describe('Dialog helpers', () => {
     await page.waitForFunction(() => Boolean(customElements.get('se-status-dialog')))
 
     const result = await page.evaluate(() => {
-      const prompt = document.createElement('se-status-dialog')
+      const prompt = document.createElement('se-status-dialog') as unknown as SeStatusDialog
       document.body.append(prompt)
       prompt.title = 'Hello'
       prompt.close = true

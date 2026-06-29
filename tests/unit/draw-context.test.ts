@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import * as draw from '../../packages/svgcanvas/core/draw.js'
 import dataStorage from '../../packages/svgcanvas/core/dataStorage.js'
+import type { ISvgCanvas } from '../../packages/svgcanvas/core/svgcanvas-types.js'
 
 const NS_SVG = 'http://www.w3.org/2000/svg'
 
@@ -25,7 +26,7 @@ describe('draw context', () => {
   }
 
   beforeEach(() => {
-    draw.init(canvas)
+    draw.init(canvas as unknown as ISvgCanvas)
     draw.leaveContext()
 
     currentGroup = null

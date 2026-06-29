@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { init as selectInit, getSelectorManager, Selector, SelectorManager } from '../../packages/svgcanvas/core/select.js'
 import { NS } from '../../packages/svgcanvas/core/namespaces.js'
+import type { ISvgCanvas } from '../../packages/svgcanvas/core/svgcanvas-types.js'
 
 describe('Select Module', () => {
   let svgRoot: SVGElement
@@ -74,7 +75,7 @@ describe('Select Module', () => {
     }
 
     // Initialize select module
-    selectInit(svgCanvas)
+    selectInit(svgCanvas as unknown as ISvgCanvas)
   })
 
   afterEach(() => {
@@ -96,8 +97,8 @@ describe('Select Module', () => {
 
     it('should not expose private selectorManager field', () => {
       const manager = getSelectorManager()
-      expect(manager.selectorManager).toBeUndefined()
-      expect(manager.selectorManager_).toBeUndefined()
+      expect((manager as unknown as Record<string, unknown>).selectorManager).toBeUndefined()
+      expect((manager as unknown as Record<string, unknown>).selectorManager_).toBeUndefined()
     })
   })
 
@@ -472,8 +473,8 @@ describe('Select Module', () => {
   describe('Private field encapsulation', () => {
     it('should not expose SelectModule private field', () => {
       const manager = getSelectorManager()
-      expect(manager.selectorManager).toBeUndefined()
-      expect(manager['#selectorManager']).toBeUndefined()
+      expect((manager as unknown as Record<string, unknown>).selectorManager).toBeUndefined()
+      expect((manager as unknown as Record<string, unknown>)['#selectorManager']).toBeUndefined()
     })
   })
 })

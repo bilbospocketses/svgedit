@@ -61,7 +61,7 @@ describe('units', function () {
     assert.ok(units.isValidUnit)
     assert.equal(typeof units.isValidUnit, typeof function () { /* empty fn */ })
 
-    const { isValidUnit } = units
+    const isValidUnit = units.isValidUnit as (attr: string, val?: string, selectedElement?: Element | null) => boolean
     assert.ok(isValidUnit('0'))
     assert.ok(isValidUnit('1'))
     assert.ok(isValidUnit('1.1'))
@@ -98,12 +98,12 @@ describe('units', function () {
   })
 
   it('Test svgedit.units.convertUnit() with pt', function () {
-    const result = units.convertUnit(72, 'pt')
+    const result = units.convertUnit(72, 'pt') as number
     assert.ok(result > 0)
   })
 
   it('Test svgedit.units.convertUnit() with pc', function () {
-    const result = units.convertUnit(96, 'pc')
+    const result = units.convertUnit(96, 'pc') as number
     assert.ok(result > 0)
   })
 })

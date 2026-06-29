@@ -1,6 +1,9 @@
 import { NS } from '../../packages/svgcanvas/core/namespaces.js'
 import * as utilities from '../../packages/svgcanvas/core/utilities.js'
 import * as coords from '../../packages/svgcanvas/core/coords.js'
+import type { ISvgCanvas } from '../../packages/svgcanvas/core/svgcanvas-types.js'
+
+type RemapChanges = Parameters<typeof coords.remapElement>[1]
 
 describe('coords', function () {
   let elemId = 1
@@ -32,7 +35,7 @@ describe('coords', function () {
         getSvgContent: () => { return svg },
         getDOMDocument () { return null },
         getDOMContainer () { return null }
-      }
+      } as unknown as ISvgCanvas
     )
     const drawing = {
       getNextId () { return String(elemId++) }
@@ -51,7 +54,7 @@ describe('coords', function () {
         getCurrentDrawing () { return drawing },
         getDataStorage () { return mockDataStorage },
         getSvgRoot () { return svg }
-      }
+      } as unknown as ISvgCanvas
     )
   })
 
@@ -78,7 +81,7 @@ describe('coords', function () {
       y: '150',
       width: '125',
       height: '75'
-    }
+    } as unknown as RemapChanges
 
     // Create a translate.
     const m = svg.createSVGMatrix()
@@ -105,7 +108,7 @@ describe('coords', function () {
       y: '0',
       width: '250',
       height: '120'
-    }
+    } as unknown as RemapChanges
 
     // Create a translate.
     const m = svg.createSVGMatrix()
@@ -132,7 +135,7 @@ describe('coords', function () {
       cx: '200',
       cy: '150',
       r: '125'
-    }
+    } as unknown as RemapChanges
 
     // Create a translate.
     const m = svg.createSVGMatrix()
@@ -158,7 +161,7 @@ describe('coords', function () {
       cx: '200',
       cy: '150',
       r: '250'
-    }
+    } as unknown as RemapChanges
 
     // Create a translate.
     const m = svg.createSVGMatrix()
@@ -222,7 +225,7 @@ describe('coords', function () {
       cy: '150',
       rx: '125',
       ry: '75'
-    }
+    } as unknown as RemapChanges
 
     // Create a translate.
     const m = svg.createSVGMatrix()
@@ -251,7 +254,7 @@ describe('coords', function () {
       cy: '150',
       rx: '250',
       ry: '120'
-    }
+    } as unknown as RemapChanges
 
     // Create a translate.
     const m = svg.createSVGMatrix()
@@ -280,7 +283,7 @@ describe('coords', function () {
       y1: '100',
       x2: '120',
       y2: '200'
-    }
+    } as unknown as RemapChanges
 
     // Create a translate.
     const m = svg.createSVGMatrix()
@@ -309,7 +312,7 @@ describe('coords', function () {
       y1: '100',
       x2: '120',
       y2: '200'
-    }
+    } as unknown as RemapChanges
 
     // Create a translate.
     const m = svg.createSVGMatrix()
@@ -334,7 +337,7 @@ describe('coords', function () {
     const attrs = {
       x: '50',
       y: '100'
-    }
+    } as unknown as RemapChanges
 
     // Create a translate.
     const m = svg.createSVGMatrix()
@@ -361,7 +364,7 @@ describe('coords', function () {
           getNextId () { return String(elemId++) }
         }
       }
-    })
+    } as unknown as ISvgCanvas)
     const rect = document.createElementNS(NS.SVG, 'rect')
     rect.setAttribute('width', '10')
     rect.setAttribute('height', '10')
@@ -428,7 +431,7 @@ describe('coords', function () {
     coords.remapElement(path, {}, m)
 
     const d = path.getAttribute('d')
-    const match = /A\s*([-\d.]+),([-\d.]+)\s+([-\d.]+)\s+(\d+)\s+(\d+)\s+([-\d.]+),([-\d.]+)/.exec(d)
+    const match = /A\s*([-\d.]+),([-\d.]+)\s+([-\d.]+)\s+(\d+)\s+(\d+)\s+([-\d.]+),([-\d.]+)/.exec(d!)
     assert.ok(match, `Unexpected path d: ${d}`)
     const [, rx, ry, angle, largeArc, sweep, x, y] = match
     assert.equal(Number(rx), 20)
@@ -504,10 +507,10 @@ describe('coords', function () {
     m.f = 50
     coords.remapElement(fo, attrs, m)
 
-    assert.equal(Number.parseFloat(fo.getAttribute('x')), 70)
-    assert.equal(Number.parseFloat(fo.getAttribute('y')), 70)
-    assert.equal(Number.parseFloat(fo.getAttribute('width')), 200)
-    assert.equal(Number.parseFloat(fo.getAttribute('height')), 160)
+    assert.equal(Number.parseFloat(fo.getAttribute('x')!), 70)
+    assert.equal(Number.parseFloat(fo.getAttribute('y')!), 70)
+    assert.equal(Number.parseFloat(fo.getAttribute('width')!), 200)
+    assert.equal(Number.parseFloat(fo.getAttribute('height')!), 160)
   })
 
   it('Test remapElement with use element (should skip)', function () {
@@ -545,8 +548,8 @@ describe('coords', function () {
     m.f = 20
     coords.remapElement(text, attrs, m)
 
-    assert.equal(Number.parseFloat(text.getAttribute('x')), 60)
-    assert.equal(Number.parseFloat(text.getAttribute('y')), 70)
+    assert.equal(Number.parseFloat(text.getAttribute('x')!), 60)
+    assert.equal(Number.parseFloat(text.getAttribute('y')!), 70)
   })
 
   it('Test remapElement with tspan element', function () {
@@ -568,8 +571,8 @@ describe('coords', function () {
     m.f = 10
     coords.remapElement(tspan, attrs, m)
 
-    assert.equal(Number.parseFloat(tspan.getAttribute('x')), 60)
-    assert.equal(Number.parseFloat(tspan.getAttribute('y')), 65)
+    assert.equal(Number.parseFloat(tspan.getAttribute('x')!), 60)
+    assert.equal(Number.parseFloat(tspan.getAttribute('y')!), 65)
   })
 
   it('#95 remaps tspan children by both axes under a rotation', function () {
@@ -593,8 +596,8 @@ describe('coords', function () {
 
     // The tspan point (55,70) must remap through the full matrix to (-70, 55).
     // The cross-axis bug (raw x with parent's remapped y, and vice versa) gives (-50, -100).
-    assert.equal(Number.parseFloat(tspan.getAttribute('x')), -70)
-    assert.equal(Number.parseFloat(tspan.getAttribute('y')), 55)
+    assert.equal(Number.parseFloat(tspan.getAttribute('x')!), -70)
+    assert.equal(Number.parseFloat(tspan.getAttribute('y')!), 55)
   })
 
   it('#96 mirrored-grad fallback ids are unique when getNextId is unavailable', function () {
@@ -606,7 +609,7 @@ describe('coords', function () {
       getCurrentDrawing () { return noIdDrawing },
       getDataStorage () { return { get: () => null, has: () => false } },
       getSvgRoot () { return svg }
-    })
+    } as unknown as ISvgCanvas)
 
     const defs = document.createElementNS(NS.SVG, 'defs')
     svg.append(defs)
@@ -772,8 +775,8 @@ describe('coords', function () {
     coords.remapElement(rect, attrs, m)
 
     // Width and height should remain positive
-    assert.ok(Number.parseFloat(rect.getAttribute('width')) > 0)
-    assert.ok(Number.parseFloat(rect.getAttribute('height')) > 0)
+    assert.ok(Number.parseFloat(rect.getAttribute('width')!) > 0)
+    assert.ok(Number.parseFloat(rect.getAttribute('height')!) > 0)
   })
 
   it('Test remapElement with path containing curves', function () {
@@ -879,8 +882,8 @@ describe('coords', function () {
     coords.remapElement(ellipse, changes, m)
 
     // Radii should remain positive
-    assert.ok(Number.parseFloat(ellipse.getAttribute('rx')) > 0)
-    assert.ok(Number.parseFloat(ellipse.getAttribute('ry')) > 0)
+    assert.ok(Number.parseFloat(ellipse.getAttribute('rx')!) > 0)
+    assert.ok(Number.parseFloat(ellipse.getAttribute('ry')!) > 0)
   })
 
   it('Test remapElement with circle and scale', function () {
@@ -935,7 +938,7 @@ describe('coords', function () {
     m.a = 2
     m.d = 2
 
-    const changes = { d: 'M 10,10 L 20,20' }
+    const changes = { d: 'M 10,10 L 20,20' } as unknown as RemapChanges
     coords.remapElement(path, changes, m)
 
     assert.equal(path.getAttribute('d'), 'M20,20 L40,40')

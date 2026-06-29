@@ -15,7 +15,7 @@ import { setRotationAngle, setSvgSource, visitAndApproveStorage } from './helper
 async function moveSelected (page: Page, dx: number, dy: number) {
   await page.evaluate(([dx, dy]) => {
     window.svgEditor.svgCanvas.moveSelectedElements(dx, dy)
-  }, [dx, dy])
+  }, [dx, dy] as [number, number])
 }
 
 /**

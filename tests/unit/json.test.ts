@@ -4,8 +4,10 @@ import * as utilities from '../../packages/svgcanvas/core/utilities.js'
 import {
   init as initJson,
   addSVGElementsFromJson,
-  getJsonFromSvgElements
+  getJsonFromSvgElements,
+  type JsonElementResult
 } from '../../packages/svgcanvas/core/json.js'
+import type { ISvgCanvas } from '../../packages/svgcanvas/core/svgcanvas-types.js'
 
 const createSvgElement = (name: string) => document.createElementNS(NS.SVG, name)
 
@@ -29,7 +31,7 @@ describe('json', () => {
 
     utilities.init({
       getSvgRoot: () => svgRoot
-    })
+    } as unknown as ISvgCanvas)
 
     initJson({
       getDOMDocument: () => document,
@@ -47,7 +49,7 @@ describe('json', () => {
         fill_opacity: 1,
         opacity: 1
       })
-    })
+    } as unknown as ISvgCanvas)
   })
 
   afterEach(() => {
@@ -61,10 +63,10 @@ describe('json', () => {
     rect.setAttribute('x', '1')
     g.append(comment, rect)
 
-    const json = getJsonFromSvgElements(g)!
+    const json = getJsonFromSvgElements(g) as JsonElementResult
     expect(json.element).toBe('g')
     expect(json.children).toHaveLength(1)
-    expect(json.children[0].element).toBe('rect')
+    expect((json.children[0] as JsonElementResult).element).toBe('rect')
   })
 
   it('addSVGElementsFromJson() does not treat missing id as "undefined"', () => {

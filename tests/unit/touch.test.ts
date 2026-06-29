@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { init as initTouch } from '../../packages/svgcanvas/core/touch.js'
+import type { ISvgCanvas } from '../../packages/svgcanvas/core/svgcanvas-types.js'
 
 interface SyntheticTouchPoint {
   target: EventTarget
@@ -18,7 +19,7 @@ interface SyntheticTouchEvent {
 type TouchEventHandler = (event: SyntheticTouchEvent) => void
 
 const createSvgRoot = () => {
-  const listeners = {}
+  const listeners: Record<string, TouchEventHandler> = {}
   return {
     listeners,
     addEventListener (type: string, handler: TouchEventHandler) { listeners[type] = handler },
@@ -31,7 +32,13 @@ const OriginalMouseEvent = global.MouseEvent
 beforeAll(() => {
   // JSDOM's MouseEvent requires a real Window; a lightweight stub keeps the adapter logic testable.
   global.MouseEvent = class extends Event {
-    constructor (type: string, init = {}) {
+    declare clientX: number | undefined
+    declare clientY: number | undefined
+    declare screenX: number | undefined
+    declare screenY: number | undefined
+    declare button: number
+    declare relatedTarget: EventTarget | null
+    constructor (type: string, init: MouseEventInit = {}) {
       super(type, init)
       this.clientX = init.clientX
       this.clientY = init.clientY
@@ -40,7 +47,7 @@ beforeAll(() => {
       this.button = init.button ?? 0
       this.relatedTarget = init.relatedTarget ?? null
     }
-  }
+  } as unknown as typeof MouseEvent
 })
 
 afterAll(() => {
@@ -51,7 +58,7 @@ describe('touch adapter', () => {
   it('translates single touch to mouse event on target', () => {
     const svgroot = createSvgRoot()
     const svgCanvas = { svgroot }
-    initTouch(svgCanvas)
+    initTouch(svgCanvas as unknown as ISvgCanvas)
 
     const target = document.createElement('div')
     const received: Array<{ type: string; clientX: number; clientY: number; screenX: number; screenY: number }> = []
@@ -90,7 +97,7 @@ describe('touch adapter', () => {
 
   it('maps move events and ignores multi-touch gestures', () => {
     const svgroot = createSvgRoot()
-    initTouch({ svgroot })
+    initTouch({ svgroot } as unknown as ISvgCanvas)
 
     const target = document.createElement('div')
     let mouseDown = 0
@@ -134,7 +141,7 @@ describe('touch adapter', () => {
 
   it('maps touchcancel to mouseup so an interrupted drag ends', () => {
     const svgroot = createSvgRoot()
-    initTouch({ svgroot })
+    initTouch({ svgroot } as unknown as ISvgCanvas)
     const target = document.createElement('div')
     const received: string[] = []
     target.addEventListener('mouseup', (ev) => { received.push(ev.type) })

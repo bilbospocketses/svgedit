@@ -1,4 +1,5 @@
 import { test, expect } from '../fixtures.js'
+import type { ISvgCanvas } from '@svgedit/svgcanvas/core/svgcanvas-types.js'
 
 test.describe('touch event adapter', () => {
   // Firefox desktop does not expose TouchEvent unless the browser context has
@@ -40,7 +41,7 @@ test.describe('touch event adapter', () => {
         dispatchEvent (ev: TouchEvent) { this.listeners[ev.type]?.(ev) }
       }
 
-      touch.init({ svgroot })
+      touch.init({ svgroot } as unknown as ISvgCanvas)
       const ev = new TouchEvent('touchstart', {
         changedTouches: [
           new Touch({
@@ -78,7 +79,7 @@ test.describe('touch event adapter', () => {
         dispatchEvent (ev: TouchEvent) { this.listeners[ev.type]?.(ev) }
       }
 
-      touch.init({ svgroot })
+      touch.init({ svgroot } as unknown as ISvgCanvas)
       const ev = new TouchEvent('touchstart', {
         changedTouches: [
           new Touch({ identifier: 1, target, clientX: 1, clientY: 2, screenX: 3, screenY: 4 }),

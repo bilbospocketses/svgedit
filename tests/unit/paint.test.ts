@@ -120,7 +120,7 @@ describe('Paint', () => {
   })
 
   it('should handle paint with undefined radialGradient', () => {
-    const paint = new Paint({ radialGradient: undefined })
+    const paint = new Paint({ radialGradient: undefined } as unknown as ConstructorParameters<typeof Paint>[0])
     expect(paint.type).toBe('none')
   })
 
@@ -417,7 +417,7 @@ describe('Paint', () => {
 
   it('should handle copy with missing clone method', () => {
     const original = new Paint({ linearGradient: createLinear('copyGrad') })
-    original.linearGradient = { id: 'fake', cloneNode: null }
+    original.linearGradient = { id: 'fake', cloneNode: null } as unknown as SVGLinearGradientElement
     const copy = new Paint({ copy: original })
     expect(copy.linearGradient).toBe(null)
   })

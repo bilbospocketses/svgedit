@@ -1,4 +1,5 @@
 import { test, expect } from '../fixtures.js'
+import type { ISvgCanvas } from '@svgedit/svgcanvas/core/svgcanvas-types.js'
 
 test.describe('SVG core recalculate', () => {
   test.beforeEach(async ({ page }) => {
@@ -37,18 +38,18 @@ test.describe('SVG core recalculate', () => {
           getDOMDocument: () => document,
           getDOMContainer: () => svg,
           getDataStorage: () => dataStorage
-        })
+        } as unknown as ISvgCanvas)
         coords.init({
           getGridSnapping: () => false,
           getDrawing: () => ({ getNextId: () => '1' }),
           getDataStorage: () => dataStorage
-        })
+        } as unknown as ISvgCanvas)
         recalculate.init({
           getSvgRoot: () => svg,
           getStartTransform: () => '',
           setStartTransform: () => {},
           getDataStorage: () => dataStorage
-        })
+        } as unknown as ISvgCanvas)
       }
       initContexts()
 

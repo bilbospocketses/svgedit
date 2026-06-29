@@ -11,7 +11,7 @@ import type { ISvgCanvas } from '../../packages/svgcanvas/core/svgcanvas-types.j
 // once per pass rather than once per segment (audit #29 perf #60).
 vi.mock('../../packages/svgcanvas/core/path-data.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../packages/svgcanvas/core/path-data.js')>()
-  return { ...actual, getPathData: vi.fn((...args) => actual.getPathData(...args)) }
+  return { ...actual, getPathData: vi.fn((...args: Parameters<typeof actual.getPathData>) => actual.getPathData(...args)) }
 })
 
 // Shape of a segment object held by the mock Path instance.
@@ -59,6 +59,16 @@ type SvgCanvasMock = ISvgCanvas & {
   getRubberBox: Mock
   getSelectedElements: Mock
   getPath_: Mock
+}
+
+// Shape of a lightweight segment used by the rubber-band selection helper; next and
+// prev form a doubly linked list, so each must be able to hold a sibling RbSeg or null.
+type RbSeg = {
+  index: number
+  item: { x: number; y: number }
+  select: Mock
+  next: RbSeg | null
+  prev: RbSeg | null
 }
 
 describe('PathActions', () => {
@@ -242,7 +252,7 @@ describe('PathActions', () => {
       ]
 
       publicMethods.forEach(method => {
-        expect(typeof pathActionsMethod[method]).toBe('function')
+        expect(typeof (pathActionsMethod as unknown as Record<string, unknown>)[method]).toBe('function')
       })
     })
   })
@@ -253,7 +263,7 @@ describe('PathActions', () => {
       svgCanvas.getDrawnPath.mockReturnValue(null)
 
       const mockEvent = { target: pathElement, shiftKey: false }
-      const result = pathActionsMethod.mouseDown(mockEvent, pathElement, 100, 100)
+      const result = pathActionsMethod.mouseDown(mockEvent as unknown as MouseEvent, pathElement, 100, 100)
 
       expect(svgCanvas.addPointGrip).toHaveBeenCalled()
       expect(result).toBeUndefined()
@@ -268,7 +278,7 @@ describe('PathActions', () => {
       grip.id = 'pathpointgrip_0'
       const mockEvent = { target: grip, shiftKey: false }
 
-      pathActionsMethod.mouseDown(mockEvent, grip, 100, 100)
+      pathActionsMethod.mouseDown(mockEvent as unknown as MouseEvent, grip, 100, 100)
 
       expect(mockPath.clearSelection).toHaveBeenCalled()
       expect(mockPath.addPtsToSelection).toHaveBeenCalled()
@@ -302,9 +312,9 @@ describe('PathActions', () => {
       pathActionsMethod.toEditMode(pathElement)
       svgCanvas.getCurrentMode.mockReturnValue('pathedit')
       mockPath.dragging = null
-      const mkSeg = (index: number) => ({ index, item: { x: index * 10, y: index * 10 }, select: vi.fn(), next: null, prev: null })
+      const mkSeg = (index: number): RbSeg => ({ index, item: { x: index * 10, y: index * 10 }, select: vi.fn(), next: null, prev: null })
       const segs = [mkSeg(0), mkSeg(1), mkSeg(2)]
-      segs[0]!.next = segs[1]; segs[1]!.prev = segs[0]; segs[1]!.next = segs[2]; segs[2]!.prev = segs[1]
+      segs[0]!.next = segs[1]!; segs[1]!.prev = segs[0]!; segs[1]!.next = segs[2]!; segs[2]!.prev = segs[1]!
       mockPath.selected_pts = []
       mockPath.eachSeg = vi.fn((cb) => segs.forEach((s, i) => cb.call(s, i)))
       const rb = document.createElementNS(NS.SVG, 'rect')
@@ -343,7 +353,7 @@ describe('PathActions', () => {
       svgCanvas.getDrawnPath.mockReturnValue(drawnPath)
 
       const mockEvent = { target: pathElement }
-      const result = pathActionsMethod.mouseUp(mockEvent, drawnPath, 100, 100)
+      const result = pathActionsMethod.mouseUp(mockEvent as unknown as MouseEvent, drawnPath, 100, 100)
 
       expect(result).toEqual({ keep: true, element: drawnPath })
     })
@@ -355,7 +365,7 @@ describe('PathActions', () => {
       mockPath.cur_pt = 1
 
       const mockEvent = { target: pathElement, shiftKey: false }
-      pathActionsMethod.mouseUp(mockEvent, pathElement, 105, 105)
+      pathActionsMethod.mouseUp(mockEvent as unknown as MouseEvent, pathElement, 105, 105)
 
       expect(mockPath.update).toHaveBeenCalled()
       expect(mockPath.endChanges).toHaveBeenCalledWith('Move path point(s)')
@@ -679,8 +689,8 @@ describe('PathActions', () => {
       const privateFields = ['subpath', 'newPoint', 'firstCtrl', 'currentPath', 'hasMoved']
 
       privateFields.forEach(field => {
-        expect(pathActionsMethod[field]).toBeUndefined()
-        expect(pathActionsMethod[`#${field}`]).toBeUndefined()
+        expect((pathActionsMethod as unknown as Record<string, unknown>)[field]).toBeUndefined()
+        expect((pathActionsMethod as unknown as Record<string, unknown>)[`#${field}`]).toBeUndefined()
       })
     })
   })
@@ -692,7 +702,7 @@ describe('PathActions', () => {
       svgCanvas.getDrawnPath.mockReturnValue(null)
 
       // First point
-      pathActionsMethod.mouseDown({ target: svgRoot }, svgRoot, 10, 10)
+      pathActionsMethod.mouseDown({ target: svgRoot } as unknown as MouseEvent, svgRoot, 10, 10)
       expect(svgCanvas.addPointGrip).toHaveBeenCalled()
 
       // Add more points

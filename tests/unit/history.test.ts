@@ -24,7 +24,7 @@ describe('history', function () {
   class MockCommand extends history.Command {
     constructor (optText?: string) {
       super()
-      this.text = optText
+      this.text = optText as string
     }
 
     apply (handler: history.HistoryEventHandler | null) {
@@ -49,7 +49,7 @@ describe('history', function () {
    * @returns {void}
    */
   beforeEach(function () {
-    undoMgr = new history.UndoManager()
+    undoMgr = new history.UndoManager(null)
 
     document.body.textContent = ''
     divparent = document.createElement('div')
@@ -291,38 +291,38 @@ describe('history', function () {
     assert.equal(typeof move.unapply, typeof function () { /* empty fn */ })
     assert.equal(typeof move.apply, typeof function () { /* empty fn */ })
 
-    move.unapply()
+    move.unapply(null)
     assert.equal(divparent.firstElementChild, div3)
     assert.equal(divparent.firstElementChild!.nextElementSibling, div1)
     assert.equal(divparent.lastElementChild, div2)
 
-    move.apply()
+    move.apply(null)
     assert.equal(divparent.firstElementChild, div1)
     assert.equal(divparent.firstElementChild!.nextElementSibling, div2)
     assert.equal(divparent.lastElementChild, div3)
 
     move = new history.MoveElementCommand(div1, null, divparent)
 
-    move.unapply()
+    move.unapply(null)
     assert.equal(divparent.firstElementChild, div2)
     assert.equal(divparent.firstElementChild!.nextElementSibling, div3)
     assert.equal(divparent.lastElementChild, div1)
 
-    move.apply()
+    move.apply(null)
     assert.equal(divparent.firstElementChild, div1)
     assert.equal(divparent.firstElementChild!.nextElementSibling, div2)
     assert.equal(divparent.lastElementChild, div3)
 
     move = new history.MoveElementCommand(div2, div5, div4)
 
-    move.unapply()
+    move.unapply(null)
     assert.equal(divparent.firstElementChild, div1)
     assert.equal(divparent.firstElementChild!.nextElementSibling, div3)
     assert.equal(divparent.lastElementChild, div3)
     assert.equal(div4.firstElementChild, div2)
     assert.equal(div4.firstElementChild!.nextElementSibling, div5)
 
-    move.apply()
+    move.apply(null)
     assert.equal(divparent.firstElementChild, div1)
     assert.equal(divparent.firstElementChild!.nextElementSibling, div2)
     assert.equal(divparent.lastElementChild, div3)
@@ -337,13 +337,13 @@ describe('history', function () {
     assert.equal(typeof insert.unapply, typeof function () { /* empty fn */ })
     assert.equal(typeof insert.apply, typeof function () { /* empty fn */ })
 
-    insert.unapply()
+    insert.unapply(null)
     assert.equal(divparent.childElementCount, 2)
     assert.equal(divparent.firstElementChild, div1)
     assert.equal(div1.nextElementSibling, div2)
     assert.equal(divparent.lastElementChild, div2)
 
-    insert.apply()
+    insert.apply(null)
     assert.equal(divparent.childElementCount, 3)
     assert.equal(divparent.firstElementChild, div1)
     assert.equal(div1.nextElementSibling, div2)
@@ -351,13 +351,13 @@ describe('history', function () {
 
     insert = new history.InsertElementCommand(div2)
 
-    insert.unapply()
+    insert.unapply(null)
     assert.equal(divparent.childElementCount, 2)
     assert.equal(divparent.firstElementChild, div1)
     assert.equal(div1.nextElementSibling, div3)
     assert.equal(divparent.lastElementChild, div3)
 
-    insert.apply()
+    insert.apply(null)
     assert.equal(divparent.childElementCount, 3)
     assert.equal(divparent.firstElementChild, div1)
     assert.equal(div1.nextElementSibling, div2)
@@ -374,14 +374,14 @@ describe('history', function () {
     assert.equal(typeof remove.unapply, typeof function () { /* empty fn */ })
     assert.equal(typeof remove.apply, typeof function () { /* empty fn */ })
 
-    remove.unapply()
+    remove.unapply(null)
     assert.equal(divparent.childElementCount, 4)
     assert.equal(divparent.firstElementChild, div1)
     assert.equal(div1.nextElementSibling, div2)
     assert.equal(div2.nextElementSibling, div3)
     assert.equal(div3.nextElementSibling, div6)
 
-    remove.apply()
+    remove.apply(null)
     assert.equal(divparent.childElementCount, 3)
     assert.equal(divparent.firstElementChild, div1)
     assert.equal(div1.nextElementSibling, div2)
@@ -389,14 +389,14 @@ describe('history', function () {
 
     remove = new history.RemoveElementCommand(div6, div2, divparent)
 
-    remove.unapply()
+    remove.unapply(null)
     assert.equal(divparent.childElementCount, 4)
     assert.equal(divparent.firstElementChild, div1)
     assert.equal(div1.nextElementSibling, div6)
     assert.equal(div6.nextElementSibling, div2)
     assert.equal(div2.nextElementSibling, div3)
 
-    remove.apply()
+    remove.apply(null)
     assert.equal(divparent.childElementCount, 3)
     assert.equal(divparent.firstElementChild, div1)
     assert.equal(div1.nextElementSibling, div2)
@@ -412,11 +412,11 @@ describe('history', function () {
     assert.equal(typeof change.unapply, typeof function () { /* empty fn */ })
     assert.equal(typeof change.apply, typeof function () { /* empty fn */ })
 
-    change.unapply()
+    change.unapply(null)
     assert.equal(div1.getAttribute('title'), 'old title')
     assert.equal(div1.getAttribute('class'), 'foo')
 
-    change.apply()
+    change.apply(null)
     assert.equal(div1.getAttribute('title'), 'new title')
     assert.ok(!div1.getAttribute('class'))
 
@@ -424,20 +424,20 @@ describe('history', function () {
     change = new history.ChangeElementCommand(div1,
       { '#text': null })
 
-    change.unapply()
+    change.unapply(null)
     assert.ok(!div1.textContent)
 
-    change.apply()
+    change.apply(null)
     assert.equal(div1.textContent, 'inner text')
 
     div1.textContent = ''
     change = new history.ChangeElementCommand(div1,
       { '#text': 'old text' })
 
-    change.unapply()
+    change.unapply(null)
     assert.equal(div1.textContent, 'old text')
 
-    change.apply()
+    change.apply(null)
     assert.ok(!div1.textContent)
 
     // TODO(codedread): Refactor this #href stuff in history.js and svgcanvas.js
@@ -466,21 +466,21 @@ describe('history', function () {
 
     justCalled = null
     sethrefvalue = '#oldhref'
-    change.unapply()
+    change.unapply(null)
     assert.equal(justCalled, 'setHref')
 
     justCalled = null
     sethrefvalue = '#newhref'
-    change.apply()
+    change.apply(null)
     assert.equal(justCalled, 'setHref')
 
     // Ensure numeric zero values are not treated like "remove attribute".
     const rectZero = document.createElementNS(NS.SVG, 'rect')
     rectZero.setAttribute('x', '5')
-    change = new history.ChangeElementCommand(rectZero, { x: 0 })
-    change.unapply()
+    change = new history.ChangeElementCommand(rectZero, { x: 0 } as unknown as history.CommandAttributes)
+    change.unapply(null)
     assert.equal(rectZero.getAttribute('x'), '0')
-    change.apply()
+    change.apply(null)
     assert.equal(rectZero.getAttribute('x'), '5')
 
     // Ensure "#href" can be removed when the previous value was null.
@@ -506,12 +506,12 @@ describe('history', function () {
     assert.deepEqual(calls, ['getHref'])
 
     calls = []
-    change.unapply()
+    change.unapply(null)
     assert.equal(rectHref.hasAttribute('href'), false)
     assert.deepEqual(calls, [])
 
     calls = []
-    change.apply()
+    change.apply(null)
     assert.equal(rectHref.getAttribute('href'), '#newhref')
     assert.deepEqual(calls, ['setHref'])
 
@@ -524,10 +524,10 @@ describe('history', function () {
     assert.equal(typeof change.unapply, typeof function () { /* empty fn */ })
     assert.equal(typeof change.apply, typeof function () { /* empty fn */ })
 
-    change.unapply()
+    change.unapply(null)
     assert.equal(line.getAttribute('class'), 'oldClass')
 
-    change.apply()
+    change.apply(null)
     assert.equal(line.getAttribute('class'), 'newClass')
   })
 
@@ -553,14 +553,14 @@ describe('history', function () {
     batch.addSubCommand(new MockCommand('c'))
 
     assert.ok(!concatResult)
-    batch.apply()
+    batch.apply(null)
     assert.equal(concatResult, 'abc')
 
     MockCommand.prototype.apply = function () { /* empty fn */ }
     MockCommand.prototype.unapply = function () { concatResult += this.text }
     concatResult = ''
     assert.ok(!concatResult)
-    batch.unapply()
+    batch.unapply(null)
     assert.equal(concatResult, 'cba')
 
     MockCommand.prototype.unapply = function () { /* empty fn */ }
@@ -571,6 +571,7 @@ describe('history', function () {
 
     // Create some mock commands that reference elements
     class MockElementCommand {
+      declare elem: Element
       constructor (elem: Element) { this.elem = elem }
       elements () { return [this.elem] }
       apply () { /* empty fn */ }
@@ -580,7 +581,7 @@ describe('history', function () {
 
     const elem1 = document.createElementNS(NS.SVG, 'rect')
     const cmd1 = new MockElementCommand(elem1)
-    batch.addSubCommand(cmd1)
+    batch.addSubCommand(cmd1 as unknown as history.Command)
 
     const elems = batch.elements()
     assert.ok(Array.isArray(elems))

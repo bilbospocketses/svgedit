@@ -12,6 +12,8 @@ import {
   encodeUTF8,
   decodeUTF8
 } from '../../packages/svgcanvas/core/utilities.js'
+import type { ElementContainer } from '../../packages/svgcanvas/core/units.js'
+import type { ISvgCanvas } from '../../packages/svgcanvas/core/svgcanvas-types.js'
 
 describe('utilities extra coverage', () => {
   let svg: SVGSVGElement
@@ -27,7 +29,7 @@ describe('utilities extra coverage', () => {
       getWidth: () => 200,
       getHeight: () => 100,
       getRoundDigits: () => 2
-    })
+    } as unknown as ElementContainer)
     initUtilities({
       getSvgRoot: () => svg,
       getSvgContent: () => svg,
@@ -35,7 +37,7 @@ describe('utilities extra coverage', () => {
       getDOMContainer: () => svg,
       getBaseUnit: () => 'cm',
       getSnappingStep: () => 0.5
-    })
+    } as unknown as ISvgCanvas)
   })
 
   it('creates defs and removes namespaced attributes via assignAttributes', () => {

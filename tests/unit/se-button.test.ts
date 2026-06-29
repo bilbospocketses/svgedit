@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import '../../src/editor/components/seButton.ts'
+import '../../src/editor/components/seButton.js'
 import type { SeButton } from '../../src/editor/components/seButton'
 
 const flush = async (el: SeButton) => {

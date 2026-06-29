@@ -1,4 +1,5 @@
 import { test, expect } from '../fixtures.js'
+import type HistoryRecordingService from '@svgedit/svgcanvas/core/historyrecording.js'
 
 test.describe('SVG core history and draw', () => {
   test.beforeEach(async ({ page }) => {
@@ -20,7 +21,7 @@ test.describe('SVG core history and draw', () => {
         unapply () { lastCalled = `${this.text}:unapply` }
         elements () { return [] }
       }
-      const um = new history.UndoManager()
+      const um = new history.UndoManager(null)
       ;['First', 'Second', 'Third'].forEach((label) => {
         um.addCommandToHistory(new MockCommand(label))
       })
@@ -86,29 +87,29 @@ test.describe('SVG core history and draw', () => {
 
       const { parent: parentMove, children: moveChildren } = makeParent()
       const move = new history.MoveElementCommand(
-        moveChildren[2],
-        moveChildren[0],
+        moveChildren[2]!,
+        moveChildren[0]!,
         parentMove
       )
-      move.unapply()
+      move.unapply(null)
       const orderAfterMoveUnapply = order(parentMove)
-      move.apply()
+      move.apply(null)
       const orderAfterMoveApply = order(parentMove)
 
       const { parent: parentInsert, children: insertChildren } = makeParent()
-      const insert = new history.InsertElementCommand(insertChildren[2])
-      insert.unapply()
+      const insert = new history.InsertElementCommand(insertChildren[2]!)
+      insert.unapply(null)
       const orderAfterInsertUnapply = order(parentInsert)
-      insert.apply()
+      insert.apply(null)
       const orderAfterInsertApply = order(parentInsert)
 
       const { parent: parentRemove } = makeParent()
       const extra = document.createElement('div')
       extra.id = 'div4'
       const remove = new history.RemoveElementCommand(extra, null, parentRemove)
-      remove.unapply()
+      remove.unapply(null)
       const orderAfterRemoveUnapply = order(parentRemove)
-      remove.apply()
+      remove.apply(null)
       const orderAfterRemoveApply = order(parentRemove)
 
       return {
@@ -147,10 +148,10 @@ test.describe('SVG core history and draw', () => {
       batch.addSubCommand(new TextCommand('a'))
       batch.addSubCommand(new TextCommand('b'))
       batch.addSubCommand(new TextCommand('c'))
-      batch.apply()
+      batch.apply(null)
       const afterApply = record
       record = ''
-      batch.unapply()
+      batch.unapply(null)
       const afterUnapply = record
       return { emptyBefore, afterApply, afterUnapply }
     })
@@ -174,7 +175,7 @@ test.describe('SVG core history and draw', () => {
         startBatchCommand: () => { hrCounts.start++ },
         endBatchCommand: () => { hrCounts.end++ },
         insertElement: () => { hrCounts.insert++ }
-      })
+      } as unknown as HistoryRecordingService)
       const afterCreate = {
         num: drawing.getNumLayers(),
         currentName: drawing.getCurrentLayerName(),

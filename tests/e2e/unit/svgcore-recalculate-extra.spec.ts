@@ -1,4 +1,5 @@
 import { test, expect } from '../fixtures.js'
+import type { ISvgCanvas } from '@svgedit/svgcanvas/core/svgcanvas-types.js'
 
 test.describe('SVG core recalculate extra cases', () => {
   test.beforeEach(async ({ page }) => {
@@ -55,13 +56,13 @@ test.describe('SVG core recalculate extra cases', () => {
         getDOMDocument: () => document,
         getDOMContainer: () => svg,
         getDataStorage: () => dataStorage
-      })
+      } as unknown as ISvgCanvas)
       coords.init({
         getGridSnapping: () => false,
         getDrawing: () => ({ getNextId: () => 'id2' }),
         getDataStorage: () => dataStorage
-      })
-      recalculate.init(canvasStub)
+      } as unknown as ISvgCanvas)
+      recalculate.init(canvasStub as unknown as ISvgCanvas)
 
       // Scale about center via translate/scale/translate sequence
       const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
@@ -145,15 +146,15 @@ test.describe('SVG core recalculate extra cases', () => {
         setStartTransform: () => {},
         getCurrentDrawing: () => drawing
       }
-      utilities.init(canvasStub)
+      utilities.init(canvasStub as unknown as ISvgCanvas)
       coords.init({
         getGridSnapping: () => false,
         getDrawing: () => drawing,
         getDataStorage: () => dataStorage,
         getCurrentDrawing: () => drawing,
         getSvgRoot: () => svg
-      })
-      recalculate.init(canvasStub)
+      } as unknown as ISvgCanvas)
+      recalculate.init(canvasStub as unknown as ISvgCanvas)
 
       const rect = document.createElementNS(NS, 'rect')
       rect.setAttribute('x', '0')
@@ -237,15 +238,15 @@ test.describe('SVG core recalculate extra cases', () => {
         setStartTransform: () => {},
         getCurrentDrawing: () => drawing
       }
-      utilities.init(canvasStub)
+      utilities.init(canvasStub as unknown as ISvgCanvas)
       coords.init({
         getGridSnapping: () => false,
         getDrawing: () => drawing,
         getDataStorage: () => dataStorage,
         getCurrentDrawing: () => drawing,
         getSvgRoot: () => svg
-      })
-      recalculate.init(canvasStub)
+      } as unknown as ISvgCanvas)
+      recalculate.init(canvasStub as unknown as ISvgCanvas)
 
       const poly = document.createElementNS(NS, 'polygon')
       poly.setAttribute('points', '0,0 10,0 10,10')

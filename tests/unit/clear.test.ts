@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { clearSvgContentElementInit, init as initClear } from '../../packages/svgcanvas/core/clear.js'
+import type { ISvgCanvas } from '../../packages/svgcanvas/core/svgcanvas-types.js'
 
 const buildCanvas = (showOutside = false) => {
   const svgContent = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
@@ -16,7 +17,7 @@ const buildCanvas = (showOutside = false) => {
       getSvgContent: () => svgContent,
       getSvgRoot: () => svgRoot,
       getDOMDocument: () => document
-    }
+    } as unknown as ISvgCanvas
   }
 }
 

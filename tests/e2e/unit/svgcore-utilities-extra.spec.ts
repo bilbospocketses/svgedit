@@ -1,4 +1,6 @@
 import { test, expect } from '../fixtures.js'
+import type { BBoxObject } from '@svgedit/svgcanvas/core/utilities.js'
+import type { ISvgCanvas } from '@svgedit/svgcanvas/core/svgcanvas-types.js'
 
 test.describe('SVG core utilities extra coverage', () => {
   test.beforeEach(async ({ page }) => {
@@ -20,7 +22,7 @@ test.describe('SVG core utilities extra coverage', () => {
         </svg>
       `
         const svg = root.querySelector('svg')!
-        const rect = svg.querySelector('#rect')
+        const rect = svg.querySelector('#rect')!
 
         utilities.init({
           getSvgRoot: () => svg,
@@ -32,11 +34,11 @@ test.describe('SVG core utilities extra coverage', () => {
           getSnappingStep: () => 1,
           addSVGElementsFromJson: () => null,
           pathActions: { convertPath: () => {} }
-        })
+        } as unknown as ISvgCanvas)
 
         const errors: string[] = []
-        const safe = <T>(fn: () => T, fallback = null) => {
-          try { return fn() } catch (e) { errors.push(e.message); return fallback }
+        const safe = <T, F = null>(fn: () => T, fallback: F = null as unknown as F): T | F => {
+          try { return fn() } catch (e) { errors.push((e as Error).message); return fallback }
         }
 
         const encoded = safe(() => utilities.encodeUTF8('hello'))
@@ -52,7 +54,7 @@ test.describe('SVG core utilities extra coverage', () => {
           rect,
           ({ element, attr }) => {
             const node = document.createElementNS(namespaces.NS.SVG, element)
-            Object.entries(attr).forEach(([key, value]) => node.setAttribute(key, value))
+            Object.entries(attr).forEach(([key, value]) => node.setAttribute(key, value as string))
             svg.querySelector('#group')!.append(node)
             return node
           },
@@ -62,12 +64,12 @@ test.describe('SVG core utilities extra coverage', () => {
         const refElem = safe(() => utilities.getRefElem('#rect'))
         const fe = safe(() => utilities.getFeGaussianBlur(svg), null)
         const elementById = safe(() => utilities.getElement('rect'))
-        safe(() => utilities.assignAttributes(elementById, { 'data-test': 'ok' }))
-        safe(() => utilities.cleanupElement(elementById))
+        safe(() => utilities.assignAttributes(elementById!, { 'data-test': 'ok' }))
+        safe(() => utilities.cleanupElement(elementById!))
         const snapped = safe(() => utilities.snapToGrid(2.6), 0)
         const htmlFrag = safe(() => utilities.stringToHTML('<span class="x">hi</span>'))
         const insertTarget = document.createElement('div')
-        safe(() => utilities.insertChildAtIndex(root, insertTarget, 0))
+        safe(() => utilities.insertChildAtIndex(root, insertTarget as unknown as string, 0))
 
         return {
           encoded: Boolean(encoded),
@@ -83,31 +85,31 @@ test.describe('SVG core utilities extra coverage', () => {
           rotated,
           refId: refElem?.id,
           feFound: fe === null,
-          dataAttr: elementById?.dataset?.test || null,
+          dataAttr: (elementById as SVGElement | null)?.dataset?.test || null,
           snapped,
           htmlTag: (htmlFrag &&
             htmlFrag.firstChild &&
-            htmlFrag.firstChild.tagName &&
-            htmlFrag.firstChild.tagName.toLowerCase()) || '',
+            (htmlFrag.firstChild as Element).tagName &&
+            (htmlFrag.firstChild as Element).tagName.toLowerCase()) || '',
           insertedFirst: root.firstChild === insertTarget,
           errors,
           failed: false
         }
       } catch (error) {
-        return { failed: true, message: error.message, stack: error.stack }
+        return { failed: true, message: (error as Error).message, stack: (error as Error).stack }
       }
     })
 
     if (result.failed) {
       throw new Error(result.message || 'utilities extra coverage failed')
     }
-    expect(result.dropped.includes('?>')).toBe(true)
+    expect(result.dropped!.includes('?>')).toBe(true)
     expect(result.xmlRefs).toBeTruthy()
     expect(result.parsedTag).toBe('svg')
     expect(result.bboxObj).toEqual({ x: 1, y: 2, width: 3, height: 4 })
     expect(result.bbox).toBeDefined()
     expect(result.pathD).toContain('M1')
-    expect(Number(result.pathBBox?.width ?? 0)).toBeGreaterThanOrEqual(0)
+    expect(Number((result.pathBBox as BBoxObject | undefined)?.width ?? 0)).toBeGreaterThanOrEqual(0)
     expect(result.dataAttr).toBe('ok')
     expect(result.snapped).toBeCloseTo(3)
     expect(result.insertedFirst).toBeDefined()

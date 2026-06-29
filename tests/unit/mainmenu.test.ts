@@ -119,7 +119,7 @@ describe('MainMenu', () => {
   it('rejects invalid doc properties and shows an alert', () => {
     const result = menu.saveDocProperties({
       detail: { title: 'Oops', w: 'bad', h: 'fit', save: 'embed' }
-    })
+    } as unknown as CustomEvent)
     expect(result).toBe(false)
     expect(globalThis.seAlert).toHaveBeenCalled()
     expect(editor.svgCanvas.setResolution).not.toHaveBeenCalled()
@@ -129,7 +129,7 @@ describe('MainMenu', () => {
     editor.docprops = true
     const result = menu.saveDocProperties({
       detail: { title: 'Demo', w: '200', h: '100', save: 'layer' }
-    })
+    } as unknown as CustomEvent)
 
     expect(result).toBe(true)
     expect(editor.svgCanvas.setDocumentTitle).toHaveBeenCalledWith('Demo')
@@ -153,7 +153,7 @@ describe('MainMenu', () => {
       baseunit: 'cm'
     }
 
-    await menu.savePreferences({ detail })
+    await menu.savePreferences({ detail } as unknown as CustomEvent)
 
     expect(editor.setBackground).toHaveBeenCalledWith('#111', '')
     expect(prefStore.lang).toBe('fr')
@@ -216,7 +216,7 @@ describe('MainMenu', () => {
     expect(editor.svgCanvas.rasterExport).toHaveBeenCalledWith('PNG', 0.5, editor.exportWindowName)
     expect(editor.exportWindowCt).toBe(1)
 
-    await menu.clickExport({ detail: { trigger: 'ok', imgType: 'PDF' } })
+    await menu.clickExport({ detail: { trigger: 'ok', imgType: 'PDF' } } as unknown as CustomEvent)
     expect(editor.svgCanvas.exportPDF).toHaveBeenCalled()
   })
 

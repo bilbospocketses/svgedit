@@ -15,7 +15,7 @@ describe('contextmenu helpers', () => {
   })
 
   it('validates menu entries and prevents duplicates', () => {
-    expect(() => add(null)).toThrow(/must be defined/)
+    expect(() => add(null as unknown as Parameters<typeof add>[0])).toThrow(/must be defined/)
     add({ id: 'foo', label: 'Foo', action: () => 'ok' })
     expect(hasCustomHandler('foo')).toBe(true)
     expect(getCustomHandler('foo')()).toBe('ok')

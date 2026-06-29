@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, beforeEach } from 'vitest'
-import * as cmd from '../../src/editor/dialogs/foreign-html-commands.ts'
+import * as cmd from '../../src/editor/dialogs/foreign-html-commands.js'
 
 const selectAll = (root: Element) => {
   const r = document.createRange(); r.selectNodeContents(root)

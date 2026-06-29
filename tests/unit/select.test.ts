@@ -1,5 +1,6 @@
 import * as select from '../../packages/svgcanvas/core/select.js'
 import { NS } from '../../packages/svgcanvas/core/namespaces.js'
+import type { ISvgCanvas } from '../../packages/svgcanvas/core/svgcanvas-types.js'
 
 describe('select', function () {
   const sandbox = document.createElement('div')
@@ -118,12 +119,12 @@ describe('select', function () {
     assert.equal(svgroot.childNodes.item(0), svgContent)
     assert.ok(!svgroot.querySelector('#selectorParentGroup'))
 
-    select.init(mockSvgCanvas)
+    select.init(mockSvgCanvas as unknown as ISvgCanvas)
 
     assert.equal(svgroot.childNodes.length, 3)
 
     // Verify existence of canvas background.
-    const cb = svgroot.childNodes.item(0)
+    const cb = svgroot.childNodes.item(0) as Element
     assert.ok(cb)
     assert.equal(cb.id, 'canvasBackground')
 
@@ -131,7 +132,7 @@ describe('select', function () {
     assert.equal(svgroot.childNodes.item(1), svgContent)
 
     // Verify existence of selectorParentGroup.
-    const spg = svgroot.childNodes.item(2)
+    const spg = svgroot.childNodes.item(2) as Element
     assert.ok(spg)
     assert.equal(svgroot.querySelector('#selectorParentGroup'), spg)
     assert.equal(spg.id, 'selectorParentGroup')

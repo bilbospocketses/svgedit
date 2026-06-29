@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { EmbedServer } from '../../src/embed/server.ts'
-import type { ReadyPayload } from '../../src/embed/protocol.ts'
+import { EmbedServer } from '../../src/embed/server.js'
+import type { ReadyPayload } from '../../src/embed/protocol.js'
 
 // Shape of the envelopes these tests capture from window.parent.postMessage.
 // Each captured value is one member of the EmbedEnvelope union (call / result /

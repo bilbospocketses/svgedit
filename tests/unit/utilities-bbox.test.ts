@@ -1,4 +1,4 @@
-import { strict as assert } from 'node:assert'
+import { strict as nodeAssert } from 'node:assert'
 
 import { NS } from '../../packages/svgcanvas/core/namespaces.js'
 import * as utilities from '../../packages/svgcanvas/core/utilities.js'
@@ -9,6 +9,14 @@ import { getPathData } from '../../packages/svgcanvas/core/path-data.js'
 import { toPathSeg } from '../../packages/svgcanvas/core/path-method.js'
 import type { SVGElementJSON, BBoxObject } from '../../packages/svgcanvas/core/utilities.js'
 import type { XYObject } from '../../packages/svgcanvas/core/math.js'
+import type { ISvgCanvas } from '../../packages/svgcanvas/core/svgcanvas-types.js'
+import type { ElementContainer } from '../../packages/svgcanvas/core/units.js'
+
+/** QUnit-style approximate-equality assertion attached to `assert` at runtime by the test harness. */
+type AssertWithClose = typeof nodeAssert & {
+  close (actual: number, expected: number, maxDifference: number, message?: string): void
+}
+const assert: AssertWithClose = nodeAssert as AssertWithClose
 
 describe('utilities bbox', function () {
   /**
@@ -17,16 +25,16 @@ describe('utilities bbox', function () {
    * @returns {SVGElement}
    */
   function mockCreateSVGElement (jsonMap: SVGElementJSON) {
-    const elem = document.createElementNS(NS.SVG, jsonMap.element)
+    const elem = document.createElementNS(NS.SVG, jsonMap.element) as SVGGraphicsElement
     Object.entries(jsonMap.attr).forEach(([attr, value]) => {
-      elem.setAttribute(attr, value)
+      elem.setAttribute(attr, value as string)
     })
     const numFromAttr = (attr: string, fallback = 0) => Number(jsonMap.attr[attr] ?? fallback)
     const calcBBox = () => {
       const tag = (jsonMap.element || '').toLowerCase()
       switch (tag) {
         case 'path': {
-          const d = jsonMap.attr.d || ''
+          const d = (jsonMap.attr.d || '') as string
           const nums = (d.match(/-?\\d*\\.?\\d+/g) || []).map(Number)
           if (nums.length >= 4) {
             const xs = nums.filter((_: number, i: number) => i % 2 === 0)
@@ -52,7 +60,7 @@ describe('utilities bbox', function () {
     }
     const bbox = calcBBox()
     elem.getBBox = () => {
-      return { ...bbox }
+      return { ...bbox } as DOMRect
     }
     return elem
   }
@@ -82,14 +90,14 @@ describe('utilities bbox', function () {
       // let lastX, lastY;
 
       for (let i = 0; i < len; ++i) {
-        const seg = toPathSeg(segData[i])
+        const seg = toPathSeg(segData[i]!)
         const type = seg.pathSegType
         if (type === 1) { continue }
         const pts: number[] = [];
         ['', 1, 2].forEach(function (n) {
           const x = seg['x' + n]; const y = seg['y' + n]
           if (x !== undefined && y !== undefined) {
-            const pt = math.transformPoint(x, y, m)
+            const pt = math.transformPoint(x as number, y as number, m)
             pts.splice(pts.length, 0, pt.x, pt.y)
           }
         })
@@ -120,15 +128,15 @@ describe('utilities bbox', function () {
       createSVGElement (jsonMap: SVGElementJSON) {
         const elem = document.createElementNS(NS.SVG, jsonMap.element)
         Object.entries(jsonMap.attr).forEach(([attr, value]) => {
-          elem.setAttribute(attr, value)
+          elem.setAttribute(attr, value as string)
         })
         return elem
       },
       getSvgRoot () { return svgroot }
     }
 
-    path.init(mockSvgCanvas)
-    units.init({ getRoundDigits: () => 2 }) // mock getRoundDigits
+    path.init(mockSvgCanvas as unknown as ISvgCanvas)
+    units.init({ getRoundDigits: () => 2 } as unknown as ElementContainer) // mock getRoundDigits
     mockaddSVGElementsFromJsonCallCount = 0
   })
 

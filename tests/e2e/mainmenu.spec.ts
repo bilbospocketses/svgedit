@@ -4,9 +4,9 @@ test.describe('Main menu logic', () => {
   test('saves properties, preferences and export settings', async ({ page }) => {
     await page.addInitScript(() => {
       window.__svgEditorReadyResolved = false
-      window.__svgEditorReady = new Promise((resolve) => {
+      window.__svgEditorReady = new Promise<void>((resolve) => {
         document.addEventListener('svgedit:ready', (e) => {
-          window.__svgEditor = e.detail
+          window.__svgEditor = (e as CustomEvent).detail
           window.__svgEditorReadyResolved = true
           resolve()
         }, { once: true })
@@ -17,7 +17,15 @@ test.describe('Main menu logic', () => {
     await page.waitForFunction(() => window.__svgEditorReadyResolved === true)
 
     const result = await page.evaluate(() => {
-      const MainMenu = window.__svgEditor.mainMenu.constructor
+      const MainMenu = window.__svgEditor.mainMenu.constructor as unknown as new (editor: object) => {
+        showDocProperties(): void
+        hideDocProperties(): void
+        saveDocProperties(e: unknown): boolean
+        showPreferences(): void
+        savePreferences(e: unknown): void
+        hidePreferences(): void
+        clickExport(e: unknown): void
+      }
       window.seAlert = () => {}
       const prefsStore: Record<string, unknown> = {}
       const svgCanvas = {

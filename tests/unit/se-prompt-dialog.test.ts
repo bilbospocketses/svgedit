@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import '../../src/editor/dialogs/SePromptDialog.ts'
+import '../../src/editor/dialogs/SePromptDialog.js'
 import type SePromptDialog from '../../src/editor/dialogs/SePromptDialog'
 
 const flushRender = async (el: SePromptDialog) => {
   await customElements.whenDefined('se-prompt-dialog')
-  await new Promise((resolve) => queueMicrotask(resolve))
+  await new Promise<void>((resolve) => queueMicrotask(resolve as () => void))
   if (el && typeof el.updateComplete?.then === 'function') {
     await el.updateComplete
   }

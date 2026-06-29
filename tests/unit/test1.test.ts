@@ -38,7 +38,7 @@ describe('Basic Module', function () {
     document.body.append(svgEditor)
 
     svgCanvas = new SvgCanvas(
-      document.getElementById('svgcanvas'), {
+      document.getElementById('svgcanvas')!, {
         canvas_expansion: 3,
         dimensions: [640, 480],
         initFill: {
@@ -81,8 +81,8 @@ describe('Basic Module', function () {
         '</svg>'
       )
 
-      const p1 = document.getElementById('p1')!
-      const p2 = document.getElementById('p2')
+      const p1 = document.getElementById('p1') as unknown as SVGPathElement
+      const p2 = document.getElementById('p2') as unknown as SVGPathElement
       const dAbs = p1.getAttribute('d')
       const segData = getPathData(p1)
 
@@ -91,11 +91,11 @@ describe('Basic Module', function () {
       assert.equal(segData.length, 4, 'Number of segments before conversion')
 
       // verify segments before conversion
-      let curseg = toPathSeg(segData[0])
+      let curseg = toPathSeg(segData[0]!)
       assert.equal(curseg.pathSegTypeAsLetter.toUpperCase(), 'M', 'Before conversion, segment #1 type')
-      curseg = toPathSeg(segData[1])
+      curseg = toPathSeg(segData[1]!)
       assert.equal(curseg.pathSegTypeAsLetter.toUpperCase(), 'L', 'Before conversion, segment #2 type')
-      curseg = toPathSeg(segData[3])
+      curseg = toPathSeg(segData[3]!)
       assert.equal(curseg.pathSegTypeAsLetter.toUpperCase(), 'Z', 'Before conversion, segment #3 type' + dAbs)
 
       // convert and verify segments
@@ -176,7 +176,7 @@ describe('Basic Module', function () {
       )
       const attrVal = document.getElementById('se_test_elem')!.getAttributeNS('http://svg-edit.googlecode.com', 'foo')
 
-      assert.strictEqual(attrVal, 'bar', true, 'Preserved namespaced attribute on import')
+      ;(assert.strictEqual as unknown as (...args: unknown[]) => void)(attrVal, 'bar', true, 'Preserved namespaced attribute on import')
 
       const output = svgCanvas.getSvgString()
       const hasXlink = output.includes('xmlns:xlink="http://www.w3.org/1999/xlink"')
@@ -255,7 +255,7 @@ describe('Basic Module', function () {
       assert.notEqual(rects.item(0)!.id, 'svg_3', 'Rectangle not re-identified')
       // TODO: determine why this test fails in WebKit browsers
       // assert.equal(grads.length, 1, 'Linear gradient imported');
-      const grad = defs.item(0)!.firstChild
+      const grad = defs.item(0)!.firstChild as Element | null
       assert.notEqual(grad!.id, 'svg_2', 'Linear gradient not re-identified')
       assert.notEqual(circles.item(0)!.getAttribute('fill'), 'url(#svg_2)', 'Circle fill value not remapped')
       assert.notEqual(rects.item(0)!.getAttribute('stroke'), 'url(#svg_2)', 'Rectangle stroke value not remapped')

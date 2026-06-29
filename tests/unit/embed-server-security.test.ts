@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 // Embed RPC/origin hardening regressions (#28-#32).
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { EmbedServer } from '../../src/embed/server.ts'
-import { parseAllowedOrigins } from '../../src/embed/origin.ts'
+import { EmbedServer } from '../../src/embed/server.js'
+import { parseAllowedOrigins } from '../../src/embed/origin.js'
 
 // Track every server so afterEach can dispose it even if an assertion throws first
 // (a leaked 'message' listener would handle later tests' dispatches and corrupt them).

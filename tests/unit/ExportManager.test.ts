@@ -20,7 +20,7 @@ describe('ExportManager', () => {
 
   it('handleExported opens the named window and streams the blob URL to it', () => {
     const fakeWin = { closed: false, location: { href: '' } }
-    vi.spyOn(window, 'open').mockReturnValue(fakeWin)
+    vi.spyOn(window, 'open').mockReturnValue(fakeWin as unknown as Window)
     const em = new ExportManager(makeHost())
 
     em.handleExported(null, { issues: [], exportWindowName: 'w1', bloburl: 'blob:abc', type: 'png' })
@@ -51,7 +51,7 @@ describe('ExportManager', () => {
 
   it('handleExportedPDF streams the PDF output to the export window', () => {
     const fakeWin = { closed: false, location: { href: '' } }
-    vi.spyOn(window, 'open').mockReturnValue(fakeWin)
+    vi.spyOn(window, 'open').mockReturnValue(fakeWin as unknown as Window)
     const em = new ExportManager(makeHost())
     em.exportWindowName = 'pdf1'
 

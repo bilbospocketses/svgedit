@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import '../../src/editor/components/seSpinInput.ts'
+import '../../src/editor/components/seSpinInput.js'
 import type { SESpinInput } from '../../src/editor/components/seSpinInput'
 
 const flush = async (el: SESpinInput) => {
   await customElements.whenDefined('se-spin-input')
-  await new Promise(resolve => queueMicrotask(resolve))
+  await new Promise<void>(resolve => queueMicrotask(resolve))
   if (el && typeof el.updateComplete?.then === 'function') {
     await el.updateComplete
   }

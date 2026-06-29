@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import '../../src/editor/components/seInput.ts'
+import '../../src/editor/components/seInput.js'
 import type { SeInput } from '../../src/editor/components/seInput.ts'
 
 const flushUpgradeAndRender = async (el: SeInput) => {
@@ -8,7 +8,7 @@ const flushUpgradeAndRender = async (el: SeInput) => {
   // version: Lit components expose `updateComplete`; HTMLElement-based don't.
   // We wait for both customElements upgrade AND any microtask-queued render.
   await customElements.whenDefined('se-input')
-  await new Promise(resolve => queueMicrotask(resolve))
+  await new Promise<void>(resolve => queueMicrotask(resolve))
   if (el && typeof el.updateComplete?.then === 'function') {
     await el.updateComplete
   }

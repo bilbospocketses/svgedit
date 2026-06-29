@@ -9,6 +9,9 @@ import * as history from '../../packages/svgcanvas/core/history.js'
 
 /** Minimal command that records its apply/unapply into a shared log. */
 class TrackCommand extends history.Command {
+  name: string
+  log: string[]
+
   constructor (name: string, log: string[]) {
     super()
     this.name = name
@@ -43,7 +46,7 @@ describe('history stack-allocation refactors (#74, #75)', () => {
   })
 
   it('#75 — a command added after an undo discards the redo tail', () => {
-    const um = new history.UndoManager()
+    const um = new history.UndoManager(null)
     um.addCommandToHistory(new TrackCommand('a', []))
     um.addCommandToHistory(new TrackCommand('b', []))
     um.addCommandToHistory(new TrackCommand('c', []))

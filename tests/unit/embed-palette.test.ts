@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { DEFAULT_PALETTE } from '../../src/embed/palette-defaults.ts'
+import { DEFAULT_PALETTE } from '../../src/embed/palette-defaults.js'
 import {
   getPalette, setPalette, setPaletteWithErrors, subscribePalette, _resetPaletteForTest
-} from '../../src/editor/components/palette-store.ts'
+} from '../../src/editor/components/palette-store.js'
 
 afterEach(() => { _resetPaletteForTest() })
 

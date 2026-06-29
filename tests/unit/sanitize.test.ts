@@ -1,6 +1,7 @@
 import { NS } from '../../packages/svgcanvas/core/namespaces.js'
 import * as sanitize from '../../packages/svgcanvas/core/sanitize.js'
 import * as utilities from '../../packages/svgcanvas/core/utilities.js'
+import type { ISvgCanvas } from '../../packages/svgcanvas/core/svgcanvas-types.js'
 
 describe('sanitize', function () {
   let container: HTMLDivElement
@@ -19,7 +20,7 @@ describe('sanitize', function () {
 
     utilities.init({
       getSvgRoot: () => svg
-    })
+    } as unknown as ISvgCanvas)
   })
 
   afterEach(() => {

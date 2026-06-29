@@ -20,7 +20,7 @@ test.describe('perf #79: overview window dedupes per-scroll getComputedStyle rea
     await page.evaluate(async () => {
       const path = '/extensions/ext-overview_window/ext-overview_window.js'
       const mod = await import(/* @vite-ignore */ path)
-      await window.svgEditor.svgCanvas.addExtension(mod.default.name, mod.default.init.bind(window.svgEditor), { langParam: 'en' })
+      await window.svgEditor.svgCanvas.addExtension(mod.default.name, mod.default.init.bind(window.svgEditor), { langParam: 'en' } as unknown as { importLocale: unknown })
     })
     await page.waitForSelector('#overviewMiniView', { state: 'attached' })
   })

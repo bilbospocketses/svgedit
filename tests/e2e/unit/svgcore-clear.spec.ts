@@ -1,4 +1,5 @@
 import { test, expect } from '../fixtures.js'
+import type { ISvgCanvas } from '@svgedit/svgcanvas/core/svgcanvas-types.js'
 
 test.describe('clear module', () => {
   test.beforeEach(async ({ page }) => {
@@ -19,7 +20,7 @@ test.describe('clear module', () => {
         getDOMDocument: () => document
       }
 
-      clearModule.init(canvas)
+      clearModule.init(canvas as unknown as ISvgCanvas)
       clearModule.clearSvgContentElementInit()
       const comment = svgContent.firstChild
 
@@ -51,7 +52,7 @@ test.describe('clear module', () => {
         getSvgContent: () => svgContent,
         getSvgRoot: () => svgRoot,
         getDOMDocument: () => document
-      })
+      } as unknown as ISvgCanvas)
       clearModule.clearSvgContentElementInit()
       return svgContent.getAttribute('overflow')
     })

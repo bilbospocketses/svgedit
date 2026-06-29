@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from 'vitest'
-import { applyChrome, resolveChromePreset } from '../../src/embed/chrome.ts'
+import { applyChrome, resolveChromePreset } from '../../src/embed/chrome.js'
 
 describe('embed chrome control', () => {
   beforeEach(() => {

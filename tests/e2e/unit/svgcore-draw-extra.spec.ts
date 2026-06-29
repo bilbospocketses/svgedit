@@ -1,4 +1,5 @@
 import { test, expect } from '../fixtures.js'
+import type HistoryRecordingService from '@svgedit/svgcanvas/core/historyrecording.js'
 
 test.describe('SVG core draw extras', () => {
   test.beforeEach(async ({ page }) => {
@@ -21,14 +22,14 @@ test.describe('SVG core draw extras', () => {
         removeElement: (el: Element) => hrLog.push('remove:' + el.tagName),
         moveElement: (el: Element) => hrLog.push('move:' + el.tagName),
         insertElement: (el: Element) => hrLog.push('insert:' + el.tagName)
-      }
+      } as unknown as HistoryRecordingService
 
-      const baseLayer = drawing.getCurrentLayer()
+      const baseLayer = drawing.getCurrentLayer()!
       const rect = document.createElementNS(NS, 'rect')
       baseLayer.append(rect)
 
       drawing.createLayer('Layer 2', hrService)
-      const layer2 = drawing.getCurrentLayer()
+      const layer2 = drawing.getCurrentLayer()!
       const circle = document.createElementNS(NS, 'circle')
       layer2.append(circle)
 
@@ -64,19 +65,19 @@ test.describe('SVG core draw extras', () => {
         removeElement: () => {},
         moveElement: () => {},
         insertElement: () => {}
-      }
+      } as unknown as HistoryRecordingService
 
       // Make three layers with a child each
-      const baseLayer = drawing.getCurrentLayer()
+      const baseLayer = drawing.getCurrentLayer()!
       baseLayer.append(document.createElementNS(NS, 'rect'))
       drawing.createLayer('Layer 2', hrService)
-      drawing.getCurrentLayer().append(document.createElementNS(NS, 'circle'))
+      drawing.getCurrentLayer()!.append(document.createElementNS(NS, 'circle'))
       drawing.createLayer('Layer 3', hrService)
-      drawing.getCurrentLayer().append(document.createElementNS(NS, 'line'))
+      drawing.getCurrentLayer()!.append(document.createElementNS(NS, 'line'))
 
       drawing.mergeAllLayers(hrService)
 
-      const remaining = drawing.getCurrentLayer()
+      const remaining = drawing.getCurrentLayer()!
       return {
         finalLayers: drawing.getNumLayers(),
         shapes: remaining.querySelectorAll('rect,circle,line').length,

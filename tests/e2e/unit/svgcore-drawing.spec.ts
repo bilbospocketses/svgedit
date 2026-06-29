@@ -38,7 +38,7 @@ test.describe('SVG core drawing', () => {
         next,
         layerCount: drawing.getNumLayers(),
         currentLayer: drawing.getCurrentLayerName(),
-        orphanParentTag: orphan.parentNode?.tagName.toLowerCase()
+        orphanParentTag: (orphan.parentNode as Element | null)?.tagName.toLowerCase()
       }
     })
 
@@ -112,7 +112,7 @@ test.describe('SVG core drawing', () => {
       const drawing = new draw.Drawing(svg)
       drawing.identifyLayers()
 
-      const currentLayer = drawing.getCurrentLayer()
+      const currentLayer = drawing.getCurrentLayer()!
       const circle = document.createElementNS(namespaces.NS.SVG, 'circle')
       circle.setAttribute('id', 'seed')
       currentLayer.append(circle)

@@ -19,7 +19,7 @@ test.describe('SVG common util helpers', () => {
       )
 
       return {
-        pos: util.findPos(child),
+        pos: util.findPos(child as unknown as HTMLElement),
         isObject: util.isObject({ hello: 'world' }),
         merged
       }
@@ -54,7 +54,7 @@ test.describe('SVG common util helpers', () => {
       return {
         byClass: util.getClosest(child, '.wrapper')?.className,
         byId: util.getClosest(child, '#section')?.id,
-        byData: util.getClosest(child, '[data-role=target]')?.dataset.role,
+        byData: (util.getClosest(child, '[data-role=target]') as HTMLElement | null)?.dataset.role,
         byTag: util.getClosest(child, 'div')?.tagName.toLowerCase()
       }
     })
@@ -83,10 +83,10 @@ test.describe('SVG common util helpers', () => {
       root.append(outer)
 
       return {
-        all: util.getParents(inner)?.map((el: Element) => el.tagName.toLowerCase()),
-        byClass: util.getParents(inner, '.outer')?.map((el: Element) => el.className),
-        untilMid: util.getParentsUntil(inner, '#mid')?.map((el: Element) => el.tagName.toLowerCase()),
-        untilMidFiltered: util.getParentsUntil(inner, '#mid', '.inner')?.map((el: Element) => el.tagName.toLowerCase())
+        all: (util.getParents(inner) as Element[] | null)?.map((el: Element) => el.tagName.toLowerCase()),
+        byClass: (util.getParents(inner, '.outer') as Element[] | null)?.map((el: Element) => el.className),
+        untilMid: (util.getParentsUntil(inner, '#mid') as Element[] | null)?.map((el: Element) => el.tagName.toLowerCase()),
+        untilMidFiltered: (util.getParentsUntil(inner, '#mid', '.inner') as Element[] | null)?.map((el: Element) => el.tagName.toLowerCase())
       }
     })
 

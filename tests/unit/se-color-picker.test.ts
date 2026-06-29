@@ -1,12 +1,12 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { packBarKey, type SeColorPicker } from '../../src/editor/components/jgraduate/se-color-picker.ts'
+import { packBarKey, type SeColorPicker } from '../../src/editor/components/jgraduate/se-color-picker.js'
 
 type ColorPickerEl = SeColorPicker & { shadowRoot: ShadowRoot }
 
 const flush = async (el: ColorPickerEl) => {
   await customElements.whenDefined('se-color-picker')
-  await new Promise(resolve => queueMicrotask(resolve))
+  await new Promise(resolve => queueMicrotask(resolve as () => void))
   if (el && typeof el.updateComplete?.then === 'function') {
     await el.updateComplete
   }
@@ -24,7 +24,7 @@ describe('packBarKey', () => {
 
   it('packs distinct rgb triples to distinct keys across the channel range', () => {
     const seen = new Set<number>()
-    for (const [r, g, b] of [[1, 0, 0], [0, 100, 0], [0, 0, 100], [255, 255, 255], [12, 34, 56]]) {
+    for (const [r, g, b] of [[1, 0, 0], [0, 100, 0], [0, 0, 100], [255, 255, 255], [12, 34, 56]] as [number, number, number][]) {
       seen.add(packBarKey('rgb', { ...base, r, g, b }))
     }
     expect(seen.size).toBe(5)
@@ -52,14 +52,14 @@ describe('se-color-picker', () => {
 
   it('renders map canvas with width 256', async () => {
     await flush(el)
-    const mapCanvas = el.shadowRoot.querySelector('#map-canvas')
+    const mapCanvas = el.shadowRoot.querySelector<HTMLCanvasElement>('#map-canvas')
     expect(mapCanvas).not.toBeNull()
     expect(mapCanvas!.width).toBe(256)
   })
 
   it('renders bar canvas with width 20', async () => {
     await flush(el)
-    const barCanvas = el.shadowRoot.querySelector('#bar-canvas')
+    const barCanvas = el.shadowRoot.querySelector<HTMLCanvasElement>('#bar-canvas')
     expect(barCanvas).not.toBeNull()
     expect(barCanvas!.width).toBe(20)
   })
@@ -114,7 +114,7 @@ describe('se-color-picker', () => {
       fired = true
       detail = (e as CustomEvent).detail
     })
-    const buttons = el.shadowRoot.querySelectorAll('.buttons button')
+    const buttons = el.shadowRoot.querySelectorAll<HTMLButtonElement>('.buttons button')
     // Ok button is the first button in .buttons
     const okBtn = buttons[0]
     expect(okBtn).not.toBeNull()
@@ -128,7 +128,7 @@ describe('se-color-picker', () => {
     await flush(el)
     let fired = false
     el.addEventListener('cancel', () => { fired = true })
-    const buttons = el.shadowRoot.querySelectorAll('.buttons button')
+    const buttons = el.shadowRoot.querySelectorAll<HTMLButtonElement>('.buttons button')
     // Cancel button is the second button in .buttons
     const cancelBtn = buttons[1]
     expect(cancelBtn).not.toBeNull()

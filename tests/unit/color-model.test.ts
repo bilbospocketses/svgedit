@@ -7,8 +7,9 @@ import {
   intToHex,
   validateHex,
   invertHex,
-  ColorModel
-} from '../../src/editor/components/jgraduate/ColorModel.ts'
+  ColorModel,
+  type ColorChangeDetail
+} from '../../src/editor/components/jgraduate/ColorModel.js'
 
 describe('intToHex (#126 — now shared by se-gradient-editor)', () => {
   it('zero-pads a byte to 2 lowercase hex chars', () => {
@@ -97,7 +98,7 @@ describe('rgbToHsv', () => {
   })
 
   it('round-trips through hsvToRgb for primary colors', () => {
-    for (const [h, s, v] of [[0, 100, 100], [120, 100, 100], [240, 100, 100]]) {
+    for (const [h, s, v] of [[0, 100, 100], [120, 100, 100], [240, 100, 100]] as [number, number, number][]) {
       const [r, g, b] = hsvToRgb(h, s, v)
       const [rh, rs, rv] = rgbToHsv(r, g, b)
       expect(rh).toBe(h)
@@ -175,7 +176,7 @@ describe('rgbaToHex', () => {
   it('round-trips with hexToRgba', () => {
     const hex = 'deadbeef'
     const { r, g, b, a } = hexToRgba(hex)
-    expect(rgbaToHex(r, g, b, a)).toBe(hex)
+    expect(rgbaToHex(r!, g!, b!, a!)).toBe(hex)
   })
 })
 
@@ -288,7 +289,7 @@ describe('ColorModel class', () => {
   it('change event includes source token', () => {
     const m = new ColorModel('ff0000ff')
     let source = null
-    m.addEventListener('change', (e) => { source = e.detail.source })
+    m.addEventListener('change', (e) => { source = (e as CustomEvent<ColorChangeDetail>).detail.source })
     m.set('r', 128, 'slider')
     expect(source).toBe('slider')
   })

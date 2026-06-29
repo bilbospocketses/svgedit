@@ -2,6 +2,7 @@ import { NS } from '../../packages/svgcanvas/core/namespaces.js'
 import * as utilities from '../../packages/svgcanvas/core/utilities.js'
 import * as coords from '../../packages/svgcanvas/core/coords.js'
 import * as recalculate from '../../packages/svgcanvas/core/recalculate.js'
+import type { ISvgCanvas } from '../../packages/svgcanvas/core/svgcanvas-types.js'
 
 /**
  * jsdom does not implement the `.points` SVGPointList on polyline/polygon, so
@@ -71,7 +72,7 @@ describe('recalculate', function () {
         getDOMDocument () { return null },
         getDOMContainer () { return null },
         getDataStorage () { return dataStorage }
-      }
+      } as unknown as ISvgCanvas
     )
     coords.init(
       /**
@@ -85,7 +86,7 @@ describe('recalculate', function () {
           }
         },
         getDataStorage () { return dataStorage }
-      }
+      } as unknown as ISvgCanvas
     )
     recalculate.init(
       /**
@@ -96,7 +97,7 @@ describe('recalculate', function () {
         getStartTransform () { return '' },
         setStartTransform () { /* empty fn */ },
         getDataStorage () { return dataStorage }
-      }
+      } as unknown as ISvgCanvas
     )
   }
 
@@ -351,8 +352,8 @@ describe('recalculate', function () {
 
     const cmd = recalculate.recalculateDimensions(circle)
 
-    assert.equal(Number.parseFloat(circle.getAttribute('cx')), 60)
-    assert.equal(Number.parseFloat(circle.getAttribute('cy')), 70)
+    assert.equal(Number.parseFloat(circle.getAttribute('cx')!), 60)
+    assert.equal(Number.parseFloat(circle.getAttribute('cy')!), 70)
     assert.ok(cmd)
   })
 
@@ -392,8 +393,8 @@ describe('recalculate', function () {
 
     const cmd = recalculate.recalculateDimensions(ellipse)
 
-    assert.equal(Number.parseFloat(ellipse.getAttribute('cx')), 65)
-    assert.equal(Number.parseFloat(ellipse.getAttribute('cy')), 75)
+    assert.equal(Number.parseFloat(ellipse.getAttribute('cx')!), 65)
+    assert.equal(Number.parseFloat(ellipse.getAttribute('cy')!), 75)
     assert.ok(cmd)
   })
 
@@ -433,10 +434,10 @@ describe('recalculate', function () {
 
     const cmd = recalculate.recalculateDimensions(line)
 
-    assert.equal(Number.parseFloat(line.getAttribute('x1')), 15)
-    assert.equal(Number.parseFloat(line.getAttribute('y1')), 25)
-    assert.equal(Number.parseFloat(line.getAttribute('x2')), 55)
-    assert.equal(Number.parseFloat(line.getAttribute('y2')), 65)
+    assert.equal(Number.parseFloat(line.getAttribute('x1')!), 15)
+    assert.equal(Number.parseFloat(line.getAttribute('y1')!), 25)
+    assert.equal(Number.parseFloat(line.getAttribute('x2')!), 55)
+    assert.equal(Number.parseFloat(line.getAttribute('y2')!), 65)
     assert.ok(cmd)
   })
 
@@ -453,10 +454,10 @@ describe('recalculate', function () {
 
     const cmd = recalculate.recalculateDimensions(line)
 
-    assert.equal(Number.parseFloat(line.getAttribute('x1')), 20)
-    assert.equal(Number.parseFloat(line.getAttribute('y1')), 30)
-    assert.equal(Number.parseFloat(line.getAttribute('x2')), 60)
-    assert.equal(Number.parseFloat(line.getAttribute('y2')), 70)
+    assert.equal(Number.parseFloat(line.getAttribute('x1')!), 20)
+    assert.equal(Number.parseFloat(line.getAttribute('y1')!), 30)
+    assert.equal(Number.parseFloat(line.getAttribute('x2')!), 60)
+    assert.equal(Number.parseFloat(line.getAttribute('y2')!), 70)
     assert.ok(cmd)
   })
 
@@ -567,8 +568,8 @@ describe('recalculate', function () {
 
     const cmd = recalculate.recalculateDimensions(image)
 
-    assert.ok(Math.abs(Number.parseFloat(image.getAttribute('width')) - 200) < 1)
-    assert.ok(Math.abs(Number.parseFloat(image.getAttribute('height')) - 160) < 1)
+    assert.ok(Math.abs(Number.parseFloat(image.getAttribute('width')!) - 200) < 1)
+    assert.ok(Math.abs(Number.parseFloat(image.getAttribute('height')!) - 160) < 1)
     assert.ok(cmd)
   })
 
@@ -802,8 +803,8 @@ describe('recalculate', function () {
 
     const cmd = recalculate.recalculateDimensions(foreignObject)
 
-    assert.ok(Math.abs(Number.parseFloat(foreignObject.getAttribute('width')) - 200) < 1)
-    assert.ok(Math.abs(Number.parseFloat(foreignObject.getAttribute('height')) - 160) < 1)
+    assert.ok(Math.abs(Number.parseFloat(foreignObject.getAttribute('width')!) - 200) < 1)
+    assert.ok(Math.abs(Number.parseFloat(foreignObject.getAttribute('height')!) - 160) < 1)
     assert.ok(cmd)
   })
 

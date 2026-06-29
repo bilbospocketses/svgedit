@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest'
 import { SvgEditEmbed } from '../../src/embed/client.js'
-import type { EmbedEnvelope } from '../../src/embed/protocol.js'
+import type { EmbedEnvelope, EmbedDialogResponse } from '../../src/embed/protocol.js'
 
 const buildIframe = (src = 'https://editor.test/') => {
   document.body.replaceChildren()
@@ -83,7 +83,7 @@ const buildIframeWithStubPM = () => {
   return iframe
 }
 
-const fireReady = (iframe: HTMLIFrameElement, { capabilities = [] } = {}) => window.dispatchEvent(new MessageEvent('message', {
+const fireReady = (iframe: HTMLIFrameElement, { capabilities = [] }: { capabilities?: string[] } = {}) => window.dispatchEvent(new MessageEvent('message', {
   data: { ns: 'svgedit', v: 1, kind: 'event', name: 'ready', payload: { version: '7.4.1', protocolVersion: 1, capabilities } },
   origin: 'https://editor.test',
   source: iframe.contentWindow
@@ -103,7 +103,7 @@ describe('SvgEditEmbed — Proxy method dispatch', () => {
     const callPromise = client.editor.getZoom!()
 
     expect(iframe.contentWindow!.postMessage).toHaveBeenCalled()
-    const sentEnv = iframe.contentWindow!.postMessage.mock.calls[0][0]
+    const sentEnv = (iframe.contentWindow!.postMessage as unknown as Mock).mock.calls[0]![0]
     expect(sentEnv.kind).toBe('call')
     expect(sentEnv.method).toBe('getZoom')
     expect(sentEnv.args).toEqual([])
@@ -125,7 +125,7 @@ describe('SvgEditEmbed — Proxy method dispatch', () => {
     await client.ready
 
     const callPromise = client.editor.bogusMethod!()
-    const sentEnv = iframe.contentWindow!.postMessage.mock.calls[0][0]
+    const sentEnv = (iframe.contentWindow!.postMessage as unknown as Mock).mock.calls[0]![0]
     window.dispatchEvent(new MessageEvent('message', {
       data: { ns: 'svgedit', v: 1, kind: 'error', id: sentEnv.id, message: 'method not found: bogusMethod', code: 'METHOD_NOT_FOUND' },
       origin: 'https://editor.test',
@@ -146,7 +146,7 @@ describe('SvgEditEmbed — Proxy method dispatch', () => {
     await client.ready
 
     expect(iframe.contentWindow!.postMessage).toHaveBeenCalled()
-    const sentEnv = iframe.contentWindow!.postMessage.mock.calls[0][0]
+    const sentEnv = (iframe.contentWindow!.postMessage as unknown as Mock).mock.calls[0]![0]
     window.dispatchEvent(new MessageEvent('message', {
       data: { ns: 'svgedit', v: 1, kind: 'result', id: sentEnv.id, result: 2.0 },
       origin: 'https://editor.test',
@@ -240,10 +240,10 @@ describe('SvgEditEmbed — dialog handlers', () => {
     }))
     await new Promise(r => setTimeout(r, 10))
 
-    const respEnv = iframe.contentWindow!.postMessage.mock.calls
-      .map((c: unknown[]) => c[0]).find((e: EmbedEnvelope) => e.kind === 'dialog-response' && e.id === 99)
+    const respEnv = (iframe.contentWindow!.postMessage as unknown as Mock).mock.calls
+      .map((c: unknown[]) => c[0] as EmbedEnvelope).find((e: EmbedEnvelope): e is EmbedDialogResponse => e.kind === 'dialog-response' && e.id === 99)
     expect(respEnv).toBeDefined()
-    expect(respEnv.response).toBe('name?=anon')
+    expect(respEnv!.response).toBe('name?=anon')
     client.dispose()
   })
 
@@ -268,7 +268,7 @@ describe('SvgEditEmbed — convenience methods', () => {
     await client.ready
 
     void client.setTheme('dark')
-    const sent = iframe.contentWindow!.postMessage.mock.calls.map((c: unknown[]) => c[0])
+    const sent = (iframe.contentWindow!.postMessage as unknown as Mock).mock.calls.map((c: unknown[]) => c[0] as EmbedEnvelope)
     expect(sent.some((e: EmbedEnvelope) => e.kind === 'call' && e.method === '__setTheme' && e.args[0] === 'dark')).toBe(true)
     client.dispose()
   })
@@ -279,7 +279,7 @@ describe('SvgEditEmbed — convenience methods', () => {
     await client.ready
 
     void client.setChrome('minimal')
-    const sent = iframe.contentWindow!.postMessage.mock.calls.map((c: unknown[]) => c[0])
+    const sent = (iframe.contentWindow!.postMessage as unknown as Mock).mock.calls.map((c: unknown[]) => c[0] as EmbedEnvelope)
     expect(sent.some((e: EmbedEnvelope) => e.kind === 'call' && e.method === '__setChrome' && e.args[0] === 'minimal')).toBe(true)
     client.dispose()
   })
@@ -290,7 +290,7 @@ describe('SvgEditEmbed — convenience methods', () => {
     await client.ready
 
     void client.setDialogTimeout(15000)
-    const sent = iframe.contentWindow!.postMessage.mock.calls.map((c: unknown[]) => c[0])
+    const sent = (iframe.contentWindow!.postMessage as unknown as Mock).mock.calls.map((c: unknown[]) => c[0] as EmbedEnvelope)
     expect(sent.some((e: EmbedEnvelope) => e.kind === 'call' && e.method === '__setDialogTimeout' && e.args[0] === 15000)).toBe(true)
     client.dispose()
   })

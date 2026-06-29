@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { NS } from '../../packages/svgcanvas/core/namespaces.js'
 import { init as initEvent } from '../../packages/svgcanvas/core/event.js'
+import type { ISvgCanvas } from '../../packages/svgcanvas/core/svgcanvas-types.js'
 
 const createSvgElement = (name: string) => {
   return document.createElementNS(NS.SVG, name)
@@ -39,7 +40,7 @@ describe('event', () => {
         e: 0,
         f: 0
       })
-    })
+    }) as unknown as DOMMatrix
 
     Object.defineProperty(contentGroup, 'transform', {
       value: { baseVal: { numberOfItems: 0 } },
@@ -139,7 +140,7 @@ describe('event', () => {
       }
     }
 
-    initEvent(canvas)
+    initEvent(canvas as unknown as ISvgCanvas)
   })
 
   afterEach(() => {

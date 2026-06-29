@@ -1,4 +1,11 @@
 import { test, expect } from '../fixtures.js'
+import type { BBoxObject, SVGElementJSON } from '@svgedit/svgcanvas/core/utilities.js'
+import type { ElementContainer } from '@svgedit/svgcanvas/core/units.js'
+
+// The real (module-private) parameter type in utilities.ts is
+// `(data: SVGElementJSON) => Element`; reconstruct it structurally from the
+// exported SVGElementJSON so the test's addSvg helpers can be cast to it.
+type AddSvgFromJsonFn = (data: SVGElementJSON) => Element
 
 test.describe('SVG core utilities', () => {
   test.beforeEach(async ({ page }) => {
@@ -19,7 +26,7 @@ test.describe('SVG core utilities', () => {
       units.init({
         getRoundDigits: () => 2,
         getBaseUnit: () => 'cm'
-      })
+      } as unknown as ElementContainer)
       units.convertAttrs(rect)
       return {
         x: rect.getAttribute('x'),
@@ -44,7 +51,7 @@ test.describe('SVG core utilities', () => {
       units.init({
         getRoundDigits: () => 2,
         getBaseUnit: () => 'px'
-      })
+      } as unknown as ElementContainer)
       const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
       rect.setAttribute('x', '10')
       rect.setAttribute('y', '20')
@@ -59,7 +66,7 @@ test.describe('SVG core utilities', () => {
         svg.append(el)
         return el
       }
-      const res = utilities.getStrokedBBox([rect], addSvg, { resetOrientation: () => {} })
+      const res = utilities.getStrokedBBox([rect], addSvg as unknown as AddSvgFromJsonFn, { resetOrientation: () => {} }) as BBoxObject
       return { x: res.x, y: res.y, width: res.width, height: res.height }
     })
     expect(Number.isFinite(bbox.x)).toBe(true)
@@ -137,9 +144,9 @@ test.describe('SVG core utilities', () => {
       const line = create('line', { id: 'l', x1: '0', y1: '1', x2: '5', y2: '6' })
       svg.append(path, rect, line)
       return {
-        path: utilities.bboxToObj(utilities.getBBoxOfElementAsPath(path, addSvg, pathActions)),
-        rect: utilities.bboxToObj(utilities.getBBoxOfElementAsPath(rect, addSvg, pathActions)),
-        line: utilities.bboxToObj(utilities.getBBoxOfElementAsPath(line, addSvg, pathActions))
+        path: utilities.bboxToObj(utilities.getBBoxOfElementAsPath(path, addSvg as unknown as AddSvgFromJsonFn, pathActions) as BBoxObject),
+        rect: utilities.bboxToObj(utilities.getBBoxOfElementAsPath(rect, addSvg as unknown as AddSvgFromJsonFn, pathActions) as BBoxObject),
+        line: utilities.bboxToObj(utilities.getBBoxOfElementAsPath(line, addSvg as unknown as AddSvgFromJsonFn, pathActions) as BBoxObject)
       }
     })
     expect(bbox.path).toEqual({ x: 0, y: 1, width: 0, height: 0 })

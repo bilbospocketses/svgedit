@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest'
-import { serialize, deserialize, FOREIGN_ROOT_CLASS, isForeignContentEmpty } from '../../src/editor/dialogs/foreign-html-serialize.ts'
+import { serialize, deserialize, FOREIGN_ROOT_CLASS, isForeignContentEmpty } from '../../src/editor/dialogs/foreign-html-serialize.js'
 import { NS } from '../../packages/svgcanvas/core/namespaces.js'
 
 describe('foreign-html serialize/deserialize', () => {

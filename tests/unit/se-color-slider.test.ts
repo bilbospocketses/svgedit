@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import '../../src/editor/components/jgraduate/se-color-slider.ts'
+import '../../src/editor/components/jgraduate/se-color-slider.js'
 
 let rafCb: FrameRequestCallback | null = null
 

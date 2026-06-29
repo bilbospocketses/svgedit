@@ -16,7 +16,7 @@ describe('math', function () {
 
   it('Test svgedit.math package exports', function () {
     assert.ok(math, 'math module should exist')
-    const expectedFunctions = [
+    const expectedFunctions: Array<keyof typeof math> = [
       'transformPoint',
       'getTransformList',
       'isIdentity',
