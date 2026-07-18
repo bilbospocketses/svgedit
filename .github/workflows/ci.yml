@@ -99,6 +99,14 @@ jobs:
           name: dist-editor
           path: dist/editor/
 
+      - name: Install matching Playwright browser
+        # Install the browser matching the INSTALLED @playwright/test version so a
+        # newer npm package than the pinned container image still finds its browser
+        # (avoids "Executable doesn't exist at /ms-playwright/..."). @playwright/test
+        # (npm) and the container tag (github-actions) are different Dependabot
+        # ecosystems and can't bump atomically, so they drift. This is a cached no-op
+        # when they match; browser-only otherwise (system deps come from the container).
+        run: npx playwright install chromium
       - name: E2e tests (chromium)
         run: npx playwright test --project chromium
 
@@ -130,5 +138,13 @@ jobs:
           name: dist-editor
           path: dist/editor/
 
+      - name: Install matching Playwright browser
+        # Install the browser matching the INSTALLED @playwright/test version so a
+        # newer npm package than the pinned container image still finds its browser
+        # (avoids "Executable doesn't exist at /ms-playwright/..."). @playwright/test
+        # (npm) and the container tag (github-actions) are different Dependabot
+        # ecosystems and can't bump atomically, so they drift. This is a cached no-op
+        # when they match; browser-only otherwise (system deps come from the container).
+        run: npx playwright install firefox
       - name: E2e tests (firefox)
         run: npx playwright test --project firefox
