@@ -95,7 +95,7 @@
     "vitest": "^4.0.16"
   },
   "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "4.62.4"
+    "@rollup/rollup-linux-x64-gnu": "4.62.5"
   },
   "overrides": {
     "flatted": "^3.4.2",
