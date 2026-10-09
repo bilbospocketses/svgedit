@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (CI -- American-spelling gate -- 2026-10-09)
+
+- The CI `build-and-unit` job now runs the American-spelling gate from
+  `bilbospocketses/american-spelling` (pinned to v1.0.2 by commit SHA), which fails
+  a PR whose added lines or commit messages use British spelling. Its checkout is
+  now a full clone (`fetch-depth: 0`), since the gate refuses a shallow one.
+
 ### Changed (tests -- strict-typed suite, typecheck:tests CI gate -- 2026-06-29)
 
 - The entire test suite is now strict-TypeScript-typed and gated. A new
