@@ -54,14 +54,33 @@ jobs:
       # directly rather than via a toolchain action, because the repo's Actions
       # allowlist permits only github-owned + ossf/scorecard-action + dependabot
       # (a non-owner toolchain action fails the workflow at startup).
+      #
+      # No time limit: each step that installs, builds, downloads or tests runs under
+      # stall-watch.sh (stall-watch.ps1 on Windows), which stops it only when it stops
+      # making progress (see the note at the top of ci.yml). Each such step comes
+      # twice, one per runner OS; the paths start at ../ because of the
+      # working-directory above.
       - name: Set up Rust (stable + target + components)
+        if: runner.os != 'Windows'
         run: |
-          rustup toolchain install stable --profile minimal --component clippy --component rustfmt --no-self-update
+          bash ../.github/scripts/stall-watch.sh --name "rustup toolchain install" -- \
+            rustup toolchain install stable --profile minimal --component clippy --component rustfmt --no-self-update
           rustup default stable
-          rustup target add ${{ matrix.target }}
+          bash ../.github/scripts/stall-watch.sh --name "rustup target add" -- rustup target add ${{ matrix.target }}
+      - name: Set up Rust (stable + target + components)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File ../.github/scripts/stall-watch.ps1 "rustup toolchain install" rustup toolchain install stable --profile minimal --component clippy --component rustfmt --no-self-update
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          rustup default stable
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pwsh -NoProfile -File ../.github/scripts/stall-watch.ps1 "rustup target add" rustup target add ${{ matrix.target }}
       - name: Install musl linker
         if: matrix.target == 'x86_64-unknown-linux-musl'
-        run: sudo apt-get update && sudo apt-get install -y musl-tools
+        run: |
+          bash ../.github/scripts/stall-watch.sh --name "apt-get update" -- sudo apt-get update
+          bash ../.github/scripts/stall-watch.sh --name "apt-get install" -- sudo apt-get install -y musl-tools
       # Cache the crates.io index + downloaded sources + compiled deps per
       # (os, target, Cargo.lock). github-owned actions/cache — the repo's
       # allowed_actions=selected list blocks Swatinem/rust-cache (non-owner). #131.
@@ -76,10 +95,34 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ matrix.target }}-${{ hashFiles('launcher/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-${{ matrix.target }}-
-      - run: cargo fmt --check
-      - run: cargo clippy --all-targets --target ${{ matrix.target }} -- -D warnings
-      - run: cargo test --target ${{ matrix.target }}
-      - run: cargo build --release --target ${{ matrix.target }}
+      - name: cargo fmt --check
+        if: runner.os != 'Windows'
+        run: bash ../.github/scripts/stall-watch.sh --name "cargo fmt" -- cargo fmt --check
+      - name: cargo fmt --check
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: pwsh -NoProfile -File ../.github/scripts/stall-watch.ps1 "cargo fmt" cargo fmt --check
+      - name: cargo clippy
+        if: runner.os != 'Windows'
+        run: bash ../.github/scripts/stall-watch.sh --name "cargo clippy" -- cargo clippy --all-targets --target ${{ matrix.target }} -- -D warnings
+      - name: cargo clippy
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: pwsh -NoProfile -File ../.github/scripts/stall-watch.ps1 "cargo clippy" cargo clippy --all-targets --target ${{ matrix.target }} -- -D warnings
+      - name: cargo test
+        if: runner.os != 'Windows'
+        run: bash ../.github/scripts/stall-watch.sh --name "cargo test" -- cargo test --target ${{ matrix.target }}
+      - name: cargo test
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: pwsh -NoProfile -File ../.github/scripts/stall-watch.ps1 "cargo test" cargo test --target ${{ matrix.target }}
+      - name: cargo build --release
+        if: runner.os != 'Windows'
+        run: bash ../.github/scripts/stall-watch.sh --name "cargo build" -- cargo build --release --target ${{ matrix.target }}
+      - name: cargo build --release
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: pwsh -NoProfile -File ../.github/scripts/stall-watch.ps1 "cargo build" cargo build --release --target ${{ matrix.target }}
       - name: Verify Linux binary is static
         if: matrix.target == 'x86_64-unknown-linux-musl'
         run: |
