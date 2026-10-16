@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (CI -- stall watchdog, no time limits -- 2026-10-16)
+
+- CI no longer stops a job for taking long. The `timeout-minutes: 60` limits on
+  `build-and-unit`, `e2e-chromium`, `e2e-firefox` and the browser canary are gone.
+  Each step that installs, builds, downloads or tests (in `ci.yml`,
+  `browser-canary.yml` and `launcher.yml`) now runs under a watchdog,
+  `.github/scripts/stall-watch.sh` (`stall-watch.ps1` on the launcher's Windows
+  leg), that stops it only when, for 20 minutes, it has printed no line and shown
+  no other sign of work, prints a hang record, and reports the step's duration as
+  a notice. The watchdog scripts are copies of `bilbospocketses/streamflex`'s. No
+  build, lint or test changed.
+
 ### Added (CI -- American-spelling gate -- 2026-10-09)
 
 - The CI `build-and-unit` job now runs the American-spelling gate from

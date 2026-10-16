@@ -12,6 +12,16 @@
 # with browsers pre-installed. This sidesteps the `playwright install` flow
 # which has been intermittently hanging on GitHub-hosted runners (download
 # reaches 100% then freezes for 60 min).
+#
+# No job has a time limit: a slow runner makes a step slow, not wrong. Each step
+# that installs, builds, downloads or tests runs under
+# .github/scripts/stall-watch.sh, which stops it only when, for 20 minutes, it
+# has printed no line and the runner has received under 4 MiB, prints a hang
+# record when it does, and reports the step's duration as a notice. The script
+# is a copy of bilbospocketses/streamflex's (PR #64, 64defdd), where the rule
+# and its measurements are written up. Steps that use an action (checkout,
+# setup-node, cache, artifact upload and download) are GitHub's own and are
+# not wrapped.
 
 name: CI
 
@@ -34,7 +44,6 @@ concurrency:
 jobs:
   build-and-unit:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -55,7 +64,7 @@ jobs:
       # gate's central allow.txt, and reaches this repo when the pin is bumped.
       # On a push to master the base is master itself, so there is nothing to scan.
       - name: Fetch the base branch
-        run: git fetch --no-tags origin "+refs/heads/${BASE}:refs/remotes/origin/${BASE}"
+        run: bash .github/scripts/stall-watch.sh --name "git fetch" -- git fetch --no-tags origin "+refs/heads/${BASE}:refs/remotes/origin/${BASE}"
         env:
           BASE: ${{ github.base_ref || github.event.repository.default_branch }}
       - name: Check out the American-spelling gate
@@ -68,6 +77,7 @@ jobs:
       - name: Check American spelling
         # The runner's own Python 3; the gate is stdlib-only.
         run: >-
+          bash .github/scripts/stall-watch.sh --name "Check American spelling" --
           python3 .american-spelling/check-american-spelling.py
           --repo .
           --base "origin/${BASE}"
@@ -85,24 +95,24 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: bash .github/scripts/stall-watch.sh --name "Install dependencies" -- npm ci
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
       - name: Lint
-        run: npm run lint
+        run: bash .github/scripts/stall-watch.sh --name Lint -- npm run lint
 
       - name: Type check
-        run: npx tsc --build
+        run: bash .github/scripts/stall-watch.sh --name "Type check" -- npx tsc --build
 
       - name: Type check (tests)
-        run: npm run typecheck:tests
+        run: bash .github/scripts/stall-watch.sh --name "Type check (tests)" -- npm run typecheck:tests
 
       - name: Build
-        run: npm run build
+        run: bash .github/scripts/stall-watch.sh --name Build -- npm run build
 
       - name: Unit tests
-        run: npx vitest run
+        run: bash .github/scripts/stall-watch.sh --name "Unit tests" -- npx vitest run
 
       - name: Upload build artifact
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -115,7 +125,6 @@ jobs:
     needs: build-and-unit
     runs-on: ubuntu-latest
     container: mcr.microsoft.com/playwright:v1.57.0-noble
-    timeout-minutes: 60
     env:
       # Firefox refuses to launch when $HOME isn't owned by the current user
       # (Playwright-in-Docker quirk). Setting HOME=/root sidesteps it.
@@ -130,7 +139,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: bash .github/scripts/stall-watch.sh --name "Install dependencies" -- npm ci
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
@@ -147,15 +156,14 @@ jobs:
         # (npm) and the container tag (github-actions) are different Dependabot
         # ecosystems and can't bump atomically, so they drift. This is a cached no-op
         # when they match; browser-only otherwise (system deps come from the container).
-        run: npx playwright install chromium
+        run: bash .github/scripts/stall-watch.sh --name "Install matching Playwright browser" -- npx playwright install chromium
       - name: E2e tests (chromium)
-        run: npx playwright test --project chromium
+        run: bash .github/scripts/stall-watch.sh --name "E2e tests (chromium)" -- npx playwright test --project chromium
 
   e2e-firefox:
     needs: build-and-unit
     runs-on: ubuntu-latest
     container: mcr.microsoft.com/playwright:v1.57.0-noble
-    timeout-minutes: 60
     env:
       # Firefox refuses to launch when $HOME isn't owned by the current user
       # (Playwright-in-Docker quirk). Setting HOME=/root sidesteps it.
@@ -169,7 +177,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: bash .github/scripts/stall-watch.sh --name "Install dependencies" -- npm ci
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
@@ -186,6 +194,6 @@ jobs:
         # (npm) and the container tag (github-actions) are different Dependabot
         # ecosystems and can't bump atomically, so they drift. This is a cached no-op
         # when they match; browser-only otherwise (system deps come from the container).
-        run: npx playwright install firefox
+        run: bash .github/scripts/stall-watch.sh --name "Install matching Playwright browser" -- npx playwright install firefox
       - name: E2e tests (firefox)
-        run: npx playwright test --project firefox
+        run: bash .github/scripts/stall-watch.sh --name "E2e tests (firefox)" -- npx playwright test --project firefox
