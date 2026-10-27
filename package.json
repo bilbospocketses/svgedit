@@ -71,7 +71,7 @@
     "jspdf": "4.2.1",
     "lit": "^3.3.3",
     "sirv": "^3.0.2",
-    "svg2pdf.js": "2.7.0"
+    "svg2pdf.js": "2.8.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",
@@ -85,7 +85,7 @@
     "eslint-plugin-no-unsanitized": "^4.1.5",
     "globals": "^17.7.0",
     "jsdom": "^29.1.1",
-    "markdownlint-cli2": "^0.23.1",
+    "markdownlint-cli2": "^0.24.0",
     "tsx": "^4.22.3",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.59.3",
@@ -95,7 +95,7 @@
     "vitest": "^4.0.16"
   },
   "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "4.62.5"
+    "@rollup/rollup-linux-x64-gnu": "4.65.0"
   },
   "overrides": {
     "flatted": "^3.4.2",
