@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (tests -- two e2e tests that proved nothing -- 2026-11-04)
+
+- The "issue 391" e2e test now checks the fix it is named for. It used to
+  press Ctrl+Shift+G, which was never an svgedit shortcut, so nothing
+  ungrouped; and its double-click never entered path edit, so its grip checks
+  were always skipped. The ungroup button and the context menu call
+  `ungroupSelectedElement`, and so does the test now; it enters path edit
+  through `pathActions.toEditMode`, the call a click on an already-selected
+  path makes. It
+  checks that the ungrouped path kept the group's translate, that the selection
+  box is centered on the path, and that a point grip sits on every corner of
+  the rendered path and nowhere else. Reverting the grip-matrix fix (#224) makes
+  it fail on both browsers: the grips land 100 px up and to the left.
+- The canvas-background zoom-out e2e test now zooms. `setZoom` only stores the
+  number, so the canvas was never redrawn and the test read the unzoomed
+  canvas. It now picks 25% from the zoom control, as a user does. After the
+  redraw it checks that the background has the zoomed size and position, stays
+  inside `#svgroot`, and keeps `overflow: visible`. The workaround this test was
+  written for, the Chrome 7 `isWebkit() ? 'none' : 'visible'` overflow, was
+  dropped in 0d255431 on the strength of the old test. The comments now say so,
+  and the attribute check expects `visible`, the only value `select.ts` sets.
+
 ### Changed (tests -- no timing-dependent tests -- 2026-11-03)
 
 - A correct test no longer fails because the machine running it is slow.

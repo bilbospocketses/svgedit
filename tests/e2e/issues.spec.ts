@@ -211,41 +211,21 @@ test.describe('Regression issues', () => {
     expect(Math.abs(d2.h)).toBeLessThanOrEqual(1)
   })
 
-  // TODO(audit #16Nrf): This test is still the original weak shell (buried
-  // `if (pointGripVisible)`) because of ONE remaining blocker. A second blocker
-  // (the grip-matrix product bug) was RESOLVED in #30 / PR #224 — see below.
+  // Issue #391: after ungrouping `<g transform="translate(100,100)">`, the selection
+  // box and the path-edit point grips must sit on the rendered path. Ungroup leaves the
+  // child path a `matrix(1 0 0 1 100 100)` transform by design (group-transforms.spec.ts
+  // "ungroup preserves element positions"), and Path.update() used to apply the grip
+  // matrix only for a rotation, so the grips rendered at the path's LOCAL coords, off by
+  // exactly the translate (fixed in core/path-method.ts, #30 / PR #224).
   //
-  //  1. (STILL BLOCKING) The user route into path-edit (double-click a path, or
-  //     click an already-selected path) CANNOT be driven headlessly. Driving real
-  //     page.mouse clicks on the path leaves svgCanvas in 'select' mode through
-  //     repeated clicks and NEVER creates any #pathpointgrip_* — the same
-  //     extension/shortcut-registration gap documented in group-transforms.spec.ts.
-  //     So `await expect(page.locator('#pathpointgrip_0')).toBeVisible()` after a
-  //     real interaction times out.
-  //
-  //  2. (RESOLVED — #30, PR #224) Forcing path-edit via the underlying API
-  //     (svgCanvas.pathActions.toEditMode, exactly what the click handler calls)
-  //     DOES create grips. This previously surfaced a real product bug: after
-  //     ungrouping `<g transform="translate(100,100)">`, the child path keeps a
-  //     normalized `matrix(1 0 0 1 100 100)` transform (ungroup leaves it on the
-  //     element by design — see group-transforms.spec.ts "ungroup preserves
-  //     element positions"), and Path.update() applied the grip matrix ONLY for a
-  //     non-zero rotation, so pure-translate grips rendered at the path's LOCAL
-  //     coords (measured off by exactly the translate). core/path-method.ts
-  //     Path.update() now derives the consolidated element matrix unconditionally
-  //     (getMatrix + isIdentity) and applies it whenever non-identity; the
-  //     translate case is covered by tests/unit/path.test.ts. A faithful
-  //     grip-position assertion via the API route would now pass.
-  //
-  //  Honest failure > fake green: still not weakening to a trivially-true bound.
-  //  Unblock by entering path-edit deterministically in e2e (blocker 1). With the
-  //  grip-matrix bug fixed, an alternative is to drive path-edit via the API route
-  //  (pathActions.toEditMode) and assert the now-correct grip position — a viable
-  //  tightening, left as a separate change.
+  // The ungroup and the path edit are driven through the canvas API, the same calls the
+  // UI makes. The old test pressed Ctrl+Shift+G, which was never an svgedit shortcut
+  // (ungroup's key is plain G, on #tool_group_elements), so nothing ungrouped. The
+  // ungroup button, the G button with a group selected, and the context menu all call
+  // svgCanvas.ungroupSelectedElement(), and so does this test. The old test's
+  // double-click never created #pathpointgrip_*; this test calls the path-edit entry
+  // directly instead. Every check below runs unconditionally.
   test('issue 391: selection box position after ungrouping and path edit', async ({ page }) => {
-    // This tests the fix for issue #391 where selection boxes and path edit points
-    // were not at correct positions after ungrouping and double-clicking to edit a path
-    // Uses a simplified version of a complex SVG with nested groups
     await setSvgSource(page, `<svg width="640" height="480" xmlns="http://www.w3.org/2000/svg">
       <g class="layer">
         <title>Layer 1</title>
@@ -256,60 +236,92 @@ test.describe('Regression issues', () => {
       </g>
     </svg>`)
 
-    await page.waitForSelector('#svgroot')
-
-    // Select the group using force click to bypass svgroot intercept
-    const group = page.locator('#svg_1')
-    await group.click({ force: true })
-
-    // Ungroup using keyboard shortcut Ctrl+Shift+G. Headless, this press does not
-    // ungroup (measured 2026-11-03: #svg_1 was still present after 120 s), so there is
-    // no ungroup to wait for; the editor's keydown handler runs synchronously in the
-    // dispatch the press has completed.
-    await page.keyboard.press('Control+Shift+g')
-
-    // Select the first path. The canvas mouse handlers run synchronously in the
-    // events the click has dispatched.
-    const path = page.locator('#svg_2')
-    await path.click({ force: true })
-
-    // Get the path's screen position
-    const pathBBox = await path.evaluate(el => {
-      const rect = el.getBoundingClientRect()
-      return { x: rect.x, y: rect.y, width: rect.width, height: rect.height, cx: rect.x + rect.width / 2, cy: rect.y + rect.height / 2 }
+    // Ungroup: select the group and call what the ungroup button and context menu call.
+    await page.evaluate(() => {
+      const c = window.svgEditor.svgCanvas
+      c.selectOnly([document.getElementById('svg_1')!])
+      c.ungroupSelectedElement()
     })
+    await expect(page.locator('#svg_1')).toHaveCount(0)
 
-    // Verify the path still has reasonable coordinates after ungrouping
-    // The path should now have its transform baked in (translated by 100,100)
-    expect(pathBBox.width).toBeGreaterThan(0)
-    expect(pathBBox.height).toBeGreaterThan(0)
+    // The scenario #391 needs: the path left the group but kept the group's translate
+    // on itself, so its local coordinates are NOT its canvas coordinates. Without this
+    // the grip checks below would pass even with the bug.
+    const path = page.locator('#svg_2')
+    const ctm = await path.evaluate(el => {
+      const m = (el as SVGGraphicsElement).getCTM()!
+      const parentM = (el.parentNode as SVGGraphicsElement).getCTM()!
+      const local = parentM.inverse().multiply(m)
+      return { a: local.a, b: local.b, c: local.c, d: local.d, e: local.e, f: local.f }
+    })
+    expect(ctm).toEqual({ a: 1, b: 0, c: 0, d: 1, e: 100, f: 100 })
 
-    // Double-click to enter path edit mode. The canvas mouse handlers run synchronously
-    // in the events the double-click has dispatched, so any grips exist by now.
-    await path.dblclick({ force: true })
-
-    // Check for path point grips (pointgrip_0 is the first control point)
-    const pointGrip = page.locator('#pathpointgrip_0')
-    const pointGripVisible = await pointGrip.isVisible().catch(() => false)
-
-    // If path edit mode activated, verify control point positions
-    if (pointGripVisible) {
-      const pointGripBBox = await pointGrip.evaluate(el => {
-        const rect = el.getBoundingClientRect()
-        return { x: rect.x, y: rect.y }
+    // One synchronous read of where the path's four corners render on screen (its own
+    // coordinates through the browser's screen matrix) and of where the elements
+    // matching `selector` render. Entering path edit moved the whole canvas 40 px on
+    // screen between two separate reads (measured 2026-11-04, chromium), so each
+    // comparison takes both sides from one snapshot.
+    type Box = { id: string, x: number, y: number, width: number, height: number }
+    const snapshot = (selector: string) => page.evaluate((sel) => {
+      const m = (document.getElementById('svg_2') as unknown as SVGGraphicsElement).getScreenCTM()!
+      const corners = [[0, 0], [50, 0], [50, 50], [0, 50]].map(([x, y]) => {
+        const p = new DOMPoint(x, y).matrixTransform(m)
+        return { x: p.x, y: p.y }
       })
+      const boxes = [...document.querySelectorAll(sel)]
+        .filter(el => el.getAttribute('display') !== 'none')
+        .map(el => {
+          const r = el.getBoundingClientRect()
+          return { id: el.id, x: r.x, y: r.y, width: r.width, height: r.height }
+        })
+      return { corners, boxes }
+    }, selector)
+    const centerOf = (r: Box) => ({ x: r.x + r.width / 2, y: r.y + r.height / 2 })
 
-      // The first point should be near the top-left of the path
-      // After ungrouping with translate(100,100), the path moves
-      // Allow reasonable tolerance
-      const tolerance = 100
-      expect(Math.abs(pointGripBBox.x - pathBBox.x)).toBeLessThan(tolerance)
-      expect(Math.abs(pointGripBBox.y - pathBBox.y)).toBeLessThan(tolerance)
+    // Selection box: select the path alone; its outline must be centered on the path.
+    await page.evaluate(() => {
+      window.svgEditor.svgCanvas.selectOnly([document.getElementById('svg_2')!], true)
+    })
+    await expect(page.locator('#selectedBox0')).toBeVisible()
+    const sel = await snapshot('#selectedBox0')
+    const selReport = JSON.stringify(sel)
+    expect(sel.boxes.length, selReport).toBe(1)
+    const boxRect = sel.boxes[0]!
+    const [c0, c1, c2, c3] = sel.corners as [{ x: number, y: number }, { x: number, y: number }, { x: number, y: number }, { x: number, y: number }]
+    const boxCenter = centerOf(boxRect)
+    expect(Math.abs(boxCenter.x - (c0.x + c2.x) / 2), selReport).toBeLessThanOrEqual(1)
+    expect(Math.abs(boxCenter.y - (c0.y + c2.y) / 2), selReport).toBeLessThanOrEqual(1)
+    // The box encloses the path rather than being a stray point near it.
+    expect(boxRect.width, selReport).toBeGreaterThanOrEqual(c1.x - c0.x)
+    expect(boxRect.height, selReport).toBeGreaterThanOrEqual(c3.y - c0.y)
+
+    // Path edit: what a mouseup with no movement on an already-selected path calls
+    // (core/event.ts mouseUp -> pathActions.select -> toEditMode). It runs
+    // synchronously, so the mode it returns is already the final one.
+    const mode = await page.evaluate(() => {
+      const c = window.svgEditor.svgCanvas
+      c.pathActions.toEditMode(document.getElementById('svg_2')!)
+      return c.getCurrentMode()
+    })
+    expect(mode).toBe('pathedit')
+
+    // The point grips must sit on the corners of the rendered path: every corner has a
+    // grip on it, and no grip is anywhere else. With the #391 bug the grips sit at the
+    // path's local coordinates, 100 canvas units up and left of the path.
+    const gripSelector = '#pathpointgrip_container [id^="pathpointgrip_"]'
+    await expect(page.locator(gripSelector).first()).toBeVisible()
+    const { corners, boxes } = await snapshot(gripSelector)
+    const grips = boxes.map(b => ({ id: b.id, ...centerOf(b) }))
+    const near = (a: { x: number, y: number }, b: { x: number, y: number }) =>
+      Math.abs(a.x - b.x) <= 1 && Math.abs(a.y - b.y) <= 1
+    const gripReport = JSON.stringify({ grips, corners })
+    expect(grips.length, gripReport).toBeGreaterThanOrEqual(corners.length)
+    for (const corner of corners) {
+      expect(grips.some(g => near(g, corner)), `no grip on corner ${JSON.stringify(corner)}: ${gripReport}`).toBe(true)
     }
-
-    // Verify the path's d attribute was updated correctly after ungrouping
-    const dAttr = await path.getAttribute('d')
-    expect(dAttr).toBeTruthy()
+    for (const grip of grips) {
+      expect(corners.some(c => near(grip, c)), `${grip.id} is on no corner: ${gripReport}`).toBe(true)
+    }
   })
 
   test('issue 404: border width during resize at zoom', async ({ page }) => {
