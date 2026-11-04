@@ -255,8 +255,9 @@ test.describe('Regression issues', () => {
 
     // One synchronous read of where the path's four corners render on screen (its own
     // coordinates through the browser's screen matrix) and of where the elements
-    // matching `selector` render. The editor's panels re-render asynchronously and can
-    // shift the whole canvas between two reads, so each comparison uses one snapshot.
+    // matching `selector` render. Entering path edit moved the whole canvas 40 px on
+    // screen between two separate reads (measured 2026-11-04, chromium), so each
+    // comparison takes both sides from one snapshot.
     type Box = { id: string, x: number, y: number, width: number, height: number }
     const snapshot = (selector: string) => page.evaluate((sel) => {
       const m = (document.getElementById('svg_2') as unknown as SVGGraphicsElement).getScreenCTM()!
