@@ -9,14 +9,18 @@ export async function visitAndApproveStorage (page: Page) {
     sessionStorage.clear()
   })
   await page.reload()
+  // Cookies and storage are cleared, so ext-storage always opens its consent prompt,
+  // asynchronously, after the editor reports ready. Wait for it to open instead of
+  // probing for it, so a slow load cannot leave it open over the editor.
+  await expect(page.locator('se-storage-dialog')).toHaveAttribute('dialog', 'open')
   await dismissStorageDialog(page)
-  await page.waitForSelector('#svgroot', { timeout: 20000 })
+  await page.waitForSelector('#svgroot')
   await selectEnglishAndSnap(page)
   await dismissStorageDialog(page)
 }
 
 export async function selectEnglishAndSnap (page: Page) {
-  await page.waitForFunction(() => window.svgEditor && window.svgEditor.setConfig, null, { timeout: 20000 })
+  await page.waitForFunction(() => window.svgEditor && window.svgEditor.setConfig)
   await page.evaluate(() => {
     window.svgEditor.setConfig({
       lang: 'en',
@@ -67,11 +71,11 @@ export async function dismissStorageDialog (page: Page) {
     })
   }
 
+  // Both paths above close the dialog synchronously, so this wait ends at once; it
+  // must not be swallowed, or a dialog still open would intercept later clicks.
   await page.waitForFunction(
-    () => document.querySelector('se-storage-dialog')?.getAttribute('dialog') !== 'open',
-    null,
-    { timeout: 5000 }
-  ).catch(() => {})
+    () => document.querySelector('se-storage-dialog')?.getAttribute('dialog') !== 'open'
+  )
 }
 
 export async function setRotationAngle (page: Page, degrees: number) {
@@ -95,7 +99,7 @@ export async function waitForExtensions (page: Page) {
   // Extensions load fire-and-forget after the editor reports ready; ext-grid's
   // init() appends #canvasGrid, so its presence signals the extension batch ran
   // (and that the shared svgEditorInstance singleton resolved).
-  await page.waitForSelector('#canvasGrid', { state: 'attached', timeout: 15000 })
+  await page.waitForSelector('#canvasGrid', { state: 'attached' })
 }
 
 export async function dragOnCanvas (page: Page, start: { x: number; y: number }, end: { x: number; y: number }) {

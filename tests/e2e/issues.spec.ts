@@ -256,24 +256,22 @@ test.describe('Regression issues', () => {
       </g>
     </svg>`)
 
-    await page.waitForSelector('#svgroot', { timeout: 5000 })
+    await page.waitForSelector('#svgroot')
 
     // Select the group using force click to bypass svgroot intercept
     const group = page.locator('#svg_1')
     await group.click({ force: true })
 
-    // Ungroup using keyboard shortcut Ctrl+Shift+G
+    // Ungroup using keyboard shortcut Ctrl+Shift+G. Headless, this press does not
+    // ungroup (measured 2026-11-03: #svg_1 was still present after 120 s), so there is
+    // no ungroup to wait for; the editor's keydown handler runs synchronously in the
+    // dispatch the press has completed.
     await page.keyboard.press('Control+Shift+g')
 
-    // Wait for ungrouping to complete
-    await page.waitForTimeout(300)
-
-    // Select the first path
+    // Select the first path. The canvas mouse handlers run synchronously in the
+    // events the click has dispatched.
     const path = page.locator('#svg_2')
     await path.click({ force: true })
-
-    // Wait for selection to be processed
-    await page.waitForTimeout(200)
 
     // Get the path's screen position
     const pathBBox = await path.evaluate(el => {
@@ -286,11 +284,9 @@ test.describe('Regression issues', () => {
     expect(pathBBox.width).toBeGreaterThan(0)
     expect(pathBBox.height).toBeGreaterThan(0)
 
-    // Double-click to enter path edit mode
+    // Double-click to enter path edit mode. The canvas mouse handlers run synchronously
+    // in the events the double-click has dispatched, so any grips exist by now.
     await path.dblclick({ force: true })
-
-    // Wait for path edit mode
-    await page.waitForTimeout(300)
 
     // Check for path point grips (pointgrip_0 is the first control point)
     const pointGrip = page.locator('#pathpointgrip_0')

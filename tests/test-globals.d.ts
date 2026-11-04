@@ -33,6 +33,8 @@ declare global {
     __promptResult: unknown
     __capturedDialog: string | null
     __capturedDialog2: string | null
+    __onceCount: number
+    __offCount: number
     __svgEditorReady: Promise<unknown>
     __svgEditorReadyResolved: boolean
     __setConfig: unknown

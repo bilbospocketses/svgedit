@@ -48,11 +48,16 @@ test.describe('embed: dialog hooks', () => {
       .poll(() => frame.evaluate(() => window.svgEditor._embedServer._isHostHandlerRegistered('alert')))
       .toBe(false)
 
-    // Trigger requestDialog — handler should NOT fire (server no longer has it registered)
+    // Trigger requestDialog — handler should NOT fire (server no longer has it registered).
+    // With no host handler the server takes its default path, the editor's own in-app
+    // alert (seAlert); seeing that alert in the editor frame proves the unregistered
+    // branch ran.
     await frame.evaluate(() => window.svgEditor._embedServer.requestDialog('alert', ['should not arrive']))
+    await expect(frame.locator('se-plain-alert-dialog', { hasText: 'should not arrive' })).toHaveCount(1)
 
-    // Wait for any potential round-trip
-    await page.waitForTimeout(300)
+    // One more call round trip: postMessage keeps order, so anything the editor posted
+    // to the host before this reply has already been delivered.
+    await page.evaluate(() => window.__svgeditEmbed.editor.getZoom!())
 
     const captured = await page.evaluate(() => window.__capturedDialog2)
     // Handler was unregistered: captured must still be null
