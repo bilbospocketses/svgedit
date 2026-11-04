@@ -46,6 +46,7 @@ test.describe('embed: events', () => {
     await page.evaluate(() =>
       window.__svgeditEmbed.editor.loadFromString!('<svg xmlns="http://www.w3.org/2000/svg"><rect/></svg>')
     )
+    // timing: allow -- expect timeout is 120 s in playwright.config.mjs
     await expect.poll(() => changeCount(page)).toBeGreaterThanOrEqual(before + 1)
     const afterFirst = await changeCount(page)
     await page.evaluate(() =>
@@ -53,6 +54,7 @@ test.describe('embed: events', () => {
     )
     // Once the second CHANGE is logged, every handler for it has run: a once
     // handler that was not removed would have counted it.
+    // timing: allow -- expect timeout is 120 s in playwright.config.mjs
     await expect.poll(() => changeCount(page)).toBeGreaterThanOrEqual(afterFirst + 1)
     expect(await page.evaluate(() => window.__onceCount)).toBe(1)
   })
@@ -70,6 +72,7 @@ test.describe('embed: events', () => {
       window.__svgeditEmbed.editor.loadFromString!('<svg xmlns="http://www.w3.org/2000/svg"><rect/></svg>')
     )
     // The CHANGE is delivered: a handler still subscribed would have run with it.
+    // timing: allow -- expect timeout is 120 s in playwright.config.mjs
     await expect.poll(() => changeCount(page)).toBeGreaterThanOrEqual(before + 1)
     expect(await page.evaluate(() => window.__offCount)).toBe(0)
   })

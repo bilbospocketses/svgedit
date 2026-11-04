@@ -114,6 +114,7 @@ test.describe('foreignObject HTML authoring', () => {
     await expect.poll(() => foreignCount(page)).toBe(0)
     // Wait for the controller's last step (it returns the editor to select mode after
     // removing the box), then re-confirm the count stayed at zero.
+    // timing: allow -- expect timeout is 120 s in playwright.config.mjs
     await expect.poll(() => page.evaluate(() => window.svgEditor.svgCanvas.getMode())).toBe('select')
     expect(await foreignCount(page)).toBe(0)
     expect(errors, `unexpected console errors on cancel: ${errors.join(' | ')}`).toEqual([])
