@@ -42,21 +42,18 @@ export async function setSvgSource (page: Page, svgMarkup: string) {
   await page.locator('#tool_source_save').click()
 }
 
+// Every caller runs after visitAndApproveStorage has seen the dialog attached and open
+// (ext-storage appends it once and closing only flips its `dialog` attribute), so the
+// element is always present here.
 export async function dismissStorageDialog (page: Page) {
   const storageDialog = page.locator('se-storage-dialog')
-  if (!(await storageDialog.count())) {
-    try {
-      await storageDialog.waitFor({ state: 'attached', timeout: 3000 })
-    } catch {
-      return
-    }
-  }
 
   const isOpen = await storageDialog.getAttribute('dialog')
   if (isOpen !== 'open') return
 
   const okButton = storageDialog.locator('button#storage_ok')
   try {
+    // timing: allow -- not a pass/fail bound: if the OK button is not visible by then, the catch dispatches the dialog's own OK change event, which closes it either way
     await okButton.waitFor({ state: 'visible', timeout: 5000 })
     await okButton.click()
   } catch {

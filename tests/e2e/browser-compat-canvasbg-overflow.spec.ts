@@ -13,9 +13,12 @@ test.describe('browser-compat: canvasBackground overflow on zoom-out (select.js:
   })
 
   test('canvas background does not overflow svgroot viewport when zoomed out to 0.25', async ({ page }) => {
-    // Set zoom to 0.25 (4x zoom out) -- triggers the original Chrome 7 bug scenario
-    // svgCanvas.setZoom only stores the value, and getBoundingClientRect below forces
-    // layout, so there is nothing to wait for between the two.
+    // KNOWN GAP: this test does NOT exercise the zoom path. svgCanvas.setZoom(0.25) only
+    // stores the value (svgcanvas.ts setZoom); nothing re-renders the canvas at 0.25, so
+    // the original Chrome 7 zoom-out scenario is never reached and the checks below read
+    // the unzoomed canvas. Raised for a follow-up todo (item 258 review, 2026-11-04).
+    // Because setZoom changes nothing on the page, there is also nothing to wait for
+    // before the reads below.
     await page.evaluate(() => {
       window.svgEditor.svgCanvas.setZoom(0.25)
     })

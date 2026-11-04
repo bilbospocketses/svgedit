@@ -4,7 +4,8 @@ export default defineConfig({
   testDir: 'tests/e2e',
   workers: process.env.CI ? 1 : undefined,
   // Hang guards only: a slow machine must never fail a correct test. Specs rely on
-  // these defaults rather than short per-call timeouts.
+  // these defaults rather than short per-call timeouts that could fail a test (the
+  // storage helper's 5 s OK-button wait only picks between two ways to close it).
   timeout: 300000,
   expect: {
     timeout: 120000

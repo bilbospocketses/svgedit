@@ -12,7 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A correct test no longer fails because the machine running it is slow.
   - The unit suite's hang guards are now 120 s for tests and hooks. The e2e
     suite's are 300 s per test and 120 s per `expect`. The specs' short
-    per-call timeouts are gone.
+    per-call timeouts that could fail a test are gone. One short wait remains:
+    the storage-consent helper waits 5 s for the dialog's OK button and, if it
+    is not visible by then, closes the dialog through its own OK event instead.
   - Fixed sleeps followed by a check are replaced with waits for the event
     itself: a CHANGE line in the embed host log, a call's reply, the editor's
     alert, the editor's mode. Sleeps that waited for nothing are deleted.

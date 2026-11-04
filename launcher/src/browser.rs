@@ -118,7 +118,10 @@ mod tests {
         // Generous timeouts: the server thread may be scheduled late on a loaded box,
         // and the product's short poll timeouts would then read it as unhealthy.
         let generous = Duration::from_secs(120);
-        assert!(check_healthz_with(port, generous, generous));
+        assert!(
+            check_healthz_with(port, generous, generous),
+            "HUNG or non-200: no healthy reply from the test server on 127.0.0.1:{port} within the 120 s socket timeouts"
+        );
         handle.join().unwrap();
     }
 

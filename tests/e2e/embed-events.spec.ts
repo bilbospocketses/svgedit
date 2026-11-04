@@ -30,7 +30,9 @@ test.describe('embed: events', () => {
       window.__svgeditEmbed.editor.loadFromString!('<svg xmlns="http://www.w3.org/2000/svg"><rect id="r" x="0" y="0" width="10" height="10"/></svg>')
     )
     await page.evaluate(() => window.__svgeditEmbed.editor.selectAllInCurrentLayer!())
-    await page.waitForFunction(() => window.__getLog().includes('SELECTION'))
+    // The load itself clears the selection and logs SELECTION {"count":0,...}, so wait
+    // for the line that names the selected rect.
+    await page.waitForFunction(() => window.__getLog().includes('SELECTION {"count":1,"ids":["r"]}'))
   })
 
   test('once subscription fires exactly once', async ({ page }) => {
