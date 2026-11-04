@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (tests -- no timing-dependent tests -- 2026-11-03)
+
+- A correct test no longer fails because the machine running it is slow.
+  - The unit suite's hang guards are now 120 s for tests and hooks. The e2e
+    suite's are 300 s per test and 120 s per `expect`. The specs' short
+    per-call timeouts that could fail a test are gone. One short wait remains:
+    the storage-consent helper waits 5 s for the dialog's OK button and, if it
+    is not visible by then, closes the dialog through its own OK event instead.
+  - Fixed sleeps followed by a check are replaced with waits for the event
+    itself: a CHANGE line in the embed host log, a call's reply, the editor's
+    alert, the editor's mode. Sleeps that waited for nothing are deleted.
+  - The e2e storage-consent helper waits for the prompt to open instead of
+    giving up after 3 s.
+  - The launcher's `/healthz` test passes generous socket timeouts; the
+    launcher's own values are unchanged.
+- The `getStrokedBBox` timing test is removed. Under jsdom it timed a stub,
+  not a browser.
+- `npm test` now prints a HUNG line, instead of a quiet warning, when the
+  Playwright availability probe is stopped by its hang guard (now 120 s). The
+  e2e suite still does not run in that case.
+
 ### Changed (CI -- stall watchdog, no time limits -- 2026-10-16)
 
 - CI no longer stops a job for taking long. The `timeout-minutes: 60` limits on

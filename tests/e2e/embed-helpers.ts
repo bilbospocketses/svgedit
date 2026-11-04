@@ -6,7 +6,7 @@ export async function openEmbedHost (page: Page, { editorSrc, allowedOrigins }: 
   if (allowedOrigins) params.set('allowedOrigins', allowedOrigins.join(','))
   const url = `/tests/e2e/fixtures/embed-host.html${params.toString() ? `?${params.toString()}` : ''}`
   await page.goto(url)
-  await page.waitForFunction(() => window.__svgeditEmbed && window.__getLog().includes('READY'), { timeout: 15000 })
+  await page.waitForFunction(() => window.__svgeditEmbed && window.__getLog().includes('READY'))
 }
 
 export async function getLog (page: Page): Promise<string> {

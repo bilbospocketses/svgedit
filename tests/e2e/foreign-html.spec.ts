@@ -112,8 +112,10 @@ test.describe('foreignObject HTML authoring', () => {
     // and the deferred InsertElementCommand for the (now detached) node must not
     // resurrect it on the canvas.
     await expect.poll(() => foreignCount(page)).toBe(0)
-    // Give any deferred command a tick, then re-confirm it stayed at zero.
-    await page.waitForTimeout(200)
+    // Wait for the controller's last step (it returns the editor to select mode after
+    // removing the box), then re-confirm the count stayed at zero.
+    // timing: allow -- expect timeout is 120 s in playwright.config.mjs
+    await expect.poll(() => page.evaluate(() => window.svgEditor.svgCanvas.getMode())).toBe('select')
     expect(await foreignCount(page)).toBe(0)
     expect(errors, `unexpected console errors on cancel: ${errors.join(' | ')}`).toEqual([])
 
@@ -215,7 +217,8 @@ test.describe('foreignObject HTML authoring', () => {
     await page.locator('#svgcanvas').click({ position: { x: 5, y: 5 } })
     await page.keyboard.press('ControlOrMeta+z')
     await page.keyboard.press('ControlOrMeta+y')
-    await page.waitForTimeout(200)
+    // The shortcut handlers run synchronously in the keydown dispatch, which the press
+    // has completed, so undo and redo have both run by now.
     expect(await foreignCount(page)).toBe(0)
     expect(errors, `unexpected console errors: ${errors.join(' | ')}`).toEqual([])
 

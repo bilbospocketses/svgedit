@@ -25,7 +25,9 @@ test.describe('embed: theme sync', () => {
     await openEmbedHost(page)
     const before = await page.evaluate(() => (window.__getLog().match(/THEME /g) ?? []).length)
     await page.evaluate(() => window.__svgeditEmbed.setTheme('dark'))
-    await new Promise(r => setTimeout(r, 200))
+    // One more call round trip: postMessage keeps order, so an echo the editor posted
+    // while applying the theme (or in a microtask after it) has been delivered by now.
+    await page.evaluate(() => window.__svgeditEmbed.editor.getZoom!())
     const after = await page.evaluate(() => (window.__getLog().match(/THEME /g) ?? []).length)
     expect(after).toBe(before)
   })

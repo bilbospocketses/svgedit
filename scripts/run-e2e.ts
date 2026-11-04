@@ -15,15 +15,30 @@ delete process.env['ELECTRON_RUN_AS_NODE']
 const isWindows = process.platform === 'win32'
 const run = (cmd: string, args: string[], opts: SpawnOptions = {}): Promise<void> => new Promise((resolve, reject) => {
   const child = spawn(cmd, args, { stdio: 'inherit', shell: isWindows, env: sanitizedEnv, ...opts })
-  child.on('exit', code => (code === 0 ? resolve(undefined) : reject(new Error(`${cmd} exited with code ${code}`))))
+  child.on('exit', (code, signal) => (code === 0
+    ? resolve(undefined)
+    : reject(Object.assign(new Error(`${cmd} exited with code ${code}${signal ? ` (killed by ${signal})` : ''}`), { signal }))))
   child.on('error', reject)
 })
 
+// The availability probe's hang guard: far above a healthy `npx playwright --version`
+// (a few seconds even on a cold npx cache), so only a hung probe reaches it.
+const PLAYWRIGHT_PROBE_TIMEOUT_MS = 120000
+
 const hasPlaywright = async () => {
   try {
-    await run('npx', ['playwright', '--version'], { timeout: 30000 })
+    await run('npx', ['playwright', '--version'], { timeout: PLAYWRIGHT_PROBE_TIMEOUT_MS })
     return true
   } catch (error) {
+    if (error instanceof Error && (error as Error & { signal?: string | null }).signal) {
+      // Killed by the hang guard: say so loudly, so a slow or stuck box does not
+      // quietly drop the e2e suite from `npm test`.
+      console.error('='.repeat(78))
+      console.error(`HUNG: the e2e availability probe \`npx playwright --version\` (scripts/run-e2e.ts) gave no answer within ${PLAYWRIGHT_PROBE_TIMEOUT_MS / 1000} s and was stopped.`)
+      console.error('E2E TESTS WERE NOT RUN. Run `npx playwright test` by hand once the probe answers.')
+      console.error('='.repeat(78))
+      return false
+    }
     console.warn('Skipping e2e tests because Playwright is unavailable or failed to verify.')
     console.warn(error instanceof Error ? error.message : String(error))
     return false

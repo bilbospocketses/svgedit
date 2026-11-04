@@ -9,12 +9,18 @@ pub fn url_for_port(port: u16) -> String {
 
 /// One `GET /healthz` over a TCP socket; true iff the status line is `200`.
 pub fn check_healthz(port: u16) -> bool {
+    check_healthz_with(port, Duration::from_millis(300), Duration::from_millis(500))
+}
+
+/// `check_healthz` with explicit connect and read/write timeouts. The launcher's poll
+/// loop uses short ones; tests pass generous ones so a loaded machine cannot fail them.
+fn check_healthz_with(port: u16, connect_timeout: Duration, io_timeout: Duration) -> bool {
     let addr = SocketAddr::from(([127, 0, 0, 1], port));
-    let Ok(mut stream) = TcpStream::connect_timeout(&addr, Duration::from_millis(300)) else {
+    let Ok(mut stream) = TcpStream::connect_timeout(&addr, connect_timeout) else {
         return false;
     };
-    let _ = stream.set_read_timeout(Some(Duration::from_millis(500)));
-    let _ = stream.set_write_timeout(Some(Duration::from_millis(500)));
+    let _ = stream.set_read_timeout(Some(io_timeout));
+    let _ = stream.set_write_timeout(Some(io_timeout));
     if stream
         .write_all(b"GET /healthz HTTP/1.0\r\nHost: localhost\r\nConnection: close\r\n\r\n")
         .is_err()
@@ -109,7 +115,13 @@ mod tests {
                 let _ = sock.write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nok");
             }
         });
-        assert!(check_healthz(port));
+        // Generous timeouts: the server thread may be scheduled late on a loaded box,
+        // and the product's short poll timeouts would then read it as unhealthy.
+        let generous = Duration::from_secs(120);
+        assert!(
+            check_healthz_with(port, generous, generous),
+            "HUNG or non-200: no healthy reply from the test server on 127.0.0.1:{port} within the 120 s socket timeouts"
+        );
         handle.join().unwrap();
     }
 
