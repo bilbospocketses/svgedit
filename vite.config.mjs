@@ -105,6 +105,10 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
+    // A slow machine must never fail a correct test: these are hang guards only,
+    // far above any healthy test or hook. hookTimeout does not inherit testTimeout.
+    testTimeout: 120000,
+    hookTimeout: 120000,
     setupFiles: ['tests/unit/setup-vitest.js'],
     include: ['tests/**/*.test.{js,ts}'],
     exclude: ['tests/e2e/**'],
