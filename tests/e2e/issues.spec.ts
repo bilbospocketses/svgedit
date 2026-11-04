@@ -219,9 +219,12 @@ test.describe('Regression issues', () => {
   // exactly the translate (fixed in core/path-method.ts, #30 / PR #224).
   //
   // The ungroup and the path edit are driven through the canvas API, the same calls the
-  // UI makes: headless, Ctrl+Shift+G does not ungroup and a double-click never creates
-  // #pathpointgrip_* (the shortcut and extension registration gap documented in
-  // group-transforms.spec.ts). Every check below runs unconditionally.
+  // UI makes. The old test pressed Ctrl+Shift+G, which was never an svgedit shortcut
+  // (ungroup's key is plain G, on #tool_group_elements), so nothing ungrouped. The
+  // ungroup button, the G button with a group selected, and the context menu all call
+  // svgCanvas.ungroupSelectedElement(), and so does this test. The old test's
+  // double-click never created #pathpointgrip_*; this test calls the path-edit entry
+  // directly instead. Every check below runs unconditionally.
   test('issue 391: selection box position after ungrouping and path edit', async ({ page }) => {
     await setSvgSource(page, `<svg width="640" height="480" xmlns="http://www.w3.org/2000/svg">
       <g class="layer">
@@ -233,7 +236,7 @@ test.describe('Regression issues', () => {
       </g>
     </svg>`)
 
-    // Ungroup: select the group and call what Ctrl+Shift+G calls.
+    // Ungroup: select the group and call what the ungroup button and context menu call.
     await page.evaluate(() => {
       const c = window.svgEditor.svgCanvas
       c.selectOnly([document.getElementById('svg_1')!])
@@ -292,8 +295,9 @@ test.describe('Regression issues', () => {
     expect(boxRect.width, selReport).toBeGreaterThanOrEqual(c1.x - c0.x)
     expect(boxRect.height, selReport).toBeGreaterThanOrEqual(c3.y - c0.y)
 
-    // Path edit: what a double-click on a selected path calls. It runs synchronously, so
-    // the mode it returns is already the final one.
+    // Path edit: what a mouseup with no movement on an already-selected path calls
+    // (core/event.ts mouseUp -> pathActions.select -> toEditMode). It runs
+    // synchronously, so the mode it returns is already the final one.
     const mode = await page.evaluate(() => {
       const c = window.svgEditor.svgCanvas
       c.pathActions.toEditMode(document.getElementById('svg_2')!)

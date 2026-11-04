@@ -10,9 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed (tests -- two e2e tests that proved nothing -- 2026-11-04)
 
 - The "issue 391" e2e test now checks the fix it is named for. It used to
-  ungroup with Ctrl+Shift+G and enter path edit with a double-click, and
-  headless neither happens, so its grip checks were always skipped. It now
-  ungroups and enters path edit through the canvas calls the UI makes. It
+  press Ctrl+Shift+G, which was never an svgedit shortcut, so nothing
+  ungrouped; and its double-click never entered path edit, so its grip checks
+  were always skipped. The ungroup button and the context menu call
+  `ungroupSelectedElement`, and so does the test now; it enters path edit
+  through `pathActions.toEditMode`, the call a click on an already-selected
+  path makes. It
   checks that the ungrouped path kept the group's translate, that the selection
   box is centered on the path, and that a point grip sits on every corner of
   the rendered path and nowhere else. Reverting the grip-matrix fix (#224) makes
